@@ -1,16 +1,1245 @@
-﻿<!doctype html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Inanolab</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Materials Analysis Lab</title>
+    <link rel="icon" type="image/png" href="assets/logo.png" />
+    <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e9ecef;
+            z-index: 1000;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            text-decoration: none;
+            display: inline-block;
+            line-height: 0; /* remove extra whitespace around inline image */
+        }
+
+        .logo img {
+            height: 48px;
+            width: auto;
+            max-width: 90vw;
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .logo img {
+                height: 40px;
+            }
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #e9ecef;
+            z-index: 1000;
+            padding: 0.5rem 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .nav-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: 8px;
+            min-width: 60px;
+        }
+
+        .nav-button:hover,
+        .nav-button.active {
+            color: #e67e22;
+            background: rgba(230, 126, 34, 0.1);
+        }
+
+        .nav-button-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-button-text {
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            background: url('https://phenom-dlsu.weebly.com/uploads/2/5/9/7/25977880/whychooseoursemedxservices_orig.png') center/contain no-repeat;
+            background-color: #f8f9fa;
+            color: white;
+            padding: 0;
+            margin-bottom: 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 500px;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 300;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .cta-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem 6rem;
+            margin-top: 0;
+        }
+
+        .section {
+            padding: 4rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .section:first-child {
+            padding-top: 0;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+            text-align: center;
+            font-weight: 300;
+        }
+
+        /* About Section */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        .about-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .team-placeholder {
+            background: #e9ecef;
+            height: 300px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 1.1rem;
+        }
+
+        /* Cost Analysis Section */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            border-color: #3498db;
+        }
+
+        .pricing-card h3 {
+            color: #3498db;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            padding: 0;
+        }
+
+        .pricing-features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .pricing-features li:before {
+            content: '✓';
+            color: #27ae60;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        /* Calculator */
+        .calculator {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .calculator h3 {
+            color: #3498db;
+            margin-bottom: 1.5rem;
+        }
+
+        .calc-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .calc-input {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calc-input label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .calc-input input, .calc-input select {
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .calc-input input:focus, .calc-input select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .calc-result {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .calc-total {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3498db;
+        }
+
+        /* Sample Preparation */
+        .prep-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .prep-step {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .step-icon {
+            width: 60px;
+            height: 60px;
+            background: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* Extras Section */
+        .extras-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .extra-service {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .extra-service:hover {
+            transform: translateY(-3px);
+        }
+
+        .extra-service h4 {
+            color: #3498db;
+            margin-bottom: 1rem;
+        }
+
+        /* Form Section */
+        .form-container {
+            background: white;
+            border-radius: 10px;
+            padding: 3rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .file-upload {
+            border: 2px dashed #e9ecef;
+            border-radius: 5px;
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            border-color: #3498db;
+        }
+
+        .submit-button {
+            background: #3498db;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+        }
+
+        .submit-button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        /* Footer */
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 3rem 0 1rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            color: #3498db;
+            margin-bottom: 1rem;
+        }
+
+        .footer-section p,
+        .footer-section a {
+            color: #bdc3c7;
+            text-decoration: none;
+            line-height: 1.8;
+        }
+
+        .footer-section a:hover {
+            color: #3498db;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid #34495e;
+            color: #95a5a6;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .calc-row {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-container {
+                padding: 0 1rem;
+            }
+
+            .main-content {
+                padding: 0 1rem 6rem;
+            }
+
+            .nav-button-text {
+                font-size: 0.6rem;
+            }
+        }
+
+        /* Page Navigation */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Error states */
+        .error {
+            border-color: #e74c3c !important;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
 </head>
 <body>
-  <main>
-    <h1>Inanolab</h1>
-    <p>Coming soon.</p>
-  </main>
-  <script src="script.js"></script>
-</body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <a class="logo" href="/" aria-label="i-Nano Research Facility home">
+                <img src="assets/logo.png" alt="i-Nano Research Facility logo" />
+            </a>
+        </nav>
+    </header>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-buttons">
+            <a href="#" class="nav-button" data-section="about">
+                <div class="nav-button-icon">🔬</div>
+                <div class="nav-button-text">About</div>
+            </a>
+            <a href="#" class="nav-button" data-section="cost">
+                <div class="nav-button-icon">🧮</div>
+                <div class="nav-button-text">Cost Analysis</div>
+            </a>
+            <a href="#" class="nav-button" data-section="preparation">
+                <div class="nav-button-icon">⚗️</div>
+                <div class="nav-button-text">Sample Prep</div>
+            </a>
+            <a href="#" class="nav-button" data-section="extras">
+                <div class="nav-button-icon">🔧</div>
+                <div class="nav-button-text">Extras</div>
+            </a>
+            <a href="#" class="nav-button" data-section="request">
+                <div class="nav-button-icon">📝</div>
+                <div class="nav-button-text">Service Request</div>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- About Page -->
+        <div id="about-page" class="page active">
+            <section class="section">
+                <h2>About Our Laboratory</h2>
+                <div class="about-grid">
+                    <div class="about-text">
+                        <p>The i-Nano Research Facility provides cutting-edge analytical services using state-of-the-art scanning electron microscopy (SEM) and energy-dispersive X-ray spectroscopy (EDX) equipment.</p>
+                        <p>With over 15 years of experience in materials characterization, our team of expert analysts delivers precise, reliable results for academic research, industrial R&D, and quality control applications.</p>
+                        <p>We specialize in surface morphology analysis, elemental composition mapping, failure analysis, and contamination identification across a wide range of materials including metals, ceramics, polymers, and composites.</p>
+                    </div>
+                    <div class="team-placeholder">
+                        <div>
+                            <p>🔬 Expert Team</p>
+                            <p>Dr. Sarah Chen - Lab Director</p>
+                            <p>Dr. Michael Rodriguez - Senior Analyst</p>
+                            <p>Dr. Emily Zhang - Materials Specialist</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Cost Analysis Page -->
+        <div id="cost-page" class="page">
+            <section class="section">
+                <h2>Cost of Analysis</h2>
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <h3>Basic SEM</h3>
+                        <div class="price">$75<span style="font-size: 1rem; color: #6c757d;">/sample</span></div>
+                        <ul class="pricing-features">
+                            <li>Up to 5 imaging spots</li>
+                            <li>Standard magnification range</li>
+                            <li>Basic image processing</li>
+                            <li>Digital image delivery</li>
+                            <li>2-3 day turnaround</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card">
+                        <h3>SEM + EDX</h3>
+                        <div class="price">$150<span style="font-size: 1rem; color: #6c757d;">/sample</span></div>
+                        <ul class="pricing-features">
+                            <li>Up to 8 imaging spots</li>
+                            <li>Elemental analysis (EDX)</li>
+                            <li>Quantitative composition</li>
+                            <li>Elemental mapping</li>
+                            <li>Detailed report included</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card">
+                        <h3>Comprehensive</h3>
+                        <div class="price">$250<span style="font-size: 1rem; color: #6c757d;">/sample</span></div>
+                        <ul class="pricing-features">
+                            <li>Unlimited imaging spots</li>
+                            <li>Advanced EDX analysis</li>
+                            <li>Phase identification</li>
+                            <li>Statistical analysis</li>
+                            <li>Expert consultation</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Cost Calculator -->
+                <div class="calculator">
+                    <h3>🧮 Cost Calculator</h3>
+                    <div class="calc-row">
+                        <div class="calc-input">
+                            <label for="samples">Number of Samples:</label>
+                            <input type="number" id="samples" min="1" value="1">
+                        </div>
+                        <div class="calc-input">
+                            <label for="analysis-type">Analysis Type:</label>
+                            <select id="analysis-type">
+                                <option value="75">Basic SEM ($75)</option>
+                                <option value="150">SEM + EDX ($150)</option>
+                                <option value="250">Comprehensive ($250)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="calc-row">
+                        <div class="calc-input">
+                            <label for="extra-spots">Extra Imaging Spots:</label>
+                            <input type="number" id="extra-spots" min="0" value="0">
+                        </div>
+                        <div class="calc-input">
+                            <label for="rush">Rush Service:</label>
+                            <select id="rush">
+                                <option value="0">Standard (No charge)</option>
+                                <option value="50">24-hour (+$50)</option>
+                                <option value="25">48-hour (+$25)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="calc-result">
+                        <div class="calc-total">Total Estimate: $<span id="total-cost">75</span></div>
+                        <p style="margin-top: 0.5rem; color: #6c757d;">*Prices exclude applicable taxes</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Sample Preparation Page -->
+        <div id="preparation-page" class="page">
+            <section class="section">
+                <h2>Sample Preparation Guidelines</h2>
+                <div class="prep-steps">
+                    <div class="prep-step">
+                        <div class="step-icon">1</div>
+                        <h4>Sample Size</h4>
+                        <p>Maximum dimensions: 25mm x 25mm x 10mm. Smaller samples preferred for optimal results.</p>
+                    </div>
+                    <div class="prep-step">
+                        <div class="step-icon">2</div>
+                        <h4>Cleaning</h4>
+                        <p>Remove oils, dust, and contaminants. Use appropriate solvents. Avoid touching analysis areas.</p>
+                    </div>
+                    <div class="prep-step">
+                        <div class="step-icon">3</div>
+                        <h4>Documentation</h4>
+                        <p>Label samples clearly. Provide detailed description of areas of interest and analysis goals.</p>
+                    </div>
+                </div>
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 1.5rem; margin-top: 2rem;">
+                    <h4 style="color: #856404; margin-bottom: 1rem;">⚠️ Important Notes:</h4>
+                    <ul style="color: #856404; margin: 0;">
+                        <li>Avoid samples containing mercury, radioactive materials, or biological hazards</li>
+                        <li>Magnetic samples may require special handling</li>
+                        <li>Volatile materials should be pre-treated or avoided</li>
+                        <li>Contact us for guidance on unusual sample types</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <!-- Extras Page -->
+        <div id="extras-page" class="page">
+            <section class="section">
+                <h2>Additional Services</h2>
+                <div class="extras-grid">
+                    <div class="extra-service">
+                        <h4>🖼️ Advanced Image Processing</h4>
+                        <p><strong>$25 per sample</strong></p>
+                        <p>Enhanced contrast, noise reduction, measurement annotations, and publication-ready formatting.</p>
+                    </div>
+                    <div class="extra-service">
+                        <h4>📊 Extended EDX Analysis</h4>
+                        <p><strong>$50 per sample</strong></p>
+                        <p>Detailed quantitative analysis, phase mapping, line scans, and statistical evaluation of composition.</p>
+                    </div>
+                    <div class="extra-service">
+                        <h4>⚡ Expedited Service</h4>
+                        <p><strong>+$25-50 per sample</strong></p>
+                        <p>Rush processing available: 24-hour (+$50) or 48-hour (+$25) turnaround options.</p>
+                    </div>
+                    <div class="extra-service">
+                        <h4>👨‍🔬 Expert Consultation</h4>
+                        <p><strong>$100 per hour</strong></p>
+                        <p>One-on-one discussion of results, interpretation guidance, and recommendations for further analysis.</p>
+                    </div>
+                    <div class="extra-service">
+                        <h4>📋 Detailed Reporting</h4>
+                        <p><strong>$75 per sample</strong></p>
+                        <p>Comprehensive written report with methodology, detailed findings, and professional interpretation.</p>
+                    </div>
+                    <div class="extra-service">
+                        <h4>🔄 Sample Return</h4>
+                        <p><strong>$15 shipping fee</strong></p>
+                        <p>Secure packaging and return shipping of analyzed samples (when possible and requested).</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Service Request Page -->
+        <div id="request-page" class="page">
+            <section class="section">
+                <h2>Service Request Form</h2>
+                <div class="form-container">
+                    <form id="service-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="full-name">Full Name *</label>
+                                <input type="text" id="full-name" name="fullName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email Address *</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="school-name">Name of School (Company or Organization) *</label>
+                                <input type="text" id="school-name" name="schoolName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="mobile-number">Mobile Number *</label>
+                                <input type="tel" id="mobile-number" name="mobileNumber" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="school-address">Address of School (Company or Organization) *</label>
+                                <textarea id="school-address" name="schoolAddress" rows="3" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="position">Position *</label>
+                                <select id="position" name="position" required onchange="toggleOtherPosition()">
+                                    <option value="">Select your position</option>
+                                    <option value="high-school-student">High School Student</option>
+                                    <option value="college-student">College Student</option>
+                                    <option value="graduate-student">Graduate Student</option>
+                                    <option value="researcher">Researcher</option>
+                                    <option value="teacher">Teacher</option>
+                                    <option value="instructor">Instructor</option>
+                                    <option value="professor">Professor</option>
+                                    <option value="adviser">Adviser</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="other-position-group" style="display: none;">
+                                <label for="other-position">Please specify your position *</label>
+                                <input type="text" id="other-position" name="otherPosition">
+                            </div>
+                            <div class="form-group">
+                                <label>Kind of Characterization *</label>
+                                <div style="margin-top: 0.5rem;">
+                                    <p style="font-size: 0.9rem; color: #6c757d; margin-bottom: 1rem;">
+                                        SEM - Surface Morphology (Scanning Electron Microscope)<br>
+                                        EDX - Elemental Analysis (Energy Dispersive X-Ray)
+                                    </p>
+                                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="radio" name="characterization" value="sem-only" required style="margin-right: 0.5rem;">
+                                            SEM only
+                                        </label>
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="radio" name="characterization" value="sem-and-edx" required style="margin-right: 0.5rem;">
+                                            SEM and EDX
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="sample-count">Number of Samples *</label>
+                                <input type="number" id="sample-count" name="sampleCount" min="1" value="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Are your samples conductive? *</label>
+                                <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                                    <label style="display: flex; align-items: center; font-weight: normal;">
+                                        <input type="radio" name="conductive" value="yes" required style="margin-right: 0.5rem;">
+                                        Yes
+                                    </label>
+                                    <label style="display: flex; align-items: center; font-weight: normal;">
+                                        <input type="radio" name="conductive" value="no" required style="margin-right: 0.5rem;">
+                                        No
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="delivery-date">Date to deliver the samples *</label>
+                                <input type="date" id="delivery-date" name="deliveryDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="turnaround">Allowance for the turnover of results *</label>
+                                <select id="turnaround" name="turnaround" required>
+                                    <option value="">Select turnaround time</option>
+                                    <option value="2-3-days">2-3 days</option>
+                                    <option value="5-days">5 days</option>
+                                    <option value="1-week">1 week</option>
+                                    <option value="2-weeks">2 weeks</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="research-objectives">What is/are your research objectives related to the surface morphology (and elemental composition) of your sample? *</label>
+                                <textarea id="research-objectives" name="researchObjectives" rows="4" required></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="sample-characteristics">Describe the characteristics of your sample *</label>
+                                <textarea id="sample-characteristics" name="sampleCharacteristics" rows="4" required></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="sem-expectations">What do you intend to see on the SEM micrographs? What do you want to prove? Explain briefly what you expect to see (shapes, structures, sizes, or particular organisms) *</label>
+                                <textarea id="sem-expectations" name="semExpectations" rows="4" required></textarea>
+                                <div style="margin-top: 1rem;">
+                                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Select all that apply:</label>
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;">
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="checkbox" name="expectations" value="nanoparticles" style="margin-right: 0.5rem;">
+                                            Nanoparticles
+                                        </label>
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="checkbox" name="expectations" value="nanowires" style="margin-right: 0.5rem;">
+                                            Nanowires
+                                        </label>
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="checkbox" name="expectations" value="microparticles" style="margin-right: 0.5rem;">
+                                            Microparticles
+                                        </label>
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="checkbox" name="expectations" value="micropores" style="margin-right: 0.5rem;">
+                                            Micropores
+                                        </label>
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="checkbox" name="expectations" value="nanopores" style="margin-right: 0.5rem;">
+                                            Nanopores
+                                        </label>
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="checkbox" name="expectations" value="surface-roughness" style="margin-right: 0.5rem;">
+                                            Surface Roughness
+                                        </label>
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="checkbox" name="expectations" value="surface-structure" style="margin-right: 0.5rem;">
+                                            Surface Structure
+                                        </label>
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="checkbox" name="expectations" value="other" style="margin-right: 0.5rem;" onchange="toggleOtherExpectation()">
+                                            Other
+                                        </label>
+                                    </div>
+                                    <div id="other-expectation-group" style="display: none; margin-top: 1rem;">
+                                        <input type="text" id="other-expectation" name="otherExpectation" placeholder="Please specify...">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="edx-elements">If you intend to avail the EDX analysis, then kindly specify the chemical elements that you expect to see</label>
+                                <textarea id="edx-elements" name="edxElements" rows="3" placeholder="e.g., Carbon (C), Oxygen (O), Silicon (Si), etc."></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Kindly upload clear photos of your sample *<br>
+                                <span style="font-size: 0.9rem; color: #6c757d;">Also, upload reference images to illustrate the features you wish to locate in the SEM micrographs.</span></label>
+                                <div class="file-upload" onclick="document.getElementById('file-input').click()">
+                                    <input type="file" id="file-input" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;" required>
+                                    <p>📎 Click to upload sample photos and reference images</p>
+                                    <p style="font-size: 0.9rem; color: #6c757d;">Accepted formats: JPG, PNG, PDF, DOC (Max 10MB each)</p>
+                                </div>
+                                <div id="file-list"></div>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-button">Submit Service Request</button>
+                        <div id="form-messages"></div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Contact Information</h4>
+                <p>📧 jolarve@gmail.com</p>
+                <p>📞 09298051084</p>
+                <p>📍 Room 113, STRC Building<br>De La Salle University - Manila</p>
+            </div>
+            <div class="footer-section">
+                <h4>Laboratory Hours</h4>
+                <p>Monday - Friday: 8:00 AM - 6:00 PM</p>
+                <p>Saturday: 9:00 AM - 5:00 PM</p>
+                <p>Sunday: *Special appointment</p>
+                <p>Emergency analysis available by appointment</p>
+            </div>
+            <div class="footer-section">
+                <h4>Institutional Affiliation</h4>
+                <p>i-Nano Research Facility</p>
+                <p><a href="https://www.dlsu.edu.ph/colleges/cos/departments/physics/" target="_blank" rel="noopener noreferrer">Department of Physics, DLSU-Manila</a></p>
+                <p><a href="https://www.papsicenter.com/" target="_blank" rel="noopener noreferrer">Philippine Association of Physics and Science Instructors</a></p>
+                <p><a href="https://www.pjmsn.org/" target="_blank" rel="noopener noreferrer">Philippine Journal of Material Science</a></p>
+            </div>
+
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 i-Nano Research Facility. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Cost Calculator
+        function updateCost() {
+            const samples = parseInt(document.getElementById('samples').value) || 1;
+            const analysisType = parseInt(document.getElementById('analysis-type').value) || 75;
+            const extraSpots = parseInt(document.getElementById('extra-spots').value) || 0;
+            const rush = parseInt(document.getElementById('rush').value) || 0;
+            
+            const baseCost = samples * analysisType;
+            const spotCost = extraSpots * 10; // $10 per extra spot
+            const rushCost = samples * rush;
+            
+            const total = baseCost + spotCost + rushCost;
+            document.getElementById('total-cost').textContent = total;
+        }
+
+        // Add event listeners for calculator
+        document.getElementById('samples').addEventListener('input', updateCost);
+        document.getElementById('analysis-type').addEventListener('change', updateCost);
+        document.getElementById('extra-spots').addEventListener('input', updateCost);
+        document.getElementById('rush').addEventListener('change', updateCost);
+
+        // File upload handling
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+            
+            if (e.target.files.length > 0) {
+                const filesDiv = document.createElement('div');
+                filesDiv.style.marginTop = '1rem';
+                
+                Array.from(e.target.files).forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.style.padding = '0.5rem';
+                    fileItem.style.background = '#f8f9fa';
+                    fileItem.style.borderRadius = '3px';
+                    fileItem.style.marginBottom = '0.5rem';
+                    fileItem.innerHTML = `📎 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                    filesDiv.appendChild(fileItem);
+                });
+                
+                fileList.appendChild(filesDiv);
+            }
+        });
+
+        // Form validation and submission
+        document.getElementById('service-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Clear previous messages
+            document.getElementById('form-messages').innerHTML = '';
+            
+            // Basic validation
+            const requiredFields = ['full-name', 'email', 'school-name', 'mobile-number', 'school-address', 'position', 'sample-count', 'delivery-date', 'turnaround', 'research-objectives', 'sample-characteristics', 'sem-expectations'];
+            let isValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                const value = field.value.trim();
+                
+                // Remove previous error styling
+                field.classList.remove('error');
+                
+                if (!value) {
+                    field.classList.add('error');
+                    isValid = false;
+                }
+            });
+            
+            // Validate "Other" position field if selected
+            const position = document.getElementById('position').value;
+            if (position === 'other') {
+                const otherPosition = document.getElementById('other-position');
+                if (!otherPosition.value.trim()) {
+                    otherPosition.classList.add('error');
+                    isValid = false;
+                } else {
+                    otherPosition.classList.remove('error');
+                }
+            }
+            
+            // Validate radio buttons
+            const characterization = document.querySelector('input[name="characterization"]:checked');
+            const conductive = document.querySelector('input[name="conductive"]:checked');
+            
+            if (!characterization) {
+                isValid = false;
+            }
+            if (!conductive) {
+                isValid = false;
+            }
+            
+            // Validate checkboxes (at least one must be selected)
+            const expectations = document.querySelectorAll('input[name="expectations"]:checked');
+            if (expectations.length === 0) {
+                isValid = false;
+            }
+            
+            // Validate "Other" expectation field if selected
+            const otherExpectationChecked = document.querySelector('input[name="expectations"][value="other"]:checked');
+            if (otherExpectationChecked) {
+                const otherExpectation = document.getElementById('other-expectation');
+                if (!otherExpectation.value.trim()) {
+                    otherExpectation.classList.add('error');
+                    isValid = false;
+                } else {
+                    otherExpectation.classList.remove('error');
+                }
+            }
+            
+            // Validate file upload
+            const fileInput = document.getElementById('file-input');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                isValid = false;
+            }
+            
+            // Email validation
+            const email = document.getElementById('email').value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (email && !emailRegex.test(email)) {
+                document.getElementById('email').classList.add('error');
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.style.background = '#f8d7da';
+                errorDiv.style.color = '#721c24';
+                errorDiv.style.padding = '1rem';
+                errorDiv.style.borderRadius = '5px';
+                errorDiv.style.marginTop = '1rem';
+                errorDiv.innerHTML = '❌ Please fill in all required fields correctly.';
+                document.getElementById('form-messages').appendChild(errorDiv);
+                return;
+            }
+            
+            // Simulate form submission
+            const submitButton = document.querySelector('.submit-button');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Submitting...';
+            submitButton.disabled = true;
+            
+            setTimeout(() => {
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success-message';
+                successDiv.innerHTML = '✅ <strong>Request submitted successfully!</strong><br>We will contact you within 24 hours to confirm your analysis requirements and provide a detailed quote.';
+                document.getElementById('form-messages').appendChild(successDiv);
+                
+                // Reset form
+                document.getElementById('service-form').reset();
+                document.getElementById('file-list').innerHTML = '';
+                
+                // Reset button
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+                
+                // Scroll to success message
+                successDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 2000);
+        });
+
+        // Page navigation functionality
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            const targetPage = document.getElementById(pageId + '-page');
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+            
+            // Update active navigation button
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            const activeButton = document.querySelector(`[data-section="${pageId}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+            
+            // Scroll to top of main content
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Navigation button click handlers
+        document.querySelectorAll('.nav-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const pageId = this.dataset.section;
+                showPage(pageId);
+            });
+        });
+
+        // CTA button handler
+        document.querySelector('.cta-button').addEventListener('click', function(e) {
+            e.preventDefault();
+            showPage('request');
+        });
+
+        // Initialize with about page active
+        window.addEventListener('load', function() {
+            showPage('about');
+        });
+
+        // Set minimum date for deadline to today
+        document.getElementById('deadline').min = new Date().toISOString().split('T')[0];
+
+        // Initialize calculator
+        updateCost();
+        
+        // Helper functions for form
+        function toggleOtherPosition() {
+            const position = document.getElementById('position').value;
+            const otherGroup = document.getElementById('other-position-group');
+            const otherInput = document.getElementById('other-position');
+            
+            if (position === 'other') {
+                otherGroup.style.display = 'block';
+                otherInput.required = true;
+            } else {
+                otherGroup.style.display = 'none';
+                otherInput.required = false;
+                otherInput.value = '';
+            }
+        }
+        
+        function toggleOtherExpectation() {
+            const otherChecked = document.querySelector('input[name="expectations"][value="other"]:checked');
+            const otherGroup = document.getElementById('other-expectation-group');
+            const otherInput = document.getElementById('other-expectation');
+            
+            if (otherChecked) {
+                otherGroup.style.display = 'block';
+            } else {
+                otherGroup.style.display = 'none';
+                otherInput.value = '';
+            }
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ae0874705b04cf',t:'MTc1OTg0Njc2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
