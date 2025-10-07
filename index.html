@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Materials Analysis Lab</title>
-    <link rel="icon" type="image/png" href="assets/logo.png" />
+    <title>i-Nano Lab</title>
+    <link rel="icon" type="image/png" href="Images/inanoresearchfacilityDLSUlogo.png" />
     <style>
         body {
             box-sizing: border-box;
@@ -55,6 +55,28 @@
             width: auto;
             max-width: 90vw;
             display: block;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .brand-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.2;
+            color: #2c3e50;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 600px) {
+            .brand-text {
+                display: none;
+            }
         }
 
         @media (max-width: 480px) {
@@ -583,8 +605,11 @@
     <!-- Header -->
     <header class="header">
         <nav class="nav-container">
-            <a class="logo" href="/" aria-label="i-Nano Research Facility home">
-                <img src="assets/logo.png" alt="i-Nano Research Facility logo" />
+            <a class="brand" href="/" aria-label="i-Nano Research Facility home">
+                <span class="logo">
+                    <img src="Images/inanoresearchfacilityDLSUlogo.png" alt="i-Nano Research Facility logo" />
+                </span>
+                <span class="brand-text">i‑Nano Research Facility</span>
             </a>
         </nav>
     </header>
@@ -636,9 +661,9 @@
                     <div class="team-placeholder">
                         <div>
                             <p>🔬 Expert Team</p>
-                            <p>Dr. Sarah Chen - Lab Director</p>
-                            <p>Dr. Michael Rodriguez - Senior Analyst</p>
-                            <p>Dr. Emily Zhang - Materials Specialist</p>
+                            <p>Dr. Gil Nonato Santos - Lab Head</p>
+                            <p>Dr. James Salveo Olarve - Lab Coordinator</p>
+                            <p>Mr. Anthony Gerard Santos - Lab Specialist</p>
                         </div>
                     </div>
                 </div>
