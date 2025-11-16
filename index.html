@@ -20,7 +20,6 @@
             box-sizing: border-box;
         }
 
-        /* Header */
         .header {
             position: fixed;
             top: 0;
@@ -127,7 +126,15 @@
         }
 
         .nav-button-icon {
-            font-size: 1.5rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #27ae60;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
             margin-bottom: 0.25rem;
         }
 
@@ -138,38 +145,14 @@
             line-height: 1.2;
         }
 
-        /* Hero Section */
-        .hero {
-            margin-top: 80px;
-            background: url('https://phenom-dlsu.weebly.com/uploads/2/5/9/7/25977880/whychooseoursemedxservices_orig.png') center/contain no-repeat;
-            background-color: #f8f9fa;
-            color: white;
-            padding: 0;
-            margin-bottom: 0;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            min-height: 500px;
+        /* Emphasize Service Request icon */
+        .nav-button[data-section="request"] .nav-button-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 1.25rem;
         }
 
-        .hero-content {
-            max-width: 800px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            font-weight: 300;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
+        /* Hero section removed */
 
         .cta-button {
             display: inline-block;
@@ -196,7 +179,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 2rem 6rem;
-            margin-top: 0;
+            margin-top: 100px; /* spacing below fixed header after hero removal */
         }
 
         .section {
@@ -243,6 +226,61 @@
             justify-content: center;
             color: #6c757d;
             font-size: 1.1rem;
+        }
+
+        /* Team Section */
+        .team-heading {
+            margin: 0 0 0.75rem 0;
+            color: #2c3e50;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .team-card {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 1.25rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+            text-align: center;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .team-card:hover {
+            transform: translateY(-4px);
+            border-color: #3498db;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .team-photo {
+            width: 112px;
+            height: 112px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+            margin: 0 auto 0.75rem;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.12);
+            background: #f1f3f5;
+        }
+
+        .team-name {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-top: 0.25rem;
+        }
+
+        .team-role {
+            color: #6c757d;
+            font-weight: 500;
+            margin-top: 0.15rem;
         }
 
         /* Cost Analysis Section */
@@ -564,6 +602,10 @@
             .nav-button-text {
                 font-size: 0.6rem;
             }
+
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* Page Navigation */
@@ -599,18 +641,31 @@
             margin-top: 1rem;
             border: 1px solid #c3e6cb;
         }
+        /* Expanded Other expectation input */
+        #other-expectation {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        #other-expectation:focus {
+            outline: none;
+            border-color: #3498db;
+        }
     </style>
 </head>
 <body>
     <!-- Header -->
     <header class="header">
         <nav class="nav-container">
-            <a class="brand" href="/" aria-label="i-Nano Research Facility home">
+            <div class="brand" aria-label="i-Nano Research Facility">
                 <span class="logo">
                     <img src="Images/inanoresearchfacilityDLSUlogo.png" alt="i-Nano Research Facility logo" />
                 </span>
                 <span class="brand-text">i‑Nano Research Facility</span>
-            </a>
+            </div>
         </nav>
     </header>
 
@@ -625,6 +680,10 @@
                 <div class="nav-button-icon">🧮</div>
                 <div class="nav-button-text">Cost Analysis</div>
             </a>
+            <a href="#" class="nav-button" data-section="request">
+                <div class="nav-button-icon">📝</div>
+                <div class="nav-button-text">Service Request</div>
+            </a>
             <a href="#" class="nav-button" data-section="preparation">
                 <div class="nav-button-icon">⚗️</div>
                 <div class="nav-button-text">Sample Prep</div>
@@ -633,23 +692,15 @@
                 <div class="nav-button-icon">🔧</div>
                 <div class="nav-button-text">Extras</div>
             </a>
-            <a href="#" class="nav-button" data-section="request">
-                <div class="nav-button-icon">📝</div>
-                <div class="nav-button-text">Service Request</div>
-            </a>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-        </div>
-    </section>
+    <!-- Hero Section removed -->
 
     <!-- Main Content -->
     <main class="main-content">
         <!-- About Page -->
-        <div id="about-page" class="page active">
+        <div id="about-page" class="page">
             <section class="section">
                 <h2>About Our Laboratory</h2>
                 <div class="about-grid">
@@ -658,12 +709,24 @@
                         <p>With over 15 years of experience in materials characterization, our team of expert analysts delivers precise, reliable results for academic research, industrial R&D, and quality control applications.</p>
                         <p>We specialize in surface morphology analysis, elemental composition mapping, failure analysis, and contamination identification across a wide range of materials including metals, ceramics, polymers, and composites.</p>
                     </div>
-                    <div class="team-placeholder">
-                        <div>
-                            <p>🔬 Expert Team</p>
-                            <p>Dr. Gil Nonato Santos - Lab Head</p>
-                            <p>Dr. James Salveo Olarve - Lab Coordinator</p>
-                            <p>Mr. Anthony Gerard Santos - Lab Specialist</p>
+                    <div>
+                        <h3 class="team-heading">🔬 Expert Team</h3>
+                        <div class="team-grid" role="list">
+                            <div class="team-card" role="listitem">
+                                <img class="team-photo" src="Images/noni.png" alt="Portrait of Dr. Gil Nonato Santos, Lab Head" loading="lazy" decoding="async" width="112" height="112" onerror="this.onerror=null; this.src='Images/blankprofile.png';">
+                                <div class="team-name">Dr. Gil Nonato Santos</div>
+                                <div class="team-role">Lab Head</div>
+                            </div>
+                            <div class="team-card" role="listitem">
+                                <img class="team-photo" src="Images/olarve.png" alt="Portrait of Dr. James Salveo Olarve, Lab Coordinator" loading="lazy" decoding="async" width="112" height="112" onerror="this.onerror=null; this.src='Images/blankprofile.png';">
+                                <div class="team-name">Dr. James Salveo Olarve</div>
+                                <div class="team-role">Lab Coordinator</div>
+                            </div>
+                            <div class="team-card" role="listitem">
+                                <img class="team-photo" src="Images/gerard.png" alt="Portrait of Mr. Anthony Gerard Santos, Lab Specialist" loading="lazy" decoding="async" width="112" height="112" onerror="this.onerror=null; this.src='Images/blankprofile.png';">
+                                <div class="team-name">Mr. Anthony Gerard Santos</div>
+                                <div class="team-role">Lab Specialist</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -822,7 +885,7 @@
         </div>
 
         <!-- Service Request Page -->
-        <div id="request-page" class="page">
+        <div id="request-page" class="page active">
             <section class="section">
                 <h2>Service Request Form</h2>
                 <div class="form-container">
@@ -909,6 +972,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="turnaround">Allowance for the turnover of results *</label>
+                                <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">Select the preferred time window for receiving your results.</p>
                                 <select id="turnaround" name="turnaround" required>
                                     <option value="">Select turnaround time</option>
                                     <option value="2-3-days">2-3 days</option>
@@ -918,7 +982,10 @@
                                 </select>
                             </div>
                             <div class="form-group full-width">
-                                <label for="research-objectives">What is/are your research objectives related to the surface morphology (and elemental composition) of your sample? *</label>
+                                <label for="research-objectives">Analysis Objectives *</label>
+                                <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
+                                    What is/are your research objectives related to the surface morphology (and elemental composition) of your sample?
+                                </p>
                                 <textarea id="research-objectives" name="researchObjectives" rows="4" required></textarea>
                             </div>
                             <div class="form-group full-width">
@@ -926,8 +993,10 @@
                                 <textarea id="sample-characteristics" name="sampleCharacteristics" rows="4" required></textarea>
                             </div>
                             <div class="form-group full-width">
-                                <label for="sem-expectations">What do you intend to see on the SEM micrographs? What do you want to prove? Explain briefly what you expect to see (shapes, structures, sizes, or particular organisms) *</label>
-                                <textarea id="sem-expectations" name="semExpectations" rows="4" required></textarea>
+                                <label for="sem-expectations">SEM Micrograph Expectations *</label>
+                                <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
+                                    Select the morphology/features you expect to observe in the SEM micrographs.
+                                </p>
                                 <div style="margin-top: 1rem;">
                                     <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Select all that apply:</label>
                                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;">
@@ -970,12 +1039,15 @@
                                 </div>
                             </div>
                             <div class="form-group full-width">
-                                <label for="edx-elements">If you intend to avail the EDX analysis, then kindly specify the chemical elements that you expect to see</label>
+                                <label for="edx-elements">EDX Target Elements</label>
+                                <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
+                                    If you intend to avail the EDX analysis, then kindly specify the chemical elements that you expect to see.
+                                </p>
                                 <textarea id="edx-elements" name="edxElements" rows="3" placeholder="e.g., Carbon (C), Oxygen (O), Silicon (Si), etc."></textarea>
                             </div>
                             <div class="form-group full-width">
-                                <label>Kindly upload clear photos of your sample *<br>
-                                <span style="font-size: 0.9rem; color: #6c757d;">Also, upload reference images to illustrate the features you wish to locate in the SEM micrographs.</span></label>
+                                <label>Upload clear photos *<br>
+                                <span style="font-size: 0.9rem; color: #6c757d;">Upload reference images to illustrate the features you wish to locate in the SEM micrographs.</span></label>
                                 <div class="file-upload" onclick="document.getElementById('file-input').click()">
                                     <input type="file" id="file-input" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;" required>
                                     <p>📎 Click to upload sample photos and reference images</p>
@@ -997,30 +1069,35 @@
         <div class="footer-content">
             <div class="footer-section">
                 <h4>Contact Information</h4>
-                <p>📧 jolarve@gmail.com</p>
+                <p>📧 admin@inanolab.com</p>
                 <p>📞 09298051084</p>
-                <p>📍 Room 113, STRC Building<br>De La Salle University - Manila</p>
+                <p>📍 Room 113, STRC Building,<br>De La Salle University - Manila</p>
             </div>
             <div class="footer-section">
-                <h4>Laboratory Hours</h4>
-                <p>Monday - Friday: 8:00 AM - 6:00 PM</p>
+                <h4>Laboratory Hours (depends on availability)</h4>
+                <p>Monday - Friday: 8:00 AM - 5:00 PM</p>
                 <p>Saturday: 9:00 AM - 5:00 PM</p>
                 <p>Sunday: *Special appointment</p>
                 <p>Emergency analysis available by appointment</p>
             </div>
             <div class="footer-section">
                 <h4>Institutional Affiliation</h4>
-                <p>i-Nano Research Facility</p>
                 <p><a href="https://www.dlsu.edu.ph/colleges/cos/departments/physics/" target="_blank" rel="noopener noreferrer">Department of Physics, DLSU-Manila</a></p>
                 <p><a href="https://www.papsicenter.com/" target="_blank" rel="noopener noreferrer">Philippine Association of Physics and Science Instructors</a></p>
                 <p><a href="https://www.pjmsn.org/" target="_blank" rel="noopener noreferrer">Philippine Journal of Material Science</a></p>
             </div>
-
+            <div class="footer-section">
+                <h4>&copy; <span class="current-year"></span> iNanolab.com</h4>
+                <p>i-Nano Research Facility</p>
+                <p>🖋️ Editor: Dr. Gil Nonato Santos</p>
+                <p>💻 Developer: Dr. James Salveo Olarvve</p>
+            </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2024 i-Nano Research Facility. All rights reserved.</p>
+            <p>&copy; <span class="current-year"></span> i-Nano Research Facility. All rights reserved.</p>
         </div>
     </footer>
+    <script>document.querySelectorAll('.current-year').forEach(function(el){ el.textContent = new Date().getFullYear(); });</script>
 
     <script>
         // Cost Calculator
@@ -1075,7 +1152,7 @@
             document.getElementById('form-messages').innerHTML = '';
             
             // Basic validation
-            const requiredFields = ['full-name', 'email', 'school-name', 'mobile-number', 'school-address', 'position', 'sample-count', 'delivery-date', 'turnaround', 'research-objectives', 'sample-characteristics', 'sem-expectations'];
+            const requiredFields = ['full-name', 'email', 'school-name', 'mobile-number', 'school-address', 'position', 'sample-count', 'delivery-date', 'turnaround', 'research-objectives', 'sample-characteristics'];
             let isValid = true;
             
             requiredFields.forEach(fieldId => {
@@ -1209,6 +1286,16 @@
             
             // Scroll to top of main content
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Toggle footer visibility (only show on About page)
+            const siteFooter = document.querySelector('footer.footer');
+            if (siteFooter) {
+                if (pageId === 'about') {
+                    siteFooter.style.display = 'block';
+                } else {
+                    siteFooter.style.display = 'none';
+                }
+            }
         }
 
         // Navigation button click handlers
@@ -1220,19 +1307,25 @@
             });
         });
 
-        // CTA button handler
-        document.querySelector('.cta-button').addEventListener('click', function(e) {
-            e.preventDefault();
+        // CTA button handler (guard if button exists)
+        const ctaButton = document.querySelector('.cta-button');
+        if (ctaButton) {
+            ctaButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                showPage('request');
+            });
+        }
+
+        // Initialize with request page active
+        window.addEventListener('load', function() {
             showPage('request');
         });
 
-        // Initialize with about page active
-        window.addEventListener('load', function() {
-            showPage('about');
-        });
-
-        // Set minimum date for deadline to today
-        document.getElementById('deadline').min = new Date().toISOString().split('T')[0];
+        // Set minimum date for delivery-date to today
+        const deliveryDateInput = document.getElementById('delivery-date');
+        if (deliveryDateInput) {
+            deliveryDateInput.min = new Date().toISOString().split('T')[0];
+        }
 
         // Initialize calculator
         updateCost();
