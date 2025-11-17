@@ -436,7 +436,18 @@
             outline: none;
             border-color: #3498db;
         }
-        .voucher-row .btn-apply {
+        .voucher-row input[type="text"][disabled] {
+            background: #f1f3f5;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+        .voucher-actions { 
+            margin-top: 0.5rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+        }
+        .voucher-row .btn-apply, .voucher-actions .btn-apply {
             padding: 0.55rem 0.9rem;
             border: none;
             border-radius: 6px;
@@ -445,8 +456,8 @@
             font-weight: 600;
             cursor: pointer;
         }
-        .voucher-row .btn-apply:hover { background: #2980b9; }
-        .voucher-row .btn-clear {
+        .voucher-row .btn-apply:hover, .voucher-actions .btn-apply:hover { background: #2980b9; }
+        .voucher-row .btn-clear, .voucher-actions .btn-clear {
             padding: 0.45rem 0.6rem;
             border: none;
             background: transparent;
@@ -1331,6 +1342,7 @@
                 <p>i-Nano Research Facility</p>
                 <p>🖋️ Head Editor: Dr. Gil Nonato Santos</p>
                 <p>💻 Head Developer: Dr. James Salveo Olarvve</p>
+                <p><a href="privacy.html" target="_self" rel="noopener">Privacy Policy</a></p>
             </div>
         </div>
         <div class="footer-bottom">
@@ -2018,6 +2030,8 @@
                 <label for="voucher-input">Voucher Code</label>
                 <div class="voucher-row">
                     <input id="voucher-input" type="text" placeholder="Enter code" autocomplete="off" inputmode="text" />
+                </div>
+                <div class="voucher-actions">
                     <button id="voucher-apply" type="button" class="btn-apply">Apply</button>
                     <button id="voucher-clear" type="button" class="btn-clear">Remove</button>
                 </div>
@@ -2051,6 +2065,10 @@
             const applyBtn = document.getElementById('voucher-apply');
             const clearBtn = document.getElementById('voucher-clear');
 
+            // Initial button visibility: only Apply visible until a valid code is applied
+            if (clearBtn) clearBtn.style.display = 'none';
+            if (applyBtn) applyBtn.style.display = 'inline-block';
+
             applyBtn.addEventListener('click', function() {
                 const code = (input.value || '').trim().toLowerCase();
                 if (lastBaseServicesTotal === null) {
@@ -2061,10 +2079,18 @@
                     appliedVoucher = 'promo';
                     setVoucherStatus('10% discount applied.', 'success');
                     updateServicesCost();
+                    // Toggle buttons: hide Apply, show Remove
+                    if (applyBtn) applyBtn.style.display = 'none';
+                    if (clearBtn) clearBtn.style.display = 'inline-block';
+                    if (input) input.disabled = true;
                 } else {
                     appliedVoucher = null;
                     setVoucherStatus('Invalid voucher code.', 'error');
                     updateServicesCost();
+                    // Keep Apply visible, hide Remove on invalid code
+                    if (applyBtn) applyBtn.style.display = 'inline-block';
+                    if (clearBtn) clearBtn.style.display = 'none';
+                    if (input) input.disabled = false;
                 }
             });
 
@@ -2073,6 +2099,10 @@
                 if (input) input.value = '';
                 setVoucherStatus('', null);
                 updateServicesCost();
+                // Restore buttons: show Apply, hide Remove
+                if (applyBtn) applyBtn.style.display = 'inline-block';
+                if (clearBtn) clearBtn.style.display = 'none';
+                if (input) input.disabled = false;
             });
         }
 
@@ -2083,6 +2113,7 @@
         let galleryThumbs = [];
         let currentLightboxIndex = -1;
         let lastFocusedElement = null;
+        let lightboxHistoryActive = false;
 
         function setLightboxImage() {
             const imgEl = document.getElementById('lightbox-image');
@@ -2105,9 +2136,18 @@
             document.addEventListener('keydown', onLightboxKeydown);
             const closeBtn = document.getElementById('lightbox-close');
             if (closeBtn) closeBtn.focus();
+
+            // Push a history state so the Back button can close the lightbox
+            if (!lightboxHistoryActive) {
+                try {
+                    history.pushState({ lightbox: true, index: currentLightboxIndex }, '');
+                } catch (_) { /* no-op */ }
+                window.addEventListener('popstate', onLightboxPopstate);
+                lightboxHistoryActive = true;
+            }
         }
 
-        function closeLightbox() {
+        function closeLightbox(fromPopstate) {
             const overlay = document.getElementById('lightbox');
             overlay.style.display = 'none';
             overlay.setAttribute('aria-hidden', 'true');
@@ -2115,6 +2155,15 @@
             document.removeEventListener('keydown', onLightboxKeydown);
             if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
                 lastFocusedElement.focus();
+            }
+
+            // Clean up history handling; if user clicked close, pop our pushed state
+            if (lightboxHistoryActive) {
+                window.removeEventListener('popstate', onLightboxPopstate);
+                lightboxHistoryActive = false;
+                if (!fromPopstate) {
+                    try { history.back(); } catch (_) { /* no-op */ }
+                }
             }
         }
 
@@ -2134,6 +2183,12 @@
             if (e.key === 'Escape') closeLightbox();
             if (e.key === 'ArrowRight') nextLightbox();
             if (e.key === 'ArrowLeft') prevLightbox();
+        }
+
+        function onLightboxPopstate(e) {
+            if (lightboxHistoryActive) {
+                closeLightbox(true);
+            }
         }
 
         function initGallery() {
