@@ -311,6 +311,15 @@
             font-size: 1.5rem;
         }
 
+        /* About Services visuals */
+        .service-header {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
         .price {
             font-size: 2rem;
             font-weight: 700;
@@ -400,6 +409,77 @@
             font-weight: 700;
             color: #3498db;
         }
+
+        /* Voucher + Summary (Request form) */
+        .services-voucher {
+            margin-top: 0.75rem;
+        }
+        .services-voucher label {
+            font-weight: 600;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+        .voucher-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .voucher-row input[type="text"] {
+            flex: 1;
+            padding: 0.6rem 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+        .voucher-row input[type="text"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .voucher-row .btn-apply {
+            padding: 0.55rem 0.9rem;
+            border: none;
+            border-radius: 6px;
+            background: #3498db;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .voucher-row .btn-apply:hover { background: #2980b9; }
+        .voucher-row .btn-clear {
+            padding: 0.45rem 0.6rem;
+            border: none;
+            background: transparent;
+            color: #6c757d;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        #voucher-status {
+            font-size: 0.9rem;
+            margin-top: 0.35rem;
+        }
+        #voucher-status.success { color: #155724; }
+        #voucher-status.error { color: #721c24; }
+
+        .services-summary {
+            margin-top: 0.5rem;
+        }
+        .services-summary .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-top: 0.25rem;
+        }
+        .services-summary .summary-label {
+            color: #6c757d;
+        }
+        .services-summary .summary-value {
+            min-width: 160px;
+            text-align: right;
+            font-weight: 600;
+        }
+        .services-summary .summary-total .summary-label { color: #2c3e50; font-weight: 700; }
+        .services-summary .summary-total .summary-value { color: #3498db; font-weight: 700; }
 
         /* Sample Preparation */
         .prep-steps {
@@ -686,6 +766,74 @@
             outline: none;
             border-color: #3498db;
         }
+        /* Gallery under Our Services */
+        .samples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .sample-thumb {
+            width: 100%;
+            height: clamp(160px, 22vw, 220px);
+            object-fit: contain;
+            background-color: #f3f3f3;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: zoom-in;
+            display: block;
+        }
+        .sample-thumb:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+        }
+        .sample-thumb:focus {
+            outline: 3px solid #3498db;
+            outline-offset: 2px;
+        }
+        /* Lightbox */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            z-index: 2000; /* above header/bottom nav (1000) */
+        }
+        .lightbox-img {
+            max-width: 90vw;
+            max-height: 85vh;
+            border-radius: 8px;
+            box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+        }
+        .lightbox-nav,
+        .lightbox-close {
+            position: absolute;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+        .lightbox-nav:hover,
+        .lightbox-close:hover { background: rgba(0,0,0,0.75); }
+        .lightbox-nav:active,
+        .lightbox-close:active { transform: scale(0.96); }
+        .lightbox-prev { left: 1rem; top: 50%; transform: translateY(-50%); }
+        .lightbox-next { right: 1rem; top: 50%; transform: translateY(-50%); }
+        .lightbox-close { top: 1rem; right: 1rem; }
+        @media (max-width: 768px) {
+            .sample-thumb { height: 160px; }
+        }
     </style>
 </head>
 <body>
@@ -761,6 +909,51 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </section>
+            <!-- Our Services Cards -->
+            <section class="section">
+                <h3 class="team-heading">🧪 Our Services</h3>
+                <div class="pricing-grid">
+                    <div class="pricing-card service-card">
+                        <img class="service-header" src="Images/headerSEM.png" alt="Basic SEM service header" loading="lazy" decoding="async" onerror="this.onerror=null; this.style.display='none';">
+                        <h3>SEM</h3>
+                        <p style="font-size: 0.95rem; color: #6c757d; margin: -0.25rem 0 0.75rem;">Scanning Electron Microscopy: Surface Morphology</p>
+                    </div>
+                    <div class="pricing-card service-card">
+                        <img class="service-header" src="Images/headerSEMEDX.png" alt="SEM and EDX service header" loading="lazy" decoding="async" onerror="this.onerror=null; this.style.display='none';">
+                        <h3>EDS/EDX</h3>
+                        <p style="font-size: 0.95rem; color: #6c757d; margin: -0.25rem 0 0.75rem;">Energy Dispersive X-ray Spectroscopy: Elemental Composition</p>
+                    </div>
+                </div>
+                <!-- Sample Images Gallery -->
+                <h4 class="team-heading" style="margin-top: 1.5rem;">🖼️ Sample Micrographs and Elemental Compositions</h4>
+                <p style="font-size: 0.95rem; color: #6c757d; margin: -0.5rem 0 1rem;">
+                    A few representative SEM micrographs and EDX results from our lab. Click to enlarge.
+                </p>
+                <div id="samples-grid" class="samples-grid" aria-live="polite"></div>
+                
+                <!-- Download Sample Raw Data -->
+                <h4 class="team-heading" style="margin-top: 1.5rem;">📥 Sample Raw Data</h4>
+                <div class="extra-service" id="raw-data-download">
+                    <p style="margin-top: 0; color: #6c757d;">
+                        Download a sample package containing SEM micrographs and EDX outputs (images, spectrum, and CSV data).
+                    </p>
+                    <!-- TODO: Replace href with your Google Drive folder link -->
+                    <a class="cta-button" href="https://drive.google.com/drive/folders/1Z2xSd-d935kg6bFXfIpvtg8A_0EWd5Td?usp=sharing" target="_blank" rel="noopener noreferrer"
+                       aria-label="Download sample SEM and EDX raw data from Google Drive">
+                        Download Sample Raw Data
+                    </a>
+                </div>
+
+                <!-- Feedback Section -->
+                <h4 class="team-heading" id="feedback-title" style="margin-top: 1.5rem;">💬 Feedback</h4>
+                <div class="extra-service" id="feedback-section" role="region" aria-labelledby="feedback-title">
+                    <p style="margin-top:0; color:#6c757d; font-size:0.95rem;">
+                        We’d love your feedback! Was our service helpful, timely, and clear? Share your experience below. This embed loads Facebook’s Comments widget (third‑party) which may set cookies. Viewers are subject to Facebook’s <a href="https://www.facebook.com/policy.php" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                    </p>
+                    <div id="fb-root"></div>
+                    <div class="fb-comments" id="feedback-comments" data-href="https://phenom-dlsu.weebly.com/" data-width="" data-numposts="7"></div>
                 </div>
             </section>
         </div>
@@ -902,9 +1095,9 @@
                 <h2>Service Request Form</h2>
                 <div class="form-container">
                     <form id="service-form">
-                        <!-- I. Requestee Information -->
+                        <!-- A. Requestee Information -->
                         <div class="form-card">
-                            <h3 class="form-section-title">I. Requestee Information</h3>
+                            <h3 class="form-section-title">A. Requestee Information</h3>
                             <p class="form-section-help">Please provide your complete contact and institutional details. This information will be used for communication, documentation, and issuing official records.</p>
                             <div class="form-grid">
                                 <div class="form-group">
@@ -949,9 +1142,9 @@
                             </div>
                         </div>
 
-                        <!-- II. Requested Services -->
+                        <!-- B. Requested Services -->
                         <div class="form-card">
-                            <h3 class="form-section-title">II. Requested Services</h3>
+                            <h3 class="form-section-title">B. Requested Services</h3>
                             <p class="form-section-help">Select the type of analysis you require and provide details about your samples and preferred schedule. This helps us plan the procedure and estimate the turnaround time.</p>
                             <div class="form-grid">
                                 <div class="form-group">
@@ -1011,9 +1204,9 @@
                             </div>
                         </div>
 
-                        <!-- III. Sample Characteristics -->
+                        <!-- C. Sample Characteristics -->
                         <div class="form-card">
-                            <h3 class="form-section-title">III. Sample Characteristics &amp; Research Requirements</h3>
+                            <h3 class="form-section-title">C. Sample Characteristics &amp; Research Requirements</h3>
                             <p class="form-section-help">Describe your sample and specify your research objectives. Clear and accurate information ensures we perform the SEM/EDX analysis according to your expectations.</p>
                             <div class="form-grid">
                                 <div class="form-group full-width">
@@ -1090,17 +1283,26 @@
                                         <p>📎 Click to upload sample photos and reference images</p>
                                         <p style="font-size: 0.9rem; color: #6c757d;">Accepted formats: JPG, PNG, PDF, DOC (Max 10MB each)</p>
                                     </div>
+                                    <div id="upload-messages" aria-live="polite" style="margin-top:0.5rem;"></div>
                                     <div id="file-list"></div>
                                 </div>
                             </div>
                         </div>
                         <button type="submit" class="submit-button">Submit Service Request</button>
-                        <div id="form-messages"></div>
+                        <div id="form-messages" aria-live="polite"></div>
                     </form>
                 </div>
             </section>
         </div>
     </main>
+    
+    <!-- Lightbox Overlay -->
+    <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Sample image viewer" aria-hidden="true">
+        <button id="lightbox-close" class="lightbox-close" type="button" aria-label="Close viewer">✕</button>
+        <button id="lightbox-prev" class="lightbox-nav lightbox-prev" type="button" aria-label="Previous image">‹</button>
+        <img id="lightbox-image" class="lightbox-img" alt="">
+        <button id="lightbox-next" class="lightbox-nav lightbox-next" type="button" aria-label="Next image">›</button>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -1138,6 +1340,17 @@
     <script>document.querySelectorAll('.current-year').forEach(function(el){ el.textContent = new Date().getFullYear(); });</script>
 
     <script>
+        // Configuration
+        // Google Apps Script Web App endpoints & API key
+        const GAS_UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbwinVplLmTXIEcp-ekRTnGEwUOpZJgoV7thg1AvJpd5XpMVNxx_EwQifyywLTYHIqlclg/exec';
+        const API_KEY = '941E5441B3FC73E61214612443D92'; // Provided key
+        // Client-side state of uploaded files: {fileId, name, size, type}
+        const uploadedFiles = [];
+        // Voucher state for Request total
+        let appliedVoucher = null; // 'promo' | null
+        const VOUCHER_RATE = 0.10;
+        let lastBaseServicesTotal = null; // number|null
+
         // Cost tables loader (from CSV assets)
         const costTables = { basic: {}, semedx: {} };
 
@@ -1201,11 +1414,38 @@
             const selectedChar = document.querySelector('input[name="characterization"]:checked');
             const key = selectedChar && selectedChar.value === 'sem-and-edx' ? 'semedx' : 'basic';
             const table = costTables[key] || {};
-            const total = typeof table[samples] !== 'undefined' ? table[samples] : null;
+            const baseTotal = typeof table[samples] !== 'undefined' ? Number(table[samples]) : null;
+            lastBaseServicesTotal = baseTotal;
+
             const el = document.getElementById('services-total-cost');
-            if (el) {
-                el.textContent = total !== null ? Number(total).toLocaleString() : '—';
+            const summary = document.getElementById('services-summary');
+            const subEl = document.getElementById('services-subtotal');
+            const discEl = document.getElementById('services-discount');
+            const finalEl = document.getElementById('services-total-final');
+
+            // Default: hide summary until a valid voucher is applied and base total exists
+            if (summary) summary.hidden = true;
+
+            if (baseTotal === null) {
+                if (el) el.textContent = '—';
+                return;
             }
+
+            // Apply voucher if present
+            let discountAmount = 0;
+            let finalTotal = baseTotal;
+            if (appliedVoucher === 'promo') {
+                discountAmount = baseTotal * VOUCHER_RATE;
+                finalTotal = baseTotal - discountAmount;
+                if (summary && subEl && discEl && finalEl) {
+                    subEl.textContent = Number(baseTotal).toLocaleString();
+                    discEl.textContent = '-' + Number(discountAmount).toLocaleString();
+                    finalEl.textContent = Number(finalTotal).toLocaleString();
+                    summary.hidden = false;
+                }
+            }
+
+            if (el) el.textContent = Number(finalTotal).toLocaleString();
         }
 
         // Add event listeners for calculator
@@ -1236,35 +1476,334 @@
             });
         }
 
-        // File upload handling
-        document.getElementById('file-input').addEventListener('change', function(e) {
+        // Utility: find uploaded file index by fileId
+        function findUploadedIndex(fileId){
+            return uploadedFiles.findIndex(f => f.fileId === fileId);
+        }
+
+        // Render uploaded files list
+        function renderUploadedFiles(){
             const fileList = document.getElementById('file-list');
+            if (!fileList) return;
             fileList.innerHTML = '';
-            
-            if (e.target.files.length > 0) {
-                const filesDiv = document.createElement('div');
-                filesDiv.style.marginTop = '1rem';
-                
-                Array.from(e.target.files).forEach(file => {
-                    const fileItem = document.createElement('div');
-                    fileItem.style.padding = '0.5rem';
-                    fileItem.style.background = '#f8f9fa';
-                    fileItem.style.borderRadius = '3px';
-                    fileItem.style.marginBottom = '0.5rem';
-                    fileItem.innerHTML = `📎 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-                    filesDiv.appendChild(fileItem);
-                });
-                
-                fileList.appendChild(filesDiv);
+            if (!uploadedFiles.length){
+                const empty = document.createElement('div');
+                empty.style.marginTop = '0.75rem';
+                empty.style.fontSize = '0.85rem';
+                empty.style.color = '#6c757d';
+                empty.textContent = 'No files uploaded yet.';
+                fileList.appendChild(empty);
+                return;
             }
+            uploadedFiles.forEach(f => {
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.alignItems = 'center';
+                row.style.justifyContent = 'space-between';
+                row.style.background = '#f8f9fa';
+                row.style.padding = '0.5rem 0.75rem';
+                row.style.borderRadius = '4px';
+                row.style.marginBottom = '0.5rem';
+                row.style.fontSize = '0.85rem';
+                row.setAttribute('data-file-id', f.fileId);
+                const info = document.createElement('span');
+                info.textContent = `📎 ${f.name} (${(f.size/1024/1024).toFixed(2)} MB)`;
+                const actions = document.createElement('div');
+                actions.style.display = 'flex';
+                actions.style.alignItems = 'center';
+                actions.style.gap = '0.5rem';
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.textContent = '×';
+                delBtn.setAttribute('aria-label', `Remove ${f.name}`);
+                delBtn.style.cursor = 'pointer';
+                delBtn.style.background = '#dc3545';
+                delBtn.style.color = '#fff';
+                delBtn.style.border = 'none';
+                delBtn.style.width = '24px';
+                delBtn.style.height = '24px';
+                delBtn.style.borderRadius = '4px';
+                delBtn.style.fontSize = '16px';
+                delBtn.style.lineHeight = '20px';
+                delBtn.style.display = 'flex';
+                delBtn.style.alignItems = 'center';
+                delBtn.style.justifyContent = 'center';
+                delBtn.addEventListener('click', () => deleteUploadedFile(f.fileId, f.name));
+                actions.appendChild(delBtn);
+                row.appendChild(info);
+                row.appendChild(actions);
+                fileList.appendChild(row);
+            });
+        }
+
+        function deleteUploadedFile(fileId, name){
+            if (!fileId) return;
+            const url = `${GAS_UPLOAD_URL}?key=${encodeURIComponent(API_KEY)}&fileId=${encodeURIComponent(fileId)}`;
+            // Immediate persistent notice while updating the list
+            const preMsg = renderUploadMessage(`🗑️ Deleting ${name} — updating list…`, 'info', 0);
+            fetch(url)
+                .then(r => r.json().catch(()=>({raw:r.status})))
+                .then(resp => {
+                    const idx = findUploadedIndex(fileId);
+                    if (idx !== -1){
+                        uploadedFiles.splice(idx,1);
+                        renderUploadedFiles();
+                        // Wait until the row is gone from the DOM before finalizing message
+                        const list = document.getElementById('file-list');
+                        const sel = `[data-file-id="${fileId}"]`;
+                        let tries = 0;
+                        (function waitRemoval(){
+                            const exists = !!(list && list.querySelector(sel));
+                            if (!exists) {
+                                if (preMsg && preMsg.parentNode) preMsg.parentNode.removeChild(preMsg);
+                                renderUploadMessage(`✅ Deleted ${name}`, 'success');
+                            } else if (tries++ < 10) {
+                                requestAnimationFrame(waitRemoval);
+                            } else {
+                                // Fallback: clear the pre-message and show success anyway
+                                if (preMsg && preMsg.parentNode) preMsg.parentNode.removeChild(preMsg);
+                                renderUploadMessage(`✅ Deleted ${name}`, 'success');
+                            }
+                        })();
+                    } else {
+                        if (preMsg && preMsg.parentNode) preMsg.parentNode.removeChild(preMsg);
+                        renderUploadMessage(`⚠️ File not found locally after delete: ${name}`, 'info');
+                    }
+                })
+                .catch(err => {
+                    if (preMsg && preMsg.parentNode) preMsg.parentNode.removeChild(preMsg);
+                    renderUploadMessage(`❌ Delete failed for ${name}: ${err.message || err}`, 'error');
+                });
+        }
+
+        // Convert File to base64 data URL
+        function fileToDataUrl(file){
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error || new Error('File read error'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function uploadSingleFile(file){
+            // Dedupe by name+size
+            if (uploadedFiles.some(f => f.name === file.name && f.size === file.size)){
+                renderUploadMessage(`Skipping duplicate: ${file.name}`, 'info');
+                return;
+            }
+            const errors = validateFiles([file], 10);
+            if (errors.length){
+                renderUploadMessage('❌ File validation failed:<br>' + errors.map(e => `• ${e}`).join('<br>'), 'error');
+                return;
+            }
+            renderUploadMessage(`Uploading ${file.name}…`, 'info');
+            let dataUrl;
+            try {
+                dataUrl = await fileToDataUrl(file);
+            } catch (err){
+                renderUploadMessage(`❌ Read failed: ${file.name} - ${err.message || err}`, 'error');
+                return;
+            }
+            const body = new URLSearchParams({
+                key: API_KEY,
+                data: dataUrl,
+                mimetype: file.type || 'application/octet-stream',
+                filename: file.name
+            });
+            try {
+                const resp = await fetch(GAS_UPLOAD_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body
+                });
+                const text = await resp.text();
+                let json; try { json = JSON.parse(text); } catch(_) {}
+                // Strictly require Drive fileId from JSON; do not fall back to filename/text
+                const fileId = json && json.fileId ? json.fileId : null;
+                const serverFilename = json && json.filename ? json.filename : file.name;
+                if (!fileId) {
+                    renderUploadMessage(`❌ Upload response missing fileId (expected JSON { fileId }) for ${file.name}`, 'error');
+                    return;
+                }
+                // Show immediate acknowledgment while preparing the list entry
+                const preMsg = renderUploadMessage(`✅ Uploaded ${file.name} — adding to list…`, 'success', 0);
+                // Store only the Drive fileId; keep original name for display
+                uploadedFiles.push({ fileId, name: file.name, size: file.size, type: file.type, serverFilename });
+                renderUploadedFiles();
+                // After the row renders, replace the pre-message with the final success
+                const list = document.getElementById('file-list');
+                const sel = `[data-file-id="${fileId}"]`;
+                let tries = 0;
+                (function checkInserted(){
+                    if (list && list.querySelector(sel)) {
+                        if (preMsg && preMsg.parentNode) preMsg.parentNode.removeChild(preMsg);
+                        renderUploadMessage(`✅ Uploaded ${file.name}`, 'success');
+                    } else if (tries++ < 10) {
+                        requestAnimationFrame(checkInserted);
+                    } else {
+                        // Fallback: clear the pre-message to avoid lingering, then show final success
+                        if (preMsg && preMsg.parentNode) preMsg.parentNode.removeChild(preMsg);
+                        renderUploadMessage(`✅ Uploaded ${file.name}`, 'success');
+                    }
+                })();
+            } catch (err){
+                renderUploadMessage(`❌ Upload failed: ${file.name} - ${err.message || err}`, 'error');
+            }
+        }
+
+        // Auto-upload handler on selection
+        document.getElementById('file-input').addEventListener('change', async function(e){
+            const files = Array.from(e.target.files || []);
+            if (!files.length) return;
+            for (const f of files){
+                // Sequential upload to reduce load
+                await uploadSingleFile(f);
+            }
+            // Clear native file input so re-selecting same file triggers change event again
+            e.target.value = '';
         });
+        // Initial render
+        renderUploadedFiles();
+
+        // Helpers: gather form meta for backend (serialize essential fields)
+        function collectFormMeta() {
+            const form = document.getElementById('service-form');
+            const getVal = id => (document.getElementById(id)?.value || '').trim();
+            const getRadio = name => {
+                const el = document.querySelector(`input[name="${name}"]:checked`);
+                return el ? el.value : '';
+            };
+            const getExpectations = () => Array.from(document.querySelectorAll('input[name="expectations"]:checked')).map(c => c.value);
+            return {
+                fullName: getVal('full-name'),
+                email: getVal('email'),
+                mobileNumber: getVal('mobile-number'),
+                position: (document.getElementById('position')?.value || ''),
+                otherPosition: getVal('other-position'),
+                schoolName: getVal('school-name'),
+                schoolAddress: getVal('school-address'),
+                characterization: getRadio('characterization'),
+                sampleCount: getVal('sample-count'),
+                conductive: getRadio('conductive'),
+                deliveryDate: getVal('delivery-date'),
+                turnaround: getVal('turnaround'),
+                researchObjectives: getVal('research-objectives'),
+                sampleCharacteristics: getVal('sample-characteristics'),
+                expectations: getExpectations(),
+                otherExpectation: getVal('other-expectation'),
+                edxElements: getVal('edx-elements'),
+                submittedAt: new Date().toISOString(),
+                pageOrigin: location.href,
+                uploadedFileIds: uploadedFiles.map(f => f.fileId),
+                // Voucher + totals snapshot
+                voucherCode: appliedVoucher || '',
+                discountRate: appliedVoucher === 'promo' ? VOUCHER_RATE : 0,
+                baseServicesTotal: lastBaseServicesTotal,
+                discountAmount: appliedVoucher === 'promo' && lastBaseServicesTotal != null ? (lastBaseServicesTotal * VOUCHER_RATE) : 0,
+                finalServicesTotal: lastBaseServicesTotal != null ? (lastBaseServicesTotal - (appliedVoucher === 'promo' ? lastBaseServicesTotal * VOUCHER_RATE : 0)) : null
+            };
+        }
+
+        function bytesToMB(n){ return (n/1024/1024).toFixed(2); }
+
+        function validateFiles(files, maxMB = 10) {
+            const allowedExts = ['jpg','jpeg','png','gif','webp','pdf','doc','docx'];
+            const errors = [];
+            Array.from(files).forEach(f => {
+                const ext = (f.name.split('.').pop() || '').toLowerCase();
+                if (!allowedExts.includes(ext)) {
+                    errors.push(`Unsupported file type: ${f.name}`);
+                }
+                const maxBytes = maxMB * 1024 * 1024;
+                if (f.size > maxBytes) {
+                    errors.push(`File too large (> ${maxMB} MB): ${f.name} (${bytesToMB(f.size)} MB)`);
+                }
+            });
+            return errors;
+        }
+
+        function renderMessage(html, kind = 'info') {
+            const box = document.getElementById('form-messages');
+            if (!box) return;
+            const colors = {
+                error: { bg: '#f8d7da', fg: '#721c24', border: '#f5c6cb' },
+                success: { bg: '#d4edda', fg: '#155724', border: '#c3e6cb' },
+                info: { bg: '#e2e3e5', fg: '#383d41', border: '#d6d8db' }
+            };
+            const c = colors[kind] || colors.info;
+            const div = document.createElement('div');
+            div.style.background = c.bg;
+            div.style.color = c.fg;
+            div.style.padding = '1rem';
+            div.style.borderRadius = '5px';
+            div.style.marginTop = '1rem';
+            div.style.border = `1px solid ${c.border}`;
+            div.innerHTML = html;
+            box.appendChild(div);
+            return div;
+        }
+
+        // Upload-specific transient messages below the upload control
+        function renderUploadMessage(html, kind = 'info', ttlMs = 2000) {
+            const box = document.getElementById('upload-messages');
+            if (!box) return;
+            const colors = {
+                error: { bg: '#f8d7da', fg: '#721c24', border: '#f5c6cb' },
+                success: { bg: '#d4edda', fg: '#155724', border: '#c3e6cb' },
+                info: { bg: '#e2e3e5', fg: '#383d41', border: '#d6d8db' }
+            };
+            const c = colors[kind] || colors.info;
+            const div = document.createElement('div');
+            div.style.background = c.bg;
+            div.style.color = c.fg;
+            div.style.padding = '0.6rem 0.8rem';
+            div.style.borderRadius = '5px';
+            div.style.marginTop = '0.5rem';
+            div.style.border = `1px solid ${c.border}`;
+            div.style.fontSize = '0.9rem';
+            div.innerHTML = html;
+            box.appendChild(div);
+            if (ttlMs > 0) {
+                setTimeout(() => {
+                    if (div.parentNode === box) box.removeChild(div);
+                }, ttlMs);
+            }
+            return div;
+        }
+
+        function clearMessages() {
+            const box = document.getElementById('form-messages');
+            if (box) box.innerHTML = '';
+        }
+
+        // (Deprecated) Old batch upload function retained for reference but unused now.
+        // function submitServiceRequestGAS(meta, files, onProgress) { /* deprecated */ }
+
+        // Metadata-only submission (no file blobs; assumes files already uploaded)
+        async function submitServiceMeta(meta){
+            if (!GAS_UPLOAD_URL) throw new Error('Endpoint not configured');
+            const body = new URLSearchParams({
+                key: API_KEY,
+                meta: JSON.stringify(meta),
+                fileIds: JSON.stringify(meta.uploadedFileIds || [])
+            });
+            const resp = await fetch(GAS_UPLOAD_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body
+            });
+            const text = await resp.text();
+            let json; try { json = JSON.parse(text); } catch(_) {}
+            return json || text;
+        }
 
         // Form validation and submission
         document.getElementById('service-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
             // Clear previous messages
-            document.getElementById('form-messages').innerHTML = '';
+            clearMessages();
             
             // Basic validation
             const requiredFields = ['full-name', 'email', 'school-name', 'mobile-number', 'school-address', 'position', 'sample-count', 'delivery-date', 'turnaround', 'research-objectives', 'sample-characteristics'];
@@ -1324,9 +1863,8 @@
                 }
             }
             
-            // Validate file upload
-            const fileInput = document.getElementById('file-input');
-            if (!fileInput.files || fileInput.files.length === 0) {
+            // Validate presence of at least one uploaded file (server-side IDs)
+            if (uploadedFiles.length === 0) {
                 isValid = false;
             }
             
@@ -1339,41 +1877,45 @@
             }
             
             if (!isValid) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error-message';
-                errorDiv.style.background = '#f8d7da';
-                errorDiv.style.color = '#721c24';
-                errorDiv.style.padding = '1rem';
-                errorDiv.style.borderRadius = '5px';
-                errorDiv.style.marginTop = '1rem';
-                errorDiv.innerHTML = '❌ Please fill in all required fields correctly.';
-                document.getElementById('form-messages').appendChild(errorDiv);
+                renderMessage('❌ Please fill in all required fields correctly.', 'error');
                 return;
             }
-            
-            // Simulate form submission
+
+            // Begin metadata submission (files already uploaded individually)
             const submitButton = document.querySelector('.submit-button');
             const originalText = submitButton.textContent;
             submitButton.textContent = 'Submitting...';
             submitButton.disabled = true;
-            
-            setTimeout(() => {
-                const successDiv = document.createElement('div');
-                successDiv.className = 'success-message';
-                successDiv.innerHTML = '✅ <strong>Request submitted successfully!</strong><br>We will contact you within 24 hours to confirm your analysis requirements and provide a detailed quote.';
-                document.getElementById('form-messages').appendChild(successDiv);
-                
-                // Reset form
+            const statusBox = renderMessage('Submitting request…', 'info');
+
+            const meta = collectFormMeta();
+            submitServiceMeta(meta).then(resp => {
+                if (statusBox) statusBox.remove();
+                renderMessage('✅ <strong>Request submitted successfully!</strong><br>We will contact you within 24 hours to confirm your analysis requirements and provide a detailed quote.', 'success');
                 document.getElementById('service-form').reset();
-                document.getElementById('file-list').innerHTML = '';
-                
-                // Reset button
+                // Clear local uploaded files state (optionally could keep)
+                uploadedFiles.length = 0;
+                renderUploadedFiles();
                 submitButton.textContent = originalText;
                 submitButton.disabled = false;
-                
-                // Scroll to success message
-                successDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 2000);
+                const box = document.getElementById('form-messages');
+                if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Reset voucher UI/state
+                appliedVoucher = null;
+                lastBaseServicesTotal = null;
+                const vi = document.getElementById('voucher-input');
+                if (vi) vi.value = '';
+                const vs = document.getElementById('voucher-status');
+                if (vs) { vs.textContent = ''; vs.classList.remove('success','error'); }
+                const summary = document.getElementById('services-summary');
+                if (summary) summary.hidden = true;
+                updateServicesCost();
+            }).catch(err => {
+                if (statusBox) statusBox.remove();
+                renderMessage(`❌ Submission failed: ${err.message || err}`, 'error');
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            });
         });
 
         // Page navigation functionality
@@ -1422,8 +1964,9 @@
             });
         });
 
-        // CTA button handler (guard if button exists)
-        const ctaButton = document.querySelector('.cta-button');
+        // CTA button handler (specific to a dedicated Request CTA only)
+        // Use a specific ID to avoid hijacking other links styled with .cta-button (e.g., download links)
+        const ctaButton = document.getElementById('cta-request');
         if (ctaButton) {
             ctaButton.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -1446,6 +1989,298 @@
         loadCostTables().then(() => {
             updateCost();
             updateServicesCost();
+        });
+
+        // Voucher UI setup and handlers
+        function setVoucherStatus(msg, kind) {
+            const s = document.getElementById('voucher-status');
+            if (!s) return;
+            s.textContent = msg || '';
+            s.classList.remove('success', 'error');
+            if (kind) s.classList.add(kind);
+        }
+
+        function initVoucherUI() {
+            const totalEl = document.getElementById('services-total-cost');
+            if (!totalEl) return; // Request form total not in DOM yet
+            // Choose a host near the total (prefer the calc-result box)
+            const host = totalEl.closest('.calc-result') || totalEl.parentElement;
+            if (!host) return;
+
+            // Avoid duplicate init
+            if (document.getElementById('services-voucher')) return;
+
+            // Voucher block
+            const v = document.createElement('div');
+            v.id = 'services-voucher';
+            v.className = 'services-voucher';
+            v.innerHTML = `
+                <label for="voucher-input">Voucher Code</label>
+                <div class="voucher-row">
+                    <input id="voucher-input" type="text" placeholder="Enter code" autocomplete="off" inputmode="text" />
+                    <button id="voucher-apply" type="button" class="btn-apply">Apply</button>
+                    <button id="voucher-clear" type="button" class="btn-clear">Remove</button>
+                </div>
+                <div id="voucher-status" aria-live="polite"></div>
+            `;
+            host.appendChild(v);
+
+            // Summary block (hidden by default)
+            const sum = document.createElement('div');
+            sum.id = 'services-summary';
+            sum.className = 'services-summary';
+            sum.hidden = true;
+            sum.innerHTML = `
+                <div class="summary-row">
+                    <div class="summary-label">Sub total cost</div>
+                    <div class="summary-value">₱ <span id="services-subtotal"></span></div>
+                </div>
+                <div class="summary-row">
+                    <div class="summary-label">Discount</div>
+                    <div class="summary-value">₱ <span id="services-discount"></span></div>
+                </div>
+                <div class="summary-row summary-total">
+                    <div class="summary-label">Total Cost</div>
+                    <div class="summary-value">₱ <span id="services-total-final"></span></div>
+                </div>
+            `;
+            host.appendChild(sum);
+
+            // Handlers
+            const input = document.getElementById('voucher-input');
+            const applyBtn = document.getElementById('voucher-apply');
+            const clearBtn = document.getElementById('voucher-clear');
+
+            applyBtn.addEventListener('click', function() {
+                const code = (input.value || '').trim().toLowerCase();
+                if (lastBaseServicesTotal === null) {
+                    setVoucherStatus('Total not available yet. Select options first.', 'error');
+                    return;
+                }
+                if (code === 'promo') {
+                    appliedVoucher = 'promo';
+                    setVoucherStatus('10% discount applied.', 'success');
+                    updateServicesCost();
+                } else {
+                    appliedVoucher = null;
+                    setVoucherStatus('Invalid voucher code.', 'error');
+                    updateServicesCost();
+                }
+            });
+
+            clearBtn.addEventListener('click', function() {
+                appliedVoucher = null;
+                if (input) input.value = '';
+                setVoucherStatus('', null);
+                updateServicesCost();
+            });
+        }
+
+        // Initialize voucher UI after page load
+        window.addEventListener('load', initVoucherUI);
+        
+        // Gallery & Lightbox
+        let galleryThumbs = [];
+        let currentLightboxIndex = -1;
+        let lastFocusedElement = null;
+
+        function setLightboxImage() {
+            const imgEl = document.getElementById('lightbox-image');
+            const thumb = galleryThumbs[currentLightboxIndex];
+            if (thumb && imgEl) {
+                imgEl.src = thumb.src;
+                imgEl.alt = thumb.alt || '';
+            }
+        }
+
+        function openLightbox(idx) {
+            if (!galleryThumbs.length) return;
+            currentLightboxIndex = idx;
+            lastFocusedElement = document.activeElement;
+            const overlay = document.getElementById('lightbox');
+            overlay.style.display = 'flex';
+            overlay.setAttribute('aria-hidden', 'false');
+            setLightboxImage();
+            document.body.style.overflow = 'hidden';
+            document.addEventListener('keydown', onLightboxKeydown);
+            const closeBtn = document.getElementById('lightbox-close');
+            if (closeBtn) closeBtn.focus();
+        }
+
+        function closeLightbox() {
+            const overlay = document.getElementById('lightbox');
+            overlay.style.display = 'none';
+            overlay.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', onLightboxKeydown);
+            if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+                lastFocusedElement.focus();
+            }
+        }
+
+        function nextLightbox() {
+            if (!galleryThumbs.length) return;
+            currentLightboxIndex = (currentLightboxIndex + 1) % galleryThumbs.length;
+            setLightboxImage();
+        }
+
+        function prevLightbox() {
+            if (!galleryThumbs.length) return;
+            currentLightboxIndex = (currentLightboxIndex - 1 + galleryThumbs.length) % galleryThumbs.length;
+            setLightboxImage();
+        }
+
+        function onLightboxKeydown(e) {
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowRight') nextLightbox();
+            if (e.key === 'ArrowLeft') prevLightbox();
+        }
+
+        function initGallery() {
+            // If thumbnails exist already, bind them (kept for safety; dynamic builder also binds individually)
+            if (galleryThumbs.length === 0) {
+                const existing = Array.from(document.querySelectorAll('.samples-grid img.sample-thumb'));
+                existing.forEach((img, idx) => {
+                    const index = galleryThumbs.length;
+                    galleryThumbs.push(img);
+                    img.setAttribute('data-index', String(index));
+                    img.tabIndex = 0;
+                    img.addEventListener('click', () => openLightbox(index));
+                    img.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            openLightbox(index);
+                        }
+                    });
+                });
+            }
+            const overlay = document.getElementById('lightbox');
+            if (overlay) {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) closeLightbox();
+                });
+            }
+            const btnPrev = document.getElementById('lightbox-prev');
+            const btnNext = document.getElementById('lightbox-next');
+            const btnClose = document.getElementById('lightbox-close');
+            if (btnPrev) btnPrev.addEventListener('click', prevLightbox);
+            if (btnNext) btnNext.addEventListener('click', nextLightbox);
+            if (btnClose) btnClose.addEventListener('click', closeLightbox);
+        }
+
+        window.addEventListener('load', initGallery);
+
+        // Dynamically build the samples gallery by probing for files like "sample<n>.<ext>"
+        // Option A: Preload off-DOM, then append only after successful load (no placeholders)
+        function buildSamplesGallery(start = 1, max = 50) {
+            const container = document.getElementById('samples-grid');
+            if (!container) return;
+            let loadedCount = 0;
+
+            function registerThumb(img) {
+                const index = galleryThumbs.length;
+                galleryThumbs.push(img);
+                img.setAttribute('data-index', String(index));
+                img.tabIndex = 0;
+                img.addEventListener('click', () => openLightbox(index));
+                img.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openLightbox(index);
+                    }
+                });
+            }
+
+            // Insert the loaded image in numeric order without creating visible placeholders
+            function insertInOrder(imgEl, n) {
+                imgEl.setAttribute('data-n', String(n));
+                const children = Array.from(container.querySelectorAll('img.sample-thumb'));
+                for (let i = 0; i < children.length; i++) {
+                    const childN = parseInt(children[i].getAttribute('data-n') || '0', 10);
+                    if (childN > n) {
+                        container.insertBefore(imgEl, children[i]);
+                        return;
+                    }
+                }
+                container.appendChild(imgEl);
+            }
+
+            const exts = ['.png', '.PNG', '.jpg', '.JPG', '.jpeg', '.JPEG', '.webp'];
+            for (let n = start; n <= max; n++) {
+                // Build ordered candidates: prefer simple names, then legacy parentheses variant
+                const candidates = [];
+                for (const ext of exts) {
+                    candidates.push(`Images/sample${n}${ext}`);
+                    candidates.push(`Images/Sample${n}${ext}`);
+                }
+                for (const base of ['Samples', 'samples']) {
+                    for (const ext of exts) {
+                        const name = `${base} (${n})${ext}`;
+                        candidates.push(`Images/${name}`);
+                        candidates.push(`Images/${encodeURIComponent(name)}`);
+                    }
+                }
+
+                // Preloader image (off-DOM)
+                const pre = new Image();
+                pre.decoding = 'async';
+                const altText = `Sample micrograph ${n}`;
+                let attempt = 0;
+
+                const tryNext = () => {
+                    if (attempt < candidates.length) {
+                        pre.src = candidates[attempt++];
+                    } else {
+                        console.warn(`Gallery: no file found for index ${n}. Tried:`, candidates);
+                        // Nothing appended for this index
+                        pre.onload = pre.onerror = null;
+                    }
+                };
+
+                pre.onload = () => {
+                    // Reuse the preloader element as the final thumbnail
+                    pre.className = 'sample-thumb';
+                    pre.alt = altText;
+                    // Do NOT set loading="lazy" here; preload already fetched the resource
+                    insertInOrder(pre, n);
+                    registerThumb(pre);
+                    loadedCount++;
+                    pre.onload = pre.onerror = null;
+                };
+
+                pre.onerror = () => {
+                    tryNext();
+                };
+
+                tryNext();
+            }
+
+            // If nothing loaded, show a gentle message
+            setTimeout(() => {
+                if (loadedCount === 0) {
+                    const note = document.createElement('div');
+                    note.style.marginTop = '0.75rem';
+                    note.style.color = '#6c757d';
+                    note.style.fontSize = '0.95rem';
+                    note.textContent = 'No sample images found. Expected files like "Images/sample1.png"';
+                    container.appendChild(note);
+                }
+            }, 1600);
+        }
+
+        window.addEventListener('load', () => buildSamplesGallery(1, 50));
+
+        // Lazy-load Facebook SDK only if feedback section exists (About page)
+        window.addEventListener('load', function(){
+            const feedback = document.getElementById('feedback-comments');
+            if (feedback && !window.FB) {
+                const sdk = document.createElement('script');
+                sdk.async = true;
+                sdk.defer = true;
+                sdk.crossOrigin = 'anonymous';
+                sdk.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v22.0';
+                document.body.appendChild(sdk);
+            }
         });
         
         // Helper functions for form
