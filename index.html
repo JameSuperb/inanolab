@@ -1125,7 +1125,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="email">Email Address *</label>
-                                    <input type="email" id="email" name="email" required>
+                                    <input type="email" id="email" name="email" required readonly>
                                     <div id="google-login-area" class="google-login">
                                         <div id="google-login-btn"></div>
                                         <div id="google-login-status">Use Google Sign-In to verify your email.</div>
@@ -1954,7 +1954,7 @@
                 googleVerifiedEmail = '';
                 googleIdToken = null;
                 const emailField = document.getElementById('email');
-                if (emailField) { emailField.readOnly = false; emailField.value = ''; emailField.classList.remove('error'); }
+                if (emailField) { emailField.readOnly = true; emailField.value = ''; emailField.classList.remove('error'); }
                 const gbtn = document.getElementById('google-login-btn');
                 if (gbtn) gbtn.style.display = '';
                 const gst = document.getElementById('google-login-status');
