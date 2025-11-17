@@ -375,6 +375,13 @@
             transition: border-color 0.3s ease;
         }
 
+        .calc-input input[type="range"] {
+            padding: 0; /* remove number input padding for slider */
+            border: none;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
         .calc-input input:focus, .calc-input select:focus {
             outline: none;
             border-color: #3498db;
@@ -456,6 +463,31 @@
             padding: 3rem;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             margin-top: 2rem;
+        }
+
+        /* Form section cards */
+        .form-card {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section-title {
+            margin: 0 0 1rem 0;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #2c3e50;
+            border-left: 4px solid #3498db;
+            padding-left: 0.5rem;
+        }
+
+        .form-section-help {
+            margin: -0.25rem 0 1rem 0;
+            color: #6c757d;
+            font-size: 0.95rem;
         }
 
         .form-grid {
@@ -757,11 +789,12 @@
                             Energy Dispersive X-ray Spectroscopy: Elemental Composition
                         </p>
                         <ul class="pricing-features">
-                            <li>Up to 8 imaging spots</li>
-                            <li>Elemental analysis (EDX)</li>
-                            <li>Quantitative composition</li>
+                            <li>Same with Basic SEM</li>
+                            <li>Elemental analysis (EDX) of three different areas on the sample</li>
+                            <li>Quantitative concentration: Atomic and Weight</li>
+                            <li>EDS graph spectrum showing characteristic peaks</li>
                             <li>Elemental mapping</li>
-                            <li>Detailed report included</li>
+                            <li>Detailed report included (docx)</li>
                         </ul>
                     </div>
                 </div>
@@ -772,34 +805,20 @@
                     <div class="calc-row">
                         <div class="calc-input">
                             <label for="samples">Number of Samples:</label>
-                            <input type="number" id="samples" min="1" value="1">
+                            <input type="number" id="samples" min="1" max="100" value="1">
+                            <input type="range" id="samples-slider" min="1" max="100" step="1" value="1" aria-label="Samples slider">
                         </div>
                         <div class="calc-input">
                             <label for="analysis-type">Analysis Type:</label>
                             <select id="analysis-type">
-                                <option value="75">Basic SEM ($75)</option>
-                                <option value="150">SEM + EDX ($150)</option>
-                                <option value="250">Comprehensive ($250)</option>
+                                <option value="basic">Basic SEM</option>
+                                <option value="semedx">SEM and EDX</option>
                             </select>
                         </div>
                     </div>
-                    <div class="calc-row">
-                        <div class="calc-input">
-                            <label for="extra-spots">Extra Imaging Spots:</label>
-                            <input type="number" id="extra-spots" min="0" value="0">
-                        </div>
-                        <div class="calc-input">
-                            <label for="rush">Rush Service:</label>
-                            <select id="rush">
-                                <option value="0">Standard (No charge)</option>
-                                <option value="50">24-hour (+$50)</option>
-                                <option value="25">48-hour (+$25)</option>
-                            </select>
-                        </div>
-                    </div>
+                    
                     <div class="calc-result">
-                        <div class="calc-total">Total Estimate: $<span id="total-cost">75</span></div>
-                        <p style="margin-top: 0.5rem; color: #6c757d;">*Prices exclude applicable taxes</p>
+                        <div class="calc-total">Total Cost ₱<span id="total-cost">—</span></div>
                     </div>
                 </div>
             </section>
@@ -883,173 +902,196 @@
                 <h2>Service Request Form</h2>
                 <div class="form-container">
                     <form id="service-form">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="full-name">Full Name *</label>
-                                <input type="text" id="full-name" name="fullName" required>
+                        <!-- I. Requestee Information -->
+                        <div class="form-card">
+                            <h3 class="form-section-title">I. Requestee Information</h3>
+                            <p class="form-section-help">Please provide your complete contact and institutional details. This information will be used for communication, documentation, and issuing official records.</p>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="full-name">Full Name *</label>
+                                    <input type="text" id="full-name" name="fullName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email Address *</label>
+                                    <input type="email" id="email" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mobile-number">Mobile Number *</label>
+                                    <input type="tel" id="mobile-number" name="mobileNumber" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="position">Position/Designation *</label>
+                                    <select id="position" name="position" required onchange="toggleOtherPosition()">
+                                        <option value="">Select your position</option>
+                                        <option value="high-school-student">High School Student</option>
+                                        <option value="college-student">College Student</option>
+                                        <option value="graduate-student">Graduate Student</option>
+                                        <option value="researcher">Researcher</option>
+                                        <option value="teacher">Teacher</option>
+                                        <option value="instructor">Instructor</option>
+                                        <option value="professor">Professor</option>
+                                        <option value="adviser">Adviser</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="other-position-group" style="display: none;">
+                                    <label for="other-position">Please specify your position *</label>
+                                    <input type="text" id="other-position" name="otherPosition">
+                                </div>
+                                <div class="form-group">
+                                    <label for="school-name">Name of School / Company / Organization *</label>
+                                    <input type="text" id="school-name" name="schoolName" required>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="school-address">Address of School / Company / Organization *</label>
+                                    <textarea id="school-address" name="schoolAddress" rows="3" required></textarea>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="email">Email Address *</label>
-                                <input type="email" id="email" name="email" required>
+                        </div>
+
+                        <!-- II. Requested Services -->
+                        <div class="form-card">
+                            <h3 class="form-section-title">II. Requested Services</h3>
+                            <p class="form-section-help">Select the type of analysis you require and provide details about your samples and preferred schedule. This helps us plan the procedure and estimate the turnaround time.</p>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Kind of Characterization *</label>
+                                    <div style="margin-top: 0.5rem;">
+                                        <p style="font-size: 0.9rem; color: #6c757d; margin-bottom: 1rem;">
+                                            SEM - Surface Morphology (Scanning Electron Microscope)<br>
+                                            EDX - Elemental Analysis (Energy Dispersive X-Ray)
+                                        </p>
+                                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="radio" name="characterization" value="sem-only" required style="margin-right: 0.5rem;" checked>
+                                                SEM only
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="radio" name="characterization" value="sem-and-edx" required style="margin-right: 0.5rem;">
+                                                SEM and EDX
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="sample-count">Number of Samples *</label>
+                                    <input type="number" id="sample-count" name="sampleCount" min="1" value="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Are your samples conductive? *</label>
+                                    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="radio" name="conductive" value="yes" required style="margin-right: 0.5rem;">
+                                            Yes
+                                        </label>
+                                        <label style="display: flex; align-items: center; font-weight: normal;">
+                                            <input type="radio" name="conductive" value="no" required style="margin-right: 0.5rem;">
+                                            No
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="delivery-date">Date to Deliver the Samples *</label>
+                                    <input type="date" id="delivery-date" name="deliveryDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="turnaround">Allowance for the turnover of results *</label>
+                                    <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">Select the preferred time window for receiving your results.</p>
+                                    <select id="turnaround" name="turnaround" required>
+                                        <option value="">Select turnaround time</option>
+                                        <option value="2-3-days">2-3 days</option>
+                                        <option value="5-days">5 days</option>
+                                        <option value="1-week">1 week</option>
+                                        <option value="2-weeks">2 weeks</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <label for="school-name">Name of School (Company or Organization) *</label>
-                                <input type="text" id="school-name" name="schoolName" required>
+                            <div class="calc-result" style="margin-top: 0.5rem;">
+                                <div class="calc-total">Total Cost ₱<span id="services-total-cost">—</span></div>
                             </div>
-                            <div class="form-group">
-                                <label for="mobile-number">Mobile Number *</label>
-                                <input type="tel" id="mobile-number" name="mobileNumber" required>
-                            </div>
-                            <div class="form-group full-width">
-                                <label for="school-address">Address of School (Company or Organization) *</label>
-                                <textarea id="school-address" name="schoolAddress" rows="3" required></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="position">Position *</label>
-                                <select id="position" name="position" required onchange="toggleOtherPosition()">
-                                    <option value="">Select your position</option>
-                                    <option value="high-school-student">High School Student</option>
-                                    <option value="college-student">College Student</option>
-                                    <option value="graduate-student">Graduate Student</option>
-                                    <option value="researcher">Researcher</option>
-                                    <option value="teacher">Teacher</option>
-                                    <option value="instructor">Instructor</option>
-                                    <option value="professor">Professor</option>
-                                    <option value="adviser">Adviser</option>
-                                    <option value="other">Other</option>
-                                </select>
-                            </div>
-                            <div class="form-group" id="other-position-group" style="display: none;">
-                                <label for="other-position">Please specify your position *</label>
-                                <input type="text" id="other-position" name="otherPosition">
-                            </div>
-                            <div class="form-group">
-                                <label>Kind of Characterization *</label>
-                                <div style="margin-top: 0.5rem;">
-                                    <p style="font-size: 0.9rem; color: #6c757d; margin-bottom: 1rem;">
-                                        SEM - Surface Morphology (Scanning Electron Microscope)<br>
-                                        EDX - Elemental Analysis (Energy Dispersive X-Ray)
+                        </div>
+
+                        <!-- III. Sample Characteristics -->
+                        <div class="form-card">
+                            <h3 class="form-section-title">III. Sample Characteristics &amp; Research Requirements</h3>
+                            <p class="form-section-help">Describe your sample and specify your research objectives. Clear and accurate information ensures we perform the SEM/EDX analysis according to your expectations.</p>
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label for="research-objectives">Analysis Objectives *</label>
+                                    <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
+                                        What is/are your research objectives related to the surface morphology (and elemental composition) of your sample?
                                     </p>
-                                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                        <label style="display: flex; align-items: center; font-weight: normal;">
-                                            <input type="radio" name="characterization" value="sem-only" required style="margin-right: 0.5rem;">
-                                            SEM only
-                                        </label>
-                                        <label style="display: flex; align-items: center; font-weight: normal;">
-                                            <input type="radio" name="characterization" value="sem-and-edx" required style="margin-right: 0.5rem;">
-                                            SEM and EDX
-                                        </label>
+                                    <textarea id="research-objectives" name="researchObjectives" rows="4" required></textarea>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="sample-characteristics">Describe the Characteristics of Your Sample *</label>
+                                    <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
+                                        Provide a clear description of your sample’s physical characteristics, such as its appearance, color, texture, and form
+                                    </p>
+                                    <textarea id="sample-characteristics" name="sampleCharacteristics" rows="3" placeholder="e.g., white powder, dried leaf fragments, tooth specimens"></textarea>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="sem-expectations">SEM Micrograph Expectations *</label>
+                                    <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
+                                        Select the morphology/features you expect to observe in the SEM micrographs.
+                                    </p>
+                                    <div style="margin-top: 1rem;">
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;">
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="checkbox" name="expectations" value="nanoparticles" style="margin-right: 0.5rem;">
+                                                Nanoparticles
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="checkbox" name="expectations" value="nanowires" style="margin-right: 0.5rem;">
+                                                Nanowires
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="checkbox" name="expectations" value="microparticles" style="margin-right: 0.5rem;">
+                                                Microparticles
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="checkbox" name="expectations" value="micropores" style="margin-right: 0.5rem;">
+                                                Micropores
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="checkbox" name="expectations" value="nanopores" style="margin-right: 0.5rem;">
+                                                Nanopores
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="checkbox" name="expectations" value="surface-roughness" style="margin-right: 0.5rem;">
+                                                Surface Roughness
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="checkbox" name="expectations" value="surface-structure" style="margin-right: 0.5rem;">
+                                                Surface Structure
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-weight: normal;">
+                                                <input type="checkbox" name="expectations" value="other" style="margin-right: 0.5rem;" onchange="toggleOtherExpectation()">
+                                                Other
+                                            </label>
+                                        </div>
+                                        <div id="other-expectation-group" style="display: none; margin-top: 1rem;">
+                                            <input type="text" id="other-expectation" name="otherExpectation" placeholder="Please specify...">
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="sample-count">Number of Samples *</label>
-                                <input type="number" id="sample-count" name="sampleCount" min="1" value="1" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Are your samples conductive? *</label>
-                                <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-                                    <label style="display: flex; align-items: center; font-weight: normal;">
-                                        <input type="radio" name="conductive" value="yes" required style="margin-right: 0.5rem;">
-                                        Yes
-                                    </label>
-                                    <label style="display: flex; align-items: center; font-weight: normal;">
-                                        <input type="radio" name="conductive" value="no" required style="margin-right: 0.5rem;">
-                                        No
-                                    </label>
+                                <div class="form-group full-width">
+                                    <label for="edx-elements">EDX Target Elements</label>
+                                    <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
+                                        If you intend to avail the EDX analysis, then kindly specify the chemical elements that you expect to see.
+                                    </p>
+                                    <textarea id="edx-elements" name="edxElements" rows="3" placeholder="e.g., Carbon (C), Oxygen (O), Silicon (Si), etc."></textarea>
                                 </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="delivery-date">Date to deliver the samples *</label>
-                                <input type="date" id="delivery-date" name="deliveryDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="turnaround">Allowance for the turnover of results *</label>
-                                <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">Select the preferred time window for receiving your results.</p>
-                                <select id="turnaround" name="turnaround" required>
-                                    <option value="">Select turnaround time</option>
-                                    <option value="2-3-days">2-3 days</option>
-                                    <option value="5-days">5 days</option>
-                                    <option value="1-week">1 week</option>
-                                    <option value="2-weeks">2 weeks</option>
-                                </select>
-                            </div>
-                            <div class="form-group full-width">
-                                <label for="research-objectives">Analysis Objectives *</label>
-                                <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
-                                    What is/are your research objectives related to the surface morphology (and elemental composition) of your sample?
-                                </p>
-                                <textarea id="research-objectives" name="researchObjectives" rows="4" required></textarea>
-                            </div>
-                            <div class="form-group full-width">
-                                <label for="sample-characteristics">Describe the characteristics of your sample *</label>
-                                <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
-                                    Provide a clear description of your sample’s physical characteristics, such as its appearance, color, texture, and form
-                                </p>
-                                <textarea id="edx-elements" name="edxElements" rows="3" placeholder="e.g., white powder, dried leaf fragments, tooth specimens"></textarea>
-                            </div>
-                            <div class="form-group full-width">
-                                <label for="sem-expectations">SEM Micrograph Expectations *</label>
-                                <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
-                                    Select the morphology/features you expect to observe in the SEM micrographs.
-                                </p>
-                                <div style="margin-top: 1rem;">
-                                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Select all that apply:</label>
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.5rem;">
-                                        <label style="display: flex; align-items: center; font-weight: normal;">
-                                            <input type="checkbox" name="expectations" value="nanoparticles" style="margin-right: 0.5rem;">
-                                            Nanoparticles
-                                        </label>
-                                        <label style="display: flex; align-items: center; font-weight: normal;">
-                                            <input type="checkbox" name="expectations" value="nanowires" style="margin-right: 0.5rem;">
-                                            Nanowires
-                                        </label>
-                                        <label style="display: flex; align-items: center; font-weight: normal;">
-                                            <input type="checkbox" name="expectations" value="microparticles" style="margin-right: 0.5rem;">
-                                            Microparticles
-                                        </label>
-                                        <label style="display: flex; align-items: center; font-weight: normal;">
-                                            <input type="checkbox" name="expectations" value="micropores" style="margin-right: 0.5rem;">
-                                            Micropores
-                                        </label>
-                                        <label style="display: flex; align-items: center; font-weight: normal;">
-                                            <input type="checkbox" name="expectations" value="nanopores" style="margin-right: 0.5rem;">
-                                            Nanopores
-                                        </label>
-                                        <label style="display: flex; align-items: center; font-weight: normal;">
-                                            <input type="checkbox" name="expectations" value="surface-roughness" style="margin-right: 0.5rem;">
-                                            Surface Roughness
-                                        </label>
-                                        <label style="display: flex; align-items: center; font-weight: normal;">
-                                            <input type="checkbox" name="expectations" value="surface-structure" style="margin-right: 0.5rem;">
-                                            Surface Structure
-                                        </label>
-                                        <label style="display: flex; align-items: center; font-weight: normal;">
-                                            <input type="checkbox" name="expectations" value="other" style="margin-right: 0.5rem;" onchange="toggleOtherExpectation()">
-                                            Other
-                                        </label>
+                                <div class="form-group full-width">
+                                    <label>Upload Reference Photos *<br>
+                                    <span style="font-size: 0.9rem; color: #6c757d;">Upload reference images to illustrate the features you wish to locate in the SEM micrographs.</span></label>
+                                    <div class="file-upload" onclick="document.getElementById('file-input').click()">
+                                        <input type="file" id="file-input" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;" required>
+                                        <p>📎 Click to upload sample photos and reference images</p>
+                                        <p style="font-size: 0.9rem; color: #6c757d;">Accepted formats: JPG, PNG, PDF, DOC (Max 10MB each)</p>
                                     </div>
-                                    <div id="other-expectation-group" style="display: none; margin-top: 1rem;">
-                                        <input type="text" id="other-expectation" name="otherExpectation" placeholder="Please specify...">
-                                    </div>
+                                    <div id="file-list"></div>
                                 </div>
-                            </div>
-                            <div class="form-group full-width">
-                                <label for="edx-elements">EDX Target Elements</label>
-                                <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
-                                    If you intend to avail the EDX analysis, then kindly specify the chemical elements that you expect to see.
-                                </p>
-                                <textarea id="edx-elements" name="edxElements" rows="3" placeholder="e.g., Carbon (C), Oxygen (O), Silicon (Si), etc."></textarea>
-                            </div>
-                            <div class="form-group full-width">
-                                <label>Upload clear photos *<br>
-                                <span style="font-size: 0.9rem; color: #6c757d;">Upload reference images to illustrate the features you wish to locate in the SEM micrographs.</span></label>
-                                <div class="file-upload" onclick="document.getElementById('file-input').click()">
-                                    <input type="file" id="file-input" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;" required>
-                                    <p>📎 Click to upload sample photos and reference images</p>
-                                    <p style="font-size: 0.9rem; color: #6c757d;">Accepted formats: JPG, PNG, PDF, DOC (Max 10MB each)</p>
-                                </div>
-                                <div id="file-list"></div>
                             </div>
                         </div>
                         <button type="submit" class="submit-button">Submit Service Request</button>
@@ -1085,8 +1127,8 @@
             <div class="footer-section">
                 <h4>&copy; <span class="current-year"></span> iNanolab.com</h4>
                 <p>i-Nano Research Facility</p>
-                <p>🖋️ Editor: Dr. Gil Nonato Santos</p>
-                <p>💻 Developer: Dr. James Salveo Olarvve</p>
+                <p>🖋️ Head Editor: Dr. Gil Nonato Santos</p>
+                <p>💻 Head Developer: Dr. James Salveo Olarvve</p>
             </div>
         </div>
         <div class="footer-bottom">
@@ -1096,26 +1138,103 @@
     <script>document.querySelectorAll('.current-year').forEach(function(el){ el.textContent = new Date().getFullYear(); });</script>
 
     <script>
+        // Cost tables loader (from CSV assets)
+        const costTables = { basic: {}, semedx: {} };
+
+        function parseCsvToTable(csvText) {
+            const table = {};
+            if (!csvText) return table;
+            const rows = csvText.trim().split(/\r?\n/);
+            for (let i = 0; i < rows.length; i++) {
+                const cols = rows[i].split(',');
+                if (!cols.length) continue;
+                const count = parseInt((cols[0] || '').trim(), 10);
+                const costRaw = (cols[7] || '').trim();
+                const cost = parseFloat(costRaw.replace(/[^0-9.]/g, ''));
+                if (!isNaN(count) && !isNaN(cost)) {
+                    table[count] = cost;
+                }
+            }
+            return table;
+        }
+
+        async function loadCostTables() {
+            try {
+                const [semResp, semedxResp] = await Promise.all([
+                    fetch('assets/SEM.csv'),
+                    fetch('assets/SEMEDX.csv')
+                ]);
+                if (semResp.ok) {
+                    const semText = await semResp.text();
+                    costTables.basic = parseCsvToTable(semText);
+                }
+                if (semedxResp.ok) {
+                    const semedxText = await semedxResp.text();
+                    costTables.semedx = parseCsvToTable(semedxText);
+                }
+            } catch (err) {
+                console.error('Failed to load cost tables:', err);
+            }
+        }
+
         // Cost Calculator
         function updateCost() {
             const samples = parseInt(document.getElementById('samples').value) || 1;
-            const analysisType = parseInt(document.getElementById('analysis-type').value) || 75;
-            const extraSpots = parseInt(document.getElementById('extra-spots').value) || 0;
-            const rush = parseInt(document.getElementById('rush').value) || 0;
-            
-            const baseCost = samples * analysisType;
-            const spotCost = extraSpots * 10; // $10 per extra spot
-            const rushCost = samples * rush;
-            
-            const total = baseCost + spotCost + rushCost;
-            document.getElementById('total-cost').textContent = total;
+            const analysisType = document.getElementById('analysis-type').value || 'basic';
+            let total = null;
+            const table = costTables[analysisType] || {};
+            if (table && typeof table[samples] !== 'undefined') {
+                total = table[samples];
+            }
+            const totalEl = document.getElementById('total-cost');
+            if (total !== null) {
+                totalEl.textContent = Number(total).toLocaleString();
+            } else {
+                totalEl.textContent = '—';
+            }
+        }
+
+        // Requested Services total (inside Request form)
+        function updateServicesCost() {
+            const samplesInputEl = document.getElementById('sample-count');
+            const samples = parseInt(samplesInputEl && samplesInputEl.value, 10) || 1;
+            const selectedChar = document.querySelector('input[name="characterization"]:checked');
+            const key = selectedChar && selectedChar.value === 'sem-and-edx' ? 'semedx' : 'basic';
+            const table = costTables[key] || {};
+            const total = typeof table[samples] !== 'undefined' ? table[samples] : null;
+            const el = document.getElementById('services-total-cost');
+            if (el) {
+                el.textContent = total !== null ? Number(total).toLocaleString() : '—';
+            }
         }
 
         // Add event listeners for calculator
         document.getElementById('samples').addEventListener('input', updateCost);
         document.getElementById('analysis-type').addEventListener('change', updateCost);
-        document.getElementById('extra-spots').addEventListener('input', updateCost);
-        document.getElementById('rush').addEventListener('change', updateCost);
+        // Link Requested Services inputs to services total
+        const sampleCountEl = document.getElementById('sample-count');
+        if (sampleCountEl) sampleCountEl.addEventListener('input', updateServicesCost);
+        document.querySelectorAll('input[name="characterization"]').forEach(r => {
+            r.addEventListener('change', updateServicesCost);
+        });
+        // Removed extra spots and rush service fields
+
+        // Sync samples slider with number input and vice versa
+        const samplesInput = document.getElementById('samples');
+        const samplesSlider = document.getElementById('samples-slider');
+        if (samplesSlider && samplesInput) {
+            // Initialize slider to current input value
+            samplesSlider.value = samplesInput.value || 1;
+            // Slider -> Input
+            samplesSlider.addEventListener('input', function() {
+                samplesInput.value = this.value;
+                updateCost();
+            });
+            // Input -> Slider (without triggering extra updateCost)
+            samplesInput.addEventListener('input', function() {
+                samplesSlider.value = this.value || 1;
+            });
+        }
 
         // File upload handling
         document.getElementById('file-input').addEventListener('change', function(e) {
@@ -1323,8 +1442,11 @@
             deliveryDateInput.min = new Date().toISOString().split('T')[0];
         }
 
-        // Initialize calculator
-        updateCost();
+        // Initialize calculator and services total (load CSVs then compute)
+        loadCostTables().then(() => {
+            updateCost();
+            updateServicesCost();
+        });
         
         // Helper functions for form
         function toggleOtherPosition() {
