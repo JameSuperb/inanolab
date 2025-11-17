@@ -678,7 +678,7 @@
             </a>
             <a href="#" class="nav-button" data-section="cost">
                 <div class="nav-button-icon">🧮</div>
-                <div class="nav-button-text">Cost Analysis</div>
+                <div class="nav-button-text">Cost of Analysis</div>
             </a>
             <a href="#" class="nav-button" data-section="request">
                 <div class="nav-button-icon">📝</div>
@@ -700,12 +700,12 @@
     <!-- Main Content -->
     <main class="main-content">
         <!-- About Page -->
-        <div id="about-page" class="page">
+        <div id="about-page" class="page active">
             <section class="section">
                 <h2>About Our Laboratory</h2>
                 <div class="about-grid">
                     <div class="about-text">
-                        <p>The i-Nano Research Facility provides cutting-edge analytical services using state-of-the-art scanning electron microscopy (SEM) and energy-dispersive X-ray spectroscopy (EDX) equipment.</p>
+                        <p>The i-Nano Research Facility, located at De La Salle University Manila, provides cutting-edge analytical services using state-of-the-art scanning electron microscopy (SEM) and energy-dispersive X-ray spectroscopy (EDX) equipment.</p>
                         <p>With over 15 years of experience in materials characterization, our team of expert analysts delivers precise, reliable results for academic research, industrial R&D, and quality control applications.</p>
                         <p>We specialize in surface morphology analysis, elemental composition mapping, failure analysis, and contamination identification across a wide range of materials including metals, ceramics, polymers, and composites.</p>
                     </div>
@@ -740,35 +740,28 @@
                 <div class="pricing-grid">
                     <div class="pricing-card">
                         <h3>Basic SEM</h3>
-                        <div class="price">$75<span style="font-size: 1rem; color: #6c757d;">/sample</span></div>
+                        <p style="font-size: 0.95rem; color: #6c757d; margin: -0.25rem 0 0.75rem;">Scanning Electron Microscopy: Surface Morphology</p>
                         <ul class="pricing-features">
-                            <li>Up to 5 imaging spots</li>
-                            <li>Standard magnification range</li>
-                            <li>Basic image processing</li>
-                            <li>Digital image delivery</li>
-                            <li>2-3 day turnaround</li>
+                            <li>High-quality images</li>
+                            <li>Imaging of up to 3 areas on the sample</li>
+                            <li>Minimum of 12 SEM images</li>
+                            <li>Multiple magnifications (500×–30,000× or higher, as needed)</li>
+                            <li>Raw data files delivered via email</li>
+                            <li>Quick turnaround (depending on the availability of our scientists)</li>
                         </ul>
                     </div>
                     <div class="pricing-card">
-                        <h3>SEM + EDX</h3>
-                        <div class="price">$150<span style="font-size: 1rem; color: #6c757d;">/sample</span></div>
+                        <h3>SEM and EDX</h3>
+                        <p style="font-size: 0.95rem; color: #6c757d; margin: -0.25rem 0 0.75rem;">
+                            Scanning Electron Microscopy: Surface Morphology<br>
+                            Energy Dispersive X-ray Spectroscopy: Elemental Composition
+                        </p>
                         <ul class="pricing-features">
                             <li>Up to 8 imaging spots</li>
                             <li>Elemental analysis (EDX)</li>
                             <li>Quantitative composition</li>
                             <li>Elemental mapping</li>
                             <li>Detailed report included</li>
-                        </ul>
-                    </div>
-                    <div class="pricing-card">
-                        <h3>Comprehensive</h3>
-                        <div class="price">$250<span style="font-size: 1rem; color: #6c757d;">/sample</span></div>
-                        <ul class="pricing-features">
-                            <li>Unlimited imaging spots</li>
-                            <li>Advanced EDX analysis</li>
-                            <li>Phase identification</li>
-                            <li>Statistical analysis</li>
-                            <li>Expert consultation</li>
                         </ul>
                     </div>
                 </div>
@@ -885,7 +878,7 @@
         </div>
 
         <!-- Service Request Page -->
-        <div id="request-page" class="page active">
+        <div id="request-page" class="page">
             <section class="section">
                 <h2>Service Request Form</h2>
                 <div class="form-container">
@@ -1319,9 +1312,9 @@
             });
         }
 
-        // Initialize with request page active
+        // Initialize with about page active
         window.addEventListener('load', function() {
-            showPage('request');
+            showPage('about');
         });
 
         // Set minimum date for delivery-date to today
