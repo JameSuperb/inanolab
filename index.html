@@ -764,6 +764,12 @@
             margin-top: 1rem;
             border: 1px solid #c3e6cb;
         }
+        /* Google Sign-In (email verification) */
+        .google-login { margin-top: 0.35rem; }
+        #google-login-status { font-size: 0.9rem; color: #6c757d; margin-top: 0.25rem; }
+        #google-login-status.status-success { color: #155724; }
+        #google-login-status.status-error { color: #721c24; }
+        input[readonly] { background: #f8f9fa; }
         /* Expanded Other expectation input */
         #other-expectation {
             width: 100%;
@@ -846,6 +852,8 @@
             .sample-thumb { height: 160px; }
         }
     </style>
+    <!-- Google Identity Services for Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <!-- Header -->
@@ -1118,6 +1126,10 @@
                                 <div class="form-group">
                                     <label for="email">Email Address *</label>
                                     <input type="email" id="email" name="email" required>
+                                    <div id="google-login-area" class="google-login">
+                                        <div id="google-login-btn"></div>
+                                        <div id="google-login-status">Use Google Sign-In to verify your email.</div>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label for="mobile-number">Mobile Number *</label>
@@ -1291,7 +1303,7 @@
                                     <span style="font-size: 0.9rem; color: #6c757d;">Upload reference images to illustrate the features you wish to locate in the SEM micrographs.</span></label>
                                     <div class="file-upload" onclick="document.getElementById('file-input').click()">
                                         <input type="file" id="file-input" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;" required>
-                                        <p>📎 Click to upload sample photos and reference images</p>
+                                        <p>📎 Click to upload sample photos and reference images. Please be patient in uploading as it usually takes a while to reflect a successful upload.</p>
                                         <p style="font-size: 0.9rem; color: #6c757d;">Accepted formats: JPG, PNG, PDF, DOC (Max 10MB each)</p>
                                     </div>
                                     <div id="upload-messages" aria-live="polite" style="margin-top:0.5rem;"></div>
@@ -1362,6 +1374,11 @@
         let appliedVoucher = null; // 'promo' | null
         const VOUCHER_RATE = 0.10;
         let lastBaseServicesTotal = null; // number|null
+
+        // Google Identity (email verification) state
+        let googleEmailVerified = false;
+        let googleVerifiedEmail = '';
+        let googleIdToken = null; // store only, not sent for verification
 
         // Cost tables loader (from CSV assets)
         const costTables = { basic: {}, semedx: {} };
@@ -1708,6 +1725,10 @@
                 submittedAt: new Date().toISOString(),
                 pageOrigin: location.href,
                 uploadedFileIds: uploadedFiles.map(f => f.fileId),
+                // Google email verification snapshot
+                googleEmailVerified: !!googleEmailVerified,
+                googleVerifiedEmail: googleVerifiedEmail,
+                googleIdToken: googleIdToken,
                 // Voucher + totals snapshot
                 voucherCode: appliedVoucher || '',
                 discountRate: appliedVoucher === 'promo' ? VOUCHER_RATE : 0,
@@ -1880,12 +1901,18 @@
                 isValid = false;
             }
             
-            // Email validation
-            const email = document.getElementById('email').value;
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (email && !emailRegex.test(email)) {
-                document.getElementById('email').classList.add('error');
+            // Email validation: require Google Sign-In verification
+            const emailEl = document.getElementById('email');
+            if (!googleEmailVerified) {
+                if (emailEl) emailEl.classList.add('error');
+                const st = document.getElementById('google-login-status');
+                if (st) { st.textContent = 'Please verify your email with Google Sign-In.'; st.classList.remove('status-success'); st.classList.add('status-error'); }
                 isValid = false;
+            } else {
+                // Ensure the email field reflects the verified email
+                if (emailEl && googleVerifiedEmail) {
+                    emailEl.value = googleVerifiedEmail;
+                }
             }
             
             if (!isValid) {
@@ -1922,6 +1949,16 @@
                 const summary = document.getElementById('services-summary');
                 if (summary) summary.hidden = true;
                 updateServicesCost();
+                // Reset Google verification state and UI
+                googleEmailVerified = false;
+                googleVerifiedEmail = '';
+                googleIdToken = null;
+                const emailField = document.getElementById('email');
+                if (emailField) { emailField.readOnly = false; emailField.value = ''; emailField.classList.remove('error'); }
+                const gbtn = document.getElementById('google-login-btn');
+                if (gbtn) gbtn.style.display = '';
+                const gst = document.getElementById('google-login-status');
+                if (gst) { gst.textContent = 'Use Google Sign-In to verify your email.'; gst.classList.remove('status-success','status-error'); }
             }).catch(err => {
                 if (statusBox) statusBox.remove();
                 renderMessage(`❌ Submission failed: ${err.message || err}`, 'error');
@@ -1990,6 +2027,74 @@
         window.addEventListener('load', function() {
             showPage('about');
         });
+        
+        // Google Identity: initialize Sign-In button when the library is ready
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (_) { return {}; }
+        }
+
+        function handleGoogleCredential(response) {
+            try {
+                const payload = parseJwt(response && response.credential || '');
+                const email = payload.email || '';
+                // Treat presence of a valid credential as verification of email ownership
+                if (email) {
+                    googleEmailVerified = true;
+                    googleVerifiedEmail = email;
+                    googleIdToken = response.credential;
+                    const emailEl = document.getElementById('email');
+                    if (emailEl) { emailEl.value = email; emailEl.readOnly = true; emailEl.classList.remove('error'); }
+                    const st = document.getElementById('google-login-status');
+                    if (st) { st.textContent = 'Verified as ' + email; st.classList.remove('status-error'); st.classList.add('status-success'); }
+                    const btn = document.getElementById('google-login-btn');
+                    if (btn) btn.style.display = 'none';
+                } else {
+                    const st = document.getElementById('google-login-status');
+                    if (st) { st.textContent = 'Verification failed. Please try again.'; st.classList.remove('status-success'); st.classList.add('status-error'); }
+                }
+            } catch (err) {
+                const st = document.getElementById('google-login-status');
+                if (st) { st.textContent = 'Verification error. Please try again.'; st.classList.remove('status-success'); st.classList.add('status-error'); }
+            }
+        }
+
+        function initGoogleSignIn() {
+            if (!window.google || !google.accounts || !google.accounts.id) return;
+            google.accounts.id.initialize({
+                client_id: '454869523412-572v5b7uqvebd7ohmgvck014ah68e3d6.apps.googleusercontent.com',
+                callback: handleGoogleCredential,
+                auto_select: false,
+                use_fedcm_for_prompt: false
+            });
+            const btnEl = document.getElementById('google-login-btn');
+            if (btnEl) {
+                google.accounts.id.renderButton(btnEl, {
+                    theme: 'outline',
+                    size: 'large',
+                    type: 'standard',
+                    text: 'signin_with'
+                });
+            }
+        }
+
+        function setupGoogleButtonWhenReady(tries = 0) {
+            if (window.google && google.accounts && google.accounts.id) {
+                initGoogleSignIn();
+            } else if (tries < 20) {
+                setTimeout(() => setupGoogleButtonWhenReady(tries + 1), 250);
+            } else {
+                console.warn('Google Identity Services library not available.');
+            }
+        }
+        
+        window.addEventListener('load', setupGoogleButtonWhenReady);
 
         // Set minimum date for delivery-date to today
         const deliveryDateInput = document.getElementById('delivery-date');
