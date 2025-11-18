@@ -508,6 +508,60 @@
             text-align: center;
         }
 
+        /* Preparation table */
+        .table-wrap {
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .prep-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 0.95rem;
+        }
+        .prep-table caption {
+            caption-side: top;
+            text-align: left;
+            font-weight: 700;
+            color: #2c3e50;
+            padding: 0.75rem 1rem;
+        }
+        .prep-table thead th {
+            background: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .prep-table tbody td {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid #f1f3f5;
+            vertical-align: top;
+        }
+        .prep-table tbody tr:nth-child(odd) td {
+            background: #fcfcfd;
+        }
+        /* Subtle column cues: green for Allowed, red for Not Allowed */
+        .prep-table thead th:first-child {
+            background: #f3fbf6; /* light green tint */
+            border-left: 4px solid #27ae60;
+        }
+        .prep-table thead th:last-child {
+            background: #fff5f5; /* light red tint */
+            border-left: 4px solid #e74c3c;
+        }
+        .prep-table tbody td:first-child {
+            border-left: 4px solid #27ae60;
+        }
+        .prep-table tbody td:last-child {
+            border-left: 4px solid #e74c3c;
+        }
+
         .step-icon {
             width: 60px;
             height: 60px;
@@ -1051,7 +1105,7 @@
                         </p>
                         <ul class="pricing-features">
                             <li>Same with Basic SEM</li>
-                            <li>Elemental analysis (EDX) of three different areas on the sample</li>
+                            <li>Elemental analysis (EDX) of 3 different areas on the sample</li>
                             <li>Quantitative concentration: Atomic and Weight</li>
                             <li>EDS graph spectrum showing characteristic peaks</li>
                             <li>Elemental mapping</li>
@@ -1089,15 +1143,68 @@
         <div id="preparation-page" class="page">
             <section class="section">
                 <h2>Sample Preparation Guidelines</h2>
+                <div class="table-wrap" aria-label="Allowed vs. Not Allowed Samples table">
+                    <table class="prep-table">
+                        <caption>Allowed vs. Not Allowed Samples for SEM-EDX Analysis</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Allowed Samples (Solid Only)</th>
+                                <th scope="col">Not Allowed Samples</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Powders / powder-like materials</td>
+                                <td>Liquids</td>
+                            </tr>
+                            <tr>
+                                <td>Rock-like or mineral samples</td>
+                                <td>Gases</td>
+                            </tr>
+                            <tr>
+                                <td>Glass pieces</td>
+                                <td>Samples containing mercury</td>
+                            </tr>
+                            <tr>
+                                <td>Plastics / polymers</td>
+                                <td>Radioactive materials</td>
+                            </tr>
+                            <tr>
+                                <td>Organic solids (wood, leaves, seeds)</td>
+                                <td>Biological hazards (blood, tissue, pathogens)</td>
+                            </tr>
+                            <tr>
+                                <td>Insects (dry and preserved)</td>
+                                <td>Toxic or highly hazardous materials</td>
+                            </tr>
+                            <tr>
+                                <td>Teeth / bone fragments</td>
+                                <td>Corrosive chemicals or strongly reactive materials</td>
+                            </tr>
+                            <tr>
+                                <td>Rubber pieces</td>
+                                <td>Wet, moist, or damp samples</td>
+                            </tr>
+                            <tr>
+                                <td>Paper / cardboard</td>
+                                <td>Samples that may outgas or contaminate the chamber</td>
+                            </tr>
+                            <tr>
+                                <td>Textiles / fabric</td>
+                                <td>Sticky, oily, or adhesive substances</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 <div class="prep-steps">
                     <div class="prep-step">
                         <div class="step-icon">1</div>
-                        <h4>Sample Size</h4>
-                        <p>Maximum dimensions: 25mm x 25mm x 10mm. Smaller samples preferred for optimal results.</p>
+                        <h4>Sample Mass & Size</h4>
+                        <p>Preferred small samples. The average sample size has a surface area of 1 cm^2 with a thickness in millimeters. The ideal mass is a few milligrams (~5mg)</p>
                     </div>
                     <div class="prep-step">
                         <div class="step-icon">2</div>
-                        <h4>Cleaning</h4>
+                        <h4>Drying</h4>
                         <p>Remove oils, dust, and contaminants. Use appropriate solvents. Avoid touching analysis areas.</p>
                     </div>
                     <div class="prep-step">
@@ -2183,13 +2290,16 @@
             const statusBox = renderMessage('Submitting request…', 'info');
 
             const meta = collectFormMeta();
-            // Build JSON payload & submit to new GAS Form endpoint
+            // Build payload & submit to GAS (urlencoded addRow)
             const formPayload = buildFormPayload(meta);
             submitFormToGAS(formPayload).then(resp => {
                 if (statusBox) statusBox.remove();
-                renderMessage('✅ <strong>Request submitted successfully!</strong><br>We will contact you within 24 hours to confirm your analysis requirements and provide a detailed quote.', 'success');
+                renderMessage('✅ <strong>Request submitted successfully!</strong><br>Please reply to our email to confirm your service request. Thank you', 'success');
                 // Small success toast to inform about email confirmation
                 showToast('✅ Request submitted! Please check your email for confirmation.', 'success', 3400);
+                // Reveal Clear Form button only after successful submission
+                const clearBtn = document.getElementById('clear-form-button');
+                if (clearBtn) clearBtn.style.display = 'inline-block';
                 // Clear form and state but keep success message visible
                 clearFormAndState({ clearMessagesBox: false });
                 submitButton.textContent = originalText;
@@ -2207,9 +2317,13 @@
         // Clear Form button handler
         const clearBtnEl = document.getElementById('clear-form-button');
         if (clearBtnEl) {
+            // Hidden by default; shown only after successful submission
+            clearBtnEl.style.display = 'none';
             clearBtnEl.addEventListener('click', function(){
                 clearFormAndState({ clearMessagesBox: true });
                 showToast('Form cleared.', 'info', 1800);
+                // Hide the button after clearing the form
+                this.style.display = 'none';
             });
         }
 
