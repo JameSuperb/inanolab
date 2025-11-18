@@ -1399,6 +1399,9 @@
         // Google Apps Script Web App endpoints & API key
         const GAS_UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbwinVplLmTXIEcp-ekRTnGEwUOpZJgoV7thg1AvJpd5XpMVNxx_EwQifyywLTYHIqlclg/exec';
         const API_KEY = '941E5441B3FC73E61214612443D92'; // Provided key
+        // New Form submission (JSON) endpoint & key
+        const GAS_FORM_URL = 'https://script.google.com/macros/s/AKfycbzjcthVbKuDvnyaUDsqrkJe5IBz8U6A2ouTbn30fwFIkaCwVLwQKsev2zMktqfSVHOJQg/exec';
+        const FORM_API_KEY = 'BgWFBsc9NAQeyd7DBfkF3qdPR6EdeieB';
         // Client-side state of uploaded files: {fileId, name, size, type}
         const uploadedFiles = [];
         // Voucher state for Request total
@@ -1410,6 +1413,7 @@
         let googleEmailVerified = false;
         let googleVerifiedEmail = '';
         let googleIdToken = null; // store only, not sent for verification
+        let googleUserId = null; // JWT 'sub'
 
         // Debug flag (?debug=1 in URL enables console tracing)
         const DEBUG = /[?&]debug=1\b/.test(location.search);
@@ -1764,6 +1768,7 @@
                 googleEmailVerified: !!googleEmailVerified,
                 googleVerifiedEmail: googleVerifiedEmail,
                 googleIdToken: googleIdToken,
+                googleUserId: googleUserId,
                 // Voucher + totals snapshot
                 voucherCode: appliedVoucher || '',
                 discountRate: appliedVoucher === 'promo' ? VOUCHER_RATE : 0,
@@ -1771,6 +1776,55 @@
                 discountAmount: appliedVoucher === 'promo' && lastBaseServicesTotal != null ? (lastBaseServicesTotal * VOUCHER_RATE) : 0,
                 finalServicesTotal: lastBaseServicesTotal != null ? (lastBaseServicesTotal - (appliedVoucher === 'promo' ? lastBaseServicesTotal * VOUCHER_RATE : 0)) : null
             };
+        }
+
+        // Build JSON payload matching Google Sheet headers / required structure
+        function buildFormPayload(meta){
+            // Position resolution
+            let positionResolved = meta.position === 'other' && meta.otherPosition ? meta.otherPosition : meta.position;
+            // Characterization label
+            const kindLabel = meta.characterization === 'sem-and-edx' ? 'SEM and EDX' : 'SEM only';
+            // Expectations processing (replace 'other' token with value)
+            const expectations = (meta.expectations || []).map(v => v === 'other' ? (meta.otherExpectation || 'Other (unspecified)') : v);
+            // Attachments: clickable Drive links
+            const attachmentLinks = (meta.uploadedFileIds || []).map(id => `https://drive.google.com/file/d/${id}/view`);
+            return {
+                apiKey: FORM_API_KEY,
+                Timestamp: meta.submittedAt,
+                GoogleID: meta.googleUserId || null,
+                'Full Name': meta.fullName,
+                Email: meta.email,
+                Mobile: meta.mobileNumber,
+                Position: positionResolved,
+                School: meta.schoolName,
+                Address: meta.schoolAddress,
+                KindCharacterization: kindLabel,
+                Samples: meta.sampleCount,
+                Conductive: meta.conductive,
+                DeliveryDate: meta.deliveryDate,
+                TurnaroundDate: meta.turnaround,
+                SubTotalCost: meta.baseServicesTotal,
+                VoucherCode: meta.voucherCode || '',
+                Discount: meta.discountAmount,
+                TotalCost: meta.finalServicesTotal,
+                AnalysisObjectives: meta.researchObjectives,
+                SampleCharacteristics: meta.sampleCharacteristics,
+                SEMExpectations: expectations.join(', '),
+                EDXElements: meta.edxElements,
+                Attachments: attachmentLinks.join(', ')
+            };
+        }
+
+        async function submitFormToGAS(payload){
+            if (!GAS_FORM_URL) throw new Error('Form endpoint not configured');
+            const resp = await fetch(GAS_FORM_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const text = await resp.text();
+            let json; try { json = JSON.parse(text); } catch(_) {}
+            return json || { raw: text, status: resp.status };
         }
 
         function bytesToMB(n){ return (n/1024/1024).toFixed(2); }
@@ -2019,7 +2073,9 @@
             const statusBox = renderMessage('Submitting request…', 'info');
 
             const meta = collectFormMeta();
-            submitServiceMeta(meta).then(resp => {
+            // Build JSON payload & submit to new GAS Form endpoint
+            const formPayload = buildFormPayload(meta);
+            submitFormToGAS(formPayload).then(resp => {
                 if (statusBox) statusBox.remove();
                 renderMessage('✅ <strong>Request submitted successfully!</strong><br>We will contact you within 24 hours to confirm your analysis requirements and provide a detailed quote.', 'success');
                 document.getElementById('service-form').reset();
@@ -2135,6 +2191,8 @@
             try {
                 const payload = parseJwt(response && response.credential || '');
                 const email = payload.email || '';
+                const sub = payload.sub || null;
+                googleUserId = sub;
                 // Treat presence of a valid credential as verification of email ownership
                 if (email) {
                     googleEmailVerified = true;
