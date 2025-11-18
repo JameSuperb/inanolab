@@ -1433,6 +1433,7 @@
         let googleVerifiedEmail = '';
         let googleIdToken = null; // store only, not sent for verification
         let googleUserId = null; // JWT 'sub'
+        let googleIdEmail = ''; // decoded email prior to verification
 
         // Debug flag (?debug=1 in URL enables console tracing)
         const DEBUG = /[?&]debug=1\b/.test(location.search);
@@ -1762,24 +1763,47 @@
                 return el ? el.value : '';
             };
             const getExpectations = () => Array.from(document.querySelectorAll('input[name="expectations"]:checked')).map(c => c.value);
+            // Sanitization helper (lightweight: strip angle brackets, collapse whitespace, limit length)
+            const sanitizeText = (str, maxLen = 1000) => {
+                if (typeof str !== 'string') return '';
+                return str.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, maxLen);
+            };
+            // Apply sanitization to free-text inputs
+            const fullName = sanitizeText(getVal('full-name'), 120);
+            const emailVal = sanitizeText(getVal('email'), 254);
+            const mobileNumber = sanitizeText(getVal('mobile-number'), 32);
+            const positionVal = (document.getElementById('position')?.value || '');
+            const otherPosition = sanitizeText(getVal('other-position'), 120);
+            const schoolName = sanitizeText(getVal('school-name'), 180);
+            const schoolAddress = sanitizeText(getVal('school-address'), 400);
+            const characterization = getRadio('characterization');
+            const sampleCount = sanitizeText(getVal('sample-count'), 6);
+            const conductive = getRadio('conductive');
+            const deliveryDate = sanitizeText(getVal('delivery-date'), 32);
+            const turnaround = sanitizeText(getVal('turnaround'), 32);
+            const researchObjectives = sanitizeText(getVal('research-objectives'), 1500);
+            const sampleCharacteristics = sanitizeText(getVal('sample-characteristics'), 800);
+            const expectationsRaw = getExpectations();
+            const otherExpectation = sanitizeText(getVal('other-expectation'), 200);
+            const edxElements = sanitizeText(getVal('edx-elements'), 600);
             return {
-                fullName: getVal('full-name'),
-                email: getVal('email'),
-                mobileNumber: getVal('mobile-number'),
-                position: (document.getElementById('position')?.value || ''),
-                otherPosition: getVal('other-position'),
-                schoolName: getVal('school-name'),
-                schoolAddress: getVal('school-address'),
-                characterization: getRadio('characterization'),
-                sampleCount: getVal('sample-count'),
-                conductive: getRadio('conductive'),
-                deliveryDate: getVal('delivery-date'),
-                turnaround: getVal('turnaround'),
-                researchObjectives: getVal('research-objectives'),
-                sampleCharacteristics: getVal('sample-characteristics'),
-                expectations: getExpectations(),
-                otherExpectation: getVal('other-expectation'),
-                edxElements: getVal('edx-elements'),
+                fullName,
+                email: emailVal,
+                mobileNumber,
+                position: positionVal,
+                otherPosition,
+                schoolName,
+                schoolAddress,
+                characterization,
+                sampleCount,
+                conductive,
+                deliveryDate,
+                turnaround,
+                researchObjectives,
+                sampleCharacteristics,
+                expectations: expectationsRaw,
+                otherExpectation,
+                edxElements,
                 submittedAt: new Date().toISOString(),
                 pageOrigin: location.href,
                 uploadedFileIds: uploadedFiles.map(f => f.fileId),
@@ -1788,6 +1812,7 @@
                 googleVerifiedEmail: googleVerifiedEmail,
                 googleIdToken: googleIdToken,
                 googleUserId: googleUserId,
+                googleIdEmail: googleIdEmail,
                 // Voucher + totals snapshot
                 voucherCode: appliedVoucher || '',
                 discountRate: appliedVoucher === 'promo' ? VOUCHER_RATE : 0,
@@ -1835,10 +1860,12 @@
                 edxElements: meta.edxElements,
                 attachments: attachmentLinks.join(', '),
                 googleId: meta.googleUserId || null,
+                googleEmail: meta.googleVerifiedEmail || null,
 
                 // Sheet-header aliases (for backward compatibility)
                 Timestamp: meta.submittedAt,
                 GoogleID: meta.googleUserId || null,
+                GoogleEmail: meta.googleVerifiedEmail || null,
                 'Full Name': meta.fullName,
                 Email: meta.email,
                 Mobile: meta.mobileNumber,
@@ -2269,32 +2296,47 @@
 
         function handleGoogleCredential(response) {
             try {
-                const payload = parseJwt(response && response.credential || '');
+                const token = response && response.credential;
+                const payload = parseJwt(token || '');
                 const email = payload.email || '';
                 const sub = payload.sub || null;
                 googleUserId = sub;
-                // Treat presence of a valid credential as verification of email ownership
-                if (email) {
-                    googleEmailVerified = true;
-                    googleVerifiedEmail = email;
-                    googleIdToken = response.credential;
-                    const emailEl = document.getElementById('email');
-                    if (emailEl) {
-                        emailEl.value = email; emailEl.readOnly = true; emailEl.classList.remove('error');
-                        const group = emailEl.closest && emailEl.closest('.form-group');
-                        if (group) {
-                            const ih = group.querySelector('.inline-error');
-                            if (ih) ih.remove();
-                        }
-                    }
-                    const st = document.getElementById('google-login-status');
-                    if (st) { st.textContent = 'Verified as ' + email; st.classList.remove('status-error'); st.classList.add('status-success'); }
-                    const btn = document.getElementById('google-login-btn');
-                    if (btn) btn.style.display = 'none';
-                } else {
-                    const st = document.getElementById('google-login-status');
-                    if (st) { st.textContent = 'Verification failed. Please try again.'; st.classList.remove('status-success'); st.classList.add('status-error'); }
+                googleIdToken = token;
+                googleIdEmail = email;
+                // Update UI to reflect pending verification
+                const st = document.getElementById('google-login-status');
+                if (st) { st.textContent = email ? ('Verifying token for ' + email + '…') : 'No email in credential.'; st.classList.remove('status-success'); st.classList.add('status-error'); }
+                const emailEl = document.getElementById('email');
+                if (emailEl && email) {
+                    emailEl.value = email; emailEl.readOnly = true; emailEl.classList.remove('error');
+                    const ih = emailEl.closest && emailEl.closest('.form-group')?.querySelector('.inline-error');
+                    if (ih) ih.remove();
                 }
+                if (!token || !email || !sub) {
+                    if (st) { st.textContent = 'Credential incomplete. Please retry Google Sign-In.'; }
+                    return;
+                }
+                // Perform remote verification against Google tokeninfo
+                fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(token))
+                    .then(r => r.ok ? r.json() : Promise.reject(new Error('tokeninfo HTTP ' + r.status)))
+                    .then(data => {
+                        const tkEmail = data.email || '';
+                        const tkSub = data.sub || '';
+                        if (tkEmail === email && tkSub === sub) {
+                            googleEmailVerified = true;
+                            googleVerifiedEmail = email;
+                            if (st) { st.textContent = 'Verified as ' + email; st.classList.remove('status-error'); st.classList.add('status-success'); }
+                            const btn = document.getElementById('google-login-btn');
+                            if (btn) btn.style.display = 'none';
+                        } else {
+                            if (st) { st.textContent = 'Token mismatch. Please re-authenticate.'; st.classList.remove('status-success'); st.classList.add('status-error'); }
+                            googleEmailVerified = false;
+                        }
+                    })
+                    .catch(err => {
+                        if (st) { st.textContent = 'Token verification failed: ' + (err.message || err); st.classList.remove('status-success'); st.classList.add('status-error'); }
+                        googleEmailVerified = false;
+                    });
             } catch (err) {
                 const st = document.getElementById('google-login-status');
                 if (st) { st.textContent = 'Verification error. Please try again.'; st.classList.remove('status-success'); st.classList.add('status-error'); }
