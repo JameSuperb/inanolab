@@ -202,6 +202,14 @@
             text-align: center;
             font-weight: 300;
         }
+        .section-subtitle {
+            max-width: 960px;
+            margin: -0.5rem auto 1.25rem;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #6c757d;
+            text-align: center;
+        }
 
         /* About Section */
         .about-grid {
@@ -506,6 +514,123 @@
             padding: 2rem;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             text-align: center;
+            border: 2px solid transparent;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .prep-step:hover,
+        .prep-step:focus-within {
+            transform: translateY(-4px);
+            border-color: #3498db;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        .prep-photo {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 0.5rem 0 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        /* Sample Prep - Quick Readiness Checklist */
+        .checklist-card {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            padding: 1.25rem;
+            margin-top: 1rem;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .checklist-card.ready {
+            border-color: #27ae60;
+            box-shadow: 0 8px 20px rgba(39, 174, 96, 0.15);
+        }
+        .checklist-card h3 {
+            margin: 0 0 0.25rem 0;
+        }
+        .checklist-help {
+            margin: 0 0 1rem 0;
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 0.75rem;
+        }
+        #prep-checklist fieldset {
+            margin: 0;
+            padding: 0.85rem 0.9rem 1rem;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+        }
+        #prep-checklist legend {
+            padding: 0 0.35rem;
+            margin-left: -0.35rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .yn-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .yn-option {
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+        }
+        .yn-option input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .yn-option span {
+            display: inline-block;
+            padding: 0.45rem 0.9rem;
+            border: 1px solid #e9ecef;
+            border-radius: 9999px;
+            background: #fff;
+            color: #495057;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .yn-option:hover span {
+            border-color: #cfd4da;
+        }
+        .yn-option input:focus + span {
+            outline: 3px solid rgba(52, 152, 219, 0.35);
+            outline-offset: 1px;
+        }
+        .yn-option input:checked + span {
+            background: #e9f3fb;
+            border-color: #3498db;
+            color: #2c3e50;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.18);
+        }
+        .yn-option input[value="yes"]:checked + span {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.18);
+        }
+        .checklist-status {
+            margin-top: 0.9rem;
+            font-size: 0.95rem;
+            color: #6c757d;
+        }
+        .ready-message {
+            margin-top: 0.6rem;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
 
         /* Preparation table */
@@ -574,6 +699,14 @@
             color: white;
             font-size: 1.5rem;
             font-weight: bold;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+            will-change: transform;
+        }
+        .prep-step:hover .step-icon,
+        .prep-step:focus-within .step-icon {
+            transform: scale(1.06);
+            background: #3aa0e0;
+            box-shadow: 0 6px 18px rgba(52, 152, 219, 0.25), 0 0 0 6px rgba(52, 152, 219, 0.12);
         }
 
         /* Extras Section */
@@ -1059,7 +1192,7 @@
                 <h4 class="team-heading" style="margin-top: 1.5rem;">📥 Sample Raw Data</h4>
                 <div class="extra-service" id="raw-data-download">
                     <p style="margin-top: 0; color: #6c757d;">
-                        Download a sample package containing SEM micrographs and EDX outputs (images, spectrum, and CSV data).
+                        Download a sample package containing SEM micrographs and EDX outputs (images, spectrum, and document report data).
                     </p>
                     <!-- TODO: Replace href with your Google Drive folder link -->
                     <a class="cta-button" href="https://drive.google.com/drive/folders/1Z2xSd-d935kg6bFXfIpvtg8A_0EWd5Td?usp=sharing" target="_blank" rel="noopener noreferrer"
@@ -1148,6 +1281,7 @@
         <div id="preparation-page" class="page">
             <section class="section">
                 <h2>Sample Preparation Guidelines</h2>
+                <p class="section-subtitle">Proper sample preparation is essential for obtaining high-quality SEM and EDX results. Only solid, fully dried samples are accepted to ensure safety and prevent instrument contamination. Each sample should be small, clean, and securely packaged in a labeled container. Following these preparation guidelines helps achieve accurate imaging, reliable elemental analysis, and smooth processing of your request.</p>
                 <div class="table-wrap" aria-label="Allowed vs. Not Allowed Samples table">
                     <table class="prep-table">
                         <caption>Allowed vs. Not Allowed Samples for SEM-EDX Analysis</caption>
@@ -1205,27 +1339,102 @@
                     <div class="prep-step">
                         <div class="step-icon">1</div>
                         <h4>Sample Mass & Size</h4>
-                        <p>Preferred small samples. The average sample size has a surface area of 1 cm^2 with a thickness in millimeters. The ideal mass is a few milligrams (~5mg)</p>
+                        <img class="prep-photo" src="Images/samplemasssize.png" alt="Sample mass and size example" loading="lazy" decoding="async" onerror="this.onerror=null; this.style.display='none';">
+                        <p>For best imaging and EDX analysis, submit small, solid samples. A typical sample should have a surface area of around 1 cm² and a thickness of a few millimeters. Only a small amount of material is required—an ideal mass is just a few milligrams (≈ 5 mg).</p>
                     </div>
                     <div class="prep-step">
                         <div class="step-icon">2</div>
                         <h4>Drying</h4>
-                        <p>Remove oils, dust, and contaminants. Use appropriate solvents. Avoid touching analysis areas.</p>
+                        <img class="prep-photo" src="Images/drying.png" alt="Drying samples before analysis" loading="lazy" decoding="async" onerror="this.onerror=null; this.style.display='none';">
+                        <p>Samples must be completely dry to prevent contamination, outgassing, or damage to the equipment. Samples may be dried using methods such as air drying or sun drying, or through laboratory techniques like oven drying and freeze drying depending on your sample's characteristics. Ensuring samples are thoroughly dried helps achieve high-quality imaging and accurate elemental results.</p>
                     </div>
                     <div class="prep-step">
                         <div class="step-icon">3</div>
-                        <h4>Documentation</h4>
-                        <p>Label samples clearly. Provide detailed description of areas of interest and analysis goals.</p>
+                        <h4>Packaging and Label</h4>
+                        <img class="prep-photo" src="Images/packaginglabel.png" alt="Packaging and labeling of samples" loading="lazy" decoding="async" onerror="this.onerror=null; this.style.display='none';">
+                        <p>Ensure all samples are placed in clean and secure containers. Each container must be tightly sealed to prevent spills or contamination. Label every sample clearly with your name and sample code for easy identification.</p>
                     </div>
                 </div>
                 <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 1.5rem; margin-top: 2rem;">
-                    <h4 style="color: #856404; margin-bottom: 1rem;">⚠️ Important Notes:</h4>
+                    <h4 style="color: #856404; margin-bottom: 1rem;">⚠️ Important Note:</h4>
                     <ul style="color: #856404; margin: 0;">
-                        <li>Avoid samples containing mercury, radioactive materials, or biological hazards</li>
-                        <li>Magnetic samples may require special handling</li>
-                        <li>Volatile materials should be pre-treated or avoided</li>
-                        <li>Contact us for guidance on unusual sample types</li>
+                        <li>Contact us for guidance on unusual sample types. Email: admin@inanolab.com  Mobile: 09565433371</li>
                     </ul>
+                </div>
+
+                <!-- Quick Readiness Checklist -->
+                <div id="prep-checklist" class="checklist-card" role="region" aria-labelledby="prep-checklist-title">
+                    <h3 id="prep-checklist-title">Quick Readiness Checklist</h3>
+                    <p class="checklist-help">Confirm your samples meet the basic requirements before submitting a request.</p>
+                    <div class="checklist-grid">
+                        <fieldset>
+                            <legend>Are your samples solid?</legend>
+                            <div class="yn-group">
+                                <label class="yn-option">
+                                    <input type="radio" name="chk-solid" value="yes">
+                                    <span>Yes</span>
+                                </label>
+                                <label class="yn-option">
+                                    <input type="radio" name="chk-solid" value="no">
+                                    <span>No</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Are your samples small?</legend>
+                            <div class="yn-group">
+                                <label class="yn-option">
+                                    <input type="radio" name="chk-small" value="yes">
+                                    <span>Yes</span>
+                                </label>
+                                <label class="yn-option">
+                                    <input type="radio" name="chk-small" value="no">
+                                    <span>No</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Are your samples dried thoroughly?</legend>
+                            <div class="yn-group">
+                                <label class="yn-option">
+                                    <input type="radio" name="chk-dried" value="yes">
+                                    <span>Yes</span>
+                                </label>
+                                <label class="yn-option">
+                                    <input type="radio" name="chk-dried" value="no">
+                                    <span>No</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Are your samples packed properly?</legend>
+                            <div class="yn-group">
+                                <label class="yn-option">
+                                    <input type="radio" name="chk-packed" value="yes">
+                                    <span>Yes</span>
+                                </label>
+                                <label class="yn-option">
+                                    <input type="radio" name="chk-packed" value="no">
+                                    <span>No</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Are your samples labeled properly?</legend>
+                            <div class="yn-group">
+                                <label class="yn-option">
+                                    <input type="radio" name="chk-labeled" value="yes">
+                                    <span>Yes</span>
+                                </label>
+                                <label class="yn-option">
+                                    <input type="radio" name="chk-labeled" value="no">
+                                    <span>No</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+                    <p class="checklist-status" aria-live="polite">0/5 Yes selected</p>
+                    <div class="ready-message" hidden>✅ All set! Your samples appear ready for submission.</div>
                 </div>
             </section>
         </div>
@@ -2952,6 +3161,32 @@
                 otherInput.value = '';
             }
         }
+
+        // Prep Checklist: initialize and update logic
+        function updatePrepChecklist(root) {
+            if (!root) return;
+            const yesCount = [
+                'chk-solid', 'chk-small', 'chk-dried', 'chk-packed', 'chk-labeled'
+            ].reduce((acc, name) => acc + (root.querySelector(`input[name="${name}"][value="yes"]:checked`) ? 1 : 0), 0);
+
+            const status = root.querySelector('.checklist-status');
+            if (status) status.textContent = `${yesCount}/5 Yes selected`;
+
+            const ready = yesCount === 5;
+            const msg = root.querySelector('.ready-message');
+            if (msg) msg.hidden = !ready;
+            root.classList.toggle('ready', !!ready);
+        }
+
+        function initPrepChecklist() {
+            const card = document.getElementById('prep-checklist');
+            if (!card) return;
+            const inputs = card.querySelectorAll('input[type="radio"][name^="chk-"]');
+            inputs.forEach(inp => inp.addEventListener('change', () => updatePrepChecklist(card)));
+            updatePrepChecklist(card);
+        }
+
+        window.addEventListener('load', initPrepChecklist);
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ae0874705b04cf',t:'MTc1OTg0Njc2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
