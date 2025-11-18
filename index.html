@@ -174,6 +174,30 @@
             box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
         }
 
+        /* Subtle/secondary action button */
+        .btn-subtle {
+            display: inline-block;
+            background: #f1f3f5;
+            color: #2c3e50;
+            padding: 0.75rem 1.25rem;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: 1px solid #dee2e6;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+            box-shadow: none;
+        }
+        .btn-subtle:hover {
+            background: #e9ecef;
+            border-color: #cfd4da;
+            transform: translateY(-1px);
+        }
+        .btn-subtle:focus {
+            outline: 3px solid rgba(52, 152, 219, 0.35);
+            outline-offset: 2px;
+        }
+
         /* Main Content */
         .main-content {
             max-width: 1200px;
@@ -417,6 +441,42 @@
             font-weight: 700;
             color: #3498db;
         }
+
+        /* Promo banner (Request form) */
+        .promo-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            background: #eef2ff;
+            border: 1px solid #bfdbfe;
+            color: #1e3a8a;
+            padding: 0.6rem 0.85rem;
+            border-radius: 8px;
+            margin: 0.5rem 0 1rem;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            flex-wrap: wrap;
+        }
+        .promo-banner > span { flex: 1 1 auto; min-width: 220px; }
+        .promo-banner .promo-dismiss {
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent;
+            border: none;
+            color: #1e3a8a;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: 700;
+            text-align: center;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .promo-banner .promo-dismiss:hover { background: rgba(191, 219, 254, 0.35); }
+        .promo-banner .promo-dismiss:focus { outline: 2px solid #bfdbfe; outline-offset: 2px; }
 
         /* Voucher + Summary (Request form) */
         .services-voucher {
@@ -842,23 +902,7 @@
             transform: translateY(-2px);
         }
 
-        .clear-button {
-            display: inline-block;
-            background: #f1f3f5;
-            color: #495057;
-            padding: 1rem 1.25rem;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            font-size: 1.05rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 2rem;
-            margin-left: 0.5rem;
-        }
-        .clear-button:hover {
-            background: #e9ecef;
-        }
+        
 
         /* Footer */
         .footer {
@@ -1195,7 +1239,7 @@
                         Download a sample package containing SEM micrographs and EDX outputs (images, spectrum, and document report data).
                     </p>
                     <!-- TODO: Replace href with your Google Drive folder link -->
-                    <a class="cta-button" href="https://drive.google.com/drive/folders/1Z2xSd-d935kg6bFXfIpvtg8A_0EWd5Td?usp=sharing" target="_blank" rel="noopener noreferrer"
+                    <a class="btn-subtle" href="https://drive.google.com/drive/folders/1Z2xSd-d935kg6bFXfIpvtg8A_0EWd5Td?usp=sharing" target="_blank" rel="noopener noreferrer"
                        aria-label="Download sample SEM and EDX raw data from Google Drive">
                         Download Sample Raw Data
                     </a>
@@ -1358,7 +1402,7 @@
                 <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 1.5rem; margin-top: 2rem;">
                     <h4 style="color: #856404; margin-bottom: 1rem;">⚠️ Important Note:</h4>
                     <ul style="color: #856404; margin: 0;">
-                        <li>Contact us for guidance on unusual sample types. Email: admin@inanolab.com  Mobile: 09565433371</li>
+                        <li>Contact us for guidance on unusual sample types.<br>Email: admin@inanolab.com<br>Mobile: 09298051084</li>
                     </ul>
                 </div>
 
@@ -1442,39 +1486,7 @@
         <!-- Extras Page -->
         <div id="extras-page" class="page">
             <section class="section">
-                <h2>Additional Services</h2>
-                <div class="extras-grid">
-                    <div class="extra-service">
-                        <h4>🖼️ Advanced Image Processing</h4>
-                        <p><strong>$25 per sample</strong></p>
-                        <p>Enhanced contrast, noise reduction, measurement annotations, and publication-ready formatting.</p>
-                    </div>
-                    <div class="extra-service">
-                        <h4>📊 Extended EDX Analysis</h4>
-                        <p><strong>$50 per sample</strong></p>
-                        <p>Detailed quantitative analysis, phase mapping, line scans, and statistical evaluation of composition.</p>
-                    </div>
-                    <div class="extra-service">
-                        <h4>⚡ Expedited Service</h4>
-                        <p><strong>+$25-50 per sample</strong></p>
-                        <p>Rush processing available: 24-hour (+$50) or 48-hour (+$25) turnaround options.</p>
-                    </div>
-                    <div class="extra-service">
-                        <h4>👨‍🔬 Expert Consultation</h4>
-                        <p><strong>$100 per hour</strong></p>
-                        <p>One-on-one discussion of results, interpretation guidance, and recommendations for further analysis.</p>
-                    </div>
-                    <div class="extra-service">
-                        <h4>📋 Detailed Reporting</h4>
-                        <p><strong>$75 per sample</strong></p>
-                        <p>Comprehensive written report with methodology, detailed findings, and professional interpretation.</p>
-                    </div>
-                    <div class="extra-service">
-                        <h4>🔄 Sample Return</h4>
-                        <p><strong>$15 shipping fee</strong></p>
-                        <p>Secure packaging and return shipping of analyzed samples (when possible and requested).</p>
-                    </div>
-                </div>
+                <h2>Coming Soon!</h2>
             </section>
         </div>
 
@@ -1482,8 +1494,11 @@
         <div id="request-page" class="page">
             <section class="section">
                 <h2>Service Request Form</h2>
-                <div class="form-container">
-                    <form id="service-form" novalidate>
+                <div id="promo-banner" class="promo-banner" role="note" aria-live="polite">
+                    <span>Holiday Promo: 10% off with code <strong>xmas</strong>. Enter it in the Voucher Code below.</span>
+                    <button type="button" class="promo-dismiss" aria-label="Dismiss promotion">×</button>
+                </div>
+                <form id="service-form" novalidate>
                         <!-- A. Requestee Information -->
                         <div class="form-card">
                             <h3 class="form-section-title">A. Requestee Information</h3>
@@ -1682,10 +1697,8 @@
                             </div>
                         </div>
                         <button type="submit" class="submit-button">Submit Service Request</button>
-                        <button type="button" id="clear-form-button" class="clear-button" aria-label="Clear form and attachments">Clear Form</button>
                         <div id="form-messages" aria-live="polite"></div>
-                    </form>
-                </div>
+                </form>
             </section>
         </div>
     </main>
@@ -1705,6 +1718,7 @@
                 <h4>Contact Information</h4>
                 <p>📧 admin@inanolab.com</p>
                 <p>📞 09298051084</p>
+                <p>📘 <a href="https://www.facebook.com/SEMEDXbyiNanoResearch/" target="_blank" rel="noopener noreferrer">Facebook Page</a></p>
                 <p>📍 Room 113, STRC Building,<br>De La Salle University - Manila</p>
             </div>
             <div class="footer-section">
@@ -1724,7 +1738,7 @@
                 <h4>&copy; <span class="current-year"></span> iNanolab.com</h4>
                 <p>i-Nano Research Facility</p>
                 <p>🖋️ Head Editor: Dr. Gil Nonato Santos</p>
-                <p>💻 Head Developer: Dr. James Salveo Olarvve</p>
+                <p>💻 Head Developer: Dr. James Salveo Olarve</p>
                 <p><a href="privacy.html" target="_self" rel="noopener">Privacy Policy</a></p>
             </div>
         </div>
@@ -1741,12 +1755,12 @@
         const API_KEY = '941E5441B3FC73E61214612443D92'; // Provided key
         // Form submission endpoint (Apps Script Web App router expecting func=addRow)
         // TODO: If you deployed a newer Web App for addRow, update this URL.
-        const GAS_FORM_URL = 'https://script.google.com/macros/s/AKfycbz0lBEdZahzoo3mEIarxLkP3XAN6foQlxRgvbKUJXnkbE4RphAp249dzKP2il6wQjOX/exec';
+        const GAS_FORM_URL = 'https://script.google.com/macros/s/AKfycbwi62tRnXQkNL-bMIgLc34X-iRiJ8UIm0i8TSbpbdQhiPntWyOLduvsmOd_gfYnLEwl/exec';
         const FORM_API_KEY = 'BgWFBsc9NAQeyd7DBfkF3qdPR6EdeieB';
         // Client-side state of uploaded files: {fileId, name, size, type}
         const uploadedFiles = [];
         // Voucher state for Request total
-        let appliedVoucher = null; // 'promo' | null
+        let appliedVoucher = null; // 'xmas' | null
         const VOUCHER_RATE = 0.10;
         let lastBaseServicesTotal = null; // number|null
 
@@ -1844,7 +1858,7 @@
             // Apply voucher if present
             let discountAmount = 0;
             let finalTotal = baseTotal;
-            if (appliedVoucher === 'promo') {
+            if (appliedVoucher === 'xmas') {
                 discountAmount = baseTotal * VOUCHER_RATE;
                 finalTotal = baseTotal - discountAmount;
                 if (summary && subEl && discEl && finalEl) {
@@ -2137,10 +2151,10 @@
                 googleIdEmail: googleIdEmail,
                 // Voucher + totals snapshot
                 voucherCode: appliedVoucher || '',
-                discountRate: appliedVoucher === 'promo' ? VOUCHER_RATE : 0,
+                discountRate: appliedVoucher === 'xmas' ? VOUCHER_RATE : 0,
                 baseServicesTotal: lastBaseServicesTotal,
-                discountAmount: appliedVoucher === 'promo' && lastBaseServicesTotal != null ? (lastBaseServicesTotal * VOUCHER_RATE) : 0,
-                finalServicesTotal: lastBaseServicesTotal != null ? (lastBaseServicesTotal - (appliedVoucher === 'promo' ? lastBaseServicesTotal * VOUCHER_RATE : 0)) : null
+                discountAmount: appliedVoucher === 'xmas' && lastBaseServicesTotal != null ? (lastBaseServicesTotal * VOUCHER_RATE) : 0,
+                finalServicesTotal: lastBaseServicesTotal != null ? (lastBaseServicesTotal - (appliedVoucher === 'xmas' ? lastBaseServicesTotal * VOUCHER_RATE : 0)) : null
             };
         }
 
@@ -2511,9 +2525,6 @@
                 renderMessage('✅ <strong>Request submitted successfully!</strong><br>Please reply to our email to confirm your service request. Thank you', 'success');
                 // Small success toast to inform about email confirmation
                 showToast('✅ Request submitted! Please check your email for confirmation.', 'success', 3400);
-                // Reveal Clear Form button only after successful submission
-                const clearBtn = document.getElementById('clear-form-button');
-                if (clearBtn) clearBtn.style.display = 'inline-block';
                 // Clear form and state but keep success message visible
                 clearFormAndState({ clearMessagesBox: false });
                 submitButton.textContent = originalText;
@@ -2528,18 +2539,7 @@
             });
         });
 
-        // Clear Form button handler
-        const clearBtnEl = document.getElementById('clear-form-button');
-        if (clearBtnEl) {
-            // Hidden by default; shown only after successful submission
-            clearBtnEl.style.display = 'none';
-            clearBtnEl.addEventListener('click', function(){
-                clearFormAndState({ clearMessagesBox: true });
-                showToast('Form cleared.', 'info', 1800);
-                // Hide the button after clearing the form
-                this.style.display = 'none';
-            });
-        }
+        
 
         // Page navigation functionality
         function showPage(pageId) {
@@ -2562,6 +2562,13 @@
             const activeButton = document.querySelector(`[data-section="${pageId}"]`);
             if (activeButton) {
                 activeButton.classList.add('active');
+            }
+
+            // If navigating to Request page, ensure promo banner is visible if eligible
+            if (pageId === 'request') {
+                if (typeof ensurePromoBannerVisibleIfEligible === 'function') {
+                    ensurePromoBannerVisibleIfEligible();
+                }
             }
             
             // Scroll to top of main content
@@ -2870,10 +2877,15 @@
                     setVoucherStatus('Total not available yet. Select options first.', 'error');
                     return;
                 }
-                if (code === 'promo') {
-                    appliedVoucher = 'promo';
+                if (code === 'xmas') {
+                    appliedVoucher = 'xmas';
                     setVoucherStatus('10% discount applied.', 'success');
                     updateServicesCost();
+                    // Hide promo banner after successful apply
+                    const pb = document.getElementById('promo-banner');
+                    if (pb) {
+                        pb.style.display = 'none';
+                    }
                     // Toggle buttons: hide Apply, show Remove
                     if (applyBtn) applyBtn.style.display = 'none';
                     if (clearBtn) clearBtn.style.display = 'inline-block';
@@ -2898,11 +2910,47 @@
                 if (applyBtn) applyBtn.style.display = 'inline-block';
                 if (clearBtn) clearBtn.style.display = 'none';
                 if (input) input.disabled = false;
+                // Re-show promo banner when voucher is removed
+                try {
+                    if (typeof ensurePromoBannerVisibleIfEligible === 'function') {
+                        ensurePromoBannerVisibleIfEligible();
+                    } else {
+                        const pb = document.getElementById('promo-banner');
+                        if (pb) pb.style.display = '';
+                    }
+                } catch (_) {}
             });
         }
 
         // Initialize voucher UI after page load
         window.addEventListener('load', initVoucherUI);
+        
+        // Promo banner: lazy init on Request page only (dismiss without persistence)
+        function initPromoBanner() {
+            const banner = document.getElementById('promo-banner');
+            if (!banner) return;
+            if (banner.dataset.bound === '1') return; // already initialized
+            const btn = banner.querySelector('.promo-dismiss');
+            if (btn) {
+                btn.addEventListener('click', function(){
+                    banner.style.display = 'none';
+                });
+            }
+            banner.dataset.bound = '1';
+        }
+        
+        // Ensure banner visibility when navigating to Request page
+        function ensurePromoBannerVisibleIfEligible() {
+            const banner = document.getElementById('promo-banner');
+            if (!banner) return;
+            // ensure handlers are wired when we first land on Request page
+            initPromoBanner();
+            if (appliedVoucher === 'xmas') {
+                banner.style.display = 'none';
+            } else {
+                banner.style.display = '';
+            }
+        }
         
         // Gallery & Lightbox
         let galleryThumbs = [];
