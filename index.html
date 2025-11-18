@@ -655,6 +655,24 @@
             transform: translateY(-2px);
         }
 
+        .clear-button {
+            display: inline-block;
+            background: #f1f3f5;
+            color: #495057;
+            padding: 1rem 1.25rem;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 2rem;
+            margin-left: 0.5rem;
+        }
+        .clear-button:hover {
+            background: #e9ecef;
+        }
+
         /* Footer */
         .footer {
             background: #2c3e50;
@@ -1343,6 +1361,7 @@
                             </div>
                         </div>
                         <button type="submit" class="submit-button">Submit Service Request</button>
+                        <button type="button" id="clear-form-button" class="clear-button" aria-label="Clear form and attachments">Clear Form</button>
                         <div id="form-messages" aria-live="polite"></div>
                     </form>
                 </div>
@@ -1928,6 +1947,50 @@
             if (box) box.innerHTML = '';
         }
 
+        // Clear the entire form and local state (including attachments)
+        function clearFormAndState(opts = {}) {
+            const { clearMessagesBox = true } = opts || {};
+
+            // Clear messages (optional)
+            if (clearMessagesBox) clearMessages();
+            // Clear inline errors
+            document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+            document.querySelectorAll('.inline-error').forEach(el => el.remove());
+
+            // Reset form fields
+            const form = document.getElementById('service-form');
+            if (form) form.reset();
+
+            // Clear uploaded files and UI
+            uploadedFiles.length = 0;
+            renderUploadedFiles();
+            const fileInput = document.getElementById('file-input');
+            if (fileInput) fileInput.value = '';
+
+            // Reset voucher and totals
+            appliedVoucher = null;
+            lastBaseServicesTotal = null;
+            const vi = document.getElementById('voucher-input');
+            if (vi) vi.value = '';
+            const vs = document.getElementById('voucher-status');
+            if (vs) { vs.textContent = ''; vs.classList.remove('success','error'); }
+            const summary = document.getElementById('services-summary');
+            if (summary) summary.hidden = true;
+            updateServicesCost();
+
+            // Reset Google verification state and UI
+            googleEmailVerified = false;
+            googleVerifiedEmail = '';
+            googleIdToken = null;
+            googleUserId = null;
+            const emailField = document.getElementById('email');
+            if (emailField) { emailField.readOnly = true; emailField.value = ''; emailField.classList.remove('error'); }
+            const gbtn = document.getElementById('google-login-btn');
+            if (gbtn) gbtn.style.display = '';
+            const gst = document.getElementById('google-login-status');
+            if (gst) { gst.textContent = 'Use Google Sign-In to verify your email.'; gst.classList.remove('status-success','status-error'); }
+        }
+
         // (Deprecated) Old batch upload function retained for reference but unused now.
         // function submitServiceRequestGAS(meta, files, onProgress) { /* deprecated */ }
 
@@ -2078,34 +2141,14 @@
             submitFormToGAS(formPayload).then(resp => {
                 if (statusBox) statusBox.remove();
                 renderMessage('✅ <strong>Request submitted successfully!</strong><br>We will contact you within 24 hours to confirm your analysis requirements and provide a detailed quote.', 'success');
-                document.getElementById('service-form').reset();
-                // Clear local uploaded files state (optionally could keep)
-                uploadedFiles.length = 0;
-                renderUploadedFiles();
+                // Small success toast to inform about email confirmation
+                showToast('✅ Request submitted! Please check your email for confirmation.', 'success', 3400);
+                // Clear form and state but keep success message visible
+                clearFormAndState({ clearMessagesBox: false });
                 submitButton.textContent = originalText;
                 submitButton.disabled = false;
                 const box = document.getElementById('form-messages');
                 if (box) box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Reset voucher UI/state
-                appliedVoucher = null;
-                lastBaseServicesTotal = null;
-                const vi = document.getElementById('voucher-input');
-                if (vi) vi.value = '';
-                const vs = document.getElementById('voucher-status');
-                if (vs) { vs.textContent = ''; vs.classList.remove('success','error'); }
-                const summary = document.getElementById('services-summary');
-                if (summary) summary.hidden = true;
-                updateServicesCost();
-                // Reset Google verification state and UI
-                googleEmailVerified = false;
-                googleVerifiedEmail = '';
-                googleIdToken = null;
-                const emailField = document.getElementById('email');
-                if (emailField) { emailField.readOnly = true; emailField.value = ''; emailField.classList.remove('error'); }
-                const gbtn = document.getElementById('google-login-btn');
-                if (gbtn) gbtn.style.display = '';
-                const gst = document.getElementById('google-login-status');
-                if (gst) { gst.textContent = 'Use Google Sign-In to verify your email.'; gst.classList.remove('status-success','status-error'); }
             }).catch(err => {
                 if (statusBox) statusBox.remove();
                 renderMessage(`❌ Submission failed: ${err.message || err}`, 'error');
@@ -2113,6 +2156,15 @@
                 submitButton.disabled = false;
             });
         });
+
+        // Clear Form button handler
+        const clearBtnEl = document.getElementById('clear-form-button');
+        if (clearBtnEl) {
+            clearBtnEl.addEventListener('click', function(){
+                clearFormAndState({ clearMessagesBox: true });
+                showToast('Form cleared.', 'info', 1800);
+            });
+        }
 
         // Page navigation functionality
         function showPage(pageId) {
