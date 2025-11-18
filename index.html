@@ -1797,7 +1797,7 @@
             };
         }
 
-        // Build JSON payload matching Google Sheet headers / required structure
+        // Build JSON payload matching Google Sheet headers / and camelCase API structure
         function buildFormPayload(meta){
             // Position resolution
             let positionResolved = meta.position === 'other' && meta.otherPosition ? meta.otherPosition : meta.position;
@@ -1808,7 +1808,35 @@
             // Attachments: clickable Drive links
             const attachmentLinks = (meta.uploadedFileIds || []).map(id => `https://drive.google.com/file/d/${id}/view`);
             return {
+                // Authentication
                 apiKey: FORM_API_KEY,
+                key: FORM_API_KEY,
+                googleIdToken: meta.googleIdToken || googleIdToken || null,
+
+                // CamelCase API fields
+                fullName: meta.fullName,
+                email: meta.email,
+                mobile: meta.mobileNumber,
+                position: positionResolved,
+                school: meta.schoolName,
+                address: meta.schoolAddress,
+                kindCharacterization: kindLabel,
+                samples: meta.sampleCount,
+                conductive: meta.conductive,
+                deliveryDate: meta.deliveryDate,
+                turnaroundDate: meta.turnaround,
+                subTotalCost: meta.baseServicesTotal,
+                voucherCode: meta.voucherCode || '',
+                discount: meta.discountAmount,
+                totalCost: meta.finalServicesTotal,
+                analysisObjectives: meta.researchObjectives,
+                sampleCharacteristics: meta.sampleCharacteristics,
+                semExpectations: expectations.join(', '),
+                edxElements: meta.edxElements,
+                attachments: attachmentLinks.join(', '),
+                googleId: meta.googleUserId || null,
+
+                // Sheet-header aliases (for backward compatibility)
                 Timestamp: meta.submittedAt,
                 GoogleID: meta.googleUserId || null,
                 'Full Name': meta.fullName,
