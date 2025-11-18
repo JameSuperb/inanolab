@@ -1418,7 +1418,8 @@
         // Google Apps Script Web App endpoints & API key
         const GAS_UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbwinVplLmTXIEcp-ekRTnGEwUOpZJgoV7thg1AvJpd5XpMVNxx_EwQifyywLTYHIqlclg/exec';
         const API_KEY = '941E5441B3FC73E61214612443D92'; // Provided key
-        // New Form submission (JSON) endpoint & key
+        // Form submission endpoint (Apps Script Web App router expecting func=addRow)
+        // TODO: If you deployed a newer Web App for addRow, update this URL.
         const GAS_FORM_URL = 'https://script.google.com/macros/s/AKfycbz0lBEdZahzoo3mEIarxLkP3XAN6foQlxRgvbKUJXnkbE4RphAp249dzKP2il6wQjOX/exec';
         const FORM_API_KEY = 'BgWFBsc9NAQeyd7DBfkF3qdPR6EdeieB';
         // Client-side state of uploaded files: {fileId, name, size, type}
@@ -1822,50 +1823,35 @@
             };
         }
 
-        // Build JSON payload matching Google Sheet headers / and camelCase API structure
+        // Build a flat payload (sheet headers) for Apps Script addRow (urlencoded)
         function buildFormPayload(meta){
             // Position resolution
-            let positionResolved = meta.position === 'other' && meta.otherPosition ? meta.otherPosition : meta.position;
-            // Characterization label
+            const positionResolved = meta.position === 'other' && meta.otherPosition ? meta.otherPosition : meta.position;
+            // Characterization label expected by the sheet
             const kindLabel = meta.characterization === 'sem-and-edx' ? 'SEM and EDX' : 'SEM only';
             // Expectations processing (replace 'other' token with value)
             const expectations = (meta.expectations || []).map(v => v === 'other' ? (meta.otherExpectation || 'Other (unspecified)') : v);
             // Attachments: clickable Drive links
             const attachmentLinks = (meta.uploadedFileIds || []).map(id => `https://drive.google.com/file/d/${id}/view`);
+            // Conductive mapping to Yes/No
+            const conductiveLabel = meta.conductive === 'yes' ? 'Yes' : (meta.conductive === 'no' ? 'No' : '');
+            // Local timestamp: YYYY-MM-DD HH:mm
+            const d = new Date();
+            const pad = n => String(n).padStart(2,'0');
+            const tsLocal = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+            // Numeric fields to plain strings (or empty if null)
+            const toNumStr = v => (v === null || typeof v === 'undefined' || v === '') ? '' : String(v);
+
             return {
-                // Authentication
-                apiKey: FORM_API_KEY,
+                // Router function + API key
+                func: 'addRow',
                 key: FORM_API_KEY,
-                googleIdToken: meta.googleIdToken || googleIdToken || null,
 
-                // CamelCase API fields
-                fullName: meta.fullName,
-                email: meta.email,
-                mobile: meta.mobileNumber,
-                position: positionResolved,
-                school: meta.schoolName,
-                address: meta.schoolAddress,
-                kindCharacterization: kindLabel,
-                samples: meta.sampleCount,
-                conductive: meta.conductive,
-                deliveryDate: meta.deliveryDate,
-                turnaroundDate: meta.turnaround,
-                subTotalCost: meta.baseServicesTotal,
-                voucherCode: meta.voucherCode || '',
-                discount: meta.discountAmount,
-                totalCost: meta.finalServicesTotal,
-                analysisObjectives: meta.researchObjectives,
-                sampleCharacteristics: meta.sampleCharacteristics,
-                semExpectations: expectations.join(', '),
-                edxElements: meta.edxElements,
-                attachments: attachmentLinks.join(', '),
-                googleId: meta.googleUserId || null,
-                googleEmail: meta.googleVerifiedEmail || null,
-
-                // Sheet-header aliases (for backward compatibility)
-                Timestamp: meta.submittedAt,
-                GoogleID: meta.googleUserId || null,
-                GoogleEmail: meta.googleVerifiedEmail || null,
+                // Exact sheet header keys
+                Timestamp: tsLocal,
+                GoogleID: meta.googleUserId || '',
+                GoogleEmail: meta.googleVerifiedEmail || '',
                 'Full Name': meta.fullName,
                 Email: meta.email,
                 Mobile: meta.mobileNumber,
@@ -1874,13 +1860,13 @@
                 Address: meta.schoolAddress,
                 KindCharacterization: kindLabel,
                 Samples: meta.sampleCount,
-                Conductive: meta.conductive,
+                Conductive: conductiveLabel,
                 DeliveryDate: meta.deliveryDate,
                 TurnaroundDate: meta.turnaround,
-                SubTotalCost: meta.baseServicesTotal,
+                SubTotalCost: toNumStr(meta.baseServicesTotal),
                 VoucherCode: meta.voucherCode || '',
-                Discount: meta.discountAmount,
-                TotalCost: meta.finalServicesTotal,
+                Discount: toNumStr(meta.discountAmount),
+                TotalCost: toNumStr(meta.finalServicesTotal),
                 AnalysisObjectives: meta.researchObjectives,
                 SampleCharacteristics: meta.sampleCharacteristics,
                 SEMExpectations: expectations.join(', '),
@@ -1891,10 +1877,16 @@
 
         async function submitFormToGAS(payload){
             if (!GAS_FORM_URL) throw new Error('Form endpoint not configured');
+            // Convert flat object to urlencoded for Apps Script
+            const params = new URLSearchParams();
+            Object.keys(payload || {}).forEach(k => {
+                const v = payload[k];
+                params.set(k, v == null ? '' : String(v));
+            });
             const resp = await fetch(GAS_FORM_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params
             });
             const text = await resp.text();
             let json; try { json = JSON.parse(text); } catch(_) {}
