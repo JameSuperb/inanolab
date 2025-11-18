@@ -764,6 +764,37 @@
             margin-top: 1rem;
             border: 1px solid #c3e6cb;
         }
+        /* Toasts (auto-dismiss messages) */
+        .toast-container {
+            position: fixed;
+            top: 72px; /* below fixed header */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000; /* above lightbox (2000) and header (1000) */
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 0 12px;
+            width: min(92vw, 640px);
+        }
+        .toast {
+            pointer-events: auto;
+            border-radius: 8px;
+            padding: 10px 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+            border: 1px solid rgba(0,0,0,0.06);
+            color: #1f2937;
+            background: #ffffff;
+            font-size: 0.95rem;
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity 150ms ease, transform 150ms ease;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background: #fde8e9; color: #721c24; border-color: #f5c6cb; }
+        .toast.info { background: #eef2ff; color: #1e3a8a; border-color: #bfdbfe; }
+        .toast.success { background: #d4edda; color: #155724; border-color: #c3e6cb; }
         /* Google Sign-In (email verification) */
         .google-login { margin-top: 0.35rem; }
         #google-login-status { font-size: 0.9rem; color: #6c757d; margin-top: 0.25rem; }
@@ -1113,7 +1144,7 @@
             <section class="section">
                 <h2>Service Request Form</h2>
                 <div class="form-container">
-                    <form id="service-form">
+                    <form id="service-form" novalidate>
                         <!-- A. Requestee Information -->
                         <div class="form-card">
                             <h3 class="form-section-title">A. Requestee Information</h3>
@@ -1133,7 +1164,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="mobile-number">Mobile Number *</label>
-                                    <input type="tel" id="mobile-number" name="mobileNumber" required>
+                                    <input type="tel" id="mobile-number" name="mobileNumber" required inputmode="tel" pattern="^[+0-9()\-\s]{7,20}$" title="Enter a valid phone number: digits and + - ( ) spaces only (7–20 chars)">
                                 </div>
                                 <div class="form-group">
                                     <label for="position">Position/Designation *</label>
@@ -1292,7 +1323,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group full-width">
-                                    <label for="edx-elements">EDX Target Elements</label>
+                                    <label for="edx-elements">EDX Target Elements *</label>
                                     <p style="font-size: 0.9rem; color: #6c757d; margin: 0.25rem 0 0.5rem;">
                                         If you intend to avail the EDX analysis, then kindly specify the chemical elements that you expect to see.
                                     </p>
@@ -1379,6 +1410,10 @@
         let googleEmailVerified = false;
         let googleVerifiedEmail = '';
         let googleIdToken = null; // store only, not sent for verification
+
+        // Debug flag (?debug=1 in URL enables console tracing)
+        const DEBUG = /[?&]debug=1\b/.test(location.search);
+        if (DEBUG) console.info('[DEBUG] Mode ON');
 
         // Cost tables loader (from CSV assets)
         const costTables = { basic: {}, semedx: {} };
@@ -1777,6 +1812,35 @@
             return div;
         }
 
+        // Auto-dismiss toast (short, non-intrusive message)
+        function showToast(message, kind = 'error', ttlMs = 2600) {
+            if (!message) return;
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const t = document.createElement('div');
+            t.className = 'toast ' + (kind || 'info');
+            t.setAttribute('role', 'status');
+            t.setAttribute('aria-live', 'polite');
+            t.textContent = message;
+            container.appendChild(t);
+            // Animate in
+            requestAnimationFrame(() => t.classList.add('show'));
+            // Auto remove
+            const remove = () => {
+                t.classList.remove('show');
+                setTimeout(() => { if (t.parentNode === container) container.removeChild(t); }, 180);
+            };
+            const id = setTimeout(remove, Math.max(1200, ttlMs|0));
+            // Allow manual dismissal on click
+            t.addEventListener('click', () => { clearTimeout(id); remove(); });
+            return t;
+        }
+
         // Upload-specific transient messages below the upload control
         function renderUploadMessage(html, kind = 'info', ttlMs = 2000) {
             const box = document.getElementById('upload-messages');
@@ -1834,90 +1898,117 @@
         // Form validation and submission
         document.getElementById('service-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Clear previous messages
+
+            // Clear previous messages and error states
             clearMessages();
-            
-            // Basic validation
-            const requiredFields = ['full-name', 'email', 'school-name', 'mobile-number', 'school-address', 'position', 'sample-count', 'delivery-date', 'turnaround', 'research-objectives', 'sample-characteristics'];
-            let isValid = true;
-            
-            requiredFields.forEach(fieldId => {
-                const field = document.getElementById(fieldId);
-                const value = field.value.trim();
-                
-                // Remove previous error styling
-                field.classList.remove('error');
-                
-                if (!value) {
-                    field.classList.add('error');
-                    isValid = false;
+            document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+            document.querySelectorAll('.inline-error').forEach(el => el.remove());
+
+            const showFieldError = (el, msg) => {
+                if (!el) return;
+                const group = el.closest && el.closest('.form-group') ? el.closest('.form-group') : el.parentElement;
+                if (group) {
+                    const existing = group.querySelector('.inline-error');
+                    if (existing) existing.remove();
+                    const hint = document.createElement('div');
+                    hint.className = 'error-message inline-error';
+                    hint.textContent = msg;
+                    group.appendChild(hint);
                 }
-            });
-            
-            // Validate "Other" position field if selected
-            const position = document.getElementById('position').value;
-            if (position === 'other') {
-                const otherPosition = document.getElementById('other-position');
-                if (!otherPosition.value.trim()) {
-                    otherPosition.classList.add('error');
-                    isValid = false;
-                } else {
-                    otherPosition.classList.remove('error');
+            };
+
+            const focusAndMessage = (el, msg) => {
+                if (el) {
+                    el.classList.add('error');
+                    try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(_) {}
+                    try { el.focus({ preventScroll: true }); } catch(_) {}
                 }
-            }
-            
-            // Validate radio buttons
-            const characterization = document.querySelector('input[name="characterization"]:checked');
-            const conductive = document.querySelector('input[name="conductive"]:checked');
-            
-            if (!characterization) {
-                isValid = false;
-            }
-            if (!conductive) {
-                isValid = false;
-            }
-            
-            // Validate checkboxes (at least one must be selected)
-            const expectations = document.querySelectorAll('input[name="expectations"]:checked');
-            if (expectations.length === 0) {
-                isValid = false;
-            }
-            
-            // Validate "Other" expectation field if selected
-            const otherExpectationChecked = document.querySelector('input[name="expectations"][value="other"]:checked');
-            if (otherExpectationChecked) {
-                const otherExpectation = document.getElementById('other-expectation');
-                if (!otherExpectation.value.trim()) {
-                    otherExpectation.classList.add('error');
-                    isValid = false;
-                } else {
-                    otherExpectation.classList.remove('error');
-                }
-            }
-            
-            // Validate presence of at least one uploaded file (server-side IDs)
-            if (uploadedFiles.length === 0) {
-                isValid = false;
-            }
-            
-            // Email validation: require Google Sign-In verification
+                showFieldError(el, msg);
+                // Brief, auto-dismissing toast for quick guidance
+                showToast(msg, 'error', 2800);
+            };
+
+            // A. Requestee Information (top to bottom)
+            const fullNameEl = document.getElementById('full-name');
+            if (!fullNameEl.value.trim()) { if (DEBUG) console.warn('[DEBUG] full-name empty'); return focusAndMessage(fullNameEl, 'Please enter your Full Name.'); }
+
             const emailEl = document.getElementById('email');
             if (!googleEmailVerified) {
+                if (DEBUG) console.warn('[DEBUG] email not verified', { googleEmailVerified, googleVerifiedEmail });
                 if (emailEl) emailEl.classList.add('error');
                 const st = document.getElementById('google-login-status');
                 if (st) { st.textContent = 'Please verify your email with Google Sign-In.'; st.classList.remove('status-success'); st.classList.add('status-error'); }
-                isValid = false;
-            } else {
-                // Ensure the email field reflects the verified email
-                if (emailEl && googleVerifiedEmail) {
-                    emailEl.value = googleVerifiedEmail;
-                }
+                showFieldError(emailEl, 'Please verify your Email Address via Google Sign-In.');
+                return focusAndMessage(emailEl, 'Please verify your Email Address via Google Sign-In.');
+            } else if (!emailEl.value.trim()) {
+                // Should not happen, but ensure the field is populated with verified email
+                if (googleVerifiedEmail) emailEl.value = googleVerifiedEmail;
             }
-            
-            if (!isValid) {
-                renderMessage('❌ Please fill in all required fields correctly.', 'error');
-                return;
+
+            const mobileEl = document.getElementById('mobile-number');
+            const phoneVal = (mobileEl.value || '').trim();
+            if (!phoneVal) { if (DEBUG) console.warn('[DEBUG] mobile-number empty'); return focusAndMessage(mobileEl, 'Please enter your Mobile Number.'); }
+            const phoneOk = /^[+0-9()\- ]{7,20}$/.test(phoneVal);
+            if (!phoneOk) { if (DEBUG) console.warn('[DEBUG] mobile-number pattern mismatch', phoneVal); return focusAndMessage(mobileEl, 'Mobile Number can contain digits, spaces, (), -, + (7–20 chars).'); }
+
+            const positionEl = document.getElementById('position');
+            if (!positionEl.value) { if (DEBUG) console.warn('[DEBUG] position empty'); return focusAndMessage(positionEl, 'Please select your Position/Designation.'); }
+            if (positionEl.value === 'other') {
+                const otherPosEl = document.getElementById('other-position');
+                if (!otherPosEl.value.trim()) { if (DEBUG) console.warn('[DEBUG] other-position empty'); return focusAndMessage(otherPosEl, 'Please specify your Position/Designation.'); }
+            }
+
+            const schoolNameEl = document.getElementById('school-name');
+            if (!schoolNameEl.value.trim()) { if (DEBUG) console.warn('[DEBUG] school-name empty'); return focusAndMessage(schoolNameEl, 'Please enter the Name of School / Company / Organization.'); }
+
+            const schoolAddrEl = document.getElementById('school-address');
+            if (!schoolAddrEl.value.trim()) { if (DEBUG) console.warn('[DEBUG] school-address empty'); return focusAndMessage(schoolAddrEl, 'Please enter the Address of School / Company / Organization.'); }
+
+            // B. Requested Services
+            const characterizationEl = document.querySelector('input[name="characterization"]:checked');
+            if (!characterizationEl) { if (DEBUG) console.warn('[DEBUG] characterization missing'); return focusAndMessage(document.querySelector('input[name="characterization"]'), 'Please choose the Kind of Characterization.'); }
+
+            const sampleCountEl2 = document.getElementById('sample-count');
+            const sampleCountVal = parseInt(sampleCountEl2.value, 10);
+            if (!sampleCountVal || sampleCountVal < 1) { if (DEBUG) console.warn('[DEBUG] sample-count invalid', sampleCountVal); return focusAndMessage(sampleCountEl2, 'Please enter a valid Number of Samples.'); }
+
+            const conductiveEl = document.querySelector('input[name="conductive"]:checked');
+            if (!conductiveEl) { if (DEBUG) console.warn('[DEBUG] conductive missing'); return focusAndMessage(document.querySelector('input[name="conductive"]'), 'Please indicate if your samples are conductive.'); }
+
+            const deliveryEl = document.getElementById('delivery-date');
+            if (!deliveryEl.value) { if (DEBUG) console.warn('[DEBUG] delivery-date empty'); return focusAndMessage(deliveryEl, 'Please select the Date to Deliver the Samples.'); }
+
+            const turnaroundEl = document.getElementById('turnaround');
+            if (!turnaroundEl.value) { if (DEBUG) console.warn('[DEBUG] turnaround empty'); return focusAndMessage(turnaroundEl, 'Please select the turnaround time for results.'); }
+
+            // C. Sample Characteristics & Research Requirements
+            const objectivesEl = document.getElementById('research-objectives');
+            if (!objectivesEl.value.trim()) { if (DEBUG) console.warn('[DEBUG] research-objectives empty'); return focusAndMessage(objectivesEl, 'Please provide your Analysis Objectives.'); }
+
+            const sampleCharEl = document.getElementById('sample-characteristics');
+            if (!sampleCharEl.value.trim()) { if (DEBUG) console.warn('[DEBUG] sample-characteristics empty'); return focusAndMessage(sampleCharEl, 'Please describe your sample characteristics.'); }
+
+            const chosenExpectations = document.querySelectorAll('input[name="expectations"]:checked');
+            if (!chosenExpectations.length) { if (DEBUG) console.warn('[DEBUG] expectations none selected'); return focusAndMessage(document.querySelector('input[name="expectations"]'), 'Please select at least one SEM Micrograph Expectation.'); }
+
+            const otherExpChecked = document.querySelector('input[name="expectations"][value="other"]:checked');
+            if (otherExpChecked) {
+                const otherExpEl = document.getElementById('other-expectation');
+                if (!otherExpEl.value.trim()) { if (DEBUG) console.warn('[DEBUG] other-expectation empty'); return focusAndMessage(otherExpEl, 'Please specify your "Other" SEM expectation.'); }
+            }
+
+            // EDX elements are required only if SEM and EDX is selected
+            const charVal = characterizationEl ? characterizationEl.value : '';
+            if (charVal === 'sem-and-edx') {
+                const edxEl = document.getElementById('edx-elements');
+                if (!edxEl.value.trim()) { if (DEBUG) console.warn('[DEBUG] edx-elements empty while sem-and-edx selected'); return focusAndMessage(edxEl, 'Please specify EDX Target Elements for SEM and EDX.'); }
+            }
+
+            // Files uploaded
+            if (uploadedFiles.length === 0) {
+                const uploadBox = document.getElementById('file-input');
+                if (DEBUG) console.warn('[DEBUG] no files uploaded');
+                return focusAndMessage(uploadBox, 'Please upload at least one reference file.');
             }
 
             // Begin metadata submission (files already uploaded individually)
@@ -2050,7 +2141,14 @@
                     googleVerifiedEmail = email;
                     googleIdToken = response.credential;
                     const emailEl = document.getElementById('email');
-                    if (emailEl) { emailEl.value = email; emailEl.readOnly = true; emailEl.classList.remove('error'); }
+                    if (emailEl) {
+                        emailEl.value = email; emailEl.readOnly = true; emailEl.classList.remove('error');
+                        const group = emailEl.closest && emailEl.closest('.form-group');
+                        if (group) {
+                            const ih = group.querySelector('.inline-error');
+                            if (ih) ih.remove();
+                        }
+                    }
                     const st = document.getElementById('google-login-status');
                     if (st) { st.textContent = 'Verified as ' + email; st.classList.remove('status-error'); st.classList.add('status-success'); }
                     const btn = document.getElementById('google-login-btn');
@@ -2095,6 +2193,98 @@
         }
         
         window.addEventListener('load', setupGoogleButtonWhenReady);
+
+        // Live validation helpers and bindings
+        function clearInlineError(el) {
+            if (!el) return;
+            el.classList.remove('error');
+            const group = el.closest && el.closest('.form-group');
+            if (group) {
+                const ih = group.querySelector('.inline-error');
+                if (ih) ih.remove();
+            }
+        }
+
+        function clearGroupErrorFor(selector) {
+            const first = document.querySelector(selector);
+            if (!first) return;
+            const group = first.closest && first.closest('.form-group');
+            if (group) {
+                group.querySelectorAll('.inline-error').forEach(n => n.remove());
+                group.querySelectorAll('.error').forEach(n => n.classList.remove('error'));
+            }
+        }
+
+        function initLiveValidation() {
+            const bind = (sel, ev = 'input', fn) => {
+                const el = document.getElementById(sel) || document.querySelector(sel);
+                if (el) el.addEventListener(ev, fn);
+            };
+
+            // Text inputs and textareas
+            ['full-name','mobile-number','school-name','school-address','research-objectives','sample-characteristics','other-position','other-expectation','edx-elements','sample-count'].forEach(id => {
+                bind(id, 'input', function(){ clearInlineError(this); });
+            });
+            // Selects and date
+            bind('delivery-date', 'change', function(){ clearInlineError(this); });
+            bind('turnaround', 'change', function(){ clearInlineError(this); });
+            bind('position', 'change', function(){ clearInlineError(this); });
+
+            // Radio groups
+            document.querySelectorAll('input[name="characterization"]').forEach(r => {
+                r.addEventListener('change', function(){
+                    clearGroupErrorFor('input[name="characterization"]');
+                    // If switching away from SEM+EDX, clear EDX field error
+                    if (this.value !== 'sem-and-edx') {
+                        const edxEl = document.getElementById('edx-elements');
+                        if (edxEl) clearInlineError(edxEl);
+                    }
+                });
+            });
+            document.querySelectorAll('input[name="conductive"]').forEach(r => {
+                r.addEventListener('change', function(){
+                    clearGroupErrorFor('input[name="conductive"]');
+                });
+            });
+
+            // Expectations checkboxes
+            document.querySelectorAll('input[name="expectations"]').forEach(cb => {
+                cb.addEventListener('change', function(){
+                    const chosen = document.querySelectorAll('input[name="expectations"]:checked');
+                    if (chosen.length) clearGroupErrorFor('input[name="expectations"]');
+                });
+            });
+
+            // File input
+            const fileInput = document.getElementById('file-input');
+            if (fileInput) fileInput.addEventListener('change', function(){ clearInlineError(this); });
+        }
+
+        window.addEventListener('load', initLiveValidation);
+
+        // Phone input sanitizer: allow digits and + - ( ) space; keep first + only
+        function sanitizePhoneValue(val) {
+            if (!val) return '';
+            let s = val.replace(/[^0-9+\-() ]+/g, '');
+            const firstPlus = s.indexOf('+');
+            if (firstPlus !== -1) {
+                s = s.slice(0, firstPlus + 1) + s.slice(firstPlus + 1).replace(/\+/g, '');
+            }
+            return s;
+        }
+
+        function initPhoneSanitizer() {
+            const el = document.getElementById('mobile-number');
+            if (!el) return;
+            el.setAttribute('inputmode','tel');
+            el.addEventListener('input', function(){
+                const cur = this.value;
+                const sanitized = sanitizePhoneValue(cur);
+                if (sanitized !== cur) this.value = sanitized;
+            });
+        }
+
+        window.addEventListener('load', initPhoneSanitizer);
 
         // Set minimum date for delivery-date to today
         const deliveryDateInput = document.getElementById('delivery-date');
