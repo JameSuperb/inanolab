@@ -1,0 +1,980 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance Board</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Nunito', sans-serif;
+    }
+    
+    .status-pill {
+      transition: all 0.2s ease;
+    }
+    
+    .student-tile {
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+    }
+    
+    .student-tile:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .student-tile:active {
+      transform: translateY(0);
+    }
+    
+    .group-panel {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+    
+    .avatar-circle {
+      object-fit: cover;
+    }
+    
+    .empty-slot {
+      border: 2px dashed #cbd5e1;
+      background: #f8fafc;
+    }
+    
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+    
+    .toast {
+      animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-white overflow-auto">
+  <div id="app" class="min-h-full flex flex-col"><!-- Header -->
+   <header id="main-header" class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg">
+    <div class="px-4 py-3 flex items-center justify-between flex-wrap gap-2">
+     <div id="header-class" class="text-sm md:text-base font-semibold bg-white/20 px-3 py-1.5 rounded-lg">
+      No Class Selected
+     </div>
+     <div id="header-title" class="text-lg md:text-xl font-bold tracking-wide text-center">
+      TEACHER'S TABLE
+     </div>
+     <div id="header-date" class="text-sm md:text-base font-semibold bg-white/20 px-3 py-1.5 rounded-lg">
+      January 7, 2026
+     </div>
+    </div>
+   </header><!-- Controls Bar -->
+   <div class="bg-white shadow-md px-4 py-3 border-b border-slate-200">
+    <div class="flex flex-wrap items-center gap-3"><!-- Class Selector -->
+     <div class="flex items-center gap-2"><label class="text-sm font-semibold text-slate-600">Class:</label> <select id="class-selector" class="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"> <option value="">Select Class</option> </select>
+     </div><!-- Date Picker -->
+     <div class="flex items-center gap-2"><label class="text-sm font-semibold text-slate-600">Date:</label> <input type="date" id="date-picker" class="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+     </div><!-- Show Photos Toggle --> <label class="flex items-center gap-2 cursor-pointer"> <input type="checkbox" id="show-photos" checked class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"> <span class="text-sm font-semibold text-slate-600">Show Photos</span> </label> <!-- Search -->
+     <div class="flex-1 min-w-[200px]"><input type="text" id="search-box" placeholder="Search by Name, Nickname, ID, or Email..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+     </div><!-- Action Buttons -->
+    <div class="flex gap-2"><button id="import-btn" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors"> Load Classes </button> <button id="export-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors"> Export CSV </button>
+     </div>
+    </div>
+   </div><!-- Main Content - Groups Grid -->
+   <main class="flex-1 p-4 md:p-6">
+    <div id="groups-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-6xl mx-auto"><!-- Groups will be rendered here -->
+    </div>
+    </main><!-- Import Modal -->
+   <div id="import-modal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90%] overflow-auto">
+     <div class="p-6 border-b border-slate-200">
+      <div class="flex items-center justify-between">
+       <h2 class="text-xl font-bold text-slate-800">Import Roster</h2><button id="close-modal" class="text-slate-400 hover:text-slate-600 text-2xl">×</button>
+      </div>
+      <p class="text-sm text-slate-500 mt-2">Paste tab-separated data from Google Sheets with headers:<br><code class="bg-slate-100 px-2 py-1 rounded text-xs">Name, Picture, Last Name, Nickname, ID, Email, Class and Section, Group</code></p>
+     </div>
+     <div class="p-6"><textarea id="import-data" rows="10" placeholder="Paste your data here..." class="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono"></textarea>
+      <div id="import-warnings" class="mt-3 text-sm text-amber-600 hidden"></div>
+     </div>
+     <div class="p-6 border-t border-slate-200 flex justify-end gap-3"><button id="cancel-import" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 font-semibold">Cancel</button> <button id="confirm-import" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold">Import</button>
+     </div>
+    </div>
+    </div><!-- Student Info Modal -->
+    <div id="student-info-modal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+     <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-auto">
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+      <h2 class="text-xl font-bold text-slate-800">Student Information</h2>
+      <button id="si-close" class="text-slate-400 hover:text-slate-600 text-2xl">×</button>
+      </div>
+      <div class="p-6 space-y-6">
+      <div class="flex justify-center">
+       <div class="w-24 h-24 rounded-full bg-emerald-700 overflow-hidden flex items-center justify-center">
+        <img id="si-photo" class="w-full h-full object-cover" alt="Student Photo" loading="lazy" decoding="async" onerror="this.style.display='none'; document.getElementById('si-initials').classList.remove('hidden');">
+        <span id="si-initials" class="hidden text-white font-bold text-xl"></span>
+       </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+       <div class="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-lg font-semibold text-slate-700">Name</div>
+       <div id="si-name" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-800"></div>
+      <div class="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-lg font-semibold text-slate-700">Nickname</div>
+      <div id="si-nickname" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-800"></div>
+       <div class="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-lg font-semibold text-slate-700">ID</div>
+       <div id="si-id" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-800"></div>
+      <div class="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-lg font-semibold text-slate-700">Email</div>
+      <div class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-emerald-700"><a id="si-email" href="#" target="_blank" class="hover:underline"></a></div>
+      </div>
+
+      <div class="mt-6">
+       <div class="font-semibold text-slate-700 mb-2">Attendance</div>
+       <div class="overflow-x-auto">
+        <table class="w-full text-sm border border-slate-200 rounded-lg">
+         <thead>
+          <tr class="bg-emerald-600 text-white">
+           <th class="px-3 py-2 text-left">Date</th>
+           <th class="px-3 py-2 text-left">Status</th>
+           <th class="px-3 py-2 text-left">Group</th>
+          </tr>
+         </thead>
+         <tbody id="si-attendance-rows"></tbody>
+        </table>
+       </div>
+      </div>
+      </div>
+     </div>
+    </div><!-- Toast Container -->
+   <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+  </div>
+  <script>
+    const PHOTO_BASE_PATH = "./Images/Profile/";
+    
+    const defaultConfig = {
+      app_title: "TEACHER'S TABLE",
+      header_bg: "#4f46e5",
+      accent_color: "#6366f1"
+    };
+
+    let config = { ...defaultConfig };
+    let roster = [];
+    let attendance = {};
+    let groupAssignments = {};
+    // Maps for Google Sheet updates
+    // rowByStudentId[classSection][studentId] = RowNumber (1-based, header=1)
+    // dateColByISO[classSection][isoDate] = ColumnNumber (1-based)
+    let rowByStudentId = {};
+    let dateColByISO = {};
+    // Track in-flight per-student updates to prevent double-click races
+    let inFlightUpdates = {};
+    let selectedClass = "";
+    let selectedDate = new Date().toISOString().split('T')[0];
+    let showPhotos = true;
+    let searchQuery = "";
+
+    // Load from localStorage
+    function loadData() {
+      const savedRoster = localStorage.getItem('attendanceBoard_roster');
+      const savedAttendance = localStorage.getItem('attendanceBoard_attendance');
+      const savedGroups = localStorage.getItem('attendanceBoard_groupAssignments');
+      const savedRowMap = localStorage.getItem('attendanceBoard_rowByStudentId');
+      const savedDateColMap = localStorage.getItem('attendanceBoard_dateColByISO');
+      
+      if (savedRoster) roster = JSON.parse(savedRoster);
+      if (savedAttendance) attendance = JSON.parse(savedAttendance);
+      if (savedGroups) groupAssignments = JSON.parse(savedGroups);
+      if (savedRowMap) rowByStudentId = JSON.parse(savedRowMap);
+      if (savedDateColMap) dateColByISO = JSON.parse(savedDateColMap);
+    }
+
+    // Save to localStorage
+    function saveData() {
+      localStorage.setItem('attendanceBoard_roster', JSON.stringify(roster));
+      localStorage.setItem('attendanceBoard_attendance', JSON.stringify(attendance));
+      localStorage.setItem('attendanceBoard_groupAssignments', JSON.stringify(groupAssignments));
+      localStorage.setItem('attendanceBoard_rowByStudentId', JSON.stringify(rowByStudentId));
+      localStorage.setItem('attendanceBoard_dateColByISO', JSON.stringify(dateColByISO));
+    }
+
+    // Get attendance key
+    function getAttendanceKey(classSection, date) {
+      return `${classSection}_${date}`;
+    }
+
+    // Get student attendance
+    function getStudentAttendance(studentId) {
+      const key = getAttendanceKey(selectedClass, selectedDate);
+      const classAttendance = attendance[key];
+      if (!classAttendance) return '-';
+      return classAttendance[studentId] || '-';
+    }
+
+    // Set student attendance
+    function setStudentAttendance(studentId, status) {
+      const key = getAttendanceKey(selectedClass, selectedDate);
+      if (!attendance[key]) attendance[key] = {};
+      attendance[key][studentId] = status;
+      saveData();
+    }
+
+    // Cycle attendance status (includes '-')
+    function cycleStatus(currentStatus) {
+      const statuses = ['-', 'Present', 'Absent', 'Late'];
+      const currentIndex = statuses.indexOf(currentStatus);
+      const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % statuses.length;
+      return statuses[nextIndex];
+    }
+
+    // Get initials from name
+    function getInitials(name, lastName) {
+      const first = name ? name.charAt(0).toUpperCase() : '';
+      const last = lastName ? lastName.charAt(0).toUpperCase() : '';
+      return first + last || '?';
+    }
+
+    // Get photo URL (trim + URL-encode local filenames)
+    function getPhotoUrl(picture) {
+      const p = String(picture || '').trim();
+      if (!p) return null;
+      if (p.startsWith('http://') || p.startsWith('https://')) {
+        return p;
+      }
+      return encodeURI(PHOTO_BASE_PATH + p);
+    }
+
+    // Image fallback: hide broken image and show initials
+    function handleAvatarError(imgEl) {
+      try {
+        if (imgEl) {
+          imgEl.style.display = 'none';
+          const fallback = imgEl.nextElementSibling;
+          if (fallback) {
+            fallback.classList.remove('hidden');
+          }
+        }
+      } catch (e) {
+        console.warn('Avatar error handler issue:', e);
+      }
+    }
+
+    // Format date for display
+    function formatDate(dateStr) {
+      const date = new Date(dateStr + 'T00:00:00');
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    }
+
+    // Parse a human-readable date header to ISO YYYY-MM-DD
+    function parseDateHeaderToISO(dateHeader) {
+      const d = new Date(dateHeader);
+      if (isNaN(d.getTime())) return null;
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // Get unique classes
+    function getUniqueClasses() {
+      const classes = [...new Set(roster.map(s => s['Class and Section']).filter(Boolean))];
+      return classes.sort();
+    }
+
+    // Filter students by search
+    function filterStudents(students) {
+      if (!searchQuery.trim()) return students;
+      const query = searchQuery.toLowerCase();
+      return students.filter(s => 
+        (s.Name && s.Name.toLowerCase().includes(query)) ||
+        (s.Nickname && s.Nickname.toLowerCase().includes(query)) ||
+        (s.ID && s.ID.toLowerCase().includes(query)) ||
+        (s.Email && s.Email.toLowerCase().includes(query))
+      );
+    }
+
+    // Get students for a group for the selected date
+    function getGroupStudents(groupNum) {
+      const key = getAttendanceKey(selectedClass, selectedDate);
+      const assigns = groupAssignments[key];
+      if (!assigns) return [];
+      const classStudents = roster.filter(s => s['Class and Section'] === selectedClass);
+      return classStudents.filter(s => assigns[s.ID]?.num === groupNum);
+    }
+
+    // Extract group number and title from raw value like "1. Group 1"
+    function extractGroupInfo(groupValue) {
+      let num = '';
+      let title = '';
+      if (typeof groupValue === 'string') {
+        const m = groupValue.match(/^\s*(\d+)\s*\.\s*(.*)\s*$/);
+        if (m) {
+          num = parseInt(m[1], 10);
+          title = m[2] || '';
+        }
+      } else if (typeof groupValue === 'number') {
+        num = groupValue;
+      }
+      if (!title && num) title = `Group ${num}`;
+      return { num, title };
+    }
+
+    // Resolve the display title for a group number for the selected date
+    function getGroupTitle(groupNum) {
+      const key = getAttendanceKey(selectedClass, selectedDate);
+      const assigns = groupAssignments[key];
+      if (!assigns) return '';
+      const classStudents = roster.filter(s => s['Class and Section'] === selectedClass);
+      for (const s of classStudents) {
+        const a = assigns[s.ID];
+        if (a && a.num === groupNum) return a.title || '';
+      }
+      return '';
+    }
+
+    // Show toast notification
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-rose-500' : type === 'warning' ? 'bg-amber-500' : 'bg-teal-600';
+      toast.className = `toast ${bgColor} text-white px-4 py-3 rounded-lg shadow-lg font-semibold text-sm`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Get all dates for a class from attendance and group assignments
+    function getClassDateList(classSection) {
+      const dates = new Set();
+      Object.keys(attendance || {}).forEach(key => {
+        const sep = key.indexOf('_');
+        if (sep === -1) return;
+        const klass = key.slice(0, sep);
+        const date = key.slice(sep + 1);
+        if (klass === classSection) dates.add(date);
+      });
+      Object.keys(groupAssignments || {}).forEach(key => {
+        const sep = key.indexOf('_');
+        if (sep === -1) return;
+        const klass = key.slice(0, sep);
+        const date = key.slice(sep + 1);
+        if (klass === classSection) dates.add(date);
+      });
+      // Sort latest -> earliest
+      return Array.from(dates).sort((a, b) => new Date(b) - new Date(a));
+    }
+
+    // Open student info modal
+    function openStudentInfo(studentId) {
+      try {
+        const student = roster.find(s => String(s.ID) === String(studentId));
+        if (!student) return;
+        const modal = document.getElementById('student-info-modal');
+        const siPhoto = document.getElementById('si-photo');
+        const siInitials = document.getElementById('si-initials');
+        const siName = document.getElementById('si-name');
+        const siNickname = document.getElementById('si-nickname');
+        const siId = document.getElementById('si-id');
+        const siEmail = document.getElementById('si-email');
+        const siAttendanceRows = document.getElementById('si-attendance-rows');
+
+        // Photo + initials
+        const url = getPhotoUrl(student.Picture);
+        siPhoto.style.display = '';
+        siInitials.classList.add('hidden');
+        siPhoto.src = url || '';
+        siInitials.textContent = getInitials(student.Name, student['Last Name']);
+
+        // Basic fields
+        siName.textContent = (student.Name || '').toString();
+        siNickname.textContent = (student.Nickname || '').toString();
+        siId.textContent = String(student.ID || '');
+        const email = (student.Email || '').toString();
+        siEmail.textContent = email;
+        siEmail.href = email ? `mailto:${email}` : '#';
+
+        // Attendance table rows for all dates in selected class (latest -> earliest)
+        siAttendanceRows.innerHTML = '';
+        if (selectedClass) {
+          const dates = getClassDateList(selectedClass);
+          dates.forEach(iso => {
+            const key = getAttendanceKey(selectedClass, iso);
+            const classAttendance = attendance[key] || {};
+            const status = classAttendance[String(student.ID)] || '-';
+            const assigns = groupAssignments[key] || {};
+            const assign = assigns[String(student.ID)];
+            const groupDisplay = assign && assign.num ? (assign.title || `Group ${assign.num}`) : '';
+            siAttendanceRows.insertAdjacentHTML('beforeend', `
+              <tr class="border-b border-slate-200">
+                <td class="px-3 py-2 text-slate-800">${formatDate(iso)}</td>
+                <td class="px-3 py-2">${status}</td>
+                <td class="px-3 py-2">${groupDisplay}</td>
+              </tr>
+            `);
+          });
+        }
+
+        // Show modal
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      } catch (e) {
+        console.error('Failed to open student info:', e);
+      }
+    }
+
+    // Render status pill
+    function renderStatusPill(status) {
+      const colors = {
+        'Present': 'bg-emerald-500 text-white',
+        'Absent': 'bg-rose-500 text-white',
+        'Late': 'bg-amber-500 text-white',
+        '-': 'bg-slate-400 text-white'
+      };
+      const cls = colors[status] || 'bg-slate-400 text-white';
+      return `<span class="status-pill px-2 py-0.5 rounded-full text-xs font-bold ${cls}">${status}</span>`;
+    }
+
+    // Render student tile
+    function renderStudentTile(student, isFiltered) {
+      const status = getStudentAttendance(student.ID);
+      const photoUrl = getPhotoUrl(student.Picture);
+      const initials = getInitials(student.Name, student['Last Name']);
+      const isBusy = !!inFlightUpdates[String(student.ID)];
+      const lastName = (student['Last Name'] || '').trim();
+      const nickname = (student.Nickname || '').trim();
+      const displayName = lastName && nickname
+        ? `${lastName}, ${nickname}`
+        : (lastName || nickname || student.Name || '');
+      
+      const avatarContent = `
+        <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm overflow-hidden" onclick="openStudentInfo('${student.ID}'); event.stopPropagation();">
+          ${showPhotos && photoUrl 
+            ? `<img src="${photoUrl}" alt="${student.Name}" class="w-full h-full object-cover" loading="lazy" decoding="async" onerror="handleAvatarError(this)">
+               <span class="hidden">${initials}</span>`
+            : `<span>${initials}</span>`}
+        </div>`;
+
+      return `
+        <div class="student-tile bg-white rounded-xl p-3 shadow-sm border border-slate-200 ${isFiltered ? '' : 'opacity-30'} ${isBusy ? 'opacity-50 pointer-events-none' : ''}" 
+             data-student-id="${student.ID}" 
+             onclick="handleTileClick('${student.ID}')">
+          <div class="flex items-center gap-3">
+            <div class="flex-shrink-0">${avatarContent}</div>
+            <div class="flex-1 min-w-0">
+              <div class="font-semibold text-slate-800 text-sm truncate">${displayName}</div>
+              <div class="mt-1">${renderStatusPill(status)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Render empty slot
+    function renderEmptySlot() {
+      return `<div class="empty-slot rounded-xl p-3 h-[72px]"></div>`;
+    }
+
+    // Render group panel
+    function renderGroupPanel(groupNum) {
+      const allGroupStudents = getGroupStudents(groupNum);
+      const filteredStudents = filterStudents(allGroupStudents);
+      const filteredIds = new Set(filteredStudents.map(s => s.ID));
+      
+      let tilesHtml = '';
+      
+      // Render all students in the group
+      for (let i = 0; i < 6; i++) {
+        if (i < allGroupStudents.length) {
+          const student = allGroupStudents[i];
+          const isFiltered = filteredIds.has(student.ID);
+          tilesHtml += renderStudentTile(student, isFiltered);
+        } else {
+          tilesHtml += renderEmptySlot();
+        }
+      }
+
+      const headerTitle = getGroupTitle(groupNum);
+      return `
+        <div class="group-panel rounded-2xl shadow-lg border border-emerald-100 overflow-hidden">
+          <div class="bg-gradient-to-r from-emerald-700 to-teal-700 px-4 py-3 flex items-center justify-between">
+            <h3 class="text-white font-bold text-lg">${groupNum}. &quot;${headerTitle}&quot;</h3>
+          </div>
+          <div class="p-4 grid grid-cols-2 gap-3">
+            ${tilesHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    // Handle tile click
+    async function handleTileClick(studentId) {
+      try {
+        if (inFlightUpdates[String(studentId)]) return;
+        const currentStatus = getStudentAttendance(studentId);
+        const newStatus = cycleStatus(currentStatus);
+
+        // Ensure we have mapping data
+        const classMap = rowByStudentId[selectedClass] || {};
+        const dateMap = dateColByISO[selectedClass] || {};
+        const row = classMap[String(studentId)];
+        const col = dateMap[String(selectedDate)];
+        if (!selectedClass || !selectedDate) {
+          showToast('Please select class and date first', 'warning');
+          return;
+        }
+        if (!row || !col) {
+          showToast('Mapping missing. Click "Load Classes" to refresh.', 'error');
+          return;
+        }
+
+        inFlightUpdates[String(studentId)] = true;
+        renderGroups();
+
+        const ok = await updateAttendanceRemote(selectedClass, studentId, selectedDate, newStatus, row, col);
+        delete inFlightUpdates[String(studentId)];
+
+        if (ok) {
+          setStudentAttendance(studentId, newStatus);
+          renderGroups();
+          showToast(`Updated to ${newStatus}`, 'success');
+        } else {
+          renderGroups();
+          showToast('Failed to update attendance', 'error');
+        }
+      } catch (e) {
+        delete inFlightUpdates[String(studentId)];
+        renderGroups();
+        console.error('Tile click update failed:', e);
+        showToast('Unexpected error during update', 'error');
+      }
+    }
+
+    // Call Google Apps Script Web App to update attendance cell
+    async function updateAttendanceRemote(classSection, studentId, isoDate, status, rowNumber, colNumber) {
+      try {
+        const BASE = 'https://script.google.com/macros/s/AKfycbx6QE_7GChBsaZUicPMgq7Rec8vW6jkhGZKy51dhYZrnFOz4PV6V6x3aKKUpxjGK_4i/exec';
+        const params = new URLSearchParams({
+          func: 'update',
+          API: '9cF3xL2A8P0KzR7M5VnDqE',
+          Sheetname: classSection,
+          RowNumber: String(rowNumber),
+          ColumnNumber: String(colNumber),
+          Data: status
+        });
+        const url = `${BASE}?${params.toString()}`;
+        const resp = await fetch(url, { method: 'GET' });
+        if (!resp.ok) return false;
+        let bodyText = '';
+        let json = null;
+        try {
+          json = await resp.json();
+        } catch {
+          bodyText = await resp.text();
+        }
+        if (json && (json.ok === true || json.success === true)) return true;
+        if (!json && /ok|success/i.test(bodyText)) return true;
+        return true; // Treat 200 as success if no explicit error
+      } catch (err) {
+        console.error('Remote update error:', err);
+        return false;
+      }
+    }
+
+    // Set all students in group to a status
+    function setGroupAttendance(groupNum, status) {
+      const students = getGroupStudents(groupNum);
+      students.forEach(student => {
+        setStudentAttendance(student.ID, status);
+      });
+      renderGroups();
+      showToast(`Group ${groupNum} marked as ${status}`, 'success');
+    }
+
+    // Render all groups
+    function renderGroups() {
+      const container = document.getElementById('groups-container');
+      let html = '';
+      for (let i = 1; i <= 6; i++) {
+        html += renderGroupPanel(i);
+      }
+      container.innerHTML = html;
+    }
+
+    // Update header
+    function updateHeader() {
+      document.getElementById('header-class').textContent = selectedClass || 'No Class Selected';
+      document.getElementById('header-date').textContent = formatDate(selectedDate);
+      document.getElementById('header-title').textContent = config.app_title || defaultConfig.app_title;
+    }
+
+    // Update class selector
+    function updateClassSelector() {
+      const selector = document.getElementById('class-selector');
+      const classes = getUniqueClasses();
+      
+      selector.innerHTML = '<option value="">Select Class</option>' + 
+        classes.map(c => `<option value="${c}" ${c === selectedClass ? 'selected' : ''}>${c}</option>`).join('');
+    }
+
+    // Parse TSV data
+    function parseTSV(data) {
+      const lines = data.trim().split('\n');
+      if (lines.length < 2) return [];
+      
+      const headers = lines[0].split('\t').map(h => h.trim());
+      const requiredHeaders = ['Name', 'Picture', 'Last Name', 'Nickname', 'ID', 'Email', 'Class and Section', 'Group'];
+      
+      const students = [];
+      const warnings = [];
+      const existingIds = new Set(roster.map(s => s.ID));
+      
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split('\t').map(v => v.trim());
+        if (values.length < headers.length) continue;
+        
+        const student = {};
+        headers.forEach((header, index) => {
+          student[header] = values[index] || '';
+        });
+
+        // Normalize group number and title if provided in a single column like "1. Group 1"
+        const info = extractGroupInfo(student.Group);
+        if (info.num) student.Group = info.num;
+        if (info.title) student.GroupTitle = info.title;
+        if (typeof student.Group === 'string') student.OriginalGroup = student.Group;
+        
+        if (existingIds.has(student.ID)) {
+          warnings.push(`Skipped duplicate ID: ${student.ID}`);
+          continue;
+        }
+        
+        if (student.ID) {
+          students.push(student);
+          existingIds.add(student.ID);
+        }
+      }
+      
+      return { students, warnings };
+    }
+
+    // Export CSV
+    function exportCSV() {
+      if (!selectedClass) {
+        showToast('Please select a class first', 'warning');
+        return;
+      }
+      
+      const classStudents = roster.filter(s => s['Class and Section'] === selectedClass);
+      const dateFormatted = formatDate(selectedDate);
+      
+      const headers = ['Name', 'Picture', 'Last Name', 'Nickname', 'ID', 'Email', 'Class and Section', dateFormatted, 'Group'];
+      
+      let csv = headers.join(',') + '\n';
+      
+      classStudents.forEach(student => {
+        const status = getStudentAttendance(student.ID);
+        // Per-date group display: "#. Group Title" if available
+        let groupDisplay = '';
+        const key = getAttendanceKey(selectedClass, selectedDate);
+        const assigns = groupAssignments[key];
+        const assign = assigns ? assigns[student.ID] : undefined;
+        if (assign && assign.num) {
+          groupDisplay = `${assign.num}. ${assign.title || ''}`.trim();
+        }
+        const row = [
+          `"${student.Name || ''}"`,
+          `"${student.Picture || ''}"`,
+          `"${student['Last Name'] || ''}"`,
+          `"${student.Nickname || ''}"`,
+          `"${student.ID || ''}"`,
+          `"${student.Email || ''}"`,
+          `"${student['Class and Section'] || ''}"`,
+          `"${status}"`,
+          `"${groupDisplay}"`
+        ];
+        csv += row.join(',') + '\n';
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `attendance_${selectedClass}_${selectedDate}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV exported successfully', 'success');
+    }
+
+    // Initialize app
+    function init() {
+      loadData();
+      
+      // Set up date picker
+      const datePicker = document.getElementById('date-picker');
+      datePicker.value = selectedDate;
+      datePicker.addEventListener('change', (e) => {
+        selectedDate = e.target.value;
+        updateHeader();
+        renderGroups();
+      });
+      
+      // Set up class selector
+      document.getElementById('class-selector').addEventListener('change', (e) => {
+        selectedClass = e.target.value;
+        updateHeader();
+        renderGroups();
+      });
+      
+      // Set up show photos toggle
+      document.getElementById('show-photos').addEventListener('change', (e) => {
+        showPhotos = e.target.checked;
+        renderGroups();
+      });
+      
+      // Set up search
+      document.getElementById('search-box').addEventListener('input', (e) => {
+        searchQuery = e.target.value;
+        renderGroups();
+      });
+      
+      // Set up import / load classes
+      const importModal = document.getElementById('import-modal');
+      document.getElementById('import-btn').addEventListener('click', async () => {
+        showToast('Loading classes...', 'info');
+        try {
+          const url = 'https://script.google.com/macros/s/AKfycbx6QE_7GChBsaZUicPMgq7Rec8vW6jkhGZKy51dhYZrnFOz4PV6V6x3aKKUpxjGK_4i/exec?func=load&API=9cF3xL2A8P0KzR7M5VnDqE';
+          const response = await fetch(url, { method: 'GET' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+          let payload;
+          try {
+            payload = await response.json();
+          } catch {
+            payload = JSON.parse(await response.text());
+          }
+          if (!payload || !payload.ok || !payload.sheets) throw new Error('Invalid payload');
+
+          const newRoster = [];
+          const newAttendance = {};
+          const newGroupAssignments = {};
+          const newRowByStudentId = {};
+          const newDateColByISO = {};
+          const seenIds = new Set();
+          const allISODateHeaders = new Set();
+
+          for (const [classSection, sheet] of Object.entries(payload.sheets)) {
+            const headers = Array.isArray(sheet.headers) ? sheet.headers : [];
+            const dateHeaders = headers.filter(h => /\w{3,}\s\d{1,2},\s\d{4}/.test(h));
+            const dateISOHeaders = dateHeaders.map(parseDateHeaderToISO).filter(Boolean);
+            dateISOHeaders.forEach(d => allISODateHeaders.add(d));
+
+            // Map each date column to its adjacent "Group" column index, if present
+            const dateCols = [];
+            newDateColByISO[classSection] = newDateColByISO[classSection] || {};
+            for (let i = 0; i < headers.length; i++) {
+              const h = headers[i];
+              if (/\w{3,}\s\d{1,2},\s\d{4}/.test(h)) {
+                const iso = parseDateHeaderToISO(h);
+                const groupIndex = (i + 1 < headers.length && headers[i + 1] === 'Group') ? i + 1 : -1;
+                dateCols.push({ header: h, iso, groupIndex });
+                if (iso) {
+                  // ColumnNumber is 1-based index in the sheet
+                  newDateColByISO[classSection][iso] = i + 1;
+                }
+              }
+            }
+            newRowByStudentId[classSection] = newRowByStudentId[classSection] || {};
+            const rowsArr = sheet.rows || [];
+            for (let rIdx = 0; rIdx < rowsArr.length; rIdx++) {
+              const row = rowsArr[rIdx];
+              // Optionally keep a baseline group from any top-level Group field
+              const groupRaw = row.Group;
+              const groupInfo = extractGroupInfo(groupRaw);
+              const groupNum = groupInfo.num;
+              const groupTitle = groupInfo.title;
+
+              const student = {
+                Name: row.Name || '',
+                Picture: row.Picture || '',
+                'Last Name': row['Last Name'] || '',
+                Nickname: row.Nickname || '',
+                ID: String(row.ID ?? ''),
+                Email: row.Email || '',
+                'Class and Section': row['Class and Section'] || classSection,
+                Group: groupNum,
+                GroupTitle: groupTitle,
+                OriginalGroup: typeof groupRaw === 'string' ? groupRaw : ''
+              };
+
+              if (student.ID && !seenIds.has(student.ID)) {
+                newRoster.push(student);
+                seenIds.add(student.ID);
+              }
+
+              // Record RowNumber (1-based). Header is row 1; first data row is 2.
+              if (student.ID) {
+                newRowByStudentId[classSection][String(student.ID)] = rIdx + 2;
+              }
+
+              // For each date column, record attendance and per-date group assignment
+              dateCols.forEach(col => {
+                const { header: dateH, iso, groupIndex } = col;
+                if (!iso) return;
+                // Attendance
+                const status = row[dateH];
+                if (status && ['Present', 'Absent', 'Late', '-'].includes(status)) {
+                  const aKey = getAttendanceKey(student['Class and Section'], iso);
+                  if (!newAttendance[aKey]) newAttendance[aKey] = {};
+                  newAttendance[aKey][student.ID] = status;
+                }
+                // Group assignment
+                if (groupIndex !== -1) {
+                  const groupRawForDate = row[headers[groupIndex]];
+                  const info = extractGroupInfo(groupRawForDate);
+                  if (info && info.num) {
+                    const gKey = getAttendanceKey(student['Class and Section'], iso);
+                    if (!newGroupAssignments[gKey]) newGroupAssignments[gKey] = {};
+                    newGroupAssignments[gKey][student.ID] = { num: info.num, title: info.title || '' };
+                  }
+                }
+              });
+            }
+          }
+
+          roster = newRoster;
+          attendance = newAttendance;
+          groupAssignments = newGroupAssignments;
+          rowByStudentId = newRowByStudentId;
+          dateColByISO = newDateColByISO;
+          saveData();
+
+          updateClassSelector();
+
+          // Do not auto-select a class; let the user pick
+          selectedClass = '';
+          document.getElementById('class-selector').value = '';
+
+          // Default date to today (may or may not have data, which is fine)
+          selectedDate = new Date().toISOString().split('T')[0];
+          document.getElementById('date-picker').value = selectedDate;
+
+          updateHeader();
+          renderGroups();
+          showToast('Classes loaded', 'success');
+        } catch (err) {
+          console.error('Failed to load classes:', err);
+          showToast('Failed to load classes', 'error');
+        }
+      });
+      
+      document.getElementById('close-modal').addEventListener('click', () => {
+        importModal.classList.add('hidden');
+        importModal.classList.remove('flex');
+      });
+      
+      document.getElementById('cancel-import').addEventListener('click', () => {
+        importModal.classList.add('hidden');
+        importModal.classList.remove('flex');
+      });
+
+      // Close student info modal
+      document.getElementById('si-close').addEventListener('click', () => {
+        const modal = document.getElementById('student-info-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      });
+      
+      document.getElementById('confirm-import').addEventListener('click', () => {
+        const data = document.getElementById('import-data').value;
+        const { students, warnings } = parseTSV(data);
+        
+        if (warnings.length > 0) {
+          document.getElementById('import-warnings').textContent = warnings.join('\n');
+          document.getElementById('import-warnings').classList.remove('hidden');
+        }
+        
+        if (students.length > 0) {
+          roster = [...roster, ...students];
+          saveData();
+          updateClassSelector();
+          
+          if (!selectedClass && students.length > 0) {
+            selectedClass = students[0]['Class and Section'];
+            document.getElementById('class-selector').value = selectedClass;
+          }
+          
+          updateHeader();
+          renderGroups();
+          showToast(`Imported ${students.length} students`, 'success');
+          
+          importModal.classList.add('hidden');
+          importModal.classList.remove('flex');
+        } else if (warnings.length === 0) {
+          showToast('No valid data found', 'error');
+        }
+      });
+      
+      // Set up export
+      document.getElementById('export-btn').addEventListener('click', exportCSV);
+      
+      // Initial render
+      updateClassSelector();
+      if (getUniqueClasses().length > 0) {
+        selectedClass = getUniqueClasses()[0];
+        document.getElementById('class-selector').value = selectedClass;
+      }
+      updateHeader();
+      renderGroups();
+    }
+
+    // Element SDK integration
+    async function onConfigChange(newConfig) {
+      config = { ...defaultConfig, ...newConfig };
+      updateHeader();
+    }
+
+    function mapToCapabilities(cfg) {
+      return {
+        recolorables: [],
+        borderables: [],
+        fontEditable: undefined,
+        fontSizeable: undefined
+      };
+    }
+
+    function mapToEditPanelValues(cfg) {
+      return new Map([
+        ['app_title', cfg.app_title || defaultConfig.app_title]
+      ]);
+    }
+
+    // Initialize SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+
+    // Start app
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb3488b32bc8d0f',t:'MTc2Nzk1NDg3OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
