@@ -77,9 +77,9 @@
      <div id="header-class" class="text-sm md:text-base font-semibold bg-white/20 px-3 py-1.5 rounded-lg">
       No Class Selected
      </div>
-     <div id="header-title" class="text-lg md:text-xl font-bold tracking-wide text-center">
-      TEACHER'S TABLE
-     </div>
+    <div id="header-title" class="text-lg md:text-xl font-bold tracking-wide text-center">
+     Class
+    </div>
      <div id="header-date" class="text-sm md:text-base font-semibold bg-white/20 px-3 py-1.5 rounded-lg">
       January 7, 2026
      </div>
@@ -157,14 +157,31 @@
       </div>
       </div>
      </div>
-    </div><!-- Toast Container -->
+     </div><!-- Login Modal -->
+     <div id="login-modal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <h2 class="text-lg font-bold text-slate-800">Admin Login</h2>
+          <button id="login-close" class="text-slate-400 hover:text-slate-600 text-2xl">×</button>
+        </div>
+        <div class="p-6 space-y-4">
+          <p class="text-sm text-slate-600">Please enter your admin username to continue.</p>
+          <input id="login-username" type="text" placeholder="Username" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
+        </div>
+        <div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
+          <button id="login-cancel" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 font-semibold">Cancel</button>
+          <button id="login-submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold">Login</button>
+        </div>
+      </div>
+     </div>
+     <!-- Toast Container -->
    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
   </div>
   <script>
     const PHOTO_BASE_PATH = "./Images/Profile/";
     
     const defaultConfig = {
-      app_title: "TEACHER'S TABLE",
+      app_title: "Class",
       header_bg: "#4f46e5",
       accent_color: "#6366f1"
     };
@@ -180,6 +197,9 @@
     let dateColByISO = {};
     // Track in-flight per-student updates to prevent double-click races
     let inFlightUpdates = {};
+    // Admin auth state
+    let isAdmin = false;
+    let adminUser = '';
     let selectedClass = "";
     let selectedDate = new Date().toISOString().split('T')[0];
     let showPhotos = true;
@@ -192,12 +212,16 @@
       const savedGroups = localStorage.getItem('attendanceBoard_groupAssignments');
       const savedRowMap = localStorage.getItem('attendanceBoard_rowByStudentId');
       const savedDateColMap = localStorage.getItem('attendanceBoard_dateColByISO');
+      const savedIsAdmin = localStorage.getItem('attendanceBoard_isAdmin');
+      const savedAdminUser = localStorage.getItem('attendanceBoard_adminUser');
       
       if (savedRoster) roster = JSON.parse(savedRoster);
       if (savedAttendance) attendance = JSON.parse(savedAttendance);
       if (savedGroups) groupAssignments = JSON.parse(savedGroups);
       if (savedRowMap) rowByStudentId = JSON.parse(savedRowMap);
       if (savedDateColMap) dateColByISO = JSON.parse(savedDateColMap);
+      if (savedIsAdmin !== null) isAdmin = savedIsAdmin === 'true';
+      if (savedAdminUser) adminUser = savedAdminUser;
     }
 
     // Save to localStorage
@@ -207,6 +231,11 @@
       localStorage.setItem('attendanceBoard_groupAssignments', JSON.stringify(groupAssignments));
       localStorage.setItem('attendanceBoard_rowByStudentId', JSON.stringify(rowByStudentId));
       localStorage.setItem('attendanceBoard_dateColByISO', JSON.stringify(dateColByISO));
+    }
+
+    function saveAuthState() {
+      localStorage.setItem('attendanceBoard_isAdmin', isAdmin ? 'true' : 'false');
+      localStorage.setItem('attendanceBoard_adminUser', adminUser || '');
     }
 
     // Get attendance key
@@ -524,6 +553,11 @@
     // Handle tile click
     async function handleTileClick(studentId) {
       try {
+        if (!isAdmin) {
+          showLoginModal();
+          showToast('Admin login required', 'warning');
+          return;
+        }
         if (inFlightUpdates[String(studentId)]) return;
         const currentStatus = getStudentAttendance(studentId);
         const newStatus = cycleStatus(currentStatus);
@@ -592,6 +626,63 @@
       } catch (err) {
         console.error('Remote update error:', err);
         return false;
+      }
+    }
+
+    // Admin login modal helpers
+    function showLoginModal() {
+      const modal = document.getElementById('login-modal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      const input = document.getElementById('login-username');
+      if (input) setTimeout(() => input.focus(), 0);
+    }
+
+    function hideLoginModal() {
+      const modal = document.getElementById('login-modal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function ensureAdmin() {
+      if (isAdmin) return true;
+      showLoginModal();
+      showToast('Admin login required', 'warning');
+      return false;
+    }
+
+    async function authenticateAdmin(username) {
+      const BASE = 'https://script.google.com/macros/s/AKfycbx6QE_7GChBsaZUicPMgq7Rec8vW6jkhGZKy51dhYZrnFOz4PV6V6x3aKKUpxjGK_4i/exec';
+      const params = new URLSearchParams({
+        func: 'authenticate',
+        api: '9cF3xL2A8P0KzR7M5VnDqE',
+        admin: username
+      });
+      const url = `${BASE}?${params.toString()}`;
+      const btn = document.getElementById('login-submit');
+      if (btn) { btn.disabled = true; btn.textContent = 'Authenticating...'; }
+      try {
+        const resp = await fetch(url, { method: 'GET' });
+        let data = null; let text = '';
+        if (resp.ok) {
+          try { data = await resp.json(); } catch { text = await resp.text(); }
+          if ((data && (data.ok === true || data.success === true)) || (!data && /ok|success|true/i.test(text))) {
+            isAdmin = true; adminUser = username; saveAuthState();
+            hideLoginModal();
+            showToast('Login successful', 'success');
+            return true;
+          }
+        }
+        showToast('Login failed. Please try again.', 'error');
+        return false;
+      } catch (e) {
+        console.error('Auth error:', e);
+        showToast('Authentication error', 'error');
+        return false;
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Login'; }
       }
     }
 
@@ -755,6 +846,7 @@
       // Set up import / load classes
       const importModal = document.getElementById('import-modal');
       document.getElementById('import-btn').addEventListener('click', async () => {
+        if (!ensureAdmin()) return;
         showToast('Loading classes...', 'info');
         try {
           const url = 'https://script.google.com/macros/s/AKfycbx6QE_7GChBsaZUicPMgq7Rec8vW6jkhGZKy51dhYZrnFOz4PV6V6x3aKKUpxjGK_4i/exec?func=load&API=9cF3xL2A8P0KzR7M5VnDqE';
@@ -931,6 +1023,15 @@
       
       // Set up export
       document.getElementById('export-btn').addEventListener('click', exportCSV);
+      // secure export behind admin
+      const exportBtn = document.getElementById('export-btn');
+      if (exportBtn) {
+        exportBtn.replaceWith(exportBtn.cloneNode(true));
+      }
+      const newExportBtn = document.getElementById('export-btn');
+      if (newExportBtn) {
+        newExportBtn.addEventListener('click', (e) => { if (!ensureAdmin()) return; exportCSV(); });
+      }
       
       // Initial render
       updateClassSelector();
@@ -940,6 +1041,31 @@
       }
       updateHeader();
       renderGroups();
+
+      // Prompt admin login if not authenticated yet
+      if (!isAdmin) {
+        showLoginModal();
+      }
+
+      // Wire login modal actions
+      const loginBtn = document.getElementById('login-submit');
+      const loginCancel = document.getElementById('login-cancel');
+      const loginClose = document.getElementById('login-close');
+      const loginInput = document.getElementById('login-username');
+      if (loginBtn) loginBtn.addEventListener('click', async () => {
+        const u = (loginInput?.value || '').trim();
+        if (!u) { showToast('Please enter username', 'warning'); return; }
+        await authenticateAdmin(u);
+      });
+      if (loginCancel) loginCancel.addEventListener('click', () => hideLoginModal());
+      if (loginClose) loginClose.addEventListener('click', () => hideLoginModal());
+      if (loginInput) loginInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const u = (loginInput.value || '').trim();
+          if (!u) { showToast('Please enter username', 'warning'); return; }
+          authenticateAdmin(u);
+        }
+      });
     }
 
     // Element SDK integration
