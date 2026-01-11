@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kirchhoff's Laws</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      font-family: 'Inter', Arial, sans-serif;
+    }
+    
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      padding: 0 1.25rem;
+    }
+    
+    .accordion-content.expanded {
+      max-height: none;
+      overflow: visible;
+      padding: 1rem 1.25rem;
+    }
+    
+    .accordion-inner {
+      padding: 0;
+    }
+    
+    .accordion-icon {
+      transition: transform 0.25s ease;
+    }
+    
+    .accordion-icon.rotated {
+      transform: rotate(90deg);
+    }
+    
+    .accordion-item {
+      transition: box-shadow 0.2s ease;
+    }
+    
+    .accordion-item.expanded {
+      box-shadow: 0 4px 12px rgba(27, 156, 90, 0.12);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-white">
+  <div class="app-wrapper h-full w-full overflow-auto">
+   <div class="max-w-3xl mx-auto px-6 py-12 md:px-8 lg:px-12"><!-- Header Section -->
+    <header class="mb-12">
+    <h1 id="course-title" class="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">Kirchhoff's Laws</h1>
+     <img src="assets/dlsuclass/Header%20-%20Kirchhoff%27s%20Laws.png" alt="Kirchhoff's Laws Header" class="w-full rounded-lg border border-gray-200 mb-6 object-cover" loading="lazy" decoding="async">
+     <div class="text-sm text-gray-600 space-y-1">
+      <p><span class="font-medium text-gray-700">Week Num:</span> <span id="week-num">2</span></p>
+      <p><span class="font-medium text-gray-700">Department:</span> <span id="department">Physics</span></p>
+      <p><span class="font-medium text-gray-700">College:</span> <span id="college">Science</span></p>
+      <p><span class="font-medium text-gray-700">School:</span> <span id="school">De La Salle University – Manila</span></p>
+      <p><span class="font-medium text-gray-700">Teacher:</span> <span id="teacher">Dr. James Salveo L. Olarve</span></p>
+     </div>
+    </header><!-- Accordion Section -->
+    <main class="space-y-3" id="accordion-container"><!-- 1. Introduction -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="0"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">1. Introduction</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <p class="text-gray-600 text-sm mb-4">Experimental errors are inevitable variations between a measurement and its true value. They are classified into two main categories:
+      • Systematic Errors: These result in consistent, reproducible bias where measurements are always too high or too low. They generally stem from personal errors (e.g., observer bias, parallax) or external errors caused by environmental conditions like temperature changes or vibrations.
+      • Random Errors: These are unpredictable variations caused by uncontrollable factors, resulting in data scattered above and below the true value. Their impact is reduced by taking repeated measurements.
+      To analyze these errors, statistics are used to determine central tendency (finding the average value) and dispersion (using standard deviation to measure precision and reliability)</p>
+       </div>
+      </div>
+     </div><!-- 2. Module -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="1"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">2. Module</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <p class="text-gray-600 text-sm mb-4">Module content covering the theoretical foundations and key concepts of the lesson. Password: DLSU_physics</p>
+        <a href="assets/dlsuclass/Day2%20-%20Experimental%20Errors%20and%20Acoustics%20Module.pdf" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg> Open module file </a>
+       </div>
+      </div>
+     </div><!-- 3. Lesson -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="2"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">3. Lesson</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+         <div class="bg-white border border-gray-200 rounded-md p-4 mb-4">
+           <h3 class="text-gray-800 text-lg md:text-xl font-bold mb-4">Lesson Slides</h3>
+           <div class="w-full">
+              <iframe
+               class="w-full h-[600px] rounded-md"
+               src="https://view.officeapps.live.com/op/embed.aspx?src=https%3A%2F%2F1drv.ms%2Fp%2Fc%2F5cc88a9f64b2483e%2FIQBr_14RnJweTJiM2OpW6KW5ASkjuCaRvCzb8hzNyv1ZnZ0%3Fe%3DufjoHq"
+               frameborder="0"
+               allowfullscreen
+             ></iframe>
+           </div>
+         </div>
+
+       </div>
+      </div>
+     </div><!-- 4. Checkpoint -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="3"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">4. Checkpoint</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <p class="text-gray-600 text-sm mb-4">Self-assessment questions to verify understanding before proceeding to activities.</p>
+
+        <!-- Checkpoint Summary Banner -->
+        <div id="checkpoint-summary" class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md p-4 mb-4">
+          <div class="font-semibold">Checkpoint</div>
+          <div class="text-sm">No answers yet. Submit to see your score.</div>
+        </div>
+
+        <!-- Checkpoint Questions Container -->
+        <div id="checkpoint-questions"></div>
+
+        <!-- Actions -->
+        <div class="mt-2">
+          <button id="checkpoint-submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md">Submit All</button>
+          <button id="checkpoint-reset" class="ml-2 px-3 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm rounded-md">Reset</button>
+        </div>
+
+       </div>
+      </div>
+     </div><!-- 5. Activity Instruction -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="4"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">5. Activity Instruction</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <p class="text-gray-600 text-sm mb-4">Step-by-step instructions for completing the hands-on activity component.</p>
+
+       </div>
+      </div>
+     </div><!-- 6. Worksheet -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="5"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">6. Worksheet</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <p class="text-gray-600 text-sm mb-4">Complete the worksheet and submit it on DLSU Canvas.</p>
+        <a href="assets/dlsuclass/Day2%20-%20Experimental%20Errors%20and%20Acoustics%20Worksheet.docx" download class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg> Download worksheet </a>
+       </div>
+      </div>
+     </div>
+    </main>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      course_title: 'Kirchhoff\'s Laws',
+      week_num: '2',
+      department: 'Physics',
+      college: 'Science',
+      school: 'De La Salle University – Manila',
+      teacher: 'Dr. James Salveo L. Olarve',
+      primary_color: '#1B9C5A',
+      text_color: '#1f2937',
+      background_color: '#ffffff',
+      font_family: 'Inter'
+    };
+
+    // Accordion functionality
+    function initAccordion() {
+      const headers = document.querySelectorAll('.accordion-header');
+      
+      headers.forEach(header => {
+        header.addEventListener('click', () => {
+          const item = header.closest('.accordion-item');
+          const content = item.querySelector('.accordion-content');
+          const icon = item.querySelector('.accordion-icon');
+          const isExpanded = item.classList.contains('expanded');
+          
+          if (isExpanded) {
+            item.classList.remove('expanded');
+            content.classList.remove('expanded');
+            icon.classList.remove('rotated');
+          } else {
+            item.classList.add('expanded');
+            content.classList.add('expanded');
+            icon.classList.add('rotated');
+          }
+        });
+        
+        // Hover effects for triangle
+        header.addEventListener('mouseenter', () => {
+          const icon = header.querySelector('.accordion-icon path');
+          icon.setAttribute('fill', '#2ECC71');
+        });
+        
+        header.addEventListener('mouseleave', () => {
+          const item = header.closest('.accordion-item');
+          const icon = header.querySelector('.accordion-icon path');
+          const isExpanded = item.classList.contains('expanded');
+          icon.setAttribute('fill', isExpanded ? '#147A44' : '#1B9C5A');
+        });
+      });
+      
+      // Set initial state for expanded items
+      document.querySelectorAll('.accordion-item.expanded').forEach(item => {
+        const icon = item.querySelector('.accordion-icon path');
+        icon.setAttribute('fill', '#147A44');
+      });
+    }
+
+    async function onConfigChange(config) {
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      const baseFontStack = 'Arial, sans-serif';
+      
+      // Update text content
+      document.getElementById('course-title').textContent = config.course_title || defaultConfig.course_title;
+      document.getElementById('week-num').textContent = config.week_num || defaultConfig.week_num;
+      document.getElementById('department').textContent = config.department || defaultConfig.department;
+      document.getElementById('college').textContent = config.college || defaultConfig.college;
+      document.getElementById('school').textContent = config.school || defaultConfig.school;
+      document.getElementById('teacher').textContent = config.teacher || defaultConfig.teacher;
+      
+      // Apply font family
+      document.querySelectorAll('*').forEach(el => {
+        el.style.fontFamily = `${fontFamily}, ${baseFontStack}`;
+      });
+      
+      // Apply colors
+      const primaryColor = config.primary_color || defaultConfig.primary_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const bgColor = config.background_color || defaultConfig.background_color;
+      
+      document.body.style.backgroundColor = bgColor;
+      document.getElementById('course-title').style.color = textColor;
+      
+      // Update all accordion icons and buttons with primary color
+      document.querySelectorAll('.accordion-icon path').forEach(path => {
+        const item = path.closest('.accordion-item');
+        const isExpanded = item && item.classList.contains('expanded');
+        path.setAttribute('fill', isExpanded ? adjustColor(primaryColor, -20) : primaryColor);
+      });
+      
+      document.querySelectorAll('.accordion-content button').forEach(btn => {
+        btn.style.backgroundColor = primaryColor;
+      });
+    }
+
+    function adjustColor(hex, percent) {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+      const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amt));
+      const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+      return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ background_color: value });
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ text_color: value });
+            }
+          },
+          {
+            get: () => config.primary_color || defaultConfig.primary_color,
+            set: (value) => {
+              config.primary_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ primary_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            if (window.elementSdk) window.elementSdk.setConfig({ font_family: value });
+          }
+        },
+        fontSizeable: undefined
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['course_title', config.course_title || defaultConfig.course_title],
+        ['week_num', config.week_num || defaultConfig.week_num],
+        ['department', config.department || defaultConfig.department],
+        ['college', config.college || defaultConfig.college],
+        ['school', config.school || defaultConfig.school],
+        ['teacher', config.teacher || defaultConfig.teacher]
+      ]);
+    }
+
+    // Initialize
+    initAccordion();
+    
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+  </script>
+  <script>
+    // Checkpoint (Section 4) scaffold
+    const CHECKPOINT_STORAGE_KEY = 'quiz:lbyph1a-d2:checkpoint4:v1';
+    const checkpointQuestions = [
+      {
+        id: 'wk2-q1',
+        stem: 'A student consistently measures a length that is longer than the accepted value using the same ruler. This error is most likely:',
+        options: [
+          'Random',
+          'Systematic',
+          'Negligible',
+          'Computational'
+        ],
+        correct: 1,
+        explanation: 'A consistent offset across repeated measurements indicates a systematic error.'
+      },
+      {
+        id: 'wk2-q2',
+        stem: 'Which situation best illustrates a parallax error?',
+        options: [
+          'Forgetting to reset a stopwatch',
+          'Reading a scale from an angle',
+          'Using an uncalibrated instrument',
+          'Rounding off values incorrectly'
+        ],
+        correct: 1,
+        explanation: 'Parallax occurs when the scale is viewed from an angle, shifting the apparent reading.'
+      },
+      {
+        id: 'wk2-q3',
+        stem: 'Which of the following errors cannot be eliminated completely, even with careful technique?',
+        options: [
+          'Zero error',
+          'Calibration error',
+          'Random error',
+          'Observer bias'
+        ],
+        correct: 2,
+        explanation: 'Random errors arise from unpredictable variations and can only be reduced, not eliminated.'
+      },
+      {
+        id: 'wk2-q4',
+        stem: 'A balance consistently reads 0.5 g even when empty. This is an example of:',
+        options: [
+          'Random error',
+          'External error',
+          'Zero error',
+          'Human reaction error'
+        ],
+        correct: 2,
+        explanation: 'A non-zero reading with no load indicates a zero error (offset) in the instrument.'
+      },
+      {
+        id: 'wk2-q5',
+        stem: 'Which action is most effective in reducing random errors?',
+        options: [
+          'Using correction factors',
+          'Calibrating the instrument',
+          'Increasing the number of measurements',
+          'Changing the observer'
+        ],
+        correct: 2,
+        explanation: 'Averaging more measurements reduces the influence of random scatter.'
+      },
+      {
+        id: 'wk2-q6',
+        stem: 'A student adjusts measured values to better match theory. This practice introduces:',
+        options: [
+          'Instrumental error',
+          'External error',
+          'Observer bias',
+          'Random noise'
+        ],
+        correct: 2,
+        explanation: 'Manual adjustment toward theory creates observer bias (systematic influence).'
+      },
+      {
+        id: 'wk2-q7',
+        stem: 'Which environmental factor is most likely to cause systematic error?',
+        options: [
+          'Air turbulence',
+          'Line voltage fluctuations',
+          'Constant temperature increase',
+          'Random vibration'
+        ],
+        correct: 2,
+        explanation: 'A steady temperature drift introduces a consistent bias (systematic error).'
+      },
+      {
+        id: 'wk2-q8',
+        stem: 'Two data sets have the same mean but different standard deviations. This implies that:',
+        options: [
+          'Both data sets are equally accurate',
+          'The data sets have identical errors',
+          'One data set is more precise than the other',
+          'The mean is unreliable'
+        ],
+        correct: 2,
+        explanation: 'Lower standard deviation indicates higher precision; equal means do not guarantee equal spread.'
+      },
+      {
+        id: 'wk2-q9',
+        stem: 'Why is averaging multiple measurements effective in experiments?',
+        options: [
+          'It removes systematic errors',
+          'It eliminates all uncertainties',
+          'It reduces the effect of random errors',
+          'It guarantees correct results'
+        ],
+        correct: 2,
+        explanation: 'Averaging reduces random error influence; systematic errors persist unless corrected.'
+      },
+      {
+        id: 'wk2-q10',
+        stem: 'Which choice best describes the goal of error analysis in physics experiments?',
+        options: [
+          'To eliminate all errors',
+          'To hide measurement imperfections',
+          'To identify and minimize sources of error',
+          'To match theoretical values exactly'
+        ],
+        correct: 2,
+        explanation: 'Error analysis aims to identify, quantify, and reduce errors — not to erase them entirely.'
+      }
+    ];
+
+    function loadCheckpointState() {
+      try { return JSON.parse(localStorage.getItem(CHECKPOINT_STORAGE_KEY) || '{}'); } catch { return {}; }
+    }
+
+    function saveCheckpointState(state) {
+      try { localStorage.setItem(CHECKPOINT_STORAGE_KEY, JSON.stringify(state || {})); } catch {}
+    }
+
+    function renderCheckpoint() {
+      const container = document.getElementById('checkpoint-questions');
+      const summary = document.getElementById('checkpoint-summary');
+      if (!container || !summary) return;
+      const state = loadCheckpointState();
+      container.innerHTML = '';
+
+      checkpointQuestions.forEach((q, qi) => {
+        const selected = state.answers?.[q.id] ?? null;
+        const card = document.createElement('div');
+        card.className = 'bg-white border border-gray-200 rounded-md p-4 mb-4';
+        const fieldsetId = `q${qi}`;
+        const header = `<div class="text-gray-800 font-medium mb-2">Question ${qi + 1}</div>`;
+        const stem = `<p class="text-gray-700 mb-3">${q.stem}</p>`;
+        let optionsHtml = '';
+        q.options.forEach((opt, oi) => {
+          const inputId = `${fieldsetId}-opt${oi}`;
+          const checked = selected === oi ? 'checked' : '';
+          optionsHtml += `
+            <div class="flex items-start gap-2 p-2 rounded hover:bg-gray-50">
+              <input type="radio" id="${inputId}" name="${fieldsetId}" value="${oi}" class="mt-0.5 accent-emerald-600 focus:ring-2 focus:ring-emerald-600" ${checked} />
+              <label for="${inputId}" class="text-gray-700">${opt}</label>
+            </div>`;
+        });
+        const feedbackClass = state.submitted ? (selected === q.correct ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200') : 'hidden';
+        const feedbackText = state.submitted ? (selected === q.correct ? 'Correct.' : 'Incorrect.') : '';
+        const feedback = `<div class="${feedbackClass} border rounded p-2 mt-3 text-sm"><span class="font-semibold">${feedbackText}</span> ${state.submitted ? q.explanation : ''}</div>`;
+
+        card.innerHTML = header + stem + `<fieldset class="mb-2">${optionsHtml}</fieldset>` + feedback;
+        container.appendChild(card);
+      });
+
+      // Update summary
+      if (state.submitted) {
+        const score = checkpointQuestions.reduce((acc, q) => acc + ((state.answers?.[q.id] ?? -1) === q.correct ? 1 : 0), 0);
+        summary.innerHTML = `<div class="font-semibold">Checkpoint</div><div class="text-sm">Score: ${score}/${checkpointQuestions.length} (${Math.round((score / checkpointQuestions.length) * 100)}%)</div>`;
+      } else {
+        summary.innerHTML = `<div class="font-semibold">Checkpoint</div><div class="text-sm">No answers yet. Submit to see your score.</div>`;
+      }
+
+      // Wire selection persistence
+      container.querySelectorAll('input[type="radio"]').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const name = e.target.name; // q{index}
+          const qi = parseInt(name.replace('q', ''), 10);
+          const q = checkpointQuestions[qi];
+          const state = loadCheckpointState();
+          state.answers = state.answers || {};
+          state.answers[q.id] = parseInt(e.target.value, 10);
+          state.submitted = false; // changing answer resets submitted state
+          saveCheckpointState(state);
+          // Re-render to hide feedback until submission and reflect selection
+          renderCheckpoint();
+        });
+      });
+    }
+
+    function submitCheckpoint() {
+      const state = loadCheckpointState();
+      if (!state.answers) state.answers = {};
+      state.submitted = true;
+      saveCheckpointState(state);
+      renderCheckpoint();
+    }
+
+    function resetCheckpoint() {
+      saveCheckpointState({ answers: {}, submitted: false });
+      renderCheckpoint();
+    }
+
+    // Wire actions after DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCheckpoint();
+      const submitBtn = document.getElementById('checkpoint-submit');
+      const resetBtn = document.getElementById('checkpoint-reset');
+      if (submitBtn) submitBtn.addEventListener('click', submitCheckpoint);
+      if (resetBtn) resetBtn.addEventListener('click', resetCheckpoint);
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb87f3f86428d03',t:'MTc2ODAwOTU0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Graphs and Equations</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      font-family: 'Inter', Arial, sans-serif;
+    }
+    
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      padding: 0 1.25rem;
+    }
+    
+    .accordion-content.expanded {
+      max-height: none;
+      overflow: visible;
+      padding: 1rem 1.25rem;
+    }
+    
+    .accordion-inner {
+      padding: 0;
+    }
+    
+    .accordion-icon {
+      transition: transform 0.25s ease;
+    }
+    
+    .accordion-icon.rotated {
+      transform: rotate(90deg);
+    }
+    
+    .accordion-item {
+      transition: box-shadow 0.2s ease;
+    }
+    
+    .accordion-item.expanded {
+      box-shadow: 0 4px 12px rgba(27, 156, 90, 0.12);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-white">
+  <div class="app-wrapper h-full w-full overflow-auto">
+   <div class="max-w-3xl mx-auto px-6 py-12 md:px-8 lg:px-12"><!-- Header Section -->
+    <header class="mb-12">
+    <h1 id="course-title" class="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">Graphs and Equations</h1>
+     <img src="assets/dlsuclass/Header%20-%20Graphs%20and%20Equations.png" alt="Graphs and Equations Header" class="w-full rounded-lg border border-gray-200 mb-6 object-cover" loading="lazy" decoding="async">
+     <div class="text-sm text-gray-600 space-y-1">
+      <p><span class="font-medium text-gray-700">Week Num:</span> <span id="week-num">2</span></p>
+      <p><span class="font-medium text-gray-700">Department:</span> <span id="department">Physics</span></p>
+      <p><span class="font-medium text-gray-700">College:</span> <span id="college">Science</span></p>
+      <p><span class="font-medium text-gray-700">School:</span> <span id="school">De La Salle University – Manila</span></p>
+      <p><span class="font-medium text-gray-700">Teacher:</span> <span id="teacher">Dr. James Salveo L. Olarve</span></p>
+     </div>
+    </header><!-- Accordion Section -->
+    <main class="space-y-3" id="accordion-container"><!-- 1. Introduction -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="0"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">1. Introduction</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <p class="text-gray-600 text-sm mb-4">In this activity, you will learn how graphs are used to represent and analyze experimental data. Graphs allow us to visualize the relationship between physical quantities and help us identify patterns that may not be immediately obvious from numerical values alone.
+
+You will practice plotting experimental results correctly, interpreting different types of graphs, and transforming non-linear relationships into linear forms. Using these graphs, you will determine the relationship between variables and formulate equations that describe the physical system being studied.
+
+This activity emphasizes that graphs are not just illustrations—they are powerful tools for understanding experimental results and verifying physical laws.</p>
+       </div>
+      </div>
+     </div><!-- 2. Module -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="1"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">2. Module</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <p class="text-gray-600 text-sm mb-4">Module content covering the theoretical foundations and key concepts of the lesson.</p>
+        <a href="assets/dlsuclass/Day2%20-%20Graphs%20and%20Equations%20Module.pdf" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg> Open module file </a>
+       </div>
+      </div>
+     </div><!-- 3. Lesson -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="2"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">3. Lesson</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <h3 class="text-gray-800 text-lg md:text-xl font-bold mb-4">Different types of graphs.</h3>
+        <div class="bg-white border border-gray-200 rounded-md p-4 mb-4">
+          <video id="lesson-video" class="w-full rounded-md" controls preload="metadata">
+            <source src="assets/dlsuclass/Types%20Of%20Graphs.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="bg-white border border-gray-200 rounded-md p-4 mb-4">
+          <h3 class="text-gray-800 font-semibold mb-2">Trends and Linearization</h3>
+          <video id="linearization-video" class="w-full rounded-md" controls preload="metadata">
+            <source src="assets/dlsuclass/Linearization.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        
+
+       </div>
+      </div>
+     </div><!-- 4. Checkpoint -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="3"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">4. Checkpoint</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <p class="text-gray-600 text-sm mb-4">Self-assessment questions to verify understanding before proceeding to activities.</p>
+
+        <!-- Checkpoint Summary Banner -->
+        <div id="checkpoint-summary" class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-md p-4 mb-4">
+          <div class="font-semibold">Checkpoint</div>
+          <div class="text-sm">No answers yet. Submit to see your score.</div>
+        </div>
+
+        <!-- Checkpoint Questions Container -->
+        <div id="checkpoint-questions"></div>
+
+        <!-- Actions -->
+        <div class="mt-2">
+          <button id="checkpoint-submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md">Submit All</button>
+          <button id="checkpoint-reset" class="ml-2 px-3 py-2 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm rounded-md">Reset</button>
+        </div>
+
+       </div>
+      </div>
+     </div><!-- 5. Activity Instruction -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="4"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">5. Activity Instruction</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <p class="text-gray-600 text-sm mb-4">If you have studied this lesson thoroughly, you will be able to complete the worksheet.</p>
+
+       </div>
+      </div>
+     </div><!-- 6. Worksheet -->
+     <div class="accordion-item border border-gray-200 rounded-lg overflow-hidden" data-index="5"><button class="accordion-header w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-emerald-50 transition-colors duration-200">
+       <svg class="accordion-icon w-4 h-4 flex-shrink-0" viewbox="0 0 24 24" fill="none"><path d="M8 5L19 12L8 19V5Z" fill="#1B9C5A" />
+       </svg><span class="font-semibold text-gray-800">6. Worksheet</span> </button>
+      <div class="accordion-content bg-gray-50">
+       <div class="accordion-inner py-4">
+        <p class="text-gray-600 text-sm mb-4">Complete the worksheet and submit it on DLSU Canvas.</p>
+        <a href="assets/dlsuclass/Day2%20-%20Graphs%20and%20Equations%20Worksheet.docx" download class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg> Download worksheet </a>
+       </div>
+      </div>
+     </div>
+    </main>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      course_title: 'Graphs and Equations',
+      week_num: '2',
+      department: 'Physics',
+      college: 'Science',
+      school: 'De La Salle University – Manila',
+      teacher: 'Dr. James Salveo L. Olarve',
+      primary_color: '#1B9C5A',
+      text_color: '#1f2937',
+      background_color: '#ffffff',
+      font_family: 'Inter'
+    };
+
+    // Accordion functionality
+    function initAccordion() {
+      const headers = document.querySelectorAll('.accordion-header');
+      
+      headers.forEach(header => {
+        header.addEventListener('click', () => {
+          const item = header.closest('.accordion-item');
+          const content = item.querySelector('.accordion-content');
+          const icon = item.querySelector('.accordion-icon');
+          const isExpanded = item.classList.contains('expanded');
+          
+          if (isExpanded) {
+            item.classList.remove('expanded');
+            content.classList.remove('expanded');
+            icon.classList.remove('rotated');
+          } else {
+            item.classList.add('expanded');
+            content.classList.add('expanded');
+            icon.classList.add('rotated');
+          }
+        });
+        
+        // Hover effects for triangle
+        header.addEventListener('mouseenter', () => {
+          const icon = header.querySelector('.accordion-icon path');
+          icon.setAttribute('fill', '#2ECC71');
+        });
+        
+        header.addEventListener('mouseleave', () => {
+          const item = header.closest('.accordion-item');
+          const icon = header.querySelector('.accordion-icon path');
+          const isExpanded = item.classList.contains('expanded');
+          icon.setAttribute('fill', isExpanded ? '#147A44' : '#1B9C5A');
+        });
+      });
+      
+      // Set initial state for expanded items
+      document.querySelectorAll('.accordion-item.expanded').forEach(item => {
+        const icon = item.querySelector('.accordion-icon path');
+        icon.setAttribute('fill', '#147A44');
+      });
+    }
+
+    async function onConfigChange(config) {
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      const baseFontStack = 'Arial, sans-serif';
+      
+      // Update text content
+      document.getElementById('course-title').textContent = config.course_title || defaultConfig.course_title;
+      document.getElementById('week-num').textContent = config.week_num || defaultConfig.week_num;
+      document.getElementById('department').textContent = config.department || defaultConfig.department;
+      document.getElementById('college').textContent = config.college || defaultConfig.college;
+      document.getElementById('school').textContent = config.school || defaultConfig.school;
+      document.getElementById('teacher').textContent = config.teacher || defaultConfig.teacher;
+      
+      // Apply font family
+      document.querySelectorAll('*').forEach(el => {
+        el.style.fontFamily = `${fontFamily}, ${baseFontStack}`;
+      });
+      
+      // Apply colors
+      const primaryColor = config.primary_color || defaultConfig.primary_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const bgColor = config.background_color || defaultConfig.background_color;
+      
+      document.body.style.backgroundColor = bgColor;
+      document.getElementById('course-title').style.color = textColor;
+      
+      // Update all accordion icons and buttons with primary color
+      document.querySelectorAll('.accordion-icon path').forEach(path => {
+        const item = path.closest('.accordion-item');
+        const isExpanded = item && item.classList.contains('expanded');
+        path.setAttribute('fill', isExpanded ? adjustColor(primaryColor, -20) : primaryColor);
+      });
+      
+      document.querySelectorAll('.accordion-content button').forEach(btn => {
+        btn.style.backgroundColor = primaryColor;
+      });
+    }
+
+    function adjustColor(hex, percent) {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+      const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amt));
+      const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+      return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ background_color: value });
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ text_color: value });
+            }
+          },
+          {
+            get: () => config.primary_color || defaultConfig.primary_color,
+            set: (value) => {
+              config.primary_color = value;
+              if (window.elementSdk) window.elementSdk.setConfig({ primary_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            if (window.elementSdk) window.elementSdk.setConfig({ font_family: value });
+          }
+        },
+        fontSizeable: undefined
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['course_title', config.course_title || defaultConfig.course_title],
+        ['week_num', config.week_num || defaultConfig.week_num],
+        ['department', config.department || defaultConfig.department],
+        ['college', config.college || defaultConfig.college],
+        ['school', config.school || defaultConfig.school],
+        ['teacher', config.teacher || defaultConfig.teacher]
+      ]);
+    }
+
+    // Initialize
+    initAccordion();
+    
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+  </script>
+  <script>
+    // Checkpoint (Section 4) scaffold
+    const CHECKPOINT_STORAGE_KEY = 'quiz:lbyph1a-d2:checkpoint4:v1';
+    const checkpointQuestions = [
+      {
+        id: 'gq1',
+        stem: 'A straight-line graph of a physical quantity does not pass through the origin. What does this indicate?',
+        options: [
+          'The two variables are inversely proportional',
+          'The relationship between the variables is nonlinear',
+          'There is a constant offset between the variables',
+          'The slope of the graph is zero'
+        ],
+        correct: 2,
+        explanation: 'A non-zero intercept indicates a constant offset independent of the variable values.'
+      },
+      {
+        id: 'gq2',
+        stem: 'In a distance vs. time graph that is a straight line passing through the origin, what does the slope of the graph physically represent?',
+        options: [
+          'Total distance traveled',
+          'Initial position',
+          'Average speed',
+          'Acceleration'
+        ],
+        correct: 2,
+        explanation: 'For a linear distance–time relationship through the origin, slope equals average speed (rate of change of distance over time).'
+      },
+      {
+        id: 'gq3',
+        stem: 'A graph of height versus time appears parabolic. Which action is most appropriate to verify the true mathematical relationship between the variables?',
+        options: [
+          'Plot height versus time again using a different scale',
+          'Plot height versus the square of time',
+          'Plot time versus height',
+          'Plot height versus the inverse of time'
+        ],
+        correct: 1,
+        explanation: 'If height ∝ t², plotting height against t² yields a straight line, confirming a quadratic relationship.'
+      },
+      {
+        id: 'gq4',
+        stem: 'A hyperbolic graph becomes a straight line when the dependent variable is plotted against 1/x. This result implies that the original variables are:',
+        options: [
+          'Directly proportional',
+          'Linearly related',
+          'Inversely proportional',
+          'Quadratically related'
+        ],
+        correct: 2,
+        explanation: 'A linear relationship with 1/x indicates y ∝ 1/x, i.e., the variables are inversely proportional.'
+      },
+      {
+        id: 'gq5',
+        stem: 'Why is linearization of a graph important in experimental physics?',
+        options: [
+          'It makes the graph easier to draw by hand',
+          'It eliminates all experimental errors',
+          'It allows the equation relating variables to be determined',
+          'It ensures that all data points lie exactly on the line'
+        ],
+        correct: 2,
+        explanation: 'Linearization reveals simple parameter relationships (slope/intercept), enabling determination of the governing equation.'
+      }
+    ];
+
+    function loadCheckpointState() {
+      try { return JSON.parse(localStorage.getItem(CHECKPOINT_STORAGE_KEY) || '{}'); } catch { return {}; }
+    }
+
+    function saveCheckpointState(state) {
+      try { localStorage.setItem(CHECKPOINT_STORAGE_KEY, JSON.stringify(state || {})); } catch {}
+    }
+
+    function renderCheckpoint() {
+      const container = document.getElementById('checkpoint-questions');
+      const summary = document.getElementById('checkpoint-summary');
+      if (!container || !summary) return;
+      const state = loadCheckpointState();
+      container.innerHTML = '';
+
+      checkpointQuestions.forEach((q, qi) => {
+        const selected = state.answers?.[q.id] ?? null;
+        const card = document.createElement('div');
+        card.className = 'bg-white border border-gray-200 rounded-md p-4 mb-4';
+        const fieldsetId = `q${qi}`;
+        const header = `<div class="text-gray-800 font-medium mb-2">Question ${qi + 1}</div>`;
+        const stem = `<p class="text-gray-700 mb-3">${q.stem}</p>`;
+        let optionsHtml = '';
+        q.options.forEach((opt, oi) => {
+          const inputId = `${fieldsetId}-opt${oi}`;
+          const checked = selected === oi ? 'checked' : '';
+          optionsHtml += `
+            <div class="flex items-start gap-2 p-2 rounded hover:bg-gray-50">
+              <input type="radio" id="${inputId}" name="${fieldsetId}" value="${oi}" class="mt-0.5 accent-emerald-600 focus:ring-2 focus:ring-emerald-600" ${checked} />
+              <label for="${inputId}" class="text-gray-700">${opt}</label>
+            </div>`;
+        });
+        const feedbackClass = state.submitted ? (selected === q.correct ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200') : 'hidden';
+        const feedbackText = state.submitted ? (selected === q.correct ? 'Correct.' : 'Incorrect.') : '';
+        const feedback = `<div class="${feedbackClass} border rounded p-2 mt-3 text-sm"><span class="font-semibold">${feedbackText}</span> ${state.submitted ? q.explanation : ''}</div>`;
+
+        card.innerHTML = header + stem + `<fieldset class="mb-2">${optionsHtml}</fieldset>` + feedback;
+        container.appendChild(card);
+      });
+
+      // Update summary
+      if (state.submitted) {
+        const score = checkpointQuestions.reduce((acc, q) => acc + ((state.answers?.[q.id] ?? -1) === q.correct ? 1 : 0), 0);
+        summary.innerHTML = `<div class="font-semibold">Checkpoint</div><div class="text-sm">Score: ${score}/${checkpointQuestions.length} (${Math.round((score / checkpointQuestions.length) * 100)}%)</div>`;
+      } else {
+        summary.innerHTML = `<div class="font-semibold">Checkpoint</div><div class="text-sm">No answers yet. Submit to see your score.</div>`;
+      }
+
+      // Wire selection persistence
+      container.querySelectorAll('input[type="radio"]').forEach(input => {
+        input.addEventListener('change', (e) => {
+          const name = e.target.name; // q{index}
+          const qi = parseInt(name.replace('q', ''), 10);
+          const q = checkpointQuestions[qi];
+          const state = loadCheckpointState();
+          state.answers = state.answers || {};
+          state.answers[q.id] = parseInt(e.target.value, 10);
+          state.submitted = false; // changing answer resets submitted state
+          saveCheckpointState(state);
+          // Re-render to hide feedback until submission and reflect selection
+          renderCheckpoint();
+        });
+      });
+    }
+
+    function submitCheckpoint() {
+      const state = loadCheckpointState();
+      if (!state.answers) state.answers = {};
+      state.submitted = true;
+      saveCheckpointState(state);
+      renderCheckpoint();
+    }
+
+    function resetCheckpoint() {
+      saveCheckpointState({ answers: {}, submitted: false });
+      renderCheckpoint();
+    }
+
+    // Wire actions after DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCheckpoint();
+      const submitBtn = document.getElementById('checkpoint-submit');
+      const resetBtn = document.getElementById('checkpoint-reset');
+      if (submitBtn) submitBtn.addEventListener('click', submitCheckpoint);
+      if (resetBtn) resetBtn.addEventListener('click', resetCheckpoint);
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb87f3f86428d03',t:'MTc2ODAwOTU0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
