@@ -74,10 +74,7 @@
        </svg><span class="font-semibold text-gray-800">1. Introduction</span> </button>
       <div class="accordion-content bg-gray-50">
        <div class="accordion-inner py-4">
-        <p class="text-gray-600 text-sm mb-4">Experimental errors are inevitable variations between a measurement and its true value. They are classified into two main categories:
-      • Systematic Errors: These result in consistent, reproducible bias where measurements are always too high or too low. They generally stem from personal errors (e.g., observer bias, parallax) or external errors caused by environmental conditions like temperature changes or vibrations.
-      • Random Errors: These are unpredictable variations caused by uncontrollable factors, resulting in data scattered above and below the true value. Their impact is reduced by taking repeated measurements.
-      To analyze these errors, statistics are used to determine central tendency (finding the average value) and dispersion (using standard deviation to measure precision and reliability)</p>
+        <p class="text-gray-600 text-sm mb-4">In this activity, you will learn how Kirchhoff’s Laws are used to analyze electrical circuits that contain multiple junctions and closed loops, where simple applications of Ohm’s Law are no longer sufficient. Kirchhoff’s Current Law and Kirchhoff’s Voltage Law provide a systematic way to describe how current flows through a circuit and how energy is distributed among its components. You will practice applying these laws by assigning current directions, writing equations for nodes and loops, and solving sets of simultaneous equations that describe the circuit behavior. Through simulation, computation, and actual measurements, you will compare theoretical predictions with experimental results and evaluate the validity of these fundamental laws. This activity emphasizes that Kirchhoff’s Laws are not merely mathematical rules—they are powerful tools grounded in the conservation of charge and energy that allow us to understand, predict, and verify the behavior of real electrical circuits.</p>
        </div>
       </div>
      </div><!-- 2. Module -->
@@ -86,8 +83,8 @@
        </svg><span class="font-semibold text-gray-800">2. Module</span> </button>
       <div class="accordion-content bg-gray-50">
        <div class="accordion-inner py-4">
-        <p class="text-gray-600 text-sm mb-4">Module content covering the theoretical foundations and key concepts of the lesson. Password: DLSU_physics</p>
-        <a href="assets/dlsuclass/Day2%20-%20Experimental%20Errors%20and%20Acoustics%20Module.pdf" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+        <p class="text-gray-600 text-sm mb-4">Module content covering the theoretical foundations and key concepts of the lesson.</p>
+        <a href="assets/dlsuclass/Day%202%20-%20Kirchhoffs%20Laws%20Module.docx" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
         </svg> Open module file </a>
        </div>
@@ -109,6 +106,22 @@
              ></iframe>
            </div>
          </div>
+
+          <div class="bg-white border border-gray-200 rounded-md p-4 mb-4">
+            <h3 class="text-gray-800 text-lg md:text-xl font-bold mb-4">How to solve a problem using Kirchhoff's Laws</h3>
+            <video class="w-full rounded-md" controls preload="metadata">
+              <source src="assets/dlsuclass/Kirchhoff%27s%20Laws.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+
+          <div class="bg-white border border-gray-200 rounded-md p-4 mb-4">
+            <h3 class="text-gray-800 text-lg md:text-xl font-bold mb-4">How to use Multisim</h3>
+            <video class="w-full rounded-md" controls preload="metadata">
+              <source src="assets/dlsuclass/Multisim.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
 
        </div>
       </div>
@@ -143,7 +156,7 @@
        </svg><span class="font-semibold text-gray-800">5. Activity Instruction</span> </button>
       <div class="accordion-content bg-gray-50">
        <div class="accordion-inner py-4">
-        <p class="text-gray-600 text-sm mb-4">Step-by-step instructions for completing the hands-on activity component.</p>
+        <p class="text-gray-600 text-sm mb-4">In this activity, you will verify Kirchhoff’s Current Law (KCL) and Kirchhoff’s Voltage Law (KVL) using simulation and computation. You will first construct the given DC circuit using a circuit simulation tool and record the current values for each branch. Next, you will analyze the same circuit analytically by writing the appropriate KCL and KVL equations and solving them using MATLAB or Octave.</p>
 
        </div>
       </div>
@@ -154,7 +167,7 @@
       <div class="accordion-content bg-gray-50">
        <div class="accordion-inner py-4">
         <p class="text-gray-600 text-sm mb-4">Complete the worksheet and submit it on DLSU Canvas.</p>
-        <a href="assets/dlsuclass/Day2%20-%20Experimental%20Errors%20and%20Acoustics%20Worksheet.docx" download class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+        <a href="assets/dlsuclass/Day%202%20-%20Kirchhoffs%20Laws%20Multisim%20and%20Matlab%20Worksheet.docx" download class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
         </svg> Download worksheet </a>
        </div>
@@ -328,127 +341,127 @@
   </script>
   <script>
     // Checkpoint (Section 4) scaffold
-    const CHECKPOINT_STORAGE_KEY = 'quiz:lbyph1a-d2:checkpoint4:v1';
+    const CHECKPOINT_STORAGE_KEY = 'quiz:lbyph1a-kirchhoff:checkpoint4:v1';
     const checkpointQuestions = [
       {
-        id: 'wk2-q1',
-        stem: 'A student consistently measures a length that is longer than the accepted value using the same ruler. This error is most likely:',
+        id: 'kl-q1',
+        stem: 'What is the fundamental physical principle behind Kirchhoff\’s Current Law (KCL)?',
         options: [
-          'Random',
-          'Systematic',
-          'Negligible',
-          'Computational'
+          'Conservation of energy',
+          'Conservation of charge',
+          'Ohm\’s Law',
+          'Conservation of momentum'
         ],
         correct: 1,
-        explanation: 'A consistent offset across repeated measurements indicates a systematic error.'
+        explanation: 'KCL is based on charge conservation: charge does not accumulate at a node.'
       },
       {
-        id: 'wk2-q2',
-        stem: 'Which situation best illustrates a parallax error?',
+        id: 'kl-q2',
+        stem: 'Which of the following best describes Kirchhoff\’s Voltage Law (KVL)?',
         options: [
-          'Forgetting to reset a stopwatch',
-          'Reading a scale from an angle',
-          'Using an uncalibrated instrument',
-          'Rounding off values incorrectly'
+          'The voltage across all resistors must be equal',
+          'The total voltage in a circuit depends on current direction',
+          'The algebraic sum of voltages around a closed loop is zero',
+          'Voltage always decreases along a loop'
+        ],
+        correct: 2,
+        explanation: 'KVL states that the sum of rises and drops around any closed loop is zero.'
+      },
+      {
+        id: 'kl-q3',
+        stem: 'When applying Kirchhoff\’s Laws, why is it acceptable to assume the direction of current?',
+        options: [
+          'The assumed direction must always be correct',
+          'Current direction does not affect voltage',
+          'A negative solution simply indicates the actual direction is opposite',
+          'Kirchhoff\’s Laws only apply to assumed currents'
+        ],
+        correct: 2,
+        explanation: 'A negative current indicates the true direction is opposite the assumption; equations remain valid.'
+      },
+      {
+        id: 'kl-q4',
+        stem: 'In an experimental verification of KCL, why might the total current entering a node not exactly equal the total current leaving?',
+        options: [
+          'Kirchhoff\’s Laws are only approximations',
+          'Current is lost inside the junction',
+          'Measurement uncertainties and instrument limitations',
+          'Electric charge is not conserved'
+        ],
+        correct: 2,
+        explanation: 'Small discrepancies arise from measurement uncertainty and instrument limitations, not a violation of KCL.'
+      },
+      {
+        id: 'kl-q5',
+        stem: 'Which statement best distinguishes Kirchhoff\’s Laws from Ohm\’s Law in circuit analysis?',
+        options: [
+          'Kirchhoff\’s Laws apply only to ideal circuits, while Ohm\’s Law applies to real circuits',
+          'Kirchhoff\’s Laws relate voltage and current in a single component',
+          'Kirchhoff\’s Laws analyze complex circuits with multiple loops and junctions',
+          'Kirchhoff\’s Laws are valid only when resistance is constant'
+        ],
+        correct: 2,
+        explanation: 'Kirchhoff’s Laws provide node and loop equations for complex circuits; Ohm’s Law relates V, I, and R for components.'
+      },
+      {
+        id: 'kl-q6',
+        stem: 'At a junction, 5 A enters while two currents of 2 A and 1 A leave. According to KCL, what is the remaining current leaving the node?',
+        options: [
+          '1 A',
+          '2 A',
+          '3 A',
+          '4 A'
         ],
         correct: 1,
-        explanation: 'Parallax occurs when the scale is viewed from an angle, shifting the apparent reading.'
+        explanation: 'KCL: 5 A in = (2 + 1 + x) out ⇒ x = 2 A.'
       },
       {
-        id: 'wk2-q3',
-        stem: 'Which of the following errors cannot be eliminated completely, even with careful technique?',
+        id: 'kl-q7',
+        stem: 'A loop contains a 12 V battery and two resistors with drops of 5 V and 7 V. What is the algebraic sum of voltages around the loop?',
         options: [
-          'Zero error',
-          'Calibration error',
-          'Random error',
-          'Observer bias'
+          '−12 V',
+          '0 V',
+          '+12 V',
+          '+24 V'
         ],
-        correct: 2,
-        explanation: 'Random errors arise from unpredictable variations and can only be reduced, not eliminated.'
+        correct: 1,
+        explanation: 'KVL: 12 V rise − (5 V + 7 V) = 0 V; sum around the loop is zero.'
       },
       {
-        id: 'wk2-q4',
-        stem: 'A balance consistently reads 0.5 g even when empty. This is an example of:',
+        id: 'kl-q8',
+        stem: 'In a loop, a battery supplies 9 V and a single resistor has R = 3 Ω. What is the current?',
         options: [
-          'Random error',
-          'External error',
-          'Zero error',
-          'Human reaction error'
+          '1 A',
+          '2 A',
+          '3 A',
+          '6 A'
         ],
         correct: 2,
-        explanation: 'A non-zero reading with no load indicates a zero error (offset) in the instrument.'
+        explanation: 'Ohm’s Law: I = V/R = 9/3 = 3 A.'
       },
       {
-        id: 'wk2-q5',
-        stem: 'Which action is most effective in reducing random errors?',
+        id: 'kl-q9',
+        stem: 'A two-loop solution gives a current of −0.5 A in one branch. What does this indicate?',
         options: [
-          'Using correction factors',
-          'Calibrating the instrument',
-          'Increasing the number of measurements',
-          'Changing the observer'
+          'There is no current in that branch',
+          'The circuit violates Kirchhoff\’s Laws',
+          'The actual current flows opposite to the assumed direction',
+          'The resistor value is incorrect'
         ],
         correct: 2,
-        explanation: 'Averaging more measurements reduces the influence of random scatter.'
+        explanation: 'Negative sign means the true current direction is opposite the assumed direction.'
       },
       {
-        id: 'wk2-q6',
-        stem: 'A student adjusts measured values to better match theory. This practice introduces:',
+        id: 'kl-q10',
+        stem: 'Total voltage rise measured is 6.02 V, while total drop is 5.90 V. What best explains this difference?',
         options: [
-          'Instrumental error',
-          'External error',
-          'Observer bias',
-          'Random noise'
+          'Kirchhoff\’s Voltage Law is invalid',
+          'The loop is not closed',
+          'Experimental errors and internal resistance',
+          'Voltage is lost at the junctions'
         ],
         correct: 2,
-        explanation: 'Manual adjustment toward theory creates observer bias (systematic influence).'
-      },
-      {
-        id: 'wk2-q7',
-        stem: 'Which environmental factor is most likely to cause systematic error?',
-        options: [
-          'Air turbulence',
-          'Line voltage fluctuations',
-          'Constant temperature increase',
-          'Random vibration'
-        ],
-        correct: 2,
-        explanation: 'A steady temperature drift introduces a consistent bias (systematic error).'
-      },
-      {
-        id: 'wk2-q8',
-        stem: 'Two data sets have the same mean but different standard deviations. This implies that:',
-        options: [
-          'Both data sets are equally accurate',
-          'The data sets have identical errors',
-          'One data set is more precise than the other',
-          'The mean is unreliable'
-        ],
-        correct: 2,
-        explanation: 'Lower standard deviation indicates higher precision; equal means do not guarantee equal spread.'
-      },
-      {
-        id: 'wk2-q9',
-        stem: 'Why is averaging multiple measurements effective in experiments?',
-        options: [
-          'It removes systematic errors',
-          'It eliminates all uncertainties',
-          'It reduces the effect of random errors',
-          'It guarantees correct results'
-        ],
-        correct: 2,
-        explanation: 'Averaging reduces random error influence; systematic errors persist unless corrected.'
-      },
-      {
-        id: 'wk2-q10',
-        stem: 'Which choice best describes the goal of error analysis in physics experiments?',
-        options: [
-          'To eliminate all errors',
-          'To hide measurement imperfections',
-          'To identify and minimize sources of error',
-          'To match theoretical values exactly'
-        ],
-        correct: 2,
-        explanation: 'Error analysis aims to identify, quantify, and reduce errors — not to erase them entirely.'
+        explanation: 'Minor differences are due to measurement errors and internal resistance, not KVL violation.'
       }
     ];
 
@@ -484,10 +497,13 @@
               <label for="${inputId}" class="text-gray-700">${opt}</label>
             </div>`;
         });
-        const feedbackClass = state.submitted ? (selected === q.correct ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200') : 'hidden';
         const feedbackText = state.submitted ? (selected === q.correct ? 'Correct.' : 'Incorrect.') : '';
+        const feedbackClass = state.submitted
+          ? (selected === q.correct
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+              : 'bg-red-50 border-red-200 text-red-700')
+          : 'hidden';
         const feedback = `<div class="${feedbackClass} border rounded p-2 mt-3 text-sm"><span class="font-semibold">${feedbackText}</span> ${state.submitted ? q.explanation : ''}</div>`;
-
         card.innerHTML = header + stem + `<fieldset class="mb-2">${optionsHtml}</fieldset>` + feedback;
         container.appendChild(card);
       });
