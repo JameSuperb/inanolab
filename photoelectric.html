@@ -1,0 +1,2594 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photoelectric Effect Virtual Lab</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      color: #1b5e20;
+      min-height: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      font-size: 1.1em;
+      opacity: 0.95;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 1024px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .panel h2 {
+      color: #2e7d32;
+      margin-bottom: 20px;
+      font-size: 1.5em;
+      border-bottom: 2px solid #c8e6c9;
+      padding-bottom: 10px;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #2e7d32;
+    }
+
+    .control-group input,
+    .control-group select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #c8e6c9;
+      border-radius: 6px;
+      font-size: 1em;
+      transition: border-color 0.3s;
+    }
+
+    .control-group input:focus,
+    .control-group select:focus {
+      outline: none;
+      border-color: #66bb6a;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9em;
+      margin-bottom: 15px;
+    }
+
+    .status-ready {
+      background: #c8e6c9;
+      color: #1b5e20;
+    }
+
+    .status-running {
+      background: #fff59d;
+      color: #f57f17;
+    }
+
+    .led-color-display {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin-left: 10px;
+      border: 2px solid #666;
+      vertical-align: middle;
+    }
+
+    .wavelength-display {
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .slider-container {
+      margin-top: 10px;
+    }
+
+    .slider-value {
+      display: inline-block;
+      font-weight: 600;
+      color: #2e7d32;
+      margin-left: 10px;
+    }
+
+    input[type="range"] {
+      width: calc(100% - 60px);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .btn-start {
+      background: #66bb6a;
+      color: white;
+    }
+
+    .btn-start:hover:not(:disabled) {
+      background: #81c784;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .btn-stop {
+      background: #ef5350;
+      color: white;
+    }
+
+    .btn-stop:hover:not(:disabled) {
+      background: #e57373;
+    }
+
+    .btn-reset {
+      background: #ffa726;
+      color: white;
+    }
+
+    .btn-reset:hover {
+      background: #ffb74d;
+    }
+
+    .btn-download {
+      background: #42a5f5;
+      color: white;
+    }
+
+    .btn-download:hover {
+      background: #64b5f6;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .chart-container {
+      width: 100%;
+      height: 300px;
+      border: 2px solid #c8e6c9;
+      border-radius: 8px;
+      margin-top: 15px;
+      position: relative;
+      background: white;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    .result-box {
+      background: #e8f5e9;
+      border: 2px solid #66bb6a;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+
+    .result-box h3 {
+      color: #2e7d32;
+      margin-bottom: 10px;
+    }
+
+    .result-value {
+      font-size: 1.8em;
+      font-weight: 700;
+      color: #1b5e20;
+    }
+
+    .accordion {
+      margin-bottom: 15px;
+    }
+
+    .accordion-header {
+      background: #c8e6c9;
+      padding: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.3s;
+      user-select: none;
+    }
+
+    .accordion-header:hover {
+      background: #a5d6a7;
+    }
+
+    .accordion-header.active {
+      background: #66bb6a;
+      color: white;
+    }
+
+    .accordion-triangle {
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 12px solid #2e7d32;
+      transition: transform 0.3s;
+    }
+
+    .accordion-header.active .accordion-triangle {
+      border-top-color: white;
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .accordion-content.open {
+      max-height: 5000px;
+      padding: 20px;
+      border: 2px solid #c8e6c9;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .instructions {
+      background: #fff9c4;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #fbc02d;
+    }
+
+    .instructions ol {
+      margin-left: 20px;
+      line-height: 1.8;
+    }
+
+    .reflection {
+      background: #e1f5fe;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      border-left: 4px solid #0288d1;
+    }
+
+    .reflection h4 {
+      color: #01579b;
+      margin-bottom: 10px;
+    }
+
+    .reflection textarea {
+      width: 100%;
+      min-height: 80px;
+      padding: 10px;
+      border: 2px solid #b3e5fc;
+      border-radius: 6px;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    table th,
+    table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #c8e6c9;
+    }
+
+    table td[contenteditable="true"] {
+      cursor: text;
+    }
+
+    table td[contenteditable="true"]:hover {
+      background: #f1f8e9;
+      outline: 2px solid #c8e6c9;
+    }
+
+    table td[contenteditable="true"]:focus {
+      outline: 2px solid #66bb6a;
+      background: #fff;
+    }
+
+    table th {
+      background: #e8f5e9;
+      font-weight: 600;
+      color: #2e7d32;
+    }
+
+    table tr:hover {
+      background: #f1f8e9;
+    }
+
+    .equation {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid #c8e6c9;
+      margin: 15px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 1.1em;
+      text-align: center;
+    }
+
+    .scatter-plot {
+      width: 100%;
+      height: 400px;
+      border: 2px solid #c8e6c9;
+      border-radius: 8px;
+      margin: 20px 0;
+      background: white;
+    }
+
+    .fit-results {
+      background: #e8f5e9;
+      padding: 20px;
+      border-radius: 8px;
+      border: 2px solid #66bb6a;
+      margin-top: 15px;
+    }
+
+    .fit-results h4 {
+      color: #2e7d32;
+      margin-bottom: 15px;
+    }
+
+    .fit-results p {
+      margin: 8px 0;
+      line-height: 1.6;
+    }
+
+    .fit-results strong {
+      color: #1b5e20;
+    }
+
+    .filter-controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-controls input,
+    .filter-controls select {
+      padding: 8px;
+      border: 2px solid #c8e6c9;
+      border-radius: 6px;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .auto-setup-btn {
+      background: #9c27b0;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: 600;
+      margin-bottom: 15px;
+      transition: background 0.3s;
+    }
+
+    .auto-setup-btn:hover {
+      background: #ba68c8;
+    }
+
+    .highlight-zero {
+      background: #ffcdd2 !important;
+      font-weight: 600;
+    }
+
+    .metal-comparison {
+      margin-top: 20px;
+    }
+
+    .metal-comparison table {
+      font-size: 0.95em;
+    }
+
+    .part3-input {
+      width: 100%;
+      padding: 8px;
+      border: 2px solid #c8e6c9;
+      border-radius: 4px;
+      font-size: 0.95em;
+      text-align: center;
+      font-family: inherit;
+    }
+
+    .part3-input:focus {
+      outline: none;
+      border-color: #66bb6a;
+    }
+
+    .part3-input[readonly] {
+      background: #f5f5f5;
+      color: #666;
+    }
+
+    #part3DataTable td {
+      padding: 8px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 600;
+      margin-left: 15px;
+    }
+
+    .status-badge.complete {
+      background: #c8e6c9;
+      color: #1b5e20;
+    }
+
+    .status-badge.incomplete {
+      background: #ffcdd2;
+      color: #b71c1c;
+    }
+
+    .part2-message {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-weight: 600;
+    }
+
+    .part2-message.warning {
+      background: #fff9c4;
+      border-left: 4px solid #fbc02d;
+      color: #f57f17;
+    }
+
+    .part2-message.success {
+      background: #c8e6c9;
+      border-left: 4px solid #66bb6a;
+      color: #1b5e20;
+    }
+
+    .apparatus-container {
+      position: relative;
+      width: 100%;
+      height: 350px;
+      background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .vacuum-tube {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px;
+      height: 120px;
+      border: 3px solid #555;
+      border-radius: 60px;
+      background: rgba(200, 230, 255, 0.1);
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .cathode-plate {
+      position: absolute;
+      left: 30px;
+      top: 20px;
+      width: 8px;
+      height: 80px;
+      background: linear-gradient(90deg, #888 0%, #666 50%, #888 100%);
+      border-radius: 2px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    }
+
+    .anode-plate {
+      position: absolute;
+      right: 30px;
+      top: 20px;
+      width: 8px;
+      height: 80px;
+      background: linear-gradient(90deg, #888 0%, #666 50%, #888 100%);
+      border-radius: 2px;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.3);
+    }
+
+    .light-source {
+      position: absolute;
+      left: 10%;
+      top: 15%;
+      width: 50px;
+      height: 50px;
+    }
+
+    .lamp-body {
+      width: 30px;
+      height: 30px;
+      background: #333;
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .lamp-bulb {
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #fff 0%, #ffd700 100%);
+      border-radius: 50%;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 15px rgba(255,215,0,0.8);
+    }
+
+    .light-beam {
+      position: absolute;
+      left: 12%;
+      top: 18%;
+      width: 0;
+      height: 0;
+      border-left: 180px solid transparent;
+      border-right: 0 solid transparent;
+      border-top: 90px solid rgba(255, 255, 0, 0.3);
+      transform: rotate(15deg);
+      transform-origin: left center;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .light-beam.active {
+      opacity: 1;
+    }
+
+    .electron {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: radial-gradient(circle, #4fc3f7 0%, #0277bd 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(79, 195, 247, 0.8);
+      opacity: 0;
+    }
+
+    .wire-left {
+      position: absolute;
+      left: calc(50% - 150px + 30px);
+      top: calc(50% + 60px);
+      width: 2px;
+      height: 40px;
+      background: #666;
+    }
+
+    .wire-right {
+      position: absolute;
+      right: calc(50% - 150px + 30px);
+      top: calc(50% + 60px);
+      width: 2px;
+      height: 40px;
+      background: #666;
+    }
+
+    .terminal {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #888;
+      border-radius: 50%;
+      border: 2px solid #555;
+    }
+
+    .terminal-left {
+      left: calc(50% - 150px + 24px);
+      bottom: 60px;
+    }
+
+    .terminal-right {
+      right: calc(50% - 150px + 24px);
+      bottom: 60px;
+    }
+
+    .voltage-label {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      font-weight: 600;
+      color: #2e7d32;
+      background: rgba(255,255,255,0.9);
+      padding: 5px 10px;
+      border-radius: 4px;
+      border: 1px solid #c8e6c9;
+    }
+
+    .component-label {
+      position: absolute;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1b5e20;
+      background: rgba(255,255,255,0.95);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #c8e6c9;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      pointer-events: none;
+    }
+
+    .label-light-source {
+      left: 8%;
+      top: 8%;
+    }
+
+    .label-photocathode {
+      left: calc(50% - 180px);
+      top: calc(50% - 80px);
+    }
+
+    .label-anode {
+      right: calc(50% - 180px);
+      top: calc(50% - 80px);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="container">
+   <header>
+    <h1>Photoelectric Effect Virtual Lab</h1>
+    <p>Investigate how light interacts with matter and determine fundamental constants</p>
+   </header>
+   <div class="main-layout"><!-- Left Panel: Controls -->
+    <div class="panel">
+     <h2>Experiment Controls</h2>
+     <div class="status-indicator" id="statusIndicator">
+      ⚫ Ready
+     </div>
+     <div class="control-group"><label for="collectTime">Collect for (seconds):</label> <input type="number" id="collectTime" value="10" min="5" max="60" step="1">
+     </div>
+     <div class="control-group"><label for="photocathode">Photocathode Metal:</label> <select id="photocathode"> <option value="cesium" selected>Cesium (2.14 eV)</option> <option value="sodium">Sodium (2.28 eV)</option> <option value="calcium">Calcium (2.90 eV)</option> </select>
+     </div>
+     <div class="control-group"><label for="ledColor">LED Color:</label> <select id="ledColor" onchange="updateLEDDisplay()"> <option value="850">Infrared (850 nm)</option> <option value="650">Red (650 nm)</option> <option value="610">Orange (610 nm)</option> <option value="590">Yellow (590 nm)</option> <option value="530">Green (530 nm)</option> <option value="470">Blue (470 nm)</option> <option value="405">Violet (405 nm)</option> <option value="365">Ultraviolet (365 nm)</option> <option value="250">Ultraviolet (250 nm)</option> </select>
+      <div class="wavelength-display"><span class="led-color-display" id="ledColorDisplay"></span> Wavelength: <strong id="wavelengthDisplay">850 nm</strong> | Frequency: <strong id="frequencyDisplay">3.53×10¹⁴ Hz</strong>
+      </div>
+     </div>
+     <div class="control-group"><label for="intensity">Light Intensity:</label>
+      <div class="slider-container"><input type="range" id="intensity" min="1" max="8" value="8" step="1" oninput="updateIntensityDisplay()"> <span class="slider-value" id="intensityValue">8</span>
+      </div>
+     </div>
+     <div class="button-group"><button class="btn-start" onclick="startExperiment()" id="startBtn">Start</button> <button class="btn-stop" onclick="stopExperiment()" id="stopBtn" disabled>Stop</button>
+     </div>
+     <div class="button-group"><button class="btn-reset" onclick="resetExperiment()">Reset</button> <button class="btn-download" onclick="downloadCSV()">Download CSV</button>
+     </div>
+    </div><!-- Middle Panel: Apparatus -->
+    <div class="panel" style="grid-column: 1 / -1;">
+     <h2>Apparatus</h2>
+     <div class="apparatus-container" id="apparatusContainer"><!-- Light source -->
+      <div class="light-source">
+       <div class="lamp-body">
+        <div class="lamp-bulb"></div>
+       </div>
+      </div><!-- Light beam -->
+      <div class="light-beam" id="lightBeam"></div><!-- Vacuum tube -->
+      <div class="vacuum-tube">
+       <div class="cathode-plate"></div>
+       <div class="anode-plate"></div>
+      </div><!-- Wires and terminals -->
+      <div class="wire-left"></div>
+      <div class="wire-right"></div>
+      <div class="terminal terminal-left"></div>
+      <div class="terminal terminal-right"></div><!-- Voltage display -->
+      <div class="voltage-label" id="apparatusVoltage">
+       0.0000 V
+      </div><!-- Component labels -->
+      <div class="component-label label-light-source">
+       LED
+      </div>
+      <div class="component-label label-photocathode">
+       Photocathode Metal
+      </div>
+      <div class="component-label label-anode">
+       Anode
+      </div>
+     </div>
+    </div><!-- Right Panel: Graph and Results -->
+    <div class="panel">
+     <h2>Live Data</h2>
+     <div class="chart-container">
+      <canvas id="voltageChart"></canvas>
+     </div>
+     <div class="result-box" id="resultBox">
+      <h3>Stopping Voltage</h3>
+      <div class="result-value" id="stoppingVoltage">
+       — V
+      </div>
+      <p style="margin-top: 10px; font-size: 0.9em; color: #666;" id="timeInfo"></p>
+     </div>
+     <div class="result-box" id="plateauBox" style="margin-top: 15px;">
+      <h3>Time to Plateau (95% of max)</h3>
+      <div class="result-value" id="plateauTime">
+       — s
+      </div>
+      <p style="margin-top: 10px; font-size: 0.9em; color: #666;" id="plateauInfo">Waiting for data...</p>
+     </div>
+    </div>
+   </div><!-- Accordion Sections -->
+   <div class="panel"><!-- Part 1 -->
+    <div class="accordion">
+     <div class="accordion-header" onclick="toggleAccordion(0)">
+      <div class="accordion-triangle"></div>
+      <h2 style="margin: 0;">Part 1: Stopping Voltage Investigation</h2>
+     </div>
+     <div class="accordion-content">
+      <div class="instructions">
+       <h3>Instructions:</h3>
+       <ol>
+        <li>Set "Collect for" to <strong>10 seconds</strong></li>
+        <li>Set Photocathode Metal to <strong>Cesium</strong></li>
+        <li>Choose <strong>Infrared (850 nm)</strong> LED</li>
+        <li>Set intensity to level <strong>8</strong></li>
+        <li>Wait for status to show "Ready"</li>
+        <li>Click <strong>Start</strong> and record the maximum voltage reached</li>
+        <li>Repeat for all LED colors in sequence</li>
+        <li>Record the stopping voltage</li>
+        <li>Repeat the procedures for the other photocathode metals</li>
+       </ol>
+      </div>
+      <table id="part1Table">
+       <thead>
+        <tr>
+         <th>LED Color (Wavelength)</th>
+         <th colspan="3" style="text-align: center; background: #c8e6c9;">Stopping Voltage (V)</th>
+        </tr>
+        <tr>
+         <th></th>
+         <th>Cesium</th>
+         <th>Sodium</th>
+         <th>Calcium</th>
+        </tr>
+       </thead>
+       <tbody id="part1TableBody">
+        <tr>
+         <td><strong>Infrared (850 nm)</strong></td>
+         <td contenteditable="true" data-wavelength="850" data-metal="cesium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="850" data-metal="sodium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">��</td>
+         <td contenteditable="true" data-wavelength="850" data-metal="calcium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+        </tr>
+        <tr>
+         <td><strong>Red (650 nm)</strong></td>
+         <td contenteditable="true" data-wavelength="650" data-metal="cesium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="650" data-metal="sodium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="650" data-metal="calcium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+        </tr>
+        <tr>
+         <td><strong>Orange (610 nm)</strong></td>
+         <td contenteditable="true" data-wavelength="610" data-metal="cesium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="610" data-metal="sodium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="610" data-metal="calcium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+        </tr>
+        <tr>
+         <td><strong>Yellow (590 nm)</strong></td>
+         <td contenteditable="true" data-wavelength="590" data-metal="cesium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="590" data-metal="sodium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="590" data-metal="calcium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+        </tr>
+        <tr>
+         <td><strong>Green (530 nm)</strong></td>
+         <td contenteditable="true" data-wavelength="530" data-metal="cesium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="530" data-metal="sodium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="530" data-metal="calcium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+        </tr>
+        <tr>
+         <td><strong>Blue (470 nm)</strong></td>
+         <td contenteditable="true" data-wavelength="470" data-metal="cesium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="470" data-metal="sodium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="470" data-metal="calcium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+        </tr>
+        <tr>
+         <td><strong>Violet (405 nm)</strong></td>
+         <td contenteditable="true" data-wavelength="405" data-metal="cesium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="405" data-metal="sodium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="405" data-metal="calcium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+        </tr>
+        <tr>
+         <td><strong>Ultraviolet (365 nm)</strong></td>
+         <td contenteditable="true" data-wavelength="365" data-metal="cesium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="365" data-metal="sodium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="365" data-metal="calcium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+        </tr>
+        <tr>
+         <td><strong>Ultraviolet (250 nm)</strong></td>
+         <td contenteditable="true" data-wavelength="250" data-metal="cesium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="250" data-metal="sodium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+         <td contenteditable="true" data-wavelength="250" data-metal="calcium" oninput="handleCellEdit(this)" onblur="handleCellBlur(this)">—</td>
+        </tr>
+       </tbody>
+      </table><button class="btn-reset" onclick="clearPart1Table()" style="margin-top: 20px;">Clear Table</button>
+      <div class="reflection">
+       <h4>Reflection Questions:</h4>
+       <p><strong>1. Which LED colors produced no stopping voltage (0 V or "No emission") for each photocathode metal (Cesium, Sodium, and Calcium)?</strong></p><textarea id="reflection1a" placeholder="Type your observations here..."></textarea>
+       <p style="margin-top: 15px;"><strong>2. Identify the first LED color (starting from Infrared → Ultraviolet) that produced a measurable stopping voltage for all three metals (Cesium, Sodium, and Calcium).</strong></p><textarea id="reflection1b" placeholder="Type your observations here..."></textarea>
+       <p style="margin-top: 15px;"><strong>3. Among the LED colors that produced emission, which LED color gave the lowest stopping voltage overall?</strong></p><textarea id="reflection1c" placeholder="Type your observations here..."></textarea>
+       <p style="margin-top: 15px;"><strong>4. Which LED color gave the highest stopping voltage overall?</strong></p><textarea id="reflection1d" placeholder="Type your observations here..."></textarea>
+       <p style="margin-top: 15px;"><strong>5. Compare the three metals in the table. Which metal requires the highest-energy light (shortest wavelength) before a stopping voltage appears? What does this suggest about its work function?</strong></p><textarea id="reflection1e" placeholder="Type your observations here..."></textarea>
+      </div>
+     </div>
+    </div><!-- Part 2 -->
+    <div class="accordion">
+     <div class="accordion-header" onclick="toggleAccordion(1)">
+      <div class="accordion-triangle"></div>
+      <h2 style="margin: 0;">Part 2: Determine h (Planck's Constant) and φ (Work Function)</h2><span id="part2StatusBadge" style="margin-left: auto;"></span>
+     </div>
+     <div class="accordion-content">
+      <div class="instructions">
+       <h3>Theory:</h3>
+       <p>The photoelectric equation relates stopping voltage to photon frequency:</p>
+      </div>
+      <div class="equation">
+       K<sub>max</sub> = hf - φ
+      </div>
+      <div class="equation">
+       eV<sub>0</sub> = hf - φ
+      </div>
+      <div class="equation">
+       V<sub>0</sub> = (h/e)f - (φ/e)
+      </div>
+      <p style="margin: 15px 0;">This is a linear relationship: V₀ = mf + b, where:</p>
+      <ul style="margin-left: 30px; line-height: 1.8;">
+       <li><strong>Slope (m)</strong> = h/e → h = m × e</li>
+       <li><strong>Intercept (b)</strong> = -φ/e → φ = -b × e</li>
+      </ul>
+      <div id="part2StatusMessage" style="margin: 20px 0;"></div>
+      <div style="margin: 20px 0;">
+       <h3>Select Photocathode Metal:</h3>
+       <div style="display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap;"><label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 1.05em;"> <input type="radio" name="part2Metal" value="none" checked onchange="updatePart2Graph()"> <span>None</span> </label> <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 1.05em;"> <input type="radio" name="part2Metal" value="cesium" onchange="updatePart2Graph()"> <span>Cesium</span> </label> <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 1.05em;"> <input type="radio" name="part2Metal" value="sodium" onchange="updatePart2Graph()"> <span>Sodium</span> </label> <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 1.05em;"> <input type="radio" name="part2Metal" value="calcium" onchange="updatePart2Graph()"> <span>Calcium</span> </label>
+       </div>
+      </div>
+      <div class="scatter-plot">
+       <canvas id="scatterPlot"></canvas>
+      </div>
+      <div id="part2Equation" style="display: none; margin: 20px 0; padding: 15px; background: white; border: 2px solid #c8e6c9; border-radius: 8px;">
+       <h4 style="margin-bottom: 10px; color: #2e7d32;">Linear Fit Equation:</h4>
+       <div style="font-family: 'Courier New', monospace; font-size: 1.2em; text-align: center; margin: 10px 0;"><span id="equationDisplay"></span>
+       </div>
+       <div style="text-align: center; font-size: 1.1em; margin-top: 10px;"><strong>R² = <span id="r2Value"></span></strong>
+       </div>
+       <div style="margin-top: 10px; font-size: 0.9em; color: #666; text-align: center;"><span id="pointsUsedInfo"></span>
+       </div>
+      </div>
+      <div class="fit-results" id="fitResults" style="display: none;">
+       <h4>Analysis Results:</h4>
+       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+        <div>
+         <p><strong>Slope (m):</strong></p>
+         <p style="font-size: 1.1em; color: #1b5e20;"><span id="slopeValue"></span> V/Hz</p>
+        </div>
+        <div>
+         <p><strong>Intercept (b):</strong></p>
+         <p style="font-size: 1.1em; color: #1b5e20;"><span id="interceptValue"></span> V</p>
+        </div>
+       </div>
+       <div style="margin-top: 20px; padding: 15px; background: #f1f8e9; border-radius: 6px;">
+        <h4 style="color: #2e7d32; margin-bottom: 10px;">Planck's Constant (h):</h4>
+        <p><strong>Calculated:</strong> <span id="hEstValue"></span> J·s</p>
+        <p><strong>Accepted:</strong> 6.626 × 10⁻³⁴ J·s</p>
+        <p><strong>Percent Error:</strong> <span id="percentError"></span></p>
+       </div>
+       <div style="margin-top: 20px; padding: 15px; background: #f1f8e9; border-radius: 6px;">
+        <h4 style="color: #2e7d32; margin-bottom: 10px;">Work Function (φ):</h4>
+        <p><strong>Calculated:</strong> <span id="phiEstValue"></span> eV</p>
+        <p><strong>Theoretical (<span id="selectedMetalName"></span>):</strong> <span id="theoreticalPhi"></span> eV</p>
+        <p><strong>Difference:</strong> <span id="phiDifference"></span> eV</p>
+        <p><strong>Percent Error:</strong> <span id="phiPercentError"></span></p>
+       </div>
+      </div>
+      <div class="reflection">
+       <h4>Reflection Questions:</h4>
+       <p><strong>1. From the plot of stopping voltage V₀ vs frequency f, what trend do you observe? Does the stopping voltage increase, decrease, or remain constant as frequency increases? Explain briefly based on the graph.</strong></p><textarea id="reflection2a" placeholder="Type your observations here..."></textarea>
+       <p style="margin-top: 15px;"><strong>2. Why does the graph of V₀ vs f form a straight line? What does this tell you about the relationship between photon energy (coming from the LED) and electron energy (the ejected electrons)?</strong></p><textarea id="reflection2b" placeholder="Type your explanation here..."></textarea>
+       <p style="margin-top: 15px;"><strong>3. In the equation V₀ = mf + b, what physical meaning does the slope m represent? Explain why changing the metal affects the intercept but does not change the slope, if the experiment is done correctly.</strong></p><textarea id="reflection2c" placeholder="Type your explanation here..."></textarea>
+       <p style="margin-top: 15px;"><strong>4. What does the intercept b tell you about the metal surface (work function)? If two metals produce different intercepts but the same slope, what conclusion can you make about how strongly each metal holds its electrons?</strong></p><textarea id="reflection2d" placeholder="Type your explanation here..."></textarea>
+       <p style="margin-top: 15px;"><strong>5. Why are "no emission" data points excluded in the linear fit? Explain what "no emission" means in terms of the photoelectric equation and why those points do not follow the linear relationship in Part 2.</strong></p><textarea id="reflection2e" placeholder="Type your explanation here..."></textarea>
+      </div>
+     </div>
+    </div><!-- Part 3 -->
+    <div class="accordion">
+     <div class="accordion-header" onclick="toggleAccordion(2)">
+      <div class="accordion-triangle"></div>
+      <h2 style="margin: 0;">Part 3: Light Intensity Investigation</h2><span id="part3StatusBadge" style="margin-left: auto;"></span>
+     </div>
+     <div class="accordion-content">
+      <div class="instructions">
+       <h3>Instructions:</h3>
+       <p>Explore how light intensity affects the photoelectric effect.</p>
+       <ol>
+        <li>Set the LED color to <strong>UV 250 nm</strong></li>
+        <li>Set the collection time to <strong>10 seconds</strong></li>
+        <li>Run experiments at intensity levels: <strong>1, 3, 5, 8</strong></li>
+        <li>and at the three photocathode metals</li>
+        <li>Record the stopping voltage and the time to reach plateau</li>
+       </ol>
+      </div>
+      <div id="part3StatusMessage" style="margin: 20px 0;"></div>
+      <h3 style="margin-top: 20px; color: #2e7d32;">Light Intensity vs Time to Plateau</h3>
+      <p style="margin: 10px 0 20px 0; color: #666;">This table is for recording the Time to Plateau (sec) when the light intensity is varied.</p>
+      <table id="part3DataTable" style="margin: 20px 0;">
+       <thead>
+        <tr>
+         <th rowspan="2">Light Intensity</th>
+         <th colspan="3" style="text-align: center; background: #c8e6c9;">Time to Plateau (sec)</th>
+        </tr>
+        <tr>
+         <th>Cesium</th>
+         <th>Sodium</th>
+         <th>Calcium</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr>
+         <td><strong>1</strong></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="1" data-metal="cesium" class="part3-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="1" data-metal="sodium" class="part3-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="1" data-metal="calcium" class="part3-input"></td>
+        </tr>
+        <tr>
+         <td><strong>3</strong></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="3" data-metal="cesium" class="part3-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="3" data-metal="sodium" class="part3-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="3" data-metal="calcium" class="part3-input"></td>
+        </tr>
+        <tr>
+         <td><strong>5</strong></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="5" data-metal="cesium" class="part3-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="5" data-metal="sodium" class="part3-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="5" data-metal="calcium" class="part3-input"></td>
+        </tr>
+        <tr>
+         <td><strong>8</strong></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="8" data-metal="cesium" class="part3-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="8" data-metal="sodium" class="part3-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter time" data-intensity="8" data-metal="calcium" class="part3-input"></td>
+        </tr>
+       </tbody>
+      </table>
+      <h3 style="margin-top: 40px; color: #2e7d32;">Light Intensity vs Stopping Voltage (V)</h3>
+      <p style="margin: 10px 0 20px 0; color: #666;">This table records the stopping voltage measured at different light intensity levels for three photocathode metals.</p>
+      <table id="part3VoltageTable" style="margin: 20px 0;">
+       <thead>
+        <tr>
+         <th rowspan="2">Light Intensity</th>
+         <th colspan="3" style="text-align: center; background: #c8e6c9;">Stopping Voltage (V)</th>
+        </tr>
+        <tr>
+         <th>Cesium</th>
+         <th>Sodium</th>
+         <th>Calcium</th>
+        </tr>
+       </thead>
+       <tbody>
+        <tr>
+         <td><strong>1</strong></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="1" data-metal="cesium" class="part3-voltage-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="1" data-metal="sodium" class="part3-voltage-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="1" data-metal="calcium" class="part3-voltage-input"></td>
+        </tr>
+        <tr>
+         <td><strong>3</strong></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="3" data-metal="cesium" class="part3-voltage-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="3" data-metal="sodium" class="part3-voltage-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="3" data-metal="calcium" class="part3-voltage-input"></td>
+        </tr>
+        <tr>
+         <td><strong>5</strong></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="5" data-metal="cesium" class="part3-voltage-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="5" data-metal="sodium" class="part3-voltage-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="5" data-metal="calcium" class="part3-voltage-input"></td>
+        </tr>
+        <tr>
+         <td><strong>8</strong></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="8" data-metal="cesium" class="part3-voltage-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="8" data-metal="sodium" class="part3-voltage-input"></td>
+         <td><input type="number" step="0.01" placeholder="Enter V" data-intensity="8" data-metal="calcium" class="part3-voltage-input"></td>
+        </tr>
+       </tbody>
+      </table>
+      <div class="button-group" style="margin: 20px 0;"><button class="btn-reset" onclick="clearPart3Tables()">Clear Part 3 Tables</button> <button class="btn-download" onclick="downloadPart3CSV()">Download CSV</button>
+      </div>
+      <div style="margin: 40px 0;">
+       <h3 style="color: #2e7d32;">Time to Plateau vs Light Intensity Analysis</h3>
+       <p style="margin: 10px 0 20px 0; color: #666;">Select a photocathode metal to view the relationship between light intensity and time to reach plateau.</p>
+       <div style="display: flex; gap: 20px; margin-top: 10px; flex-wrap: wrap;"><label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 1.05em;"> <input type="radio" name="part3Metal" value="none" checked onchange="updatePart3IntensityGraph()"> <span>None</span> </label> <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 1.05em;"> <input type="radio" name="part3Metal" value="cesium" onchange="updatePart3IntensityGraph()"> <span>Cesium</span> </label> <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 1.05em;"> <input type="radio" name="part3Metal" value="sodium" onchange="updatePart3IntensityGraph()"> <span>Sodium</span> </label> <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 1.05em;"> <input type="radio" name="part3Metal" value="calcium" onchange="updatePart3IntensityGraph()"> <span>Calcium</span> </label>
+       </div>
+       <div class="scatter-plot">
+        <canvas id="intensityPlot"></canvas>
+       </div>
+       <div id="part3Equation" style="display: none; margin: 20px 0; padding: 15px; background: white; border: 2px solid #c8e6c9; border-radius: 8px;">
+        <h4 style="margin-bottom: 10px; color: #2e7d32;">Linear Fit Equation:</h4>
+        <div style="font-family: 'Courier New', monospace; font-size: 1.2em; text-align: center; margin: 10px 0;"><span id="part3EquationDisplay"></span>
+        </div>
+        <div style="text-align: center; font-size: 1.1em; margin-top: 10px;"><strong>R² = <span id="part3R2Value"></span></strong>
+        </div>
+        <div style="margin-top: 10px; font-size: 0.9em; color: #666; text-align: center;"><span id="part3PointsInfo"></span>
+        </div>
+       </div>
+      </div>
+      <div class="reflection">
+       <h4>Reflection Questions:</h4>
+       <p><strong>1. Does intensity affect the stopping voltage?</strong></p><textarea id="reflection3a" placeholder="Type your observations here..."></textarea>
+       <p style="margin-top: 15px;"><strong>2. Does intensity affect the time to reach stopping voltage?</strong></p><textarea id="reflection3b" placeholder="Type your observations here..."></textarea>
+       <p style="margin-top: 15px;"><strong>3. As intensity increases, does the time increase or decrease?</strong></p><textarea id="reflection3c" placeholder="Type your observations here..."></textarea>
+      </div>
+     </div>
+    </div><!-- Data Browser -->
+    <div class="accordion">
+     <div class="accordion-header" onclick="toggleAccordion(3)">
+      <div class="accordion-triangle"></div>
+      <h2 style="margin: 0;">Data Browser</h2>
+     </div>
+     <div class="accordion-content">
+      <div class="filter-controls"><input type="text" id="searchFilter" placeholder="Search..." oninput="filterDataBrowser()"> <select id="partFilter" onchange="filterDataBrowser()"> <option value="">All Parts</option> <option value="1">Part 1</option> <option value="2">Part 2</option> <option value="3">Part 3</option> </select> <select id="colorFilter" onchange="filterDataBrowser()"> <option value="">All Colors</option> <option value="Infrared">Infrared</option> <option value="Red">Red</option> <option value="Orange">Orange</option> <option value="Yellow">Yellow</option> <option value="Green">Green</option> <option value="Blue">Blue</option> <option value="Violet">Violet</option> <option value="Ultraviolet">Ultraviolet</option> </select>
+      </div>
+      <table id="dataBrowserTable">
+       <thead>
+        <tr>
+         <th>Part</th>
+         <th>Metal</th>
+         <th>LED Color</th>
+         <th>Wavelength (nm)</th>
+         <th>Frequency (Hz)</th>
+         <th>Intensity</th>
+         <th>Collect Time (s)</th>
+         <th>Stopping V (V)</th>
+         <th>Time to 95% (s)</th>
+         <th>Timestamp</th>
+        </tr>
+       </thead>
+       <tbody id="dataBrowserBody"><!-- Data populated by JavaScript -->
+       </tbody>
+      </table><button class="btn-reset" onclick="clearAllData()" style="margin-top: 20px;">Clear All Data</button>
+     </div>
+    </div><!-- About -->
+    <div class="accordion">
+     <div class="accordion-header" onclick="toggleAccordion(4)">
+      <div class="accordion-triangle"></div>
+      <h2 style="margin: 0;">About</h2>
+     </div>
+     <div class="accordion-content">
+      <div class="instructions">
+       <h3>About This Simulation:</h3>
+       <p><strong>Prepared and Coded by:</strong> Dr. James Salveo L. Olarve</p>
+       <p style="margin-top: 15px;">This virtual lab simulates the photoelectric effect with realistic physics:</p>
+       <ul style="margin: 15px 0 15px 30px; line-height: 1.8;">
+        <li>Uses actual photoelectric equation: K<sub>max</sub> = hf - φ</li>
+        <li>Implements charging dynamics with intensity-dependent time constants</li>
+        <li>Includes realistic experimental uncertainties (wavelength variations, work function differences, voltage measurement errors)</li>
+        <li>Expected error in Planck's constant: 3-7% (simulates real experimental conditions)</li>
+        <li>Three metal options (Cesium, Sodium, Calcium) with different work functions</li>
+        <li>Electron animation stops at plateau to reflect zero current when stopping voltage is reached</li>
+       </ul>
+       <h3 style="margin-top: 20px;">Learning Objectives:</h3>
+       <ul style="margin: 15px 0 15px 30px; line-height: 1.8;">
+        <li><strong>Part 1:</strong> Observe threshold frequency and frequency dependence</li>
+        <li><strong>Part 2:</strong> Determine Planck's constant through linear regression</li>
+        <li><strong>Part 3:</strong> Understand that intensity affects rate, not energy</li>
+       </ul>
+       <h3 style="margin-top: 20px;">Expected Results:</h3>
+       <ul style="margin: 15px 0 15px 30px; line-height: 1.8;">
+        <li>Low-frequency LEDs (IR, Red) may produce zero voltage depending on metal</li>
+        <li>Stopping voltage increases linearly with frequency</li>
+        <li>Linear fit should yield h ≈ 6.626 × 10⁻³⁴ J·s (within ~3-7% error)</li>
+        <li>Higher intensity → faster charging, same final voltage</li>
+       </ul>
+       <h3 style="margin-top: 20px;">Tips for Classroom Use:</h3>
+       <ul style="margin: 15px 0 15px 30px; line-height: 1.8;">
+        <li>Have students work through Part 1 first to build intuition</li>
+        <li>Students can compare results across different metals</li>
+        <li>Export CSV data for further analysis in spreadsheet software</li>
+        <li>Discuss sources of experimental error and how they affect results</li>
+       </ul>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // ========== CONSTANTS ==========
+    const C = 2.99792458e8; // m/s
+    const E = 1.602176634e-19; // C
+    const H_TRUE = 6.62607015e-34; // J·s
+    const BASE_TAU = 8; // seconds
+
+    const METALS = {
+      cesium: { name: 'Cesium', phi: 2.14 },
+      sodium: { name: 'Sodium', phi: 2.28 },
+      calcium: { name: 'Calcium', phi: 2.90 },
+      zinc: { name: 'Zinc', phi: 4.30 },
+      copper: { name: 'Copper', phi: 4.70 },
+      platinum: { name: 'Platinum', phi: 5.65 }
+    };
+
+    const LED_COLORS = {
+      850: { name: 'Infrared', color: '#8B0000' },
+      650: { name: 'Red', color: '#FF0000' },
+      610: { name: 'Orange', color: '#FF8C00' },
+      590: { name: 'Yellow', color: '#FFD700' },
+      530: { name: 'Green', color: '#00FF00' },
+      470: { name: 'Blue', color: '#0000FF' },
+      405: { name: 'Violet', color: '#8B00FF' },
+      365: { name: 'Ultraviolet', color: '#C800FF' },
+      250: { name: 'Ultraviolet', color: '#E000FF' }
+    };
+
+    // ========== STATE ==========
+    let isRunning = false;
+    let animationFrame = null;
+    let startTime = 0;
+    let voltageData = [];
+    let timeData = [];
+    let currentVoltage = 0;
+    let maxVoltage = 0;
+    let allRunData = [];
+    let plateauReached = false;
+    let plateauTime = null;
+    let electronPool = [];
+    let activeElectrons = [];
+    
+    // Experimental error state (persists between runs to simulate systematic drift)
+    let systematicVoltageOffset = 0;
+    let driftCounter = 0;
+
+    // ========== INITIALIZATION ==========
+    window.addEventListener('load', () => {
+      updateLEDDisplay();
+      updateIntensityDisplay();
+      initCharts();
+      updateDataBrowser();
+      initElectronPool();
+      updatePart2Status();
+      updatePart3Status();
+      updatePart2Graph();
+    });
+
+    // ========== PART 3 STATUS ==========
+    function updatePart3Status() {
+      // Need 4 intensity levels (1, 3, 5, 8) x 3 metals = 12 data points
+      const requiredIntensities = [1, 3, 5, 8];
+      const metals = ['cesium', 'sodium', 'calcium'];
+      
+      let totalCells = requiredIntensities.length * metals.length; // 12
+      let filledCells = 0;
+
+      metals.forEach(metal => {
+        requiredIntensities.forEach(intensity => {
+          const dataExists = allRunData.some(run => 
+            run.metal === metal && 
+            run.intensity === intensity && 
+            run.wavelength === 250 &&
+            run.stoppingVoltage !== null
+          );
+          if (dataExists) filledCells++;
+        });
+      });
+
+      const badge = document.getElementById('part3StatusBadge');
+      const message = document.getElementById('part3StatusMessage');
+
+      if (filledCells === totalCells) {
+        badge.className = 'status-badge complete';
+        badge.textContent = `✓ Complete (${filledCells}/${totalCells})`;
+        message.className = 'part2-message success';
+        message.textContent = '✓ All Part 3 data collected. Review the results below.';
+      } else {
+        badge.className = 'status-badge incomplete';
+        badge.textContent = `Incomplete (${filledCells}/${totalCells})`;
+        message.className = 'part2-message warning';
+        message.textContent = `⚠ Run experiments at UV 250 nm with intensities 1, 3, 5, 8 for all three metals. ${totalCells - filledCells} measurements remaining.`;
+      }
+    }
+
+    // ========== PART 2 STATUS ==========
+    function updatePart2Status() {
+      const wavelengths = [850, 650, 610, 590, 530, 470, 405, 365, 250];
+      const metals = ['cesium', 'sodium', 'calcium'];
+      
+      let totalCells = 0;
+      let filledCells = 0;
+
+      metals.forEach(metal => {
+        wavelengths.forEach(wavelength => {
+          totalCells++;
+          const dataExists = allRunData.some(run => 
+            run.metal === metal && 
+            run.wavelength === wavelength && 
+            run.stoppingVoltage !== null
+          );
+          if (dataExists) filledCells++;
+        });
+      });
+
+      const badge = document.getElementById('part2StatusBadge');
+      const message = document.getElementById('part2StatusMessage');
+
+      if (filledCells === totalCells) {
+        badge.className = 'status-badge complete';
+        badge.textContent = `✓ Complete (${filledCells}/${totalCells})`;
+        message.className = 'part2-message success';
+        message.textContent = '✓ Part 1 data collection complete. Select a metal below to analyze.';
+      } else {
+        badge.className = 'status-badge incomplete';
+        badge.textContent = `Incomplete (${filledCells}/${totalCells})`;
+        message.className = 'part2-message warning';
+        message.textContent = `⚠ Complete Part 1 data collection first. ${totalCells - filledCells} measurements remaining.`;
+      }
+    }
+
+    // ========== PART 2 GRAPH ==========
+    function updatePart2Graph() {
+      const selectedMetal = document.querySelector('input[name="part2Metal"]:checked').value;
+      
+      if (selectedMetal === 'none') {
+        drawScatterPlot([], null, null);
+        document.getElementById('part2Equation').style.display = 'none';
+        document.getElementById('fitResults').style.display = 'none';
+        return;
+      }
+
+      // Get data for selected metal
+      const metalData = allRunData.filter(run => run.metal === selectedMetal);
+      
+      if (metalData.length === 0) {
+        drawScatterPlot([], null, selectedMetal);
+        document.getElementById('part2Equation').style.display = 'none';
+        document.getElementById('fitResults').style.display = 'none';
+        return;
+      }
+
+      // Group by wavelength and take highest voltage
+      const dataByWavelength = {};
+      metalData.forEach(run => {
+        if (!dataByWavelength[run.wavelength] || dataByWavelength[run.wavelength].stoppingVoltage < run.stoppingVoltage) {
+          dataByWavelength[run.wavelength] = run;
+        }
+      });
+
+      const allPoints = Object.values(dataByWavelength);
+      const validPoints = allPoints.filter(d => d.stoppingVoltage && d.stoppingVoltage > 0.05);
+
+      if (validPoints.length < 3) {
+        drawScatterPlot(allPoints, null, selectedMetal);
+        document.getElementById('part2Equation').style.display = 'none';
+        document.getElementById('fitResults').style.display = 'none';
+        return;
+      }
+
+      // Linear regression on valid points only
+      const n = validPoints.length;
+      const sumF = validPoints.reduce((s, d) => s + d.frequency, 0);
+      const sumV = validPoints.reduce((s, d) => s + d.stoppingVoltage, 0);
+      const sumFV = validPoints.reduce((s, d) => s + d.frequency * d.stoppingVoltage, 0);
+      const sumF2 = validPoints.reduce((s, d) => s + d.frequency * d.frequency, 0);
+
+      const slope = (n * sumFV - sumF * sumV) / (n * sumF2 - sumF * sumF);
+      const intercept = (sumV - slope * sumF) / n;
+
+      // Calculate R²
+      const meanV = sumV / n;
+      const ssTotal = validPoints.reduce((s, d) => s + Math.pow(d.stoppingVoltage - meanV, 2), 0);
+      const ssResidual = validPoints.reduce((s, d) => {
+        const predicted = slope * d.frequency + intercept;
+        return s + Math.pow(d.stoppingVoltage - predicted, 2);
+      }, 0);
+      const r2 = 1 - (ssResidual / ssTotal);
+
+      const h_est = slope * E;
+      const phi_est_eV = -intercept;
+      const percentError = Math.abs((h_est - H_TRUE) / H_TRUE * 100);
+
+      const theoreticalPhi = METALS[selectedMetal].phi;
+      const phiDifference = Math.abs(phi_est_eV - theoreticalPhi);
+      const phiPercentError = Math.abs((phi_est_eV - theoreticalPhi) / theoreticalPhi * 100);
+
+      // Draw graph with fit line
+      drawScatterPlot(allPoints, { slope, intercept }, selectedMetal);
+
+      // Display equation
+      document.getElementById('part2Equation').style.display = 'block';
+      document.getElementById('equationDisplay').textContent = `y = ${slope.toExponential(4)}x + ${intercept.toFixed(4)}`;
+      document.getElementById('r2Value').textContent = r2.toFixed(4);
+      document.getElementById('pointsUsedInfo').textContent = `Using ${validPoints.length} of ${allPoints.length} data points (excluding "no emission" points)`;
+
+      // Display results
+      document.getElementById('fitResults').style.display = 'block';
+      document.getElementById('slopeValue').textContent = slope.toExponential(4);
+      document.getElementById('interceptValue').textContent = intercept.toFixed(4);
+      document.getElementById('hEstValue').textContent = h_est.toExponential(3);
+      
+      const percentErrorColor = percentError < 5 ? '#2e7d32' : (percentError < 10 ? '#f57f17' : '#c62828');
+      document.getElementById('percentError').innerHTML = `<span style="color: ${percentErrorColor};">${percentError.toFixed(2)}%</span>`;
+      
+      document.getElementById('phiEstValue').textContent = phi_est_eV.toFixed(3);
+      document.getElementById('selectedMetalName').textContent = METALS[selectedMetal].name;
+      document.getElementById('theoreticalPhi').textContent = theoreticalPhi.toFixed(2);
+      document.getElementById('phiDifference').textContent = phiDifference.toFixed(3);
+      
+      const phiPercentErrorColor = phiPercentError < 5 ? '#2e7d32' : (phiPercentError < 10 ? '#f57f17' : '#c62828');
+      document.getElementById('phiPercentError').innerHTML = `<span style="color: ${phiPercentErrorColor};">${phiPercentError.toFixed(2)}%</span>`;
+    }
+
+    // ========== ELECTRON ANIMATION ==========
+    function initElectronPool() {
+      const container = document.getElementById('apparatusContainer');
+      // Create a pool of 20 electron elements
+      for (let i = 0; i < 20; i++) {
+        const electron = document.createElement('div');
+        electron.className = 'electron';
+        container.appendChild(electron);
+        electronPool.push({
+          element: electron,
+          active: false,
+          x: 0,
+          y: 0,
+          vx: 0,
+          vy: 0,
+          life: 0
+        });
+      }
+    }
+
+    function updateApparatus() {
+      const wavelength = parseInt(document.getElementById('ledColor').value);
+      const intensity = parseInt(document.getElementById('intensity').value);
+      const lightBeam = document.getElementById('lightBeam');
+      const apparatusVoltage = document.getElementById('apparatusVoltage');
+
+      // Update light beam color
+      const ledColor = LED_COLORS[wavelength].color;
+      const rgbaColor = hexToRGBA(ledColor, 0.3);
+      lightBeam.style.borderTopColor = rgbaColor;
+
+      // Show/hide light beam based on running state
+      if (isRunning) {
+        lightBeam.classList.add('active');
+      } else {
+        lightBeam.classList.remove('active');
+      }
+
+      // Update voltage display
+      apparatusVoltage.textContent = currentVoltage.toFixed(4) + ' V';
+
+      // Calculate if photoelectric effect occurs
+      const V0 = calculateStoppingVoltage(wavelength);
+      const hasEffect = V0 > 0.05;
+
+      // Spawn electrons based on intensity if effect occurs
+      // Stop spawning completely once plateau is reached
+      if (isRunning && hasEffect && !plateauReached) {
+        // Calculate how close we are to stopping voltage (0 to 1)
+        const voltageRatio = currentVoltage / V0;
+        
+        // Gradually reduce spawn rate as we approach 95% of stopping voltage
+        let spawnMultiplier = 1.0;
+        if (voltageRatio > 0.80) {
+          // Linear reduction from 80% to 95% of V0
+          spawnMultiplier = Math.max(0, (0.95 - voltageRatio) / 0.15);
+        }
+        
+        const baseSpawnRate = intensity * 0.5; // Electrons per frame
+        const effectiveSpawnRate = baseSpawnRate * spawnMultiplier;
+        if (Math.random() < effectiveSpawnRate) {
+          spawnElectron();
+        }
+      }
+
+      // Update active electrons
+      updateElectrons();
+    }
+
+    function hexToRGBA(hex, alpha) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function spawnElectron() {
+      // Find an inactive electron from the pool
+      const electron = electronPool.find(e => !e.active);
+      if (!electron) return;
+
+      const container = document.getElementById('apparatusContainer');
+      const tube = container.querySelector('.vacuum-tube');
+      const cathode = container.querySelector('.cathode-plate');
+      const anode = container.querySelector('.anode-plate');
+      
+      const tubeRect = tube.getBoundingClientRect();
+      const cathodeRect = cathode.getBoundingClientRect();
+      const anodeRect = anode.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      
+      // Calculate boundaries in percentage
+      const cathodeX = ((cathodeRect.right - containerRect.left) / containerRect.width) * 100;
+      const anodeX = ((anodeRect.left - containerRect.left) / containerRect.width) * 100;
+      const tubeTop = ((tubeRect.top - containerRect.top) / containerRect.height) * 100;
+      const tubeHeight = (tubeRect.height / containerRect.height) * 100;
+      
+      // Get current intensity to scale velocity
+      const intensity = parseInt(document.getElementById('intensity').value);
+      const speedMultiplier = 0.3 + (intensity / 8) * 1.2; // Range from 0.3x to 1.5x based on intensity
+      
+      // Start from cathode (right edge of left plate)
+      electron.active = true;
+      electron.x = cathodeX;
+      electron.y = tubeTop + tubeHeight * 0.2 + Math.random() * (tubeHeight * 0.6);
+      electron.vx = (0.8 + Math.random() * 0.4) * speedMultiplier;
+      electron.vy = (Math.random() - 0.5) * 0.1 * speedMultiplier;
+      electron.life = Math.floor(500 / speedMultiplier); // Shorter life for faster electrons
+      electron.minX = cathodeX; // Don't go before cathode
+      electron.maxX = anodeX; // Don't go past anode
+      electron.minY = tubeTop;
+      electron.maxY = tubeTop + tubeHeight;
+
+      activeElectrons.push(electron);
+    }
+
+    function updateElectrons() {
+      for (let i = activeElectrons.length - 1; i >= 0; i--) {
+        const electron = activeElectrons[i];
+        
+        electron.x += electron.vx;
+        electron.y += electron.vy;
+        electron.life--;
+
+        // Enforce boundaries - keep electrons within bounds
+        if (electron.x < electron.minX) electron.x = electron.minX;
+        if (electron.x > electron.maxX) electron.x = electron.maxX;
+        if (electron.y < electron.minY) electron.y = electron.minY;
+        if (electron.y > electron.maxY) electron.y = electron.maxY;
+
+        // Position electron element
+        electron.element.style.left = electron.x + '%';
+        electron.element.style.top = electron.y + '%';
+        electron.element.style.opacity = Math.min(electron.life / 20, 1);
+
+        // Remove if reached anode or life expired
+        if (electron.x >= electron.maxX || electron.life <= 0) {
+          electron.active = false;
+          electron.element.style.opacity = 0;
+          activeElectrons.splice(i, 1);
+        }
+      }
+    }
+
+    // ========== LED DISPLAY ==========
+    function updateLEDDisplay() {
+      const wavelength = parseInt(document.getElementById('ledColor').value);
+      const frequency = C / (wavelength * 1e-9);
+      
+      document.getElementById('wavelengthDisplay').textContent = wavelength + ' nm';
+      document.getElementById('frequencyDisplay').textContent = formatScientific(frequency) + ' Hz';
+      document.getElementById('ledColorDisplay').style.backgroundColor = LED_COLORS[wavelength].color;
+    }
+
+    function updateIntensityDisplay() {
+      document.getElementById('intensityValue').textContent = document.getElementById('intensity').value;
+    }
+
+    // ========== PHYSICS MODEL WITH REALISTIC ERRORS ==========
+    function getWorkFunction() {
+      const selected = document.getElementById('photocathode').value;
+      const baseWorkFunction = METALS[selected].phi;
+      
+      // Add work function variation (±3.5% to simulate surface conditions, oxidation, etc.)
+      const workFunctionVariation = (Math.random() - 0.5) * 0.07 * baseWorkFunction;
+      return baseWorkFunction + workFunctionVariation;
+    }
+
+    function calculateStoppingVoltage(wavelength) {
+      // Add wavelength uncertainty (±10 nm to simulate LED spectral width)
+      const wavelengthJitter = (Math.random() - 0.5) * 20;
+      const actualWavelength = wavelength + wavelengthJitter;
+      
+      const frequency = C / (actualWavelength * 1e-9);
+      const photonEnergy = H_TRUE * frequency;
+      const workFunction = getWorkFunction() * E;
+      const kMax = Math.max(photonEnergy - workFunction, 0);
+      return kMax / E;
+    }
+
+    function calculateTau(intensity) {
+      return BASE_TAU / (0.35 + intensity);
+    }
+
+    function simulateVoltage(t, V0, tau) {
+      const baseVoltage = V0 * (1 - Math.exp(-t / tau));
+      
+      // Add random noise (±2.5% of reading)
+      const noise = (Math.random() - 0.5) * 0.05 * baseVoltage;
+      
+      // Add small fixed noise for near-zero readings
+      const fixedNoise = (Math.random() - 0.5) * 0.003;
+      
+      return baseVoltage + noise + fixedNoise;
+    }
+    
+    function applyMeasurementError(voltage) {
+      // Simulate voltmeter errors
+      // 1. Reading error: ±0.5% of reading
+      const readingError = (Math.random() - 0.5) * 0.01 * voltage;
+      
+      // 2. Small offset error (±0.002V instrument offset)
+      const offsetError = (Math.random() - 0.5) * 0.004;
+      
+      // 3. Systematic drift (changes slowly between runs)
+      // Update drift every 3 measurements
+      if (driftCounter % 3 === 0) {
+        systematicVoltageOffset = (Math.random() - 0.5) * 0.06;
+      }
+      
+      return voltage + readingError + offsetError + systematicVoltageOffset;
+    }
+
+    // ========== EXPERIMENT CONTROL ==========
+    function startExperiment() {
+      if (isRunning) return;
+
+      isRunning = true;
+      startTime = Date.now();
+      voltageData = [];
+      timeData = [];
+      currentVoltage = 0;
+      maxVoltage = 0;
+      plateauReached = false;
+      plateauTime = null;
+
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+      document.getElementById('statusIndicator').className = 'status-indicator status-running';
+      document.getElementById('statusIndicator').textContent = '🟢 Running';
+      document.getElementById('stoppingVoltage').textContent = '—';
+      document.getElementById('timeInfo').textContent = '';
+      document.getElementById('plateauTime').textContent = '— s';
+      document.getElementById('plateauInfo').textContent = 'Monitoring for plateau...';
+
+      runExperiment();
+    }
+
+    function stopExperiment() {
+      if (!isRunning) return;
+
+      isRunning = false;
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = true;
+      document.getElementById('statusIndicator').className = 'status-indicator status-ready';
+      document.getElementById('statusIndicator').textContent = '⚫ Ready';
+
+      saveRunData();
+    }
+
+    function resetExperiment() {
+      stopExperiment();
+      voltageData = [];
+      timeData = [];
+      currentVoltage = 0;
+      maxVoltage = 0;
+      plateauReached = false;
+      plateauTime = null;
+      document.getElementById('stoppingVoltage').textContent = '—';
+      document.getElementById('timeInfo').textContent = '';
+      document.getElementById('plateauTime').textContent = '— s';
+      document.getElementById('plateauInfo').textContent = 'Waiting for data...';
+      drawVoltageChart();
+      
+      // Reset apparatus
+      document.getElementById('lightBeam').classList.remove('active');
+      document.getElementById('apparatusVoltage').textContent = '0.0000 V';
+      activeElectrons.forEach(e => {
+        e.active = false;
+        e.element.style.opacity = 0;
+      });
+      activeElectrons = [];
+    }
+
+    function runExperiment() {
+      if (!isRunning) return;
+
+      const collectTime = parseFloat(document.getElementById('collectTime').value);
+      const wavelength = parseInt(document.getElementById('ledColor').value);
+      const intensity = parseInt(document.getElementById('intensity').value);
+
+      const elapsedTime = (Date.now() - startTime) / 1000;
+
+      if (elapsedTime >= collectTime) {
+        stopExperiment();
+        return;
+      }
+
+      const V0 = calculateStoppingVoltage(wavelength);
+      const tau = calculateTau(intensity);
+      let voltage = simulateVoltage(elapsedTime, V0, tau);
+      
+      // Apply measurement errors
+      voltage = applyMeasurementError(voltage);
+      
+      currentVoltage = voltage;
+      maxVoltage = Math.max(maxVoltage, currentVoltage);
+
+      voltageData.push(currentVoltage);
+      timeData.push(elapsedTime);
+
+      document.getElementById('timeInfo').textContent = `Time: ${elapsedTime.toFixed(1)} / ${collectTime} s`;
+
+      // Check for plateau (95% of theoretical max)
+      if (!plateauReached && V0 > 0.05) {
+        const threshold = V0 * 0.95;
+        if (currentVoltage >= threshold) {
+          plateauReached = true;
+          plateauTime = elapsedTime;
+          maxVoltage = currentVoltage;
+          document.getElementById('stoppingVoltage').textContent = maxVoltage.toFixed(4) + ' V';
+          document.getElementById('plateauTime').textContent = plateauTime.toFixed(2) + ' s';
+          document.getElementById('plateauInfo').textContent = 'Plateau reached';
+        }
+      }
+
+      // Update plateau info even if not reached
+      if (!plateauReached && V0 > 0.05) {
+        document.getElementById('plateauInfo').textContent = 'Monitoring...';
+      } else if (!plateauReached && V0 <= 0.05) {
+        document.getElementById('plateauInfo').textContent = 'No photoelectric effect expected';
+      }
+
+      drawVoltageChart();
+
+      updateApparatus();
+
+      animationFrame = requestAnimationFrame(runExperiment);
+    }
+
+    function saveRunData() {
+      const wavelength = parseInt(document.getElementById('ledColor').value);
+      const frequency = C / (wavelength * 1e-9);
+      const intensity = parseInt(document.getElementById('intensity').value);
+      const collectTime = parseFloat(document.getElementById('collectTime').value);
+      const metal = document.getElementById('photocathode').value;
+
+      // Increment drift counter for systematic error simulation
+      driftCounter++;
+
+      // Only record stopping voltage if plateau was actually reached
+      // If no plateau reached, treat as zero (no emission)
+      const recordedVoltage = plateauReached ? maxVoltage : 0;
+      
+      const runData = {
+        part: 'Manual',
+        ledColor: LED_COLORS[wavelength].name,
+        wavelength: wavelength,
+        frequency: frequency,
+        intensity: intensity,
+        collectTime: collectTime,
+        metal: metal,
+        stoppingVoltage: recordedVoltage,
+        timeTo95: plateauTime,
+        timestamp: new Date().toLocaleString()
+      };
+
+      allRunData.push(runData);
+      updateDataBrowser();
+      updatePart1Table();
+      updatePart3Table();
+      updatePart2Status();
+      updatePart3Status();
+      
+      // Auto-fill Part 3 data table if applicable
+      autoFillPart3DataTable(intensity, metal, plateauTime, collectTime);
+    }
+    
+    function autoFillPart3DataTable(intensity, metal, timeTo95, collectTime) {
+      // Only auto-fill for intensities 1, 3, 5, 8
+      if (![1, 3, 5, 8].includes(intensity)) return;
+      
+      // CRITICAL: Only auto-fill if the wavelength is 250 nm (UV)
+      const wavelength = parseInt(document.getElementById('ledColor').value);
+      if (wavelength !== 250) return;
+      
+      // Find the matching input field for time to plateau
+      const timeInput = document.querySelector(`.part3-input[data-intensity="${intensity}"][data-metal="${metal}"]`);
+      if (timeInput) {
+        // If plateau was reached, fill in the time
+        if (timeTo95 !== null && timeTo95 > 0) {
+          timeInput.value = timeTo95.toFixed(2);
+          timeInput.style.background = '#e8f5e9';
+        } else {
+          // Plateau not reached during collection time
+          timeInput.value = '';
+          timeInput.placeholder = 'Not reached';
+          timeInput.style.background = '#ffcdd2';
+        }
+      }
+      
+      // Auto-fill the stopping voltage table with voltage AT plateau time
+      const voltageInput = document.querySelector(`.part3-voltage-input[data-intensity="${intensity}"][data-metal="${metal}"]`);
+      if (voltageInput) {
+        // Use currentVoltage which is the voltage at the moment plateau was reached
+        const recordedVoltage = plateauReached ? currentVoltage : 0;
+        
+        if (recordedVoltage < 0.05) {
+          // No emission detected
+          voltageInput.value = '';
+          voltageInput.placeholder = 'No emission';
+          voltageInput.style.background = '#ffcdd2';
+          voltageInput.style.color = '#999';
+        } else {
+          // Valid emission detected - voltage at plateau time
+          voltageInput.value = recordedVoltage.toFixed(4);
+          voltageInput.style.background = '#e8f5e9';
+          voltageInput.style.color = '';
+          voltageInput.placeholder = 'Enter V';
+        }
+      }
+    }
+    
+    function clearPart3Tables() {
+      if (!confirm('Are you sure you want to clear both Part 3 data tables?')) {
+        return;
+      }
+      
+      console.log('Clear Part 3 Tables button clicked');
+      console.log('Before clear - allRunData length:', allRunData.length);
+      
+      // Clear time to plateau table
+      const timeInputs = document.querySelectorAll('.part3-input');
+      console.log('Found', timeInputs.length, 'time input fields');
+      timeInputs.forEach(input => {
+        input.value = '';
+        input.placeholder = 'Enter time';
+        input.style.background = '';
+        input.style.color = '';
+      });
+      
+      // Clear stopping voltage table
+      const voltageInputs = document.querySelectorAll('.part3-voltage-input');
+      console.log('Found', voltageInputs.length, 'voltage input fields');
+      voltageInputs.forEach(input => {
+        input.value = '';
+        input.placeholder = 'Enter V';
+        input.style.background = '';
+        input.style.color = '';
+      });
+      
+      // Remove Part 3 related data from allRunData (wavelength 250, intensities 1,3,5,8)
+      const beforeLength = allRunData.length;
+      allRunData = allRunData.filter(run => 
+        !(run.wavelength === 250 && [1, 3, 5, 8].includes(run.intensity))
+      );
+      const afterLength = allRunData.length;
+      
+      console.log('After filter - allRunData length:', afterLength);
+      console.log(`Removed ${beforeLength - afterLength} Part 3 data entries`);
+      
+      // Update status and data browser
+      updateDataBrowser();
+      updatePart3Status();
+      
+      console.log('Clear operation completed');
+    }
+    
+    function downloadPart3CSV() {
+      const headers1 = ['Light Intensity', 'Time to Plateau - Cesium (sec)', 'Time to Plateau - Sodium (sec)', 'Time to Plateau - Calcium (sec)', 'Stopping Voltage - Cesium (V)', 'Stopping Voltage - Sodium (V)', 'Stopping Voltage - Calcium (V)'];
+      const intensities = [1, 3, 5, 8];
+      const metals = ['cesium', 'sodium', 'calcium'];
+      
+      const rows = intensities.map(intensity => {
+        const row = [intensity];
+        
+        // Add time to plateau data
+        metals.forEach(metal => {
+          const timeInput = document.querySelector(`.part3-input[data-intensity="${intensity}"][data-metal="${metal}"]`);
+          const value = timeInput.value || (timeInput.placeholder === 'Not reached' ? 'Not reached' : '');
+          row.push(value);
+        });
+        
+        // Add stopping voltage data
+        metals.forEach(metal => {
+          const voltageInput = document.querySelector(`.part3-voltage-input[data-intensity="${intensity}"][data-metal="${metal}"]`);
+          const value = voltageInput.value || (voltageInput.placeholder === 'No emission' ? 'No emission' : '');
+          row.push(value);
+        });
+        
+        return row;
+      });
+      
+      const csv = [headers1, ...rows].map(row => row.join(',')).join('\n');
+      
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'part3_intensity_data.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ========== CHARTS ==========
+    let voltageCanvas, voltageCtx;
+    let scatterCanvas, scatterCtx;
+    let intensityCanvas, intensityCtx;
+
+    function initCharts() {
+      voltageCanvas = document.getElementById('voltageChart');
+      voltageCtx = voltageCanvas.getContext('2d');
+      
+      scatterCanvas = document.getElementById('scatterPlot');
+      scatterCtx = scatterCanvas.getContext('2d');
+      
+      intensityCanvas = document.getElementById('intensityPlot');
+      intensityCtx = intensityCanvas.getContext('2d');
+
+      resizeCanvas(voltageCanvas);
+      resizeCanvas(scatterCanvas);
+      resizeCanvas(intensityCanvas);
+
+      drawVoltageChart();
+      drawScatterPlot([], null, null);
+    }
+
+    function resizeCanvas(canvas) {
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth - 4;
+      canvas.height = container.clientHeight - 4;
+    }
+
+    function drawVoltageChart() {
+      if (!voltageCtx) return;
+
+      resizeCanvas(voltageCanvas);
+      const w = voltageCanvas.width;
+      const h = voltageCanvas.height;
+
+      voltageCtx.clearRect(0, 0, w, h);
+
+      // Draw axes
+      const padding = 50;
+      voltageCtx.strokeStyle = '#2e7d32';
+      voltageCtx.lineWidth = 2;
+      voltageCtx.beginPath();
+      voltageCtx.moveTo(padding, h - padding);
+      voltageCtx.lineTo(w - 20, h - padding);
+      voltageCtx.moveTo(padding, h - padding);
+      voltageCtx.lineTo(padding, 20);
+      voltageCtx.stroke();
+
+      // Labels
+      voltageCtx.fillStyle = '#2e7d32';
+      voltageCtx.font = '14px Arial';
+      voltageCtx.fillText('Time (s)', w / 2 - 30, h - 10);
+      voltageCtx.save();
+      voltageCtx.translate(15, h / 2);
+      voltageCtx.rotate(-Math.PI / 2);
+      voltageCtx.fillText('Voltage (V)', 0, 0);
+      voltageCtx.restore();
+
+      if (timeData.length === 0) return;
+
+      // Find scales
+      const maxTime = Math.max(...timeData);
+      const maxV = Math.max(...voltageData, 0.1);
+
+      // Draw data
+      voltageCtx.strokeStyle = '#66bb6a';
+      voltageCtx.lineWidth = 2;
+      voltageCtx.beginPath();
+
+      for (let i = 0; i < timeData.length; i++) {
+        const x = padding + (timeData[i] / maxTime) * (w - padding - 30);
+        const y = h - padding - (voltageData[i] / maxV) * (h - padding - 30);
+        
+        if (i === 0) {
+          voltageCtx.moveTo(x, y);
+        } else {
+          voltageCtx.lineTo(x, y);
+        }
+      }
+      voltageCtx.stroke();
+    }
+
+    function drawScatterPlot(data, fitLine = null, selectedMetal = null) {
+      if (!scatterCtx) return;
+
+      resizeCanvas(scatterCanvas);
+      const w = scatterCanvas.width;
+      const h = scatterCanvas.height;
+
+      scatterCtx.clearRect(0, 0, w, h);
+
+      const padding = 60;
+
+      // Draw axes
+      scatterCtx.strokeStyle = '#2e7d32';
+      scatterCtx.lineWidth = 2;
+      scatterCtx.beginPath();
+      scatterCtx.moveTo(padding, h - padding);
+      scatterCtx.lineTo(w - 20, h - padding);
+      scatterCtx.moveTo(padding, h - padding);
+      scatterCtx.lineTo(padding, 20);
+      scatterCtx.stroke();
+
+      // Labels
+      scatterCtx.fillStyle = '#2e7d32';
+      scatterCtx.font = '14px Arial';
+      scatterCtx.fillText('Frequency (Hz)', w / 2 - 50, h - 10);
+      scatterCtx.save();
+      scatterCtx.translate(15, h / 2);
+      scatterCtx.rotate(-Math.PI / 2);
+      scatterCtx.fillText('Stopping Voltage (V)', 0, 0);
+      scatterCtx.restore();
+
+      if (data.length === 0) {
+        // Show message
+        scatterCtx.fillStyle = '#666';
+        scatterCtx.font = '16px Arial';
+        scatterCtx.textAlign = 'center';
+        if (selectedMetal === null) {
+          scatterCtx.fillText('Select a metal to display data', w / 2, h / 2);
+        } else {
+          scatterCtx.fillText(`No data available for ${METALS[selectedMetal].name}`, w / 2, h / 2);
+        }
+        return;
+      }
+
+      // Find scales
+      const frequencies = data.map(d => d.frequency);
+      const voltages = data.map(d => d.stoppingVoltage);
+      const minF = Math.min(...frequencies);
+      const maxF = Math.max(...frequencies);
+      const minV = Math.min(...voltages, 0);
+      const maxV = Math.max(...voltages);
+
+      const rangeF = maxF - minF || 1;
+      const rangeV = maxV - minV || 1;
+
+      // Draw X-axis scale (frequency)
+      scatterCtx.fillStyle = '#2e7d32';
+      scatterCtx.font = '11px Arial';
+      scatterCtx.textAlign = 'center';
+      const numXTicks = 5;
+      for (let i = 0; i <= numXTicks; i++) {
+        const freq = minF + (rangeF * i / numXTicks);
+        const x = padding + ((freq - minF) / rangeF) * (w - padding - 30);
+        
+        // Draw tick mark
+        scatterCtx.beginPath();
+        scatterCtx.moveTo(x, h - padding);
+        scatterCtx.lineTo(x, h - padding + 5);
+        scatterCtx.stroke();
+        
+        // Draw label
+        const exp = Math.floor(Math.log10(freq));
+        const mantissa = (freq / Math.pow(10, exp)).toFixed(1);
+        scatterCtx.fillText(`${mantissa}e${exp}`, x, h - padding + 18);
+      }
+
+      // Draw Y-axis scale (voltage)
+      scatterCtx.textAlign = 'right';
+      const numYTicks = 5;
+      for (let i = 0; i <= numYTicks; i++) {
+        const voltage = minV + (rangeV * i / numYTicks);
+        const y = h - padding - ((voltage - minV) / rangeV) * (h - padding - 30);
+        
+        // Draw tick mark
+        scatterCtx.beginPath();
+        scatterCtx.moveTo(padding, y);
+        scatterCtx.lineTo(padding - 5, y);
+        scatterCtx.stroke();
+        
+        // Draw label
+        scatterCtx.fillText(voltage.toFixed(2), padding - 10, y + 4);
+      }
+
+      // Draw data points (only show valid points with emission)
+      data.filter(d => d.stoppingVoltage > 0.05).forEach(d => {
+        const x = padding + ((d.frequency - minF) / rangeF) * (w - padding - 30);
+        const y = h - padding - ((d.stoppingVoltage - minV) / rangeV) * (h - padding - 30);
+
+        const wavelength = d.wavelength;
+        const ledColor = LED_COLORS[wavelength].color;
+
+        scatterCtx.fillStyle = ledColor;
+        scatterCtx.beginPath();
+        scatterCtx.arc(x, y, 6, 0, 2 * Math.PI);
+        scatterCtx.fill();
+        
+        // Black border
+        scatterCtx.strokeStyle = '#000';
+        scatterCtx.lineWidth = 1;
+        scatterCtx.stroke();
+      });
+
+      // Draw fit line if provided
+      if (fitLine) {
+        const { slope, intercept } = fitLine;
+        scatterCtx.strokeStyle = '#ef5350';
+        scatterCtx.lineWidth = 3;
+        scatterCtx.beginPath();
+
+        const x1 = padding;
+        const x2 = w - 30;
+        const f1 = minF;
+        const f2 = maxF;
+        const v1 = slope * f1 + intercept;
+        const v2 = slope * f2 + intercept;
+        
+        const y1 = h - padding - ((v1 - minV) / rangeV) * (h - padding - 30);
+        const y2 = h - padding - ((v2 - minV) / rangeV) * (h - padding - 30);
+
+        scatterCtx.moveTo(x1, y1);
+        scatterCtx.lineTo(x2, y2);
+        scatterCtx.stroke();
+      }
+    }
+
+    function drawIntensityPlot(data, fitLine = null, selectedMetal = null) {
+      if (!intensityCtx) return;
+
+      resizeCanvas(intensityCanvas);
+      const w = intensityCanvas.width;
+      const h = intensityCanvas.height;
+
+      intensityCtx.clearRect(0, 0, w, h);
+
+      const padding = 60;
+
+      // Draw axes
+      intensityCtx.strokeStyle = '#2e7d32';
+      intensityCtx.lineWidth = 2;
+      intensityCtx.beginPath();
+      intensityCtx.moveTo(padding, h - padding);
+      intensityCtx.lineTo(w - 20, h - padding);
+      intensityCtx.moveTo(padding, h - padding);
+      intensityCtx.lineTo(padding, 20);
+      intensityCtx.stroke();
+
+      // Labels
+      intensityCtx.fillStyle = '#2e7d32';
+      intensityCtx.font = '14px Arial';
+      intensityCtx.fillText('Light Intensity', w / 2 - 50, h - 10);
+      intensityCtx.save();
+      intensityCtx.translate(15, h / 2);
+      intensityCtx.rotate(-Math.PI / 2);
+      intensityCtx.fillText('Time to Plateau (s)', 0, 0);
+      intensityCtx.restore();
+
+      if (data.length === 0) {
+        // Show message
+        intensityCtx.fillStyle = '#666';
+        intensityCtx.font = '16px Arial';
+        intensityCtx.textAlign = 'center';
+        if (selectedMetal === null) {
+          intensityCtx.fillText('Select a metal to display data', w / 2, h / 2);
+        } else {
+          intensityCtx.fillText(`No data available for ${METALS[selectedMetal].name}`, w / 2, h / 2);
+        }
+        return;
+      }
+
+      // Find scales
+      const intensities = data.map(d => d.intensity);
+      const times = data.map(d => d.timeTo95);
+      
+      const minI = Math.min(...intensities, 0);
+      const maxI = Math.max(...intensities, 8);
+      const minT = Math.min(...times, 0);
+      const maxT = Math.max(...times);
+
+      const rangeI = maxI - minI || 1;
+      const rangeT = maxT - minT || 1;
+
+      // Draw X-axis scale (intensity)
+      intensityCtx.fillStyle = '#2e7d32';
+      intensityCtx.font = '11px Arial';
+      intensityCtx.textAlign = 'center';
+      for (let i = 0; i <= 8; i++) {
+        const x = padding + ((i - minI) / rangeI) * (w - padding - 30);
+        
+        // Draw tick mark
+        intensityCtx.strokeStyle = '#2e7d32';
+        intensityCtx.lineWidth = 1;
+        intensityCtx.beginPath();
+        intensityCtx.moveTo(x, h - padding);
+        intensityCtx.lineTo(x, h - padding + 5);
+        intensityCtx.stroke();
+        
+        // Draw label
+        intensityCtx.fillText(i.toString(), x, h - padding + 18);
+      }
+
+      // Draw Y-axis scale (time)
+      intensityCtx.textAlign = 'right';
+      const numYTicks = 5;
+      for (let i = 0; i <= numYTicks; i++) {
+        const time = minT + (rangeT * i / numYTicks);
+        const y = h - padding - ((time - minT) / rangeT) * (h - padding - 30);
+        
+        // Draw tick mark
+        intensityCtx.strokeStyle = '#2e7d32';
+        intensityCtx.lineWidth = 1;
+        intensityCtx.beginPath();
+        intensityCtx.moveTo(padding, y);
+        intensityCtx.lineTo(padding - 5, y);
+        intensityCtx.stroke();
+        
+        // Draw label
+        intensityCtx.fillText(time.toFixed(2), padding - 10, y + 4);
+      }
+
+      // Draw data points
+      data.forEach(d => {
+        const x = padding + ((d.intensity - minI) / rangeI) * (w - padding - 30);
+        const y = h - padding - ((d.timeTo95 - minT) / rangeT) * (h - padding - 30);
+
+        intensityCtx.fillStyle = '#2e7d32';
+        intensityCtx.beginPath();
+        intensityCtx.arc(x, y, 6, 0, 2 * Math.PI);
+        intensityCtx.fill();
+        
+        // Black border
+        intensityCtx.strokeStyle = '#000';
+        intensityCtx.lineWidth = 1;
+        intensityCtx.stroke();
+      });
+
+      // Draw fit line if provided
+      if (fitLine) {
+        const { slope, intercept } = fitLine;
+        intensityCtx.strokeStyle = '#ef5350';
+        intensityCtx.lineWidth = 3;
+        intensityCtx.beginPath();
+
+        const i1 = minI;
+        const i2 = maxI;
+        const t1 = slope * i1 + intercept;
+        const t2 = slope * i2 + intercept;
+        
+        const x1 = padding + ((i1 - minI) / rangeI) * (w - padding - 30);
+        const y1 = h - padding - ((t1 - minT) / rangeT) * (h - padding - 30);
+        const x2 = padding + ((i2 - minI) / rangeI) * (w - padding - 30);
+        const y2 = h - padding - ((t2 - minT) / rangeT) * (h - padding - 30);
+
+        intensityCtx.moveTo(x1, y1);
+        intensityCtx.lineTo(x2, y2);
+        intensityCtx.stroke();
+      }
+    }
+
+    // ========== PART 1 ==========
+    function clearPart1Table() {
+      if (confirm('Are you sure you want to clear all entries in the Part 1 table?')) {
+        // Clear all cells in the table
+        const cells = document.querySelectorAll('#part1TableBody td[contenteditable="true"]');
+        cells.forEach(cell => {
+          cell.textContent = '—';
+          cell.style.background = '';
+          cell.style.fontWeight = 'normal';
+        });
+        
+        // Remove ALL entries (both manual and automatic) that are part of Part 1 data
+        // Keep only Part 3 data (wavelength 250 with intensities 1,3,5,8)
+        allRunData = allRunData.filter(run => 
+          run.wavelength === 250 && [1, 3, 5, 8].includes(run.intensity)
+        );
+        
+        updateDataBrowser();
+        updatePart2Status();
+        updatePart3Status();
+        updatePart2Graph();
+      }
+    }
+
+    function handleCellEdit(cell) {
+      // Get raw text without formatting
+      let text = cell.textContent.trim();
+      const wavelength = parseInt(cell.dataset.wavelength);
+      const metal = cell.dataset.metal;
+      
+      // Remove " V" suffix if present to get clean number
+      text = text.replace(/\s*V\s*$/, '').trim();
+      
+      // Allow "—" or empty for clearing
+      if (text === '—' || text === '') {
+        cell.textContent = '—';
+        cell.style.background = '';
+        cell.style.fontWeight = 'normal';
+        removeManualEntry(wavelength, metal);
+        return;
+      }
+      
+      // Check if it's "No emission" text
+      if (text.toLowerCase().includes('no emission')) {
+        cell.textContent = 'No emission';
+        cell.style.background = '#ffcdd2';
+        cell.style.fontWeight = '600';
+        saveManualEntry(wavelength, metal, 0);
+        return;
+      }
+      
+      // Check if it's "0" which means no emission
+      if (text === '0') {
+        cell.textContent = 'No emission';
+        cell.style.background = '#ffcdd2';
+        cell.style.fontWeight = '600';
+        saveManualEntry(wavelength, metal, 0);
+        return;
+      }
+      
+      // Try to parse as number (only numbers and decimal point allowed during typing)
+      const value = parseFloat(text);
+      if (!isNaN(value) && value > 0) {
+        // Don't reformat while typing - wait for blur event
+        saveManualEntry(wavelength, metal, value);
+        
+        if (value < 0.05) {
+          cell.style.background = '#ffcdd2';
+          cell.style.fontWeight = '600';
+        } else {
+          cell.style.background = '#e8f5e9';
+          cell.style.fontWeight = 'normal';
+        }
+      }
+    }
+    
+    function handleCellBlur(cell) {
+      let text = cell.textContent.trim();
+      const wavelength = parseInt(cell.dataset.wavelength);
+      const metal = cell.dataset.metal;
+      
+      // Remove " V" suffix if present
+      text = text.replace(/\s*V\s*$/, '').trim();
+      
+      // Format the final value when user is done editing
+      if (text !== '—' && text !== '' && !text.toLowerCase().includes('no emission')) {
+        const value = parseFloat(text);
+        if (!isNaN(value) && value > 0) {
+          cell.textContent = value.toFixed(4) + ' V';
+        } else if (value === 0) {
+          cell.textContent = 'No emission';
+        } else {
+          cell.textContent = '—';
+          cell.style.background = '';
+          cell.style.fontWeight = 'normal';
+        }
+      }
+    }
+
+    function saveManualEntry(wavelength, metal, voltage) {
+      const frequency = C / (wavelength * 1e-9);
+      
+      // Remove any existing entry for this wavelength-metal combo
+      removeManualEntry(wavelength, metal);
+      
+      // Add new manual entry
+      const runData = {
+        part: 'Manual',
+        ledColor: LED_COLORS[wavelength].name,
+        wavelength: wavelength,
+        frequency: frequency,
+        intensity: 0,
+        collectTime: 0,
+        metal: metal,
+        stoppingVoltage: voltage,
+        timeTo95: null,
+        timestamp: new Date().toLocaleString(),
+        isManual: true
+      };
+      
+      allRunData.push(runData);
+      updateDataBrowser();
+      updatePart2Status();
+      updatePart3Status();
+    }
+
+    function removeManualEntry(wavelength, metal) {
+      allRunData = allRunData.filter(run => 
+        !(run.wavelength === wavelength && run.metal === metal && run.isManual)
+      );
+      updateDataBrowser();
+      updatePart2Status();
+      updatePart3Status();
+    }
+
+    function updatePart1Table() {
+      // Group data by wavelength and metal
+      const dataByWavelengthMetal = {};
+      
+      allRunData.forEach(run => {
+        const key = `${run.wavelength}-${run.metal}`;
+        if (!dataByWavelengthMetal[key] || dataByWavelengthMetal[key].stoppingVoltage < run.stoppingVoltage) {
+          dataByWavelengthMetal[key] = run;
+        }
+      });
+
+      // Update each cell in the table
+      const wavelengths = [850, 650, 610, 590, 530, 470, 405, 365, 250];
+      const metals = ['cesium', 'sodium', 'calcium'];
+
+      wavelengths.forEach(wavelength => {
+        metals.forEach(metal => {
+          const cells = document.querySelectorAll(`[data-wavelength="${wavelength}"][data-metal="${metal}"]`);
+          cells.forEach(cell => {
+            const key = `${wavelength}-${metal}`;
+            const data = dataByWavelengthMetal[key];
+
+            if (data && data.stoppingVoltage !== null) {
+              if (data.stoppingVoltage < 0.05) {
+                cell.textContent = 'No emission';
+                cell.style.background = '#ffcdd2';
+                cell.style.fontWeight = '600';
+              } else {
+                cell.textContent = data.stoppingVoltage.toFixed(4) + ' V';
+                cell.style.background = '#e8f5e9';
+                cell.style.fontWeight = 'normal';
+              }
+            }
+          });
+        });
+      });
+    }
+
+    // ========== PART 3 ==========
+    function updatePart3IntensityGraph() {
+      const selectedMetal = document.querySelector('input[name="part3Metal"]:checked').value;
+      
+      if (selectedMetal === 'none') {
+        drawIntensityPlot([], null, null);
+        document.getElementById('part3Equation').style.display = 'none';
+        return;
+      }
+
+      // Get data for selected metal at UV 250 nm
+      const intensityLevels = [1, 3, 5, 8];
+      const dataPoints = [];
+
+      intensityLevels.forEach(intensity => {
+        const input = document.querySelector(`.part3-input[data-intensity="${intensity}"][data-metal="${selectedMetal}"]`);
+        if (input && input.value) {
+          const timeToPlateau = parseFloat(input.value);
+          if (!isNaN(timeToPlateau) && timeToPlateau > 0) {
+            dataPoints.push({ intensity: intensity, timeTo95: timeToPlateau });
+          }
+        }
+      });
+
+      if (dataPoints.length < 2) {
+        drawIntensityPlot(dataPoints, null, selectedMetal);
+        document.getElementById('part3Equation').style.display = 'none';
+        return;
+      }
+
+      // Linear regression
+      const n = dataPoints.length;
+      const sumI = dataPoints.reduce((s, d) => s + d.intensity, 0);
+      const sumT = dataPoints.reduce((s, d) => s + d.timeTo95, 0);
+      const sumIT = dataPoints.reduce((s, d) => s + d.intensity * d.timeTo95, 0);
+      const sumI2 = dataPoints.reduce((s, d) => s + d.intensity * d.intensity, 0);
+
+      const slope = (n * sumIT - sumI * sumT) / (n * sumI2 - sumI * sumI);
+      const intercept = (sumT - slope * sumI) / n;
+
+      // Calculate R²
+      const meanT = sumT / n;
+      const ssTotal = dataPoints.reduce((s, d) => s + Math.pow(d.timeTo95 - meanT, 2), 0);
+      const ssResidual = dataPoints.reduce((s, d) => {
+        const predicted = slope * d.intensity + intercept;
+        return s + Math.pow(d.timeTo95 - predicted, 2);
+      }, 0);
+      const r2 = 1 - (ssResidual / ssTotal);
+
+      // Draw graph with fit line
+      drawIntensityPlot(dataPoints, { slope, intercept }, selectedMetal);
+
+      // Display equation
+      document.getElementById('part3Equation').style.display = 'block';
+      document.getElementById('part3EquationDisplay').textContent = `y = ${slope.toFixed(4)}x + ${intercept.toFixed(4)}`;
+      document.getElementById('part3R2Value').textContent = r2.toFixed(4);
+      document.getElementById('part3PointsInfo').textContent = `Using ${dataPoints.length} data points`;
+    }
+
+    function updatePart3Table() {
+      // This function is now used to refresh the graph when data changes
+      updatePart3IntensityGraph();
+    }
+
+    // ========== DATA BROWSER ==========
+    function updateDataBrowser() {
+      const tbody = document.getElementById('dataBrowserBody');
+      tbody.innerHTML = '';
+
+      const filtered = getFilteredData();
+
+      filtered.forEach(run => {
+        const row = tbody.insertRow();
+        row.insertCell(0).textContent = run.part;
+        row.insertCell(1).textContent = METALS[run.metal] ? METALS[run.metal].name : run.metal;
+        row.insertCell(2).textContent = run.ledColor;
+        row.insertCell(3).textContent = run.wavelength;
+        row.insertCell(4).textContent = formatScientific(run.frequency);
+        row.insertCell(5).textContent = run.intensity;
+        row.insertCell(6).textContent = run.collectTime;
+        row.insertCell(7).textContent = run.stoppingVoltage ? run.stoppingVoltage.toFixed(4) : '—';
+        row.insertCell(8).textContent = run.timeTo95 ? run.timeTo95.toFixed(2) : '—';
+        row.insertCell(9).textContent = run.timestamp;
+      });
+    }
+
+    function getFilteredData() {
+      const searchTerm = document.getElementById('searchFilter').value.toLowerCase();
+      const partFilter = document.getElementById('partFilter').value;
+      const colorFilter = document.getElementById('colorFilter').value;
+
+      return allRunData.filter(run => {
+        const matchesSearch = !searchTerm || 
+          Object.values(run).some(v => String(v).toLowerCase().includes(searchTerm));
+        const matchesPart = !partFilter || run.part === partFilter;
+        const matchesColor = !colorFilter || run.ledColor === colorFilter;
+
+        return matchesSearch && matchesPart && matchesColor;
+      });
+    }
+
+    function filterDataBrowser() {
+      updateDataBrowser();
+    }
+
+    function clearAllData() {
+      if (confirm('Are you sure you want to clear all collected data? This cannot be undone.')) {
+        allRunData = [];
+        updateDataBrowser();
+        updatePart1Table();
+        updatePart3Table();
+        updatePart2Status();
+        updatePart3Status();
+        updatePart2Graph();
+        
+        // Clear Part 1 table display
+        const cells = document.querySelectorAll('#part1TableBody td[contenteditable="true"]');
+        cells.forEach(cell => {
+          cell.textContent = '—';
+          cell.style.background = '';
+          cell.style.fontWeight = 'normal';
+        });
+      }
+    }
+
+    // ========== CSV EXPORT ==========
+    function downloadCSV() {
+      if (allRunData.length === 0) {
+        alert('No data to export. Run some experiments first!');
+        return;
+      }
+
+      const headers = ['Part', 'Metal', 'LED Color', 'Wavelength (nm)', 'Frequency (Hz)', 'Intensity', 
+                       'Collect Time (s)', 'Stopping Voltage (V)', 'Time to 95% (s)', 'Timestamp'];
+      
+      const rows = allRunData.map(run => [
+        run.part,
+        METALS[run.metal] ? METALS[run.metal].name : run.metal,
+        run.ledColor,
+        run.wavelength,
+        run.frequency,
+        run.intensity,
+        run.collectTime,
+        run.stoppingVoltage || '',
+        run.timeTo95 || '',
+        run.timestamp
+      ]);
+
+      const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'photoelectric_effect_data.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ========== ACCORDION ==========
+    function toggleAccordion(index) {
+      const headers = document.querySelectorAll('.accordion-header');
+      const contents = document.querySelectorAll('.accordion-content');
+
+      headers[index].classList.toggle('active');
+      contents[index].classList.toggle('open');
+    }
+
+    // ========== UTILITIES ==========
+    function formatScientific(num) {
+      const exp = Math.floor(Math.log10(num));
+      const mantissa = (num / Math.pow(10, exp)).toFixed(2);
+      return `${mantissa}×10${exp >= 0 ? '⁺' : '⁻'}${Math.abs(exp)}`;
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bd9e85166971091',t:'MTc2ODM1OTg4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
