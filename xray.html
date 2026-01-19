@@ -135,7 +135,7 @@
        <h2 class="font-semibold text-green-800 mb-3 flex items-center gap-2">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg> Object Source</h2>
-       <div class="grid grid-cols-2 gap-2 mb-3"><button class="btn-preset active bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="center">Center Circle</button> <button class="btn-preset bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="offcenter">Off-center Circle</button> <button class="btn-preset bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="ellipse">Ellipse</button> <button class="btn-preset bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="two">Two Circles</button>
+      <div class="grid grid-cols-2 gap-2 mb-3"><button class="btn-preset active bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="center">Center Circle</button> <button class="btn-preset bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="offcenter">Off-center Circle</button> <button class="btn-preset bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="ellipse">Ellipse</button> <button class="btn-preset bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="two">Two Circles</button> <button class="btn-preset bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="brain">Brain</button>
        </div><label class="block"> <span class="sr-only">Upload Image</span> <input type="file" id="imageUpload" accept="image/png,image/jpeg" class="block w-full text-sm text-green-700 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-600 file:text-white hover:file:bg-green-700 cursor-pointer"> </label>
       </section><!-- Scan Parameters -->
       <section class="bg-white rounded-xl shadow-md p-4 border border-green-200">
@@ -153,8 +153,8 @@
        <div class="mb-2"><label for="bins" class="text-sm text-green-700 font-medium mb-1 block tooltip-trigger" data-tooltip="Number of detector elements. More bins = higher spatial resolution."> Detector Bins: <span id="binsVal">128</span> ℹ️ </label> <input type="range" id="bins" min="64" max="256" step="16" value="128" class="w-full">
        </div>
       </section><!-- Action Buttons -->
-      <section class="bg-white rounded-xl shadow-md p-4 border border-green-200 space-y-2"><button id="btnSinogram" class="w-full py-3 px-4 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      <section class="bg-white rounded-xl shadow-md p-4 border border-green-200 space-y-2"><button id="btnSinogram" class="w-full py-3 px-4 rounded-lg font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg hover:shadow-xl ring-1 ring-amber-800/20 transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 flex items-center justify-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg> Compute Sinogram </button> <!-- Animation Controls (hidden initially) -->
        <div id="animationControls" class="hidden space-y-2">
         <div class="flex gap-2"><button id="btnPause" class="flex-1 py-2 px-3 rounded-lg font-medium bg-yellow-500 text-white hover:bg-yellow-600 transition-colors flex items-center justify-center gap-1">
@@ -171,9 +171,9 @@
         <p id="progressText" class="text-xs text-green-700 text-center font-medium">Scanning: 0° / 180° (0/60 projections)</p><!-- Animation Speed -->
         <div><label for="animSpeed" class="text-xs text-green-700 font-medium mb-1 block"> Animation Speed: <span id="speedVal">Very Slow</span> </label> <input type="range" id="animSpeed" min="1" max="5" value="1" class="w-full">
         </div>
-       </div><button id="btnReconstruct" class="w-full py-3 px-4 rounded-lg font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg> Reconstruct </button> <button id="btnReset" class="w-full py-2 px-4 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"> Reset </button>
+      </div><button id="btnReconstruct" class="w-full py-3 px-4 rounded-lg font-semibold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg hover:shadow-xl ring-1 ring-amber-800/20 transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg> Reconstruct Image </button> <button id="btnReset" class="w-full py-2 px-4 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"> Reset </button>
       </section><!-- Guide Questions -->
       <section class="bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl shadow-md p-4 border border-green-300 md:col-span-2">
        <h2 class="font-semibold text-green-800 mb-3 flex items-center gap-2">
@@ -228,11 +228,12 @@
       <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
        <h3 class="font-semibold text-blue-900 mb-2">📋 How to use this code:</h3>
        <ol class="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-        <li>Copy the code above using the button below</li>
-        <li>Open MATLAB</li>
-        <li>Paste the code into the editor and save as a .m file</li>
-        <li>Run the code to see the reconstruction with different filters</li>
-        <li>The code demonstrates: Ram-Lak, Shepp-Logan, and Hamming filters</li>
+        <li>Copy all the code from the simulator</li>
+        <li>Open MATLAB Online</li>
+        <li>Go to: File → New → Script (or press Ctrl+N)</li>
+        <li>Paste the entire code into the editor</li>
+        <li>Save it as: ct_reconstruction_main.m</li>
+        <li>In the command window, type: ct_reconstruction_main and press Enter</li>
        </ol>
       </div>
      </div><!-- Modal Footer -->
@@ -511,6 +512,14 @@
         case 'offcenter': createOffCenterCircle(); break;
         case 'ellipse': createEllipse(); break;
         case 'two': createTwoCircles(); break;
+        case 'brain':
+          // Load brain image preset from assets
+          loadPresetImage('assets/dlsuclass/brain.png');
+          // Toggle active state for buttons, then return to avoid premature render
+          presetBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.preset === preset);
+          });
+          return; // rendering will be done after image loads
       }
       presetBtns.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.preset === preset);
@@ -680,7 +689,7 @@
       ctxReconstructed.fillStyle = '#4ade80';
       ctxReconstructed.font = '14px Source Sans 3';
       ctxReconstructed.textAlign = 'center';
-      ctxReconstructed.fillText('Click "Reconstruct"', SIZE / 2, SIZE / 2);
+      ctxReconstructed.fillText('Click "Reconstruct Image"', SIZE / 2, SIZE / 2);
     }
     
     // Modal functions
@@ -1166,59 +1175,63 @@ end  % End of main function
       ctxSinogram.stroke();
     }
     
-    // Draw scan geometry (rotating rays) on overlay canvas
+    // Draw scan geometry (parallel-beam) on overlay canvas
     function drawScanGeometry(angle) {
       ctxOverlay.clearRect(0, 0, SIZE, SIZE);
-      
+
       const center = SIZE / 2;
       const radius = SIZE * 0.55; // Extend beyond object
-      
-      // Calculate source and detector positions
       const angleRad = angle * Math.PI / 180;
-      const sourceX = center + radius * Math.cos(angleRad);
-      const sourceY = center + radius * Math.sin(angleRad);
-      const detectorX = center - radius * Math.cos(angleRad);
-      const detectorY = center - radius * Math.sin(angleRad);
-      
-      // Draw main axis line (source to detector)
+
+      // Unit vectors: normal (source→detector) and tangent (along the detector/source lines)
+      const nx = Math.cos(angleRad);
+      const ny = Math.sin(angleRad);
+      const tx = -Math.sin(angleRad);
+      const ty = Math.cos(angleRad);
+
+      // Centers of source and detector lines
+      const sourceCx = center + radius * nx;
+      const sourceCy = center + radius * ny;
+      const detectorCx = center - radius * nx;
+      const detectorCy = center - radius * ny;
+
+      // Draw main axis line (source to detector) for context
       ctxOverlay.strokeStyle = '#10b981';
       ctxOverlay.lineWidth = 2;
       ctxOverlay.beginPath();
-      ctxOverlay.moveTo(sourceX, sourceY);
-      ctxOverlay.lineTo(detectorX, detectorY);
+      ctxOverlay.moveTo(sourceCx, sourceCy);
+      ctxOverlay.lineTo(detectorCx, detectorCy);
       ctxOverlay.stroke();
-      
-      // Draw source (X-ray source)
-      ctxOverlay.fillStyle = '#fbbf24';
-      ctxOverlay.beginPath();
-      ctxOverlay.arc(sourceX, sourceY, 6, 0, Math.PI * 2);
-      ctxOverlay.fill();
-      
-      // Draw detector array (multiple small rectangles)
+
+      // Geometry parameters along the lines
       const detectorLength = SIZE * 0.4;
       const numDetectors = 7;
-      const perpAngle = angleRad + Math.PI / 2;
-      
+      const half = (numDetectors - 1) / 2;
+      const step = detectorLength / numDetectors;
+
+      // Draw beams: multiple yellow source points, matching blue detector squares, with parallel segments
+      ctxOverlay.lineWidth = 1;
       for (let i = 0; i < numDetectors; i++) {
-        const offset = (i - (numDetectors - 1) / 2) * (detectorLength / numDetectors);
-        const dx = detectorX + offset * Math.cos(perpAngle);
-        const dy = detectorY + offset * Math.sin(perpAngle);
-        
+        const offset = (i - half) * step;
+
+        // Source point along the source line
+        const sx = sourceCx + offset * tx;
+        const sy = sourceCy + offset * ty;
+        ctxOverlay.fillStyle = '#fbbf24';
+        ctxOverlay.beginPath();
+        ctxOverlay.arc(sx, sy, 4, 0, Math.PI * 2);
+        ctxOverlay.fill();
+
+        // Detector element along the detector line
+        const dx = detectorCx + offset * tx;
+        const dy = detectorCy + offset * ty;
         ctxOverlay.fillStyle = '#3b82f6';
         ctxOverlay.fillRect(dx - 3, dy - 3, 6, 6);
-      }
-      
-      // Draw sample rays (5 rays from source to detector array)
-      ctxOverlay.strokeStyle = 'rgba(16, 185, 129, 0.3)';
-      ctxOverlay.lineWidth = 1;
-      const numRays = 5;
-      for (let i = 0; i < numRays; i++) {
-        const offset = (i - (numRays - 1) / 2) * (detectorLength / (numRays - 1));
-        const dx = detectorX + offset * Math.cos(perpAngle);
-        const dy = detectorY + offset * Math.sin(perpAngle);
-        
+
+        // Parallel beam from source point to detector element
+        ctxOverlay.strokeStyle = 'rgba(16, 185, 129, 0.4)';
         ctxOverlay.beginPath();
-        ctxOverlay.moveTo(sourceX, sourceY);
+        ctxOverlay.moveTo(sx, sy);
         ctxOverlay.lineTo(dx, dy);
         ctxOverlay.stroke();
       }
@@ -1631,6 +1644,36 @@ end  % End of main function
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
+    }
+
+    // Load preset image from URL, resize to canvas, and convert to grayscale
+    function loadPresetImage(url) {
+      const img = new Image();
+      img.onload = function() {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = SIZE;
+        tempCanvas.height = SIZE;
+        const tempCtx = tempCanvas.getContext('2d');
+
+        // Draw resized image to match simulation grid
+        tempCtx.drawImage(img, 0, 0, SIZE, SIZE);
+        const imgData = tempCtx.getImageData(0, 0, SIZE, SIZE);
+
+        // Convert to grayscale intensity [0,1]
+        for (let i = 0; i < SIZE * SIZE; i++) {
+          const r = imgData.data[i * 4];
+          const g = imgData.data[i * 4 + 1];
+          const b = imgData.data[i * 4 + 2];
+          const gray = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+          objectData[i] = gray;
+        }
+
+        currentPreset = 'brain';
+        renderObject();
+        clearSinogram();
+        clearReconstructed();
+      };
+      img.src = url;
     }
 
     // Event listeners
