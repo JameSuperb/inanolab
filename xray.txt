@@ -1,0 +1,1804 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D X-Ray Imaging (CT) Simulator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    * {
+      font-family: 'Source Sans 3', sans-serif;
+    }
+    .tooltip-trigger {
+      position: relative;
+      cursor: help;
+    }
+    .tooltip-trigger::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a472a;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: normal;
+      width: 200px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 100;
+      text-align: left;
+      line-height: 1.4;
+    }
+    .tooltip-trigger:hover::after {
+      opacity: 1;
+      visibility: visible;
+    }
+    canvas {
+      image-rendering: pixelated;
+    }
+    .btn-preset {
+      transition: all 0.15s ease;
+    }
+    .btn-preset:hover {
+      transform: translateY(-1px);
+    }
+    .btn-preset.active {
+      box-shadow: 0 0 0 2px #166534;
+    }
+    .filter-btn {
+      transition: all 0.15s ease;
+    }
+    .filter-btn:hover {
+      transform: translateY(-1px);
+    }
+    .filter-btn.active {
+      box-shadow: 0 0 0 2px #166534;
+      background-color: #10b981 !important;
+      color: white !important;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: #d1fae5;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #166534;
+      cursor: pointer;
+    }
+    .guide-card {
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .processing {
+      animation: pulse 1s infinite;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-emerald-50 overflow-auto">
+  <div class="min-h-full flex flex-col"><!-- Header -->
+   <header id="app-header" class="bg-gradient-to-r from-green-800 to-green-700 text-white px-6 py-4 shadow-lg">
+    <h1 id="app-title" class="text-2xl font-bold tracking-tight">3D X-Ray Imaging (CT) – Sinogram &amp; Reconstruction</h1>
+    <p id="app-description" class="text-green-100 mt-1 text-sm">Explore how CT scanners create cross-sectional images using projections and backprojection reconstruction.</p>
+   </header><!-- Main Content -->
+   <main class="flex-1 flex flex-col gap-4 p-4"><!-- Row 1: Original Object + Reconstructed Image (side by side) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><!-- Object Canvas -->
+     <div class="bg-white rounded-xl shadow-md p-4 border border-green-200">
+      <h3 class="font-semibold text-green-800 mb-2 flex items-center gap-2 tooltip-trigger" data-tooltip="The original object (phantom) to be scanned. In real CT, this represents a cross-section of the patient.">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+       </svg> Original Object ℹ️</h3>
+      <div class="aspect-square bg-gray-900 rounded-lg overflow-hidden relative">
+       <canvas id="canvasObject" class="w-full h-full absolute top-0 left-0"></canvas>
+       <canvas id="canvasOverlay" class="w-full h-full absolute top-0 left-0 pointer-events-none"></canvas>
+      </div>
+      <p class="text-xs text-green-600 mt-2">Grayscale phantom image</p>
+     </div><!-- Reconstructed Canvas -->
+     <div class="bg-white rounded-xl shadow-md p-4 border border-green-200">
+      <h3 class="font-semibold text-green-800 mb-2 flex items-center gap-2 tooltip-trigger" data-tooltip="Backprojection smears each projection back along its ray direction. Summing all angles reconstructs the image. Filtering removes blurring artifacts.">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+       </svg> Reconstructed Image ℹ️</h3>
+      <div class="aspect-square bg-gray-900 rounded-lg overflow-hidden">
+       <canvas id="canvasReconstructed" class="w-full h-full"></canvas>
+      </div><!-- Filter Selection -->
+      <div class="mt-3 space-y-2"><label class="text-sm text-green-700 font-medium block">Reconstruction Filter:</label>
+       <div class="grid grid-cols-2 gap-2"><button class="filter-btn active bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium tooltip-trigger" data-filter="none" data-tooltip="Simple backprojection without filtering. Fast but produces blurry images with star artifacts."> None (Unfiltered) </button> <button class="filter-btn bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium tooltip-trigger" data-filter="ram-lak" data-tooltip="Sharp ramp filter used in clinical CT. Excellent spatial resolution but amplifies noise."> Ram-Lak </button> <button class="filter-btn bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium tooltip-trigger" data-filter="shepp-logan" data-tooltip="Smoothed ramp filter that reduces noise while maintaining good resolution. Good for noisy data."> Shepp-Logan </button> <button class="filter-btn bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium tooltip-trigger" data-filter="hamming" data-tooltip="Heavily smoothed filter that minimizes noise but reduces sharpness. Best for very noisy scans."> Hamming </button>
+       </div>
+       <p id="filterDescription" class="text-xs text-green-600 mt-2">Unfiltered backprojection result</p>
+      </div>
+     </div>
+    </div><!-- Row 2: Controls + Sinogram (2 columns) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4"><!-- Left: All Controls -->
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><!-- Object Source -->
+      <section class="bg-white rounded-xl shadow-md p-4 border border-green-200">
+       <h2 class="font-semibold text-green-800 mb-3 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg> Object Source</h2>
+       <div class="grid grid-cols-2 gap-2 mb-3"><button class="btn-preset active bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="center">Center Circle</button> <button class="btn-preset bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="offcenter">Off-center Circle</button> <button class="btn-preset bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="ellipse">Ellipse</button> <button class="btn-preset bg-green-100 hover:bg-green-200 text-green-800 text-xs py-2 px-3 rounded-lg font-medium" data-preset="two">Two Circles</button>
+       </div><label class="block"> <span class="sr-only">Upload Image</span> <input type="file" id="imageUpload" accept="image/png,image/jpeg" class="block w-full text-sm text-green-700 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-600 file:text-white hover:file:bg-green-700 cursor-pointer"> </label>
+      </section><!-- Scan Parameters -->
+      <section class="bg-white rounded-xl shadow-md p-4 border border-green-200">
+       <h2 class="font-semibold text-green-800 mb-3 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg> Scan Parameters</h2><!-- Angle Range -->
+       <div class="mb-4"><label class="text-sm text-green-700 font-medium mb-2 block tooltip-trigger" data-tooltip="180° is often sufficient for CT due to symmetry in parallel-beam geometry. 360° provides redundant data but can improve quality with noise."> Angle Range ℹ️ </label>
+        <div class="flex gap-2"><button id="btn180" class="flex-1 py-2 px-3 rounded-lg text-sm font-medium bg-green-600 text-white">0–180°</button> <button id="btn360" class="flex-1 py-2 px-3 rounded-lg text-sm font-medium bg-green-100 text-green-800 hover:bg-green-200">0–360°</button>
+        </div>
+       </div><!-- Projections -->
+       <div class="mb-4"><label for="projections" class="text-sm text-green-700 font-medium mb-1 block tooltip-trigger" data-tooltip="More projections = more angles sampled = better reconstruction quality, but slower computation."> Projections: <span id="projVal" class="font-bold">60</span> ℹ️ </label> <input type="range" id="projections" min="10" max="180" value="60" class="w-full">
+       </div><!-- Noise -->
+       <div class="mb-4"><label for="noise" class="text-sm text-green-700 font-medium mb-1 block tooltip-trigger" data-tooltip="Simulates detector noise and scatter. Higher noise degrades image quality."> Noise: <span id="noiseVal">0</span>% ℹ️ </label> <input type="range" id="noise" min="0" max="10" value="0" class="w-full">
+       </div><!-- Detector Bins -->
+       <div class="mb-2"><label for="bins" class="text-sm text-green-700 font-medium mb-1 block tooltip-trigger" data-tooltip="Number of detector elements. More bins = higher spatial resolution."> Detector Bins: <span id="binsVal">128</span> ℹ️ </label> <input type="range" id="bins" min="64" max="256" step="16" value="128" class="w-full">
+       </div>
+      </section><!-- Action Buttons -->
+      <section class="bg-white rounded-xl shadow-md p-4 border border-green-200 space-y-2"><button id="btnSinogram" class="w-full py-3 px-4 rounded-lg font-semibold bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg> Compute Sinogram </button> <!-- Animation Controls (hidden initially) -->
+       <div id="animationControls" class="hidden space-y-2">
+        <div class="flex gap-2"><button id="btnPause" class="flex-1 py-2 px-3 rounded-lg font-medium bg-yellow-500 text-white hover:bg-yellow-600 transition-colors flex items-center justify-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg> Pause </button> <button id="btnResume" class="flex-1 py-2 px-3 rounded-lg font-medium bg-green-500 text-white hover:bg-green-600 transition-colors flex items-center justify-center gap-1 hidden">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg> Resume </button> <button id="btnStop" class="flex-1 py-2 px-3 rounded-lg font-medium bg-red-500 text-white hover:bg-red-600 transition-colors flex items-center justify-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+          </svg> Stop </button>
+        </div><!-- Progress Bar -->
+        <div class="bg-gray-200 rounded-full h-2 overflow-hidden">
+         <div id="progressBar" class="bg-green-600 h-full transition-all duration-200" style="width: 0%"></div>
+        </div>
+        <p id="progressText" class="text-xs text-green-700 text-center font-medium">Scanning: 0° / 180° (0/60 projections)</p><!-- Animation Speed -->
+        <div><label for="animSpeed" class="text-xs text-green-700 font-medium mb-1 block"> Animation Speed: <span id="speedVal">Very Slow</span> </label> <input type="range" id="animSpeed" min="1" max="5" value="1" class="w-full">
+        </div>
+       </div><button id="btnReconstruct" class="w-full py-3 px-4 rounded-lg font-semibold bg-emerald-500 text-white hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg> Reconstruct </button> <button id="btnReset" class="w-full py-2 px-4 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"> Reset </button>
+      </section><!-- Guide Questions -->
+      <section class="bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl shadow-md p-4 border border-green-300 md:col-span-2">
+       <h2 class="font-semibold text-green-800 mb-3 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg> Guide Questions</h2>
+       <div id="guideContent" class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-green-800">
+        <div class="guide-card bg-white/60 rounded-lg p-3">
+         <p class="font-medium">🔬 Try 20 vs 120 projections</p>
+         <p class="text-green-600 text-xs mt-1">Compare the clarity and artifacts in reconstruction.</p>
+        </div>
+        <div class="guide-card bg-white/60 rounded-lg p-3">
+         <p class="font-medium">📊 Add noise (5-10%)</p>
+         <p class="text-green-600 text-xs mt-1">Observe how sinogram and reconstruction change.</p>
+        </div>
+        <div class="guide-card bg-white/60 rounded-lg p-3">
+         <p class="font-medium">🎯 Why is 180° often enough?</p>
+         <p class="text-green-600 text-xs mt-1">Parallel beams are symmetric—opposite angles give same info.</p>
+        </div>
+       </div>
+      </section>
+     </div><!-- Right: Sinogram -->
+     <div class="bg-white rounded-xl shadow-md p-4 border border-green-200 flex flex-col">
+      <h3 class="font-semibold text-green-800 mb-2 flex items-center justify-between flex-shrink-0"><span class="flex items-center gap-2 tooltip-trigger" data-tooltip="A sinogram displays projections at all angles. Each row is one projection; columns are detector positions. A point traces a sinusoidal path—hence 'sinogram'.">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg> Sinogram ℹ️ </span>
+       <div class="flex gap-2"><button id="btnViewData" class="text-xs bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled> View Data </button> <button id="btnShowCode" class="text-xs bg-purple-600 text-white px-3 py-1 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled> Show Code </button>
+       </div></h3>
+      <div class="flex-1 bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center min-h-0">
+       <canvas id="canvasSinogram" class="w-full h-full object-contain"></canvas>
+      </div>
+      <p class="text-xs text-green-600 mt-2 flex-shrink-0">Vertical: angles | Horizontal: detector bins</p>
+     </div>
+    </div>
+   </main><!-- Footer -->
+   <footer class="bg-green-800 text-green-100 text-center py-3 text-sm">
+    <p>Prepared and coded by Dr. James Salveo Olarve</p>
+   </footer><!-- MATLAB Code Modal -->
+   <div id="codeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col"><!-- Modal Header -->
+     <div class="bg-gradient-to-r from-purple-800 to-purple-700 text-white px-6 py-4 rounded-t-xl flex items-center justify-between">
+      <div>
+       <h2 class="text-xl font-bold">MATLAB Reconstruction Code</h2>
+       <p class="text-purple-100 text-sm mt-1">Complete code with embedded sinogram data</p>
+      </div><button id="btnCloseCodeModal" class="text-white hover:bg-purple-600 rounded-lg p-2 transition-colors">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg></button>
+     </div><!-- Modal Body -->
+     <div class="flex-1 overflow-auto p-6 bg-gray-50">
+      <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+       <pre id="matlabCode" class="text-green-400 text-sm font-mono leading-relaxed"></pre>
+      </div>
+      <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+       <h3 class="font-semibold text-blue-900 mb-2">📋 How to use this code:</h3>
+       <ol class="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+        <li>Copy the code above using the button below</li>
+        <li>Open MATLAB</li>
+        <li>Paste the code into the editor and save as a .m file</li>
+        <li>Run the code to see the reconstruction with different filters</li>
+        <li>The code demonstrates: Ram-Lak, Shepp-Logan, and Hamming filters</li>
+       </ol>
+      </div>
+     </div><!-- Modal Footer -->
+     <div class="bg-gray-50 px-6 py-4 rounded-b-xl flex gap-3 border-t border-gray-200"><button id="btnCopyCode" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+       </svg> Copy Code </button> <button id="btnDownloadCode" class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+       </svg> Download .m File </button> <button id="btnCloseCodeModalFooter" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"> Close </button>
+     </div>
+    </div>
+   </div><!-- Data Modal -->
+   <div id="dataModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col"><!-- Modal Header -->
+     <div class="bg-gradient-to-r from-green-800 to-green-700 text-white px-6 py-4 rounded-t-xl flex items-center justify-between">
+      <div>
+       <h2 class="text-xl font-bold">Sinogram Raw Data</h2>
+       <p id="modalDimensions" class="text-green-100 text-sm mt-1">60 projections × 128 detector bins</p>
+      </div><button id="btnCloseModal" class="text-white hover:bg-green-600 rounded-lg p-2 transition-colors">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg></button>
+     </div><!-- Modal Body -->
+     <div class="flex-1 overflow-auto p-6">
+      <div class="overflow-x-auto">
+       <table id="dataTable" class="w-full border-collapse text-xs font-mono">
+        <thead class="bg-green-100 sticky top-0 z-10">
+         <tr>
+          <th class="border border-green-300 px-2 py-1 text-green-800 font-semibold">Angle</th><!-- Detector columns will be added dynamically -->
+         </tr>
+        </thead>
+        <tbody id="dataTableBody"><!-- Rows will be added dynamically -->
+        </tbody>
+       </table>
+      </div>
+     </div><!-- Modal Footer -->
+     <div class="bg-gray-50 px-6 py-4 rounded-b-xl flex gap-3 border-t border-gray-200"><button id="btnCopyClipboard" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+       </svg> Copy to Clipboard </button> <button id="btnExportCSV" class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+       </svg> Export as CSV </button> <button id="btnCloseModalFooter" class="px-4 py-2 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"> Close </button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Default configuration
+    const defaultConfig = {
+      app_title: "3D X-Ray Imaging (CT) – Sinogram & Reconstruction",
+      app_description: "Explore how CT scanners create cross-sectional images using projections and backprojection reconstruction.",
+      background_color: "#ecfdf5",
+      header_color: "#166534",
+      accent_color: "#059669",
+      text_color: "#14532d",
+      surface_color: "#ffffff"
+    };
+
+    // Initialize Element SDK
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => {
+        document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+        document.getElementById('app-description').textContent = config.app_description || defaultConfig.app_description;
+      },
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => window.elementSdk.setConfig({ background_color: value })
+          },
+          {
+            get: () => config.header_color || defaultConfig.header_color,
+            set: (value) => window.elementSdk.setConfig({ header_color: value })
+          },
+          {
+            get: () => config.accent_color || defaultConfig.accent_color,
+            set: (value) => window.elementSdk.setConfig({ accent_color: value })
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => window.elementSdk.setConfig({ text_color: value })
+          },
+          {
+            get: () => config.surface_color || defaultConfig.surface_color,
+            set: (value) => window.elementSdk.setConfig({ surface_color: value })
+          }
+        ],
+        borderables: [],
+        fontEditable: undefined,
+        fontSizeable: undefined
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ["app_title", config.app_title || defaultConfig.app_title],
+        ["app_description", config.app_description || defaultConfig.app_description]
+      ])
+    });
+
+    // CT Simulation Logic
+    const SIZE = 256;
+    let objectData = new Float32Array(SIZE * SIZE);
+    let sinogramData = null;
+    let reconstructedData = null;
+    let angleMode = 180;
+    let numProjections = 60;
+    let noiseLevel = 0;
+    let numBins = 128;
+    let currentPreset = 'center';
+    let currentFilter = 'none';
+    
+    // Animation state
+    let isAnimating = false;
+    let isPaused = false;
+    let animationSpeed = 1; // 1=slowest, 5=fastest
+    let currentProjection = 0;
+
+    // Canvas references
+    const canvasObject = document.getElementById('canvasObject');
+    const canvasOverlay = document.getElementById('canvasOverlay');
+    const canvasSinogram = document.getElementById('canvasSinogram');
+    const canvasReconstructed = document.getElementById('canvasReconstructed');
+    const ctxObject = canvasObject.getContext('2d');
+    const ctxOverlay = canvasOverlay.getContext('2d');
+    const ctxSinogram = canvasSinogram.getContext('2d');
+    const ctxReconstructed = canvasReconstructed.getContext('2d');
+
+    // Set canvas sizes
+    [canvasObject, canvasOverlay, canvasSinogram, canvasReconstructed].forEach(c => {
+      c.width = SIZE;
+      c.height = SIZE;
+    });
+
+    // UI Elements
+    const projSlider = document.getElementById('projections');
+    const noiseSlider = document.getElementById('noise');
+    const binsSlider = document.getElementById('bins');
+    const projVal = document.getElementById('projVal');
+    const noiseVal = document.getElementById('noiseVal');
+    const binsVal = document.getElementById('binsVal');
+    const btn180 = document.getElementById('btn180');
+    const btn360 = document.getElementById('btn360');
+    const btnSinogram = document.getElementById('btnSinogram');
+    const btnReconstruct = document.getElementById('btnReconstruct');
+    const btnReset = document.getElementById('btnReset');
+    const imageUpload = document.getElementById('imageUpload');
+    const presetBtns = document.querySelectorAll('.btn-preset');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const filterDescription = document.getElementById('filterDescription');
+    
+    // Modal UI elements
+    const btnViewData = document.getElementById('btnViewData');
+    const btnShowCode = document.getElementById('btnShowCode');
+    const dataModal = document.getElementById('dataModal');
+    const codeModal = document.getElementById('codeModal');
+    const btnCloseModal = document.getElementById('btnCloseModal');
+    const btnCloseModalFooter = document.getElementById('btnCloseModalFooter');
+    const btnCloseCodeModal = document.getElementById('btnCloseCodeModal');
+    const btnCloseCodeModalFooter = document.getElementById('btnCloseCodeModalFooter');
+    const btnCopyClipboard = document.getElementById('btnCopyClipboard');
+    const btnExportCSV = document.getElementById('btnExportCSV');
+    const btnCopyCode = document.getElementById('btnCopyCode');
+    const btnDownloadCode = document.getElementById('btnDownloadCode');
+    const modalDimensions = document.getElementById('modalDimensions');
+    const dataTableBody = document.getElementById('dataTableBody');
+    const dataTable = document.getElementById('dataTable');
+    const matlabCode = document.getElementById('matlabCode');
+    
+    // Animation UI elements
+    const animationControls = document.getElementById('animationControls');
+    const btnPause = document.getElementById('btnPause');
+    const btnResume = document.getElementById('btnResume');
+    const btnStop = document.getElementById('btnStop');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const animSpeedSlider = document.getElementById('animSpeed');
+    const speedVal = document.getElementById('speedVal');
+
+    // Create preset phantoms
+    function createCenterCircle() {
+      objectData.fill(0);
+      const cx = SIZE / 2, cy = SIZE / 2, r = SIZE / 4;
+      for (let y = 0; y < SIZE; y++) {
+        for (let x = 0; x < SIZE; x++) {
+          const dx = x - cx, dy = y - cy;
+          if (dx * dx + dy * dy < r * r) {
+            objectData[y * SIZE + x] = 1.0;
+          }
+        }
+      }
+    }
+
+    function createOffCenterCircle() {
+      objectData.fill(0);
+      const cx = SIZE / 2 + SIZE / 6, cy = SIZE / 2 - SIZE / 8, r = SIZE / 5;
+      for (let y = 0; y < SIZE; y++) {
+        for (let x = 0; x < SIZE; x++) {
+          const dx = x - cx, dy = y - cy;
+          if (dx * dx + dy * dy < r * r) {
+            objectData[y * SIZE + x] = 1.0;
+          }
+        }
+      }
+    }
+
+    function createEllipse() {
+      objectData.fill(0);
+      const cx = SIZE / 2, cy = SIZE / 2, a = SIZE / 3, b = SIZE / 6;
+      for (let y = 0; y < SIZE; y++) {
+        for (let x = 0; x < SIZE; x++) {
+          const dx = (x - cx) / a, dy = (y - cy) / b;
+          if (dx * dx + dy * dy < 1) {
+            objectData[y * SIZE + x] = 1.0;
+          }
+        }
+      }
+    }
+
+    function createTwoCircles() {
+      objectData.fill(0);
+      const circles = [
+        { cx: SIZE / 3, cy: SIZE / 2, r: SIZE / 6, val: 1.0 },
+        { cx: 2 * SIZE / 3, cy: SIZE / 2, r: SIZE / 8, val: 0.6 }
+      ];
+      for (let y = 0; y < SIZE; y++) {
+        for (let x = 0; x < SIZE; x++) {
+          for (const c of circles) {
+            const dx = x - c.cx, dy = y - c.cy;
+            if (dx * dx + dy * dy < c.r * c.r) {
+              objectData[y * SIZE + x] = Math.max(objectData[y * SIZE + x], c.val);
+            }
+          }
+        }
+      }
+    }
+
+    function setPreset(preset) {
+      currentPreset = preset;
+      switch (preset) {
+        case 'center': createCenterCircle(); break;
+        case 'offcenter': createOffCenterCircle(); break;
+        case 'ellipse': createEllipse(); break;
+        case 'two': createTwoCircles(); break;
+      }
+      presetBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.preset === preset);
+      });
+      renderObject();
+      clearSinogram();
+      clearReconstructed();
+    }
+
+    // Render functions
+    function renderObject() {
+      const imageData = ctxObject.createImageData(SIZE, SIZE);
+      for (let i = 0; i < SIZE * SIZE; i++) {
+        const val = Math.floor(objectData[i] * 255);
+        imageData.data[i * 4] = val;
+        imageData.data[i * 4 + 1] = val;
+        imageData.data[i * 4 + 2] = val;
+        imageData.data[i * 4 + 3] = 255;
+      }
+      ctxObject.putImageData(imageData, 0, 0);
+    }
+
+    function renderSinogram() {
+      if (!sinogramData) return;
+      const height = sinogramData.length;
+      const width = sinogramData[0].length;
+      
+      // Add padding for labels
+      const leftPadding = 50;
+      const bottomPadding = 40;
+      const topPadding = 10;
+      const rightPadding = 10;
+      
+      canvasSinogram.width = width + leftPadding + rightPadding;
+      canvasSinogram.height = height + topPadding + bottomPadding;
+      
+      // Fill background
+      ctxSinogram.fillStyle = '#000000';
+      ctxSinogram.fillRect(0, 0, canvasSinogram.width, canvasSinogram.height);
+      
+      // Find max for normalization
+      let maxVal = 0;
+      for (let i = 0; i < height; i++) {
+        for (let j = 0; j < width; j++) {
+          maxVal = Math.max(maxVal, sinogramData[i][j]);
+        }
+      }
+      
+      // Draw sinogram data (offset by padding)
+      const imageData = ctxSinogram.createImageData(width, height);
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const val = Math.floor((sinogramData[y][x] / maxVal) * 255);
+          const idx = (y * width + x) * 4;
+          imageData.data[idx] = val;
+          imageData.data[idx + 1] = val;
+          imageData.data[idx + 2] = val;
+          imageData.data[idx + 3] = 255;
+        }
+      }
+      ctxSinogram.putImageData(imageData, leftPadding, topPadding);
+      
+      // Draw grid lines and labels
+      ctxSinogram.strokeStyle = 'rgba(74, 222, 128, 0.2)';
+      ctxSinogram.lineWidth = 1;
+      ctxSinogram.fillStyle = '#4ade80';
+      ctxSinogram.font = '11px Source Sans 3';
+      ctxSinogram.textAlign = 'right';
+      ctxSinogram.textBaseline = 'middle';
+      
+      // Y-axis: Angle labels
+      const angleStep = angleMode === 180 ? 45 : 60;
+      for (let angle = 0; angle <= angleMode; angle += angleStep) {
+        const y = topPadding + (angle / angleMode) * height;
+        
+        // Grid line
+        ctxSinogram.beginPath();
+        ctxSinogram.moveTo(leftPadding, y);
+        ctxSinogram.lineTo(leftPadding + width, y);
+        ctxSinogram.stroke();
+        
+        // Label
+        ctxSinogram.fillText(angle + '°', leftPadding - 5, y);
+      }
+      
+      // Y-axis title (rotated)
+      ctxSinogram.save();
+      ctxSinogram.translate(12, canvasSinogram.height / 2);
+      ctxSinogram.rotate(-Math.PI / 2);
+      ctxSinogram.textAlign = 'center';
+      ctxSinogram.font = 'bold 12px Source Sans 3';
+      ctxSinogram.fillText('Projection Angle →', 0, 0);
+      ctxSinogram.restore();
+      
+      // X-axis: Detector position labels
+      ctxSinogram.textAlign = 'center';
+      ctxSinogram.textBaseline = 'top';
+      ctxSinogram.font = '11px Source Sans 3';
+      
+      const xLabels = ['Left', 'Center', 'Right'];
+      const xPositions = [0, width / 2, width];
+      for (let i = 0; i < xLabels.length; i++) {
+        ctxSinogram.fillText(xLabels[i], leftPadding + xPositions[i], topPadding + height + 5);
+      }
+      
+      // X-axis title
+      ctxSinogram.font = 'bold 12px Source Sans 3';
+      ctxSinogram.fillText('Detector Position ���', leftPadding + width / 2, topPadding + height + 25);
+      
+      // Draw axis lines
+      ctxSinogram.strokeStyle = '#4ade80';
+      ctxSinogram.lineWidth = 2;
+      
+      // Left axis
+      ctxSinogram.beginPath();
+      ctxSinogram.moveTo(leftPadding, topPadding);
+      ctxSinogram.lineTo(leftPadding, topPadding + height);
+      ctxSinogram.stroke();
+      
+      // Bottom axis
+      ctxSinogram.beginPath();
+      ctxSinogram.moveTo(leftPadding, topPadding + height);
+      ctxSinogram.lineTo(leftPadding + width, topPadding + height);
+      ctxSinogram.stroke();
+    }
+
+    function renderReconstructed() {
+      if (!reconstructedData) return;
+      
+      canvasReconstructed.width = SIZE;
+      canvasReconstructed.height = SIZE;
+      
+      // Find max for normalization
+      let maxVal = 0;
+      for (let i = 0; i < SIZE * SIZE; i++) {
+        maxVal = Math.max(maxVal, reconstructedData[i]);
+      }
+      
+      const imageData = ctxReconstructed.createImageData(SIZE, SIZE);
+      for (let i = 0; i < SIZE * SIZE; i++) {
+        const val = Math.floor((reconstructedData[i] / maxVal) * 255);
+        imageData.data[i * 4] = val;
+        imageData.data[i * 4 + 1] = val;
+        imageData.data[i * 4 + 2] = val;
+        imageData.data[i * 4 + 3] = 255;
+      }
+      ctxReconstructed.putImageData(imageData, 0, 0);
+    }
+
+    function clearSinogram() {
+      sinogramData = null;
+      ctxSinogram.fillStyle = '#111';
+      ctxSinogram.fillRect(0, 0, canvasSinogram.width, canvasSinogram.height);
+      ctxSinogram.fillStyle = '#4ade80';
+      ctxSinogram.font = '14px Source Sans 3';
+      ctxSinogram.textAlign = 'center';
+      ctxSinogram.fillText('Click "Compute Sinogram"', SIZE / 2, SIZE / 2);
+      btnReconstruct.disabled = true;
+      btnViewData.disabled = true;
+      btnShowCode.disabled = true;
+    }
+
+    function clearReconstructed() {
+      reconstructedData = null;
+      ctxReconstructed.fillStyle = '#111';
+      ctxReconstructed.fillRect(0, 0, canvasReconstructed.width, canvasReconstructed.height);
+      ctxReconstructed.fillStyle = '#4ade80';
+      ctxReconstructed.font = '14px Source Sans 3';
+      ctxReconstructed.textAlign = 'center';
+      ctxReconstructed.fillText('Click "Reconstruct"', SIZE / 2, SIZE / 2);
+    }
+    
+    // Modal functions
+    function openDataModal() {
+      if (!sinogramData) return;
+      
+      const nProj = sinogramData.length;
+      const nBins = sinogramData[0].length;
+      
+      // Update dimensions
+      modalDimensions.textContent = `${nProj} projections × ${nBins} detector bins`;
+      
+      // Build table header
+      const thead = dataTable.querySelector('thead tr');
+      thead.innerHTML = '<th class="border border-green-300 px-2 py-1 text-green-800 font-semibold bg-green-100">Angle</th>';
+      for (let i = 0; i < nBins; i++) {
+        const th = document.createElement('th');
+        th.className = 'border border-green-300 px-2 py-1 text-green-800 font-semibold bg-green-100';
+        th.textContent = `D${i}`;
+        thead.appendChild(th);
+      }
+      
+      // Build table body
+      dataTableBody.innerHTML = '';
+      for (let p = 0; p < nProj; p++) {
+        const angle = ((p / nProj) * angleMode).toFixed(1);
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-green-50';
+        
+        // Angle header cell
+        const th = document.createElement('th');
+        th.className = 'border border-green-300 px-2 py-1 text-green-800 font-semibold bg-green-50';
+        th.textContent = `${angle}°`;
+        tr.appendChild(th);
+        
+        // Data cells
+        for (let b = 0; b < nBins; b++) {
+          const td = document.createElement('td');
+          td.className = 'border border-gray-300 px-2 py-1 text-right text-gray-700';
+          td.textContent = sinogramData[p][b].toFixed(3);
+          tr.appendChild(td);
+        }
+        
+        dataTableBody.appendChild(tr);
+      }
+      
+      // Show modal
+      dataModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeDataModal() {
+      dataModal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+    
+    function generateMatlabCode() {
+      if (!sinogramData) return '';
+      
+      const nProj = sinogramData.length;
+      const nBins = sinogramData[0].length;
+      
+      let code = `function ct_reconstruction_main()
+% CT Reconstruction using Filtered Backprojection
+% Generated from CT Imaging Simulator
+% Scan parameters: ${nProj} projections, ${nBins} detector bins, ${angleMode}° rotation
+
+clear all;
+close all;
+clc;
+
+% Sinogram data (each row is one projection)
+sinogram = [
+`;
+      
+      // Add sinogram data
+      for (let p = 0; p < nProj; p++) {
+        code += '  ';
+        for (let b = 0; b < nBins; b++) {
+          code += sinogramData[p][b].toFixed(6);
+          if (b < nBins - 1) code += ', ';
+        }
+        if (p < nProj - 1) {
+          code += ';\n';
+        } else {
+          code += '\n';
+        }
+      }
+      
+      code += `];
+
+% Scan parameters
+num_projections = ${nProj};
+num_bins = ${nBins};
+angle_range = ${angleMode};  % degrees
+image_size = 256;
+
+% Generate angle array
+theta = linspace(0, angle_range, num_projections);
+
+fprintf('Sinogram size: %d projections x %d bins\\n', num_projections, num_bins);
+fprintf('Angle range: 0 to %d degrees\\n', angle_range);
+
+% ============================================================================
+% GRAYSCALE INTERPRETATION GUIDE FOR CT IMAGES
+% ============================================================================
+% | Brightness in Image | Appearance           | What It Represents | Material / Structure                 | X-Ray Interaction | Reason for Appearance                                                                                               |
+% | ------------------- | -------------------- | ------------------ | ------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+% | Dark                | Black to dark gray   | No object / background | Air or empty space               | Almost no attenuation | Air has very low density, so X-rays pass through with little to no reduction in intensity                       |
+% | Bright              | Gray                 | Object present     | Soft tissues (cells, skin, fat, muscles) | Partial attenuation | Soft tissues have low to moderate density; they reduce only a portion of the X-ray intensity                  |
+% | Brightest           | White to light gray  | Dense object       | Bones                                | Strong attenuation | Bones are highly dense and contain calcium, which greatly absorbs and scatters X-rays, reducing intensity significantly |
+% ============================================================================
+
+%% 1. Simple Backprojection (no filter)
+fprintf('\\nPerforming simple backprojection...\\n');
+reconstructed_simple = backproject_simple(sinogram, theta, image_size);
+
+%% 2. Filtered Backprojection with Ram-Lak filter
+fprintf('Performing filtered backprojection (Ram-Lak)...\\n');
+reconstructed_ramlak = filtered_backproject(sinogram, theta, image_size, 'ram-lak');
+
+%% 3. Filtered Backprojection with Shepp-Logan filter
+fprintf('Performing filtered backprojection (Shepp-Logan)...\\n');
+reconstructed_shepp = filtered_backproject(sinogram, theta, image_size, 'shepp-logan');
+
+%% 4. Filtered Backprojection with Hamming filter
+fprintf('Performing filtered backprojection (Hamming)...\\n');
+reconstructed_hamming = filtered_backproject(sinogram, theta, image_size, 'hamming');
+
+%% Display results
+figure('Name', 'CT Reconstruction Comparison', 'Position', [100 100 1200 800]);
+
+subplot(2,3,1);
+imagesc(sinogram);
+colormap(gca, 'hot');
+colorbar;
+title('Sinogram');
+xlabel('Detector Position');
+ylabel('Projection Angle');
+
+subplot(2,3,2);
+imagesc(reconstructed_simple);
+colormap(gca, 'gray');
+colorbar;
+title('Simple Backprojection');
+axis image;
+
+subplot(2,3,3);
+imagesc(reconstructed_ramlak);
+colormap(gca, 'gray');
+colorbar;
+title('Filtered BP (Ram-Lak)');
+axis image;
+
+subplot(2,3,4);
+imagesc(reconstructed_shepp);
+colormap(gca, 'gray');
+colorbar;
+title('Filtered BP (Shepp-Logan)');
+axis image;
+
+subplot(2,3,5);
+imagesc(reconstructed_hamming);
+colormap(gca, 'gray');
+colorbar;
+title('Filtered BP (Hamming)');
+axis image;
+
+subplot(2,3,6);
+plot(sinogram(round(num_projections/2), :));
+title('Center Projection Profile');
+xlabel('Detector Position');
+ylabel('Intensity');
+grid on;
+
+fprintf('\\nReconstruction complete!\\n');
+fprintf('Compare the different filters to see their effects.\\n');
+
+%% Helper Functions
+
+function img = backproject_simple(sinogram, theta, img_size)
+    % Simple backprojection without filtering
+    [num_proj, num_bins] = size(sinogram);
+    img = zeros(img_size, img_size);
+    center = img_size / 2;
+    
+    % Create coordinate grid
+    [X, Y] = meshgrid(1:img_size, 1:img_size);
+    X = X - center;
+    Y = Y - center;
+    
+    % Backproject each projection
+    for p = 1:num_proj
+        angle_rad = theta(p) * pi / 180;
+        
+        % Rotate coordinates
+        t = X * cos(angle_rad) + Y * sin(angle_rad);
+        
+        % Map to detector bins
+        bin_pos = t + num_bins/2;
+        
+        % Interpolate projection values
+        valid = (bin_pos >= 1) & (bin_pos <= num_bins);
+        bin_idx = floor(bin_pos(valid));
+        frac = bin_pos(valid) - bin_idx;
+        
+        % Linear interpolation
+        vals = zeros(size(bin_idx));
+        for i = 1:length(bin_idx)
+            if bin_idx(i) >= 1 && bin_idx(i) < num_bins
+                vals(i) = sinogram(p, bin_idx(i)) * (1 - frac(i)) + ...
+                          sinogram(p, bin_idx(i) + 1) * frac(i);
+            elseif bin_idx(i) == num_bins
+                vals(i) = sinogram(p, num_bins);
+            end
+        end
+        
+        % Add to image
+        img_flat = img(:);
+        valid_flat = valid(:);
+        img_flat(valid_flat) = img_flat(valid_flat) + vals;
+        img = reshape(img_flat, img_size, img_size);
+    end
+    
+    img = img / num_proj;
+end
+
+function img = filtered_backproject(sinogram, theta, img_size, filter_type)
+    % Filtered backprojection
+    [num_proj, num_bins] = size(sinogram);
+    
+    % Create frequency domain filter
+    filter = create_filter(num_bins, filter_type);
+    
+    % Filter each projection
+    filtered_sinogram = zeros(size(sinogram));
+    for p = 1:num_proj
+        proj_fft = fft(sinogram(p, :));
+        filtered_sinogram(p, :) = real(ifft(proj_fft .* filter));
+    end
+    
+    % Backproject filtered sinogram
+    img = backproject_simple(filtered_sinogram, theta, img_size);
+end
+
+function H = create_filter(n, filter_type)
+    % Create frequency domain filter
+    
+    % Frequency array
+    freq = [0:(n/2), -(n/2-1):-1] / n;
+    
+    % Ram-Lak filter (ramp filter)
+    H = abs(freq);
+    
+    % Apply window function based on filter type
+    switch lower(filter_type)
+        case 'ram-lak'
+            % Already done above
+            
+        case 'shepp-logan'
+            % Shepp-Logan filter
+            omega = pi * freq;
+            omega(omega == 0) = 1;  % Avoid division by zero
+            window = sin(omega) ./ omega;
+            window(freq == 0) = 1;
+            H = H .* window;
+            
+        case 'hamming'
+            % Hamming window
+            window = 0.54 + 0.46 * cos(2 * pi * freq);
+            H = H .* window;
+            
+        case 'hann'
+            % Hann window
+            window = 0.5 + 0.5 * cos(2 * pi * freq);
+            H = H .* window;
+            
+        otherwise
+            warning('Unknown filter type, using Ram-Lak');
+    end
+end
+
+end  % End of main function
+`;
+      
+      return code;
+    }
+    
+    function openCodeModal() {
+      if (!sinogramData) return;
+      
+      const code = generateMatlabCode();
+      matlabCode.textContent = code;
+      
+      codeModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeCodeModal() {
+      codeModal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+    
+    function copyMatlabCode() {
+      const code = matlabCode.textContent;
+      
+      navigator.clipboard.writeText(code).then(() => {
+        const originalText = btnCopyCode.innerHTML;
+        btnCopyCode.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Copied!';
+        btnCopyCode.disabled = true;
+        
+        setTimeout(() => {
+          btnCopyCode.innerHTML = originalText;
+          btnCopyCode.disabled = false;
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+      });
+    }
+    
+    function downloadMatlabCode() {
+      const code = matlabCode.textContent;
+      const blob = new Blob([code], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ct_reconstruction_${numProjections}proj_${numBins}bins.m`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      const originalText = btnDownloadCode.innerHTML;
+      btnDownloadCode.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Downloaded!';
+      btnDownloadCode.disabled = true;
+      
+      setTimeout(() => {
+        btnDownloadCode.innerHTML = originalText;
+        btnDownloadCode.disabled = false;
+      }, 2000);
+    }
+    
+    function copyToClipboard() {
+      if (!sinogramData) return;
+      
+      const nProj = sinogramData.length;
+      const nBins = sinogramData[0].length;
+      
+      // Build tab-separated text
+      let text = 'Angle\t';
+      for (let i = 0; i < nBins; i++) {
+        text += `D${i}${i < nBins - 1 ? '\t' : '\n'}`;
+      }
+      
+      for (let p = 0; p < nProj; p++) {
+        const angle = ((p / nProj) * angleMode).toFixed(1);
+        text += `${angle}°\t`;
+        for (let b = 0; b < nBins; b++) {
+          text += `${sinogramData[p][b].toFixed(3)}${b < nBins - 1 ? '\t' : '\n'}`;
+        }
+      }
+      
+      // Copy to clipboard
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = btnCopyClipboard.innerHTML;
+        btnCopyClipboard.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Copied!';
+        btnCopyClipboard.disabled = true;
+        
+        setTimeout(() => {
+          btnCopyClipboard.innerHTML = originalText;
+          btnCopyClipboard.disabled = false;
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy:', err);
+      });
+    }
+    
+    function exportCSV() {
+      if (!sinogramData) return;
+      
+      const nProj = sinogramData.length;
+      const nBins = sinogramData[0].length;
+      
+      // Build CSV content
+      let csv = 'Angle,';
+      for (let i = 0; i < nBins; i++) {
+        csv += `D${i}${i < nBins - 1 ? ',' : '\n'}`;
+      }
+      
+      for (let p = 0; p < nProj; p++) {
+        const angle = ((p / nProj) * angleMode).toFixed(1);
+        csv += `${angle},`;
+        for (let b = 0; b < nBins; b++) {
+          csv += `${sinogramData[p][b].toFixed(3)}${b < nBins - 1 ? ',' : '\n'}`;
+        }
+      }
+      
+      // Create download
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sinogram_${nProj}proj_${nBins}bins.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      // Show feedback
+      const originalText = btnExportCSV.innerHTML;
+      btnExportCSV.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Downloaded!';
+      btnExportCSV.disabled = true;
+      
+      setTimeout(() => {
+        btnExportCSV.innerHTML = originalText;
+        btnExportCSV.disabled = false;
+      }, 2000);
+    }
+    
+    // Draw sinogram axes and labels
+    function drawSinogramAxes(width, height, leftPadding, topPadding, bottomPadding) {
+      // Draw grid lines and labels
+      ctxSinogram.strokeStyle = 'rgba(74, 222, 128, 0.2)';
+      ctxSinogram.lineWidth = 1;
+      ctxSinogram.fillStyle = '#4ade80';
+      ctxSinogram.font = '11px Source Sans 3';
+      ctxSinogram.textAlign = 'right';
+      ctxSinogram.textBaseline = 'middle';
+      
+      // Y-axis: Angle labels
+      const angleStep = angleMode === 180 ? 45 : 60;
+      for (let angle = 0; angle <= angleMode; angle += angleStep) {
+        const y = topPadding + (angle / angleMode) * height;
+        
+        // Grid line
+        ctxSinogram.beginPath();
+        ctxSinogram.moveTo(leftPadding, y);
+        ctxSinogram.lineTo(leftPadding + width, y);
+        ctxSinogram.stroke();
+        
+        // Label
+        ctxSinogram.fillText(angle + '°', leftPadding - 5, y);
+      }
+      
+      // Y-axis title (rotated)
+      ctxSinogram.save();
+      ctxSinogram.translate(12, (topPadding + height / 2));
+      ctxSinogram.rotate(-Math.PI / 2);
+      ctxSinogram.textAlign = 'center';
+      ctxSinogram.font = 'bold 12px Source Sans 3';
+      ctxSinogram.fillText('Projection Angle →', 0, 0);
+      ctxSinogram.restore();
+      
+      // X-axis: Detector position labels
+      ctxSinogram.textAlign = 'center';
+      ctxSinogram.textBaseline = 'top';
+      ctxSinogram.font = '11px Source Sans 3';
+      
+      const xLabels = ['Left', 'Center', 'Right'];
+      const xPositions = [0, width / 2, width];
+      for (let i = 0; i < xLabels.length; i++) {
+        ctxSinogram.fillText(xLabels[i], leftPadding + xPositions[i], topPadding + height + 5);
+      }
+      
+      // X-axis title
+      ctxSinogram.font = 'bold 12px Source Sans 3';
+      ctxSinogram.fillText('Detector Position →', leftPadding + width / 2, topPadding + height + 25);
+      
+      // Draw axis lines
+      ctxSinogram.strokeStyle = '#4ade80';
+      ctxSinogram.lineWidth = 2;
+      
+      // Left axis
+      ctxSinogram.beginPath();
+      ctxSinogram.moveTo(leftPadding, topPadding);
+      ctxSinogram.lineTo(leftPadding, topPadding + height);
+      ctxSinogram.stroke();
+      
+      // Bottom axis
+      ctxSinogram.beginPath();
+      ctxSinogram.moveTo(leftPadding, topPadding + height);
+      ctxSinogram.lineTo(leftPadding + width, topPadding + height);
+      ctxSinogram.stroke();
+    }
+    
+    // Draw scan geometry (rotating rays) on overlay canvas
+    function drawScanGeometry(angle) {
+      ctxOverlay.clearRect(0, 0, SIZE, SIZE);
+      
+      const center = SIZE / 2;
+      const radius = SIZE * 0.55; // Extend beyond object
+      
+      // Calculate source and detector positions
+      const angleRad = angle * Math.PI / 180;
+      const sourceX = center + radius * Math.cos(angleRad);
+      const sourceY = center + radius * Math.sin(angleRad);
+      const detectorX = center - radius * Math.cos(angleRad);
+      const detectorY = center - radius * Math.sin(angleRad);
+      
+      // Draw main axis line (source to detector)
+      ctxOverlay.strokeStyle = '#10b981';
+      ctxOverlay.lineWidth = 2;
+      ctxOverlay.beginPath();
+      ctxOverlay.moveTo(sourceX, sourceY);
+      ctxOverlay.lineTo(detectorX, detectorY);
+      ctxOverlay.stroke();
+      
+      // Draw source (X-ray source)
+      ctxOverlay.fillStyle = '#fbbf24';
+      ctxOverlay.beginPath();
+      ctxOverlay.arc(sourceX, sourceY, 6, 0, Math.PI * 2);
+      ctxOverlay.fill();
+      
+      // Draw detector array (multiple small rectangles)
+      const detectorLength = SIZE * 0.4;
+      const numDetectors = 7;
+      const perpAngle = angleRad + Math.PI / 2;
+      
+      for (let i = 0; i < numDetectors; i++) {
+        const offset = (i - (numDetectors - 1) / 2) * (detectorLength / numDetectors);
+        const dx = detectorX + offset * Math.cos(perpAngle);
+        const dy = detectorY + offset * Math.sin(perpAngle);
+        
+        ctxOverlay.fillStyle = '#3b82f6';
+        ctxOverlay.fillRect(dx - 3, dy - 3, 6, 6);
+      }
+      
+      // Draw sample rays (5 rays from source to detector array)
+      ctxOverlay.strokeStyle = 'rgba(16, 185, 129, 0.3)';
+      ctxOverlay.lineWidth = 1;
+      const numRays = 5;
+      for (let i = 0; i < numRays; i++) {
+        const offset = (i - (numRays - 1) / 2) * (detectorLength / (numRays - 1));
+        const dx = detectorX + offset * Math.cos(perpAngle);
+        const dy = detectorY + offset * Math.sin(perpAngle);
+        
+        ctxOverlay.beginPath();
+        ctxOverlay.moveTo(sourceX, sourceY);
+        ctxOverlay.lineTo(dx, dy);
+        ctxOverlay.stroke();
+      }
+    }
+
+    // Compute sinogram using Radon transform (parallel beam) - ANIMATED VERSION
+    async function computeSinogramAnimated() {
+      if (isAnimating) return;
+      
+      isAnimating = true;
+      isPaused = false;
+      currentProjection = 0;
+      
+      // Show animation controls
+      animationControls.classList.remove('hidden');
+      btnSinogram.disabled = true;
+      btnReconstruct.disabled = true;
+      btnPause.classList.remove('hidden');
+      btnResume.classList.add('hidden');
+      
+      const maxAngle = angleMode;
+      const nProj = numProjections;
+      const nBins = numBins;
+      const noise = noiseLevel / 100;
+      
+      // Initialize sinogram data
+      sinogramData = [];
+      const center = SIZE / 2;
+      const diagonal = Math.sqrt(2) * SIZE;
+      const binWidth = diagonal / nBins;
+      
+      // Add padding for labels
+      const leftPadding = 50;
+      const bottomPadding = 40;
+      const topPadding = 10;
+      const rightPadding = 10;
+      
+      // Prepare sinogram canvas - start completely black
+      canvasSinogram.width = nBins + leftPadding + rightPadding;
+      canvasSinogram.height = nProj + topPadding + bottomPadding;
+      ctxSinogram.fillStyle = '#000000';
+      ctxSinogram.fillRect(0, 0, canvasSinogram.width, canvasSinogram.height);
+      
+      // Draw initial axes and labels
+      drawSinogramAxes(nBins, nProj, leftPadding, topPadding, bottomPadding);
+      
+      // Speed mapping: 1=slowest (100ms), 5=fastest (10ms)
+      const speedMap = {1: 100, 2: 60, 3: 30, 4: 15, 5: 10};
+      
+      for (let p = 0; p < nProj; p++) {
+        // Check if stopped
+        if (!isAnimating) {
+          break;
+        }
+        
+        // Wait while paused
+        while (isPaused && isAnimating) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        
+        if (!isAnimating) break;
+        
+        currentProjection = p;
+        const angle = (p / nProj) * maxAngle;
+        const angleRad = angle * Math.PI / 180;
+        const cosA = Math.cos(angleRad);
+        const sinA = Math.sin(angleRad);
+        
+        // Draw scan geometry
+        drawScanGeometry(angle);
+        
+        // Compute projection for this angle
+        const projection = new Array(nBins).fill(0);
+        
+        for (let y = 0; y < SIZE; y++) {
+          for (let x = 0; x < SIZE; x++) {
+            const val = objectData[y * SIZE + x];
+            if (val > 0) {
+              const dx = x - center;
+              const dy = y - center;
+              const t = dx * cosA + dy * sinA;
+              
+              const binIdx = Math.floor((t + diagonal / 2) / binWidth);
+              if (binIdx >= 0 && binIdx < nBins) {
+                projection[binIdx] += val;
+              }
+            }
+          }
+        }
+        
+        // Add noise
+        if (noise > 0) {
+          const maxProj = Math.max(...projection);
+          for (let i = 0; i < nBins; i++) {
+            const noiseVal = (Math.random() - 0.5) * 2 * noise * maxProj;
+            projection[i] = Math.max(0, projection[i] + noiseVal);
+          }
+        }
+        
+        sinogramData.push(projection);
+        
+        // Draw thin yellow highlight line at NEXT scanning position (before drawing data)
+        if (p < nProj - 1) {
+          ctxSinogram.strokeStyle = '#fbbf24';
+          ctxSinogram.lineWidth = 2;
+          ctxSinogram.beginPath();
+          ctxSinogram.moveTo(leftPadding, topPadding + p + 1);
+          ctxSinogram.lineTo(leftPadding + nBins, topPadding + p + 1);
+          ctxSinogram.stroke();
+        }
+        
+        // Draw this row in sinogram (actual grayscale data)
+        const maxVal = Math.max(...projection, 1); // Avoid division by zero
+        const imageData = ctxSinogram.createImageData(nBins, 1);
+        for (let x = 0; x < nBins; x++) {
+          const val = Math.floor((projection[x] / maxVal) * 255);
+          imageData.data[x * 4] = val;
+          imageData.data[x * 4 + 1] = val;
+          imageData.data[x * 4 + 2] = val;
+          imageData.data[x * 4 + 3] = 255;
+        }
+        ctxSinogram.putImageData(imageData, leftPadding, topPadding + p);
+        
+        // Update progress
+        const progress = ((p + 1) / nProj) * 100;
+        progressBar.style.width = progress + '%';
+        progressText.textContent = `Scanning: ${Math.round(angle)}° / ${maxAngle}° (${p + 1}/${nProj} projections)`;
+        
+        // Wait based on speed
+        await new Promise(resolve => setTimeout(resolve, speedMap[animationSpeed]));
+      }
+      
+      // Animation complete
+      if (isAnimating) {
+        isAnimating = false;
+        animationControls.classList.add('hidden');
+        btnSinogram.disabled = false;
+        btnReconstruct.disabled = false;
+        btnViewData.disabled = false;
+        btnShowCode.disabled = false;
+        ctxOverlay.clearRect(0, 0, SIZE, SIZE);
+        
+        // Re-render sinogram without highlight
+        renderSinogram();
+      }
+    }
+    
+    // Original instant computation (kept as fallback)
+    function computeSinogram() {
+      const maxAngle = angleMode;
+      const nProj = numProjections;
+      const nBins = numBins;
+      const noise = noiseLevel / 100;
+      
+      sinogramData = [];
+      const center = SIZE / 2;
+      const diagonal = Math.sqrt(2) * SIZE;
+      const binWidth = diagonal / nBins;
+      
+      for (let p = 0; p < nProj; p++) {
+        const angle = (p / nProj) * maxAngle * Math.PI / 180;
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        
+        const projection = new Array(nBins).fill(0);
+        
+        for (let y = 0; y < SIZE; y++) {
+          for (let x = 0; x < SIZE; x++) {
+            const val = objectData[y * SIZE + x];
+            if (val > 0) {
+              const dx = x - center;
+              const dy = y - center;
+              const t = dx * cosA + dy * sinA;
+              
+              const binIdx = Math.floor((t + diagonal / 2) / binWidth);
+              if (binIdx >= 0 && binIdx < nBins) {
+                projection[binIdx] += val;
+              }
+            }
+          }
+        }
+        
+        if (noise > 0) {
+          const maxProj = Math.max(...projection);
+          for (let i = 0; i < nBins; i++) {
+            const noiseVal = (Math.random() - 0.5) * 2 * noise * maxProj;
+            projection[i] = Math.max(0, projection[i] + noiseVal);
+          }
+        }
+        
+        sinogramData.push(projection);
+      }
+      
+      renderSinogram();
+      btnReconstruct.disabled = false;
+      btnViewData.disabled = false;
+      btnShowCode.disabled = false;
+    }
+
+    // Backprojection reconstruction
+    function reconstruct() {
+      if (!sinogramData) return;
+      
+      // Apply filtering if selected
+      let processedSinogram = sinogramData;
+      if (currentFilter !== 'none') {
+        processedSinogram = applyFilter(sinogramData, currentFilter);
+      }
+      
+      reconstructedData = new Float32Array(SIZE * SIZE);
+      const nProj = processedSinogram.length;
+      const nBins = processedSinogram[0].length;
+      const center = SIZE / 2;
+      const diagonal = Math.sqrt(2) * SIZE;
+      const binWidth = diagonal / nBins;
+      const maxAngle = angleMode;
+      
+      for (let p = 0; p < nProj; p++) {
+        const angle = (p / nProj) * maxAngle * Math.PI / 180;
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        const projection = processedSinogram[p];
+        
+        // Backproject this projection
+        for (let y = 0; y < SIZE; y++) {
+          for (let x = 0; x < SIZE; x++) {
+            const dx = x - center;
+            const dy = y - center;
+            const t = dx * cosA + dy * sinA;
+            
+            // Interpolate from projection
+            const binPos = (t + diagonal / 2) / binWidth;
+            const binIdx = Math.floor(binPos);
+            const frac = binPos - binIdx;
+            
+            if (binIdx >= 0 && binIdx < nBins - 1) {
+              const val = projection[binIdx] * (1 - frac) + projection[binIdx + 1] * frac;
+              reconstructedData[y * SIZE + x] += val;
+            } else if (binIdx === nBins - 1) {
+              reconstructedData[y * SIZE + x] += projection[binIdx];
+            }
+          }
+        }
+      }
+      
+      renderReconstructed();
+    }
+
+    // Apply frequency domain filter to sinogram
+    function applyFilter(sinogram, filterType) {
+      const nProj = sinogram.length;
+      const nBins = sinogram[0].length;
+      const filtered = [];
+      
+      // Create filter
+      const filter = createFrequencyFilter(nBins, filterType);
+      
+      // Filter each projection
+      for (let p = 0; p < nProj; p++) {
+        const projection = sinogram[p];
+        
+        // FFT
+        const fftResult = fft(projection);
+        
+        // Apply filter in frequency domain
+        for (let i = 0; i < nBins; i++) {
+          fftResult[i].re *= filter[i];
+          fftResult[i].im *= filter[i];
+        }
+        
+        // Inverse FFT
+        const filteredProj = ifft(fftResult);
+        filtered.push(filteredProj);
+      }
+      
+      return filtered;
+    }
+
+    // Create frequency domain filter
+    function createFrequencyFilter(n, filterType) {
+      const filter = new Array(n);
+      
+      // Frequency array
+      for (let i = 0; i < n; i++) {
+        const freq = i <= n/2 ? i / n : (i - n) / n;
+        const omega = Math.abs(freq);
+        
+        // Base ramp filter
+        let H = omega;
+        
+        // Apply window based on filter type
+        switch (filterType) {
+          case 'ram-lak':
+            // Already a ramp
+            break;
+            
+          case 'shepp-logan':
+            // Shepp-Logan filter
+            const omegaPi = Math.PI * freq;
+            if (omegaPi !== 0) {
+              H *= Math.sin(omegaPi) / omegaPi;
+            }
+            break;
+            
+          case 'hamming':
+            // Hamming window
+            H *= (0.54 + 0.46 * Math.cos(2 * Math.PI * freq));
+            break;
+        }
+        
+        filter[i] = H;
+      }
+      
+      return filter;
+    }
+
+    // Simple FFT implementation (Cooley-Tukey)
+    function fft(input) {
+      const n = input.length;
+      if (n <= 1) return input.map(x => ({re: x, im: 0}));
+      
+      // Pad to power of 2
+      let N = 1;
+      while (N < n) N *= 2;
+      const padded = [...input];
+      while (padded.length < N) padded.push(0);
+      
+      return fftRecursive(padded.map(x => ({re: x, im: 0})));
+    }
+
+    function fftRecursive(input) {
+      const n = input.length;
+      if (n <= 1) return input;
+      
+      const even = fftRecursive(input.filter((_, i) => i % 2 === 0));
+      const odd = fftRecursive(input.filter((_, i) => i % 2 === 1));
+      
+      const result = new Array(n);
+      for (let k = 0; k < n/2; k++) {
+        const angle = -2 * Math.PI * k / n;
+        const wr = Math.cos(angle);
+        const wi = Math.sin(angle);
+        
+        const tr = wr * odd[k].re - wi * odd[k].im;
+        const ti = wr * odd[k].im + wi * odd[k].re;
+        
+        result[k] = {
+          re: even[k].re + tr,
+          im: even[k].im + ti
+        };
+        result[k + n/2] = {
+          re: even[k].re - tr,
+          im: even[k].im - ti
+        };
+      }
+      
+      return result;
+    }
+
+    // Inverse FFT
+    function ifft(input) {
+      const n = input.length;
+      
+      // Conjugate
+      const conj = input.map(x => ({re: x.re, im: -x.im}));
+      
+      // Forward FFT
+      const result = fftRecursive(conj);
+      
+      // Conjugate and scale
+      return result.map(x => x.re / n);
+    }
+
+    // Image upload handling
+    function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          // Create temporary canvas to resize and convert to grayscale
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = SIZE;
+          tempCanvas.height = SIZE;
+          const tempCtx = tempCanvas.getContext('2d');
+          
+          // Draw resized image
+          tempCtx.drawImage(img, 0, 0, SIZE, SIZE);
+          const imgData = tempCtx.getImageData(0, 0, SIZE, SIZE);
+          
+          // Convert to grayscale
+          for (let i = 0; i < SIZE * SIZE; i++) {
+            const r = imgData.data[i * 4];
+            const g = imgData.data[i * 4 + 1];
+            const b = imgData.data[i * 4 + 2];
+            const gray = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
+            objectData[i] = gray;
+          }
+          
+          // Clear preset selection
+          presetBtns.forEach(btn => btn.classList.remove('active'));
+          currentPreset = 'custom';
+          
+          renderObject();
+          clearSinogram();
+          clearReconstructed();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Event listeners
+    presetBtns.forEach(btn => {
+      btn.addEventListener('click', () => setPreset(btn.dataset.preset));
+    });
+
+    btn180.addEventListener('click', () => {
+      angleMode = 180;
+      btn180.classList.add('bg-green-600', 'text-white');
+      btn180.classList.remove('bg-green-100', 'text-green-800');
+      btn360.classList.remove('bg-green-600', 'text-white');
+      btn360.classList.add('bg-green-100', 'text-green-800');
+      projSlider.max = 180;
+      if (parseInt(projSlider.value) > 180) {
+        projSlider.value = 180;
+        numProjections = 180;
+        projVal.textContent = '180';
+      }
+    });
+
+    btn360.addEventListener('click', () => {
+      angleMode = 360;
+      btn360.classList.add('bg-green-600', 'text-white');
+      btn360.classList.remove('bg-green-100', 'text-green-800');
+      btn180.classList.remove('bg-green-600', 'text-white');
+      btn180.classList.add('bg-green-100', 'text-green-800');
+      projSlider.max = 360;
+    });
+
+    projSlider.addEventListener('input', (e) => {
+      numProjections = parseInt(e.target.value);
+      projVal.textContent = numProjections;
+    });
+
+    noiseSlider.addEventListener('input', (e) => {
+      noiseLevel = parseInt(e.target.value);
+      noiseVal.textContent = noiseLevel;
+    });
+
+    binsSlider.addEventListener('input', (e) => {
+      numBins = parseInt(e.target.value);
+      binsVal.textContent = numBins;
+    });
+
+    btnSinogram.addEventListener('click', () => {
+      computeSinogramAnimated();
+    });
+    
+    btnPause.addEventListener('click', () => {
+      isPaused = true;
+      btnPause.classList.add('hidden');
+      btnResume.classList.remove('hidden');
+    });
+    
+    btnResume.addEventListener('click', () => {
+      isPaused = false;
+      btnResume.classList.add('hidden');
+      btnPause.classList.remove('hidden');
+    });
+    
+    btnStop.addEventListener('click', () => {
+      isAnimating = false;
+      isPaused = false;
+      animationControls.classList.add('hidden');
+      btnSinogram.disabled = false;
+      ctxOverlay.clearRect(0, 0, SIZE, SIZE);
+      
+      // Clear partial sinogram
+      if (sinogramData && sinogramData.length < numProjections) {
+        clearSinogram();
+      }
+    });
+    
+    animSpeedSlider.addEventListener('input', (e) => {
+      animationSpeed = parseInt(e.target.value);
+      const labels = ['Very Slow', 'Slow', 'Normal', 'Fast', 'Very Fast'];
+      speedVal.textContent = labels[animationSpeed - 1];
+    });
+
+    btnReconstruct.addEventListener('click', () => {
+      btnReconstruct.innerHTML = '<span class="processing">Reconstructing...</span>';
+      btnReconstruct.disabled = true;
+      
+      setTimeout(() => {
+        reconstruct();
+        btnReconstruct.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Reconstruct
+        `;
+        btnReconstruct.disabled = false;
+      }, 50);
+    });
+
+    btnReset.addEventListener('click', () => {
+      // Stop any ongoing animation
+      isAnimating = false;
+      isPaused = false;
+      animationControls.classList.add('hidden');
+      ctxOverlay.clearRect(0, 0, SIZE, SIZE);
+      
+      // Disable buttons
+      btnReconstruct.disabled = true;
+      btnViewData.disabled = true;
+      btnShowCode.disabled = true;
+      
+      angleMode = 180;
+      numProjections = 60;
+      noiseLevel = 0;
+      numBins = 128;
+      animationSpeed = 1;
+      currentFilter = 'none';
+      
+      btn180.classList.add('bg-green-600', 'text-white');
+      btn180.classList.remove('bg-green-100', 'text-green-800');
+      btn360.classList.remove('bg-green-600', 'text-white');
+      btn360.classList.add('bg-green-100', 'text-green-800');
+      
+      projSlider.max = 180;
+      projSlider.value = 60;
+      noiseSlider.value = 0;
+      binsSlider.value = 128;
+      animSpeedSlider.value = 1;
+      projVal.textContent = '60';
+      noiseVal.textContent = '0';
+      binsVal.textContent = '128';
+      speedVal.textContent = 'Very Slow';
+      
+      imageUpload.value = '';
+      
+      // Reset filter buttons
+      filterBtns.forEach(b => b.classList.remove('active'));
+      filterBtns[0].classList.add('active'); // First button is "None"
+      filterDescription.textContent = 'Unfiltered backprojection result';
+      
+      setPreset('center');
+    });
+
+    imageUpload.addEventListener('change', handleImageUpload);
+    
+    // Filter button listeners
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.dataset.filter;
+        currentFilter = filter;
+        
+        // Update active state
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Update description
+        const descriptions = {
+          'none': 'Unfiltered backprojection result',
+          'ram-lak': 'Clinical-quality filtered reconstruction (Ram-Lak)',
+          'shepp-logan': 'Noise-reduced reconstruction (Shepp-Logan)',
+          'hamming': 'Maximum smoothing reconstruction (Hamming)'
+        };
+        filterDescription.textContent = descriptions[filter];
+        
+        // Re-reconstruct if sinogram exists
+        if (sinogramData) {
+          reconstruct();
+        }
+      });
+    });
+    
+    // Modal event listeners
+    btnViewData.addEventListener('click', openDataModal);
+    btnShowCode.addEventListener('click', openCodeModal);
+    btnCloseModal.addEventListener('click', closeDataModal);
+    btnCloseModalFooter.addEventListener('click', closeDataModal);
+    btnCloseCodeModal.addEventListener('click', closeCodeModal);
+    btnCloseCodeModalFooter.addEventListener('click', closeCodeModal);
+    btnCopyClipboard.addEventListener('click', copyToClipboard);
+    btnExportCSV.addEventListener('click', exportCSV);
+    btnCopyCode.addEventListener('click', copyMatlabCode);
+    btnDownloadCode.addEventListener('click', downloadMatlabCode);
+    
+    // Close modal on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (!dataModal.classList.contains('hidden')) {
+          closeDataModal();
+        }
+        if (!codeModal.classList.contains('hidden')) {
+          closeCodeModal();
+        }
+      }
+    });
+    
+    // Close modal on backdrop click
+    dataModal.addEventListener('click', (e) => {
+      if (e.target === dataModal) {
+        closeDataModal();
+      }
+    });
+    
+    codeModal.addEventListener('click', (e) => {
+      if (e.target === codeModal) {
+        closeCodeModal();
+      }
+    });
+
+    // Initialize
+    setPreset('center');
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c05ab3fc6796e8d',t:'MTc2ODgxODc1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
