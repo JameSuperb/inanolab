@@ -288,45 +288,84 @@
       surface_color: "#ffffff"
     };
 
-    // Initialize Element SDK
-    window.elementSdk.init({
-      defaultConfig,
-      onConfigChange: async (config) => {
-        document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
-        document.getElementById('app-description').textContent = config.app_description || defaultConfig.app_description;
-      },
-      mapToCapabilities: (config) => ({
-        recolorables: [
-          {
-            get: () => config.background_color || defaultConfig.background_color,
-            set: (value) => window.elementSdk.setConfig({ background_color: value })
-          },
-          {
-            get: () => config.header_color || defaultConfig.header_color,
-            set: (value) => window.elementSdk.setConfig({ header_color: value })
-          },
-          {
-            get: () => config.accent_color || defaultConfig.accent_color,
-            set: (value) => window.elementSdk.setConfig({ accent_color: value })
-          },
-          {
-            get: () => config.text_color || defaultConfig.text_color,
-            set: (value) => window.elementSdk.setConfig({ text_color: value })
-          },
-          {
-            get: () => config.surface_color || defaultConfig.surface_color,
-            set: (value) => window.elementSdk.setConfig({ surface_color: value })
+    // Helper: apply configuration to the DOM (standalone + Canva)
+    function applyConfig(config) {
+      const cfg = Object.assign({}, defaultConfig, config || {});
+      const header = document.getElementById('app-header');
+      const titleEl = document.getElementById('app-title');
+      const descEl = document.getElementById('app-description');
+
+      if (titleEl) titleEl.textContent = cfg.app_title;
+      if (descEl) descEl.textContent = cfg.app_description;
+
+      document.body.style.backgroundColor = cfg.background_color;
+      if (header) {
+        header.style.background = cfg.header_color;
+      }
+      document.documentElement.style.setProperty('--accent-color', cfg.accent_color);
+      document.documentElement.style.setProperty('--text-color', cfg.text_color);
+      document.documentElement.style.setProperty('--surface-color', cfg.surface_color);
+    }
+
+    // Initialize Element SDK robustly so the page works standalone
+    (function initElementSdk() {
+      try {
+        if (window.elementSdk && typeof window.elementSdk.init === 'function') {
+          window.elementSdk.init({
+            defaultConfig,
+            onConfigChange: async (config) => {
+              applyConfig(config);
+            },
+            mapToCapabilities: (config) => ({
+              recolorables: [
+                {
+                  get: () => (config.background_color || defaultConfig.background_color),
+                  set: (value) => window.elementSdk.setConfig({ background_color: value })
+                },
+                {
+                  get: () => (config.header_color || defaultConfig.header_color),
+                  set: (value) => window.elementSdk.setConfig({ header_color: value })
+                },
+                {
+                  get: () => (config.accent_color || defaultConfig.accent_color),
+                  set: (value) => window.elementSdk.setConfig({ accent_color: value })
+                },
+                {
+                  get: () => (config.text_color || defaultConfig.text_color),
+                  set: (value) => window.elementSdk.setConfig({ text_color: value })
+                },
+                {
+                  get: () => (config.surface_color || defaultConfig.surface_color),
+                  set: (value) => window.elementSdk.setConfig({ surface_color: value })
+                }
+              ],
+              borderables: [],
+              fontEditable: undefined,
+              fontSizeable: undefined
+            }),
+            mapToEditPanelValues: (config) => new Map([
+              ["app_title", config.app_title || defaultConfig.app_title],
+              ["app_description", config.app_description || defaultConfig.app_description]
+            ])
+          });
+        } else {
+          // Standalone mode: stub SDK and apply defaults
+          window.elementSdk = window.elementSdk || {};
+          if (typeof window.elementSdk.setConfig !== 'function') {
+            window.elementSdk.setConfig = function () {};
           }
-        ],
-        borderables: [],
-        fontEditable: undefined,
-        fontSizeable: undefined
-      }),
-      mapToEditPanelValues: (config) => new Map([
-        ["app_title", config.app_title || defaultConfig.app_title],
-        ["app_description", config.app_description || defaultConfig.app_description]
-      ])
-    });
+          applyConfig(defaultConfig);
+          console.info('Element SDK not found; running in standalone mode.');
+        }
+      } catch (err) {
+        console.warn('Element SDK initialization failed; continuing in standalone mode.', err);
+        window.elementSdk = window.elementSdk || {};
+        if (typeof window.elementSdk.setConfig !== 'function') {
+          window.elementSdk.setConfig = function () {};
+        }
+        applyConfig(defaultConfig);
+      }
+    })();
 
     // CT Simulation Logic
     const SIZE = 256;
