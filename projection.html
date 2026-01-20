@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projection Profile Generator</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #0f172a;
+      color: #f1f5f9;
+    }
+    
+    body {
+      box-sizing: border-box;
+      overflow: auto;
+    }
+    
+    .mono {
+      font-family: 'Courier New', Courier, monospace;
+    }
+    
+    #app-wrapper {
+      width: 100%;
+      min-height: 100%;
+      padding: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+      #app-wrapper {
+        padding: 1.5rem;
+      }
+    }
+    
+    header {
+      margin-bottom: 1.5rem;
+    }
+    
+    #app-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #facc15;
+      letter-spacing: -0.025em;
+    }
+    
+    @media (min-width: 768px) {
+      #app-title {
+        font-size: 1.875rem;
+      }
+    }
+    
+    header p {
+      color: #94a3b8;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+    
+    .main-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    @media (min-width: 1024px) {
+      .main-layout {
+        flex-direction: row;
+      }
+    }
+    
+    .left-panel {
+      width: 100%;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    @media (min-width: 1024px) {
+      .left-panel {
+        width: 20rem;
+      }
+    }
+    
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-width: 0;
+    }
+    
+    .canvas-container {
+      background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+      border: 1px solid #334155;
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+    
+    .section-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #facc15;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      background: linear-gradient(90deg, #1e293b 0%, transparent 100%);
+      border-radius: 0.25rem;
+    }
+    
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .preset-btn {
+      padding: 0.5rem;
+      background-color: #1e293b;
+      border: 2px solid transparent;
+      border-radius: 0.5rem;
+      color: #f1f5f9;
+      font-size: 1.125rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+    
+    .preset-btn:hover {
+      border-color: #facc15;
+      background: rgba(250, 204, 21, 0.1);
+    }
+    
+    .preset-btn.active {
+      border-color: #facc15;
+      background: rgba(250, 204, 21, 0.2);
+    }
+    
+    .control-label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+    
+    .flex-gap {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .text-input {
+      flex: 1;
+      background-color: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      color: #f1f5f9;
+      outline: none;
+    }
+    
+    .text-input:focus {
+      border-color: #facc15;
+    }
+    
+    .btn {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-secondary {
+      background-color: #334155;
+      color: #f1f5f9;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #475569;
+    }
+    
+    .file-upload-label {
+      display: block;
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      background-color: #1e293b;
+      border: 2px dashed #475569;
+      border-radius: 0.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+    
+    .file-upload-label:hover {
+      border-color: #facc15;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .upload-status {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+    
+    .mb-4 {
+      margin-bottom: 1rem;
+    }
+    
+    .control-row {
+      margin-bottom: 1rem;
+    }
+    
+    .control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.25rem;
+    }
+    
+    .control-value {
+      font-size: 0.75rem;
+      color: #facc15;
+    }
+    
+    .slider-track {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #1e293b 0%, #334155 100%);
+      outline: none;
+    }
+    
+    .slider-track::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #facc15;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(250, 204, 21, 0.4);
+      transition: transform 0.15s ease;
+    }
+    
+    .slider-track::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+    
+    .slider-track::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #facc15;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 8px rgba(250, 204, 21, 0.4);
+    }
+    
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: #334155;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    
+    .toggle-switch.active {
+      background: #facc15;
+    }
+    
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .toggle-switch.active::after {
+      transform: translateX(20px);
+    }
+    
+    .flex-1 {
+      flex: 1;
+    }
+    
+    .mt-3 {
+      margin-top: 0.75rem;
+    }
+    
+    .mt-2 {
+      margin-top: 0.5rem;
+    }
+    
+    .w-full {
+      width: 100%;
+    }
+    
+    .glow-btn {
+      background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%);
+      box-shadow: 0 4px 20px rgba(250, 204, 21, 0.3);
+      color: #0f172a;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .glow-btn:hover {
+      box-shadow: 0 6px 30px rgba(250, 204, 21, 0.5);
+      transform: translateY(-1px);
+    }
+    
+    .record-btn {
+      width: 100%;
+      margin-top: 0.75rem;
+      padding: 0.5rem;
+      background-color: #1e293b;
+      border: 1px solid #475569;
+      color: #f1f5f9;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+    }
+    
+    .record-btn:hover {
+      border-color: #facc15;
+    }
+    
+    .sinogram-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    
+    .clear-btn {
+      font-size: 0.75rem;
+      color: #64748b;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.2s ease;
+    }
+    
+    .clear-btn:hover {
+      color: #facc15;
+    }
+    
+    .sinogram-container {
+      background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    
+    .sinogram-count {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+    
+    .canvas-center {
+      display: flex;
+      justify-content: center;
+    }
+    
+    canvas {
+      border-radius: 0.5rem;
+      background-color: #000;
+    }
+    
+    #sinogram-canvas {
+      width: 100%;
+    }
+    
+    .profile-chart-container {
+      height: 12rem;
+    }
+    
+    @media (min-width: 768px) {
+      .profile-chart-container {
+        height: 14rem;
+      }
+    }
+    
+    #profile-canvas {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .profile-chart-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+    }
+    
+    .flex-1-panel {
+      flex: 1;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div id="app-wrapper"><!-- Header -->
+   <header>
+    <h1 id="app-title">Projection Profile Generator</h1>
+    <p>X-ray CT Demo — Simulate projection profiles at different angles</p>
+   </header><!-- Main Layout -->
+   <div class="main-layout"><!-- Left Panel: Controls -->
+    <div class="left-panel"><!-- Object Source Section -->
+     <div class="canvas-container">
+      <h2 class="section-title">Object Source</h2><!-- Presets -->
+      <div class="mb-4"><label class="control-label">Presets</label>
+       <div class="preset-grid"><button class="preset-btn" data-preset="circle" title="Center Circle">●</button> <button class="preset-btn" data-preset="ellipse" title="Ellipse">⬭</button> <button class="preset-btn" data-preset="offcenter" title="Off-center">◐</button> <button class="preset-btn" data-preset="twocircles" title="Two Circles">◎</button> <button class="preset-btn mono" data-preset="T" title="T Shape">T</button> <button class="preset-btn mono" data-preset="perpendicular" title="Perpendicular">⊥</button> <button class="preset-btn mono" data-preset="gamma" title="Gamma">Γ</button> <button class="preset-btn" data-preset="square" title="Square">▪</button> <button class="preset-btn" data-preset="shepp-logan" title="Shepp-Logan Phantom">◉</button> <button class="preset-btn" data-preset="ring" title="Ring">◯</button> <button class="preset-btn" data-preset="cross" title="Cross">✚</button> <button class="preset-btn" data-preset="diagonal" title="Diagonal Bar">⟋</button> <button class="preset-btn" data-preset="triangle" title="Triangle">△</button> <button class="preset-btn" data-preset="hexagon" title="Hexagon">⬡</button> <button class="preset-btn" data-preset="nested" title="Nested Circles">◎</button> <button class="preset-btn" data-preset="checkboard" title="Checkerboard">▦</button>
+       </div>
+      </div><!-- Text Input -->
+      <div class="mb-4"><label class="control-label">Custom Text</label>
+       <div class="flex-gap"><input type="text" id="text-input" maxlength="4" placeholder="A" class="text-input mono"> <button id="apply-text-btn" class="btn btn-secondary">Apply</button>
+       </div>
+      </div><!-- Image Upload -->
+      <div><label class="control-label">Upload Image</label> <input type="file" id="image-upload" accept="image/png,image/jpeg" class="hidden"> <label for="image-upload" class="file-upload-label"> 📁 Choose PNG/JPG </label>
+       <div id="upload-status" class="upload-status hidden">
+        Image loaded
+       </div>
+      </div>
+     </div><!-- Controls Section -->
+     <div class="canvas-container">
+      <h2 class="section-title">Controls</h2><!-- Angle Slider -->
+      <div class="control-row">
+       <div class="control-header"><label class="control-label">Projection Angle</label> <span id="angle-value" class="control-value mono">0°</span>
+       </div><input type="range" id="angle-slider" min="0" max="180" value="0" class="slider-track">
+      </div><!-- Detector Bins Slider -->
+      <div class="control-row">
+       <div class="control-header"><label class="control-label">Detector Bins</label> <span id="bins-value" class="control-value mono">128</span>
+       </div><input type="range" id="bins-slider" min="32" max="256" value="128" class="slider-track">
+      </div><!-- Noise Slider -->
+      <div class="control-row">
+       <div class="control-header"><label class="control-label">Noise Level</label> <span id="noise-value" class="control-value mono">0%</span>
+       </div><input type="range" id="noise-slider" min="0" max="10" value="0" step="0.5" class="slider-track">
+      </div><!-- Normalize Toggle -->
+      <div class="toggle-row"><label class="control-label">Normalize Profile</label>
+       <div id="normalize-toggle" class="toggle-switch active"></div>
+      </div><!-- Threshold Slider (for images) -->
+      <div id="threshold-container" class="control-row hidden">
+       <div class="control-header"><label class="control-label">Threshold</label> <span id="threshold-value" class="control-value mono">0.5</span>
+       </div><input type="range" id="threshold-slider" min="0" max="1" value="0.5" step="0.05" class="slider-track">
+      </div><!-- Buttons -->
+      <div class="flex-gap mt-3"><button id="generate-btn" class="btn glow-btn flex-1"> Generate Profile </button> <button id="reset-btn" class="btn btn-secondary"> Reset </button>
+      </div><!-- Record Angle Button --> <button id="record-btn" class="record-btn"> 📊 Record Angle → Sinogram </button>
+     </div><!-- Sinogram Preview -->
+     <div class="canvas-container">
+      <div class="sinogram-header">
+       <h2 class="section-title" style="margin-bottom: 0;">Sinogram Preview</h2><button id="clear-sinogram-btn" class="clear-btn">Clear</button>
+      </div>
+      <div class="sinogram-container">
+       <canvas id="sinogram-canvas" width="256" height="100"></canvas>
+      </div>
+      <p class="sinogram-count mono"><span id="sinogram-count">0</span> projections recorded</p>
+     </div>
+    </div><!-- Right Panel: Visualizations -->
+    <div class="right-panel"><!-- Object Canvas -->
+     <div class="canvas-container">
+      <h2 class="section-title">Object (Phantom)</h2>
+      <div class="canvas-center">
+       <canvas id="object-canvas" width="256" height="256"></canvas>
+      </div>
+     </div><!-- Projection View Canvas -->
+     <div class="canvas-container">
+      <h2 class="section-title">Projection View (Rotated + Detector)</h2>
+      <div class="canvas-center">
+       <canvas id="projection-canvas" width="256" height="256"></canvas>
+      </div>
+     </div><!-- Profile Chart -->
+     <div class="canvas-container flex-1-panel">
+      <h2 class="section-title">Projection Profile</h2>
+      <div class="profile-chart-container">
+       <canvas id="profile-canvas"></canvas>
+      </div>
+      <div class="profile-chart-labels mono"><span>Bin 0</span> <span id="max-bin-label">Bin 127</span>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Default configuration
+    const defaultConfig = {
+      app_title: 'Projection Profile Generator'
+    };
+
+    // State
+    let objectData = null; // 2D array [256][256] with values 0..1
+    let currentPreset = 'circle';
+    let angle = 0;
+    let detectorBins = 128;
+    let noiseLevel = 0;
+    let normalizeEnabled = true;
+    let threshold = 0.5;
+    let isImageMode = false;
+    let sinogramData = []; // Array of projection profiles
+
+    // Canvas contexts
+    let objectCtx, projectionCtx, profileCtx, sinogramCtx;
+
+    // Initialize canvases
+    function initCanvases() {
+      objectCtx = document.getElementById('object-canvas').getContext('2d');
+      projectionCtx = document.getElementById('projection-canvas').getContext('2d');
+      profileCtx = document.getElementById('profile-canvas').getContext('2d');
+      sinogramCtx = document.getElementById('sinogram-canvas').getContext('2d');
+    }
+
+    // Create 2D array initialized with zeros
+    function createArray2D(size, fillValue = 0) {
+      return Array.from({ length: size }, () => Array(size).fill(fillValue));
+    }
+
+    // Generate preset objects
+    function generatePreset(preset) {
+      const size = 256;
+      const data = createArray2D(size);
+      const cx = size / 2;
+      const cy = size / 2;
+
+      switch (preset) {
+        case 'circle':
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+              if (dist < 80) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'ellipse':
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const dx = (x - cx) / 100;
+              const dy = (y - cy) / 60;
+              if (dx * dx + dy * dy < 1) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'offcenter':
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const dist = Math.sqrt((x - cx - 40) ** 2 + (y - cy - 30) ** 2);
+              if (dist < 50) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'twocircles':
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const dist1 = Math.sqrt((x - cx - 50) ** 2 + (y - cy) ** 2);
+              const dist2 = Math.sqrt((x - cx + 50) ** 2 + (y - cy) ** 2);
+              if (dist1 < 40) data[y][x] = 1;
+              if (dist2 < 40) data[y][x] = 0.6;
+            }
+          }
+          break;
+
+        case 'T':
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              // Horizontal bar
+              if (y >= 60 && y <= 90 && x >= 50 && x <= 206) data[y][x] = 1;
+              // Vertical bar
+              if (x >= 113 && x <= 143 && y >= 60 && y <= 196) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'perpendicular':
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              // Horizontal bar (bottom)
+              if (y >= 166 && y <= 196 && x >= 50 && x <= 206) data[y][x] = 1;
+              // Vertical bar
+              if (x >= 113 && x <= 143 && y >= 60 && y <= 196) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'gamma':
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              // Horizontal bar (top)
+              if (y >= 60 && y <= 90 && x >= 80 && x <= 206) data[y][x] = 1;
+              // Vertical bar (left)
+              if (x >= 80 && x <= 110 && y >= 60 && y <= 196) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'square':
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              if (x >= 78 && x <= 178 && y >= 78 && y <= 178) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'shepp-logan':
+          // Simplified Shepp-Logan phantom (medical imaging standard)
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              // Large outer ellipse
+              const dx1 = (x - cx) / 92;
+              const dy1 = (y - cy) / 117;
+              if (dx1 * dx1 + dy1 * dy1 < 1) data[y][x] = 0.8;
+              
+              // Inner bright ellipse
+              const dx2 = (x - cx) / 83;
+              const dy2 = (y - cy) / 105;
+              if (dx2 * dx2 + dy2 * dy2 < 1) data[y][x] = 1;
+              
+              // Small circles (lesions)
+              const dist1 = Math.sqrt((x - cx - 35) ** 2 + (y - cy + 25) ** 2);
+              if (dist1 < 15) data[y][x] = 0.4;
+              
+              const dist2 = Math.sqrt((x - cx + 30) ** 2 + (y - cy - 20) ** 2);
+              if (dist2 < 12) data[y][x] = 0.5;
+              
+              const dist3 = Math.sqrt((x - cx - 20) ** 2 + (y - cy - 35) ** 2);
+              if (dist3 < 10) data[y][x] = 0.6;
+            }
+          }
+          break;
+
+        case 'ring':
+          // Hollow ring
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+              if (dist < 90 && dist > 60) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'cross':
+          // Plus sign / cross
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              // Horizontal bar
+              if (y >= 108 && y <= 148 && x >= 40 && x <= 216) data[y][x] = 1;
+              // Vertical bar
+              if (x >= 108 && x <= 148 && y >= 40 && y <= 216) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'diagonal':
+          // Diagonal bar from top-left to bottom-right
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              // Thickness of diagonal line
+              const dist = Math.abs(x - y) / Math.sqrt(2);
+              if (dist < 20 && x > 40 && x < 216 && y > 40 && y < 216) {
+                data[y][x] = 1;
+              }
+            }
+          }
+          break;
+
+        case 'triangle':
+          // Equilateral triangle
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const h = 100; // height from center
+              const dy = y - cy;
+              const dx = x - cx;
+              
+              // Top vertex at (cx, cy - h)
+              // Bottom edge from (cx - h*sqrt(3)/2, cy + h/2) to (cx + h*sqrt(3)/2, cy + h/2)
+              const top = dy > -h;
+              const left = dx * Math.sqrt(3) + dy > -h;
+              const right = -dx * Math.sqrt(3) + dy > -h;
+              
+              if (top && left && right) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'hexagon':
+          // Regular hexagon
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const dx = x - cx;
+              const dy = y - cy;
+              const radius = 70;
+              
+              // Six sides of hexagon
+              const side1 = dy < radius;
+              const side2 = dy > -radius;
+              const side3 = Math.sqrt(3) * dx + dy < 2 * radius;
+              const side4 = Math.sqrt(3) * dx + dy > -2 * radius;
+              const side5 = -Math.sqrt(3) * dx + dy < 2 * radius;
+              const side6 = -Math.sqrt(3) * dx + dy > -2 * radius;
+              
+              if (side1 && side2 && side3 && side4 && side5 && side6) {
+                data[y][x] = 1;
+              }
+            }
+          }
+          break;
+
+        case 'nested':
+          // Multiple concentric circles with varying intensities
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+              if (dist < 95) data[y][x] = 0.3;
+              if (dist < 75) data[y][x] = 0.5;
+              if (dist < 55) data[y][x] = 0.7;
+              if (dist < 35) data[y][x] = 0.9;
+              if (dist < 15) data[y][x] = 1;
+            }
+          }
+          break;
+
+        case 'checkboard':
+          // Checkerboard pattern
+          const squareSize = 32;
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const row = Math.floor(y / squareSize);
+              const col = Math.floor(x / squareSize);
+              // Only draw inside a circular boundary
+              const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+              if (dist < 100 && (row + col) % 2 === 0) {
+                data[y][x] = 1;
+              }
+            }
+          }
+          break;
+      }
+
+      return data;
+    }
+
+    // Generate text as object
+    function generateTextObject(text) {
+      const size = 256;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, size, size);
+
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      // Adjust font size based on text length
+      const fontSize = Math.min(180, 200 / Math.max(1, text.length));
+      ctx.font = `bold ${fontSize}px 'Courier New', monospace`;
+      ctx.fillText(text, size / 2, size / 2);
+
+      const imageData = ctx.getImageData(0, 0, size, size);
+      const data = createArray2D(size);
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x) * 4;
+          data[y][x] = imageData.data[idx] / 255;
+        }
+      }
+
+      return data;
+    }
+
+    // Process uploaded image
+    function processImage(img) {
+      const size = 256;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+
+      // Calculate scaling to fit and center
+      const scale = Math.min(size / img.width, size / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      const x = (size - w) / 2;
+      const y = (size - h) / 2;
+
+      ctx.fillStyle = 'black';
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, x, y, w, h);
+
+      const imageData = ctx.getImageData(0, 0, size, size);
+      const data = createArray2D(size);
+
+      for (let i = 0; i < size; i++) {
+        for (let j = 0; j < size; j++) {
+          const idx = (i * size + j) * 4;
+          // Convert to grayscale
+          const gray = (imageData.data[idx] * 0.299 + 
+                       imageData.data[idx + 1] * 0.587 + 
+                       imageData.data[idx + 2] * 0.114) / 255;
+          data[i][j] = gray;
+        }
+      }
+
+      return data;
+    }
+
+    // Apply threshold to image data
+    function applyThreshold(data, thresh) {
+      const size = data.length;
+      const result = createArray2D(size);
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          result[y][x] = data[y][x] >= thresh ? data[y][x] : 0;
+        }
+      }
+      return result;
+    }
+
+    // Draw object on canvas
+    function drawObject(data, ctx) {
+      const size = data.length;
+      const imageData = ctx.createImageData(size, size);
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x) * 4;
+          const val = Math.floor(data[y][x] * 255);
+          imageData.data[idx] = val;
+          imageData.data[idx + 1] = val;
+          imageData.data[idx + 2] = val;
+          imageData.data[idx + 3] = 255;
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    // Rotate object data by angle (bilinear interpolation)
+    function rotateObject(data, angleDeg) {
+      const size = data.length;
+      const result = createArray2D(size);
+      const cx = size / 2;
+      const cy = size / 2;
+      const rad = -angleDeg * Math.PI / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          // Transform back to original coordinates
+          const dx = x - cx;
+          const dy = y - cy;
+          const srcX = cos * dx - sin * dy + cx;
+          const srcY = sin * dx + cos * dy + cy;
+
+          // Bilinear interpolation
+          const x0 = Math.floor(srcX);
+          const y0 = Math.floor(srcY);
+          const x1 = x0 + 1;
+          const y1 = y0 + 1;
+          const fx = srcX - x0;
+          const fy = srcY - y0;
+
+          if (x0 >= 0 && x1 < size && y0 >= 0 && y1 < size) {
+            const v00 = data[y0][x0];
+            const v10 = data[y0][x1];
+            const v01 = data[y1][x0];
+            const v11 = data[y1][x1];
+            result[y][x] = (1 - fx) * (1 - fy) * v00 +
+                          fx * (1 - fy) * v10 +
+                          (1 - fx) * fy * v01 +
+                          fx * fy * v11;
+          }
+        }
+      }
+
+      return result;
+    }
+
+    // Compute projection profile (sum down each column - vertical rays)
+    function computeProjection(data) {
+      const size = data.length;
+      const profile = new Array(size).fill(0);
+
+      // Sum down each column (along y-axis) for each x position
+      for (let x = 0; x < size; x++) {
+        for (let y = 0; y < size; y++) {
+          profile[x] += data[y][x];
+        }
+      }
+
+      return profile;
+    }
+
+    // Resample profile to target bins
+    function resampleProfile(profile, targetBins) {
+      const result = new Array(targetBins).fill(0);
+      const scale = (profile.length - 1) / (targetBins - 1);
+
+      for (let i = 0; i < targetBins; i++) {
+        const srcIdx = i * scale;
+        const idx0 = Math.floor(srcIdx);
+        const idx1 = Math.min(idx0 + 1, profile.length - 1);
+        const frac = srcIdx - idx0;
+        result[i] = (1 - frac) * profile[idx0] + frac * profile[idx1];
+      }
+
+      return result;
+    }
+
+    // Add noise to profile
+    function addNoise(profile, noisePercent) {
+      if (noisePercent <= 0) return profile;
+      
+      const maxVal = Math.max(...profile);
+      const noiseAmp = maxVal * (noisePercent / 100);
+
+      return profile.map(v => {
+        const noise = (Math.random() - 0.5) * 2 * noiseAmp;
+        return Math.max(0, Math.min(1, v + noise));
+      });
+    }
+
+    // Normalize profile to 0-1
+    function normalizeProfile(profile) {
+      const maxVal = Math.max(...profile);
+      if (maxVal === 0) return profile;
+      return profile.map(v => v / maxVal);
+    }
+
+    // Draw projection view with detector lines
+    function drawProjectionView(rotatedData, angleDeg, bins) {
+      const size = rotatedData.length;
+      const imageData = projectionCtx.createImageData(size, size);
+
+      // Draw rotated object
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const idx = (y * size + x) * 4;
+          const val = Math.floor(rotatedData[y][x] * 255);
+          imageData.data[idx] = val;
+          imageData.data[idx + 1] = val;
+          imageData.data[idx + 2] = val;
+          imageData.data[idx + 3] = 255;
+        }
+      }
+
+      projectionCtx.putImageData(imageData, 0, 0);
+
+      // Draw detector bin guides (horizontal lines - vertical rays)
+      projectionCtx.strokeStyle = 'rgba(250, 204, 21, 0.3)';
+      projectionCtx.lineWidth = 1;
+      
+      const binWidth = size / bins;
+      for (let i = 0; i <= bins; i += Math.ceil(bins / 16)) {
+        const y = i * binWidth;
+        projectionCtx.beginPath();
+        projectionCtx.moveTo(0, y);
+        projectionCtx.lineTo(size, y);
+        projectionCtx.stroke();
+      }
+
+      // Draw detector direction arrow (vertical, top to bottom, on left side)
+      projectionCtx.strokeStyle = '#facc15';
+      projectionCtx.lineWidth = 2;
+      projectionCtx.beginPath();
+      projectionCtx.moveTo(20, 20);
+      projectionCtx.lineTo(20, size - 20);
+      projectionCtx.stroke();
+      
+      // Arrow head (pointing down)
+      projectionCtx.beginPath();
+      projectionCtx.moveTo(15, size - 30);
+      projectionCtx.lineTo(20, size - 20);
+      projectionCtx.lineTo(25, size - 30);
+      projectionCtx.stroke();
+
+      // Draw angle indicator
+      projectionCtx.fillStyle = '#facc15';
+      projectionCtx.font = '12px "Courier New", monospace';
+      projectionCtx.fillText(`θ = ${angleDeg}°`, 10, 20);
+    }
+
+    // Draw profile chart
+    function drawProfileChart(profile) {
+      const canvas = document.getElementById('profile-canvas');
+      const ctx = profileCtx;
+      const width = canvas.width;
+      const height = canvas.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Background
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, width, height);
+
+      // Grid
+      ctx.strokeStyle = 'rgba(100, 116, 139, 0.3)';
+      ctx.lineWidth = 1;
+      
+      for (let i = 0; i <= 4; i++) {
+        const y = (height * i) / 4;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // Draw profile line
+      if (profile && profile.length > 0) {
+        const padding = 10;
+        const chartWidth = width - padding * 2;
+        const chartHeight = height - padding * 2;
+
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+
+        profile.forEach((val, i) => {
+          const x = padding + (i / (profile.length - 1)) * chartWidth;
+          const y = padding + (1 - val) * chartHeight;
+          
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+
+        ctx.stroke();
+
+        // Fill under curve
+        ctx.lineTo(padding + chartWidth, padding + chartHeight);
+        ctx.lineTo(padding, padding + chartHeight);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(250, 204, 21, 0.1)';
+        ctx.fill();
+      }
+    }
+
+    // Draw sinogram
+    function drawSinogram() {
+      const canvas = document.getElementById('sinogram-canvas');
+      const ctx = sinogramCtx;
+      const width = canvas.width;
+      const height = canvas.height;
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, width, height);
+
+      if (sinogramData.length === 0) {
+        ctx.fillStyle = '#334155';
+        ctx.textAlign = 'center';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('No projections recorded', width / 2, height / 2);
+        return;
+      }
+
+      const rowHeight = Math.min(height / sinogramData.length, 5);
+      
+      sinogramData.forEach((profile, row) => {
+        const y = row * rowHeight;
+        const binWidth = width / profile.length;
+
+        profile.forEach((val, col) => {
+          const x = col * binWidth;
+          const intensity = Math.floor(val * 255);
+          ctx.fillStyle = `rgb(${intensity}, ${intensity}, ${intensity})`;
+          ctx.fillRect(x, y, binWidth + 1, rowHeight + 1);
+        });
+      });
+    }
+
+    // Generate and display projection
+    function generateProjection() {
+      if (!objectData) return;
+
+      let data = objectData;
+      
+      // Apply threshold for image mode
+      if (isImageMode) {
+        data = applyThreshold(objectData, threshold);
+      }
+
+      // Rotate object
+      const rotated = rotateObject(data, angle);
+
+      // Compute projection
+      let profile = computeProjection(rotated);
+
+      // Resample to detector bins
+      profile = resampleProfile(profile, detectorBins);
+
+      // Add noise
+      profile = addNoise(profile, noiseLevel);
+
+      // Normalize if enabled
+      if (normalizeEnabled) {
+        profile = normalizeProfile(profile);
+      } else {
+        // Scale to reasonable range
+        const maxVal = Math.max(...profile);
+        if (maxVal > 0) {
+          profile = profile.map(v => v / maxVal);
+        }
+      }
+
+      // Draw views
+      drawObject(data, objectCtx);
+      drawProjectionView(rotated, angle, detectorBins);
+      drawProfileChart(profile);
+
+      // Update max bin label
+      document.getElementById('max-bin-label').textContent = `Bin ${detectorBins - 1}`;
+
+      return profile;
+    }
+
+    // Record current projection to sinogram
+    function recordProjection() {
+      const profile = generateProjection();
+      if (profile) {
+        sinogramData.push([...profile]);
+        drawSinogram();
+        document.getElementById('sinogram-count').textContent = sinogramData.length;
+      }
+    }
+
+    // Clear sinogram
+    function clearSinogram() {
+      sinogramData = [];
+      drawSinogram();
+      document.getElementById('sinogram-count').textContent = '0';
+    }
+
+    // Reset to initial state
+    function resetAll() {
+      angle = 0;
+      detectorBins = 128;
+      noiseLevel = 0;
+      normalizeEnabled = true;
+      threshold = 0.5;
+      isImageMode = false;
+
+      document.getElementById('angle-slider').value = 0;
+      document.getElementById('bins-slider').value = 128;
+      document.getElementById('noise-slider').value = 0;
+      document.getElementById('threshold-slider').value = 0.5;
+      
+      document.getElementById('angle-value').textContent = '0°';
+      document.getElementById('bins-value').textContent = '128';
+      document.getElementById('noise-value').textContent = '0%';
+      document.getElementById('threshold-value').textContent = '0.5';
+
+      const toggle = document.getElementById('normalize-toggle');
+      if (!toggle.classList.contains('active')) {
+        toggle.classList.add('active');
+      }
+
+      document.getElementById('threshold-container').classList.add('hidden');
+      document.getElementById('upload-status').classList.add('hidden');
+      document.getElementById('text-input').value = '';
+
+      selectPreset('circle');
+      clearSinogram();
+    }
+
+    // Select preset
+    function selectPreset(preset) {
+      currentPreset = preset;
+      isImageMode = false;
+      objectData = generatePreset(preset);
+      document.getElementById('threshold-container').classList.add('hidden');
+      document.getElementById('upload-status').classList.add('hidden');
+      
+      // Update preset button states
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.preset === preset);
+      });
+
+      generateProjection();
+    }
+
+    // Initialize event listeners
+    function initEventListeners() {
+      // Preset buttons
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectPreset(btn.dataset.preset);
+        });
+      });
+
+      // Text input
+      document.getElementById('apply-text-btn').addEventListener('click', () => {
+        const text = document.getElementById('text-input').value.trim();
+        if (text) {
+          isImageMode = false;
+          objectData = generateTextObject(text);
+          document.getElementById('threshold-container').classList.add('hidden');
+          document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+          generateProjection();
+        }
+      });
+
+      document.getElementById('text-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          document.getElementById('apply-text-btn').click();
+        }
+      });
+
+      // Image upload
+      document.getElementById('image-upload').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+              isImageMode = true;
+              objectData = processImage(img);
+              document.getElementById('threshold-container').classList.remove('hidden');
+              document.getElementById('upload-status').classList.remove('hidden');
+              document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+              generateProjection();
+            };
+            img.src = event.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      // Sliders
+      document.getElementById('angle-slider').addEventListener('input', (e) => {
+        angle = parseInt(e.target.value);
+        document.getElementById('angle-value').textContent = `${angle}°`;
+        generateProjection();
+      });
+
+      document.getElementById('bins-slider').addEventListener('input', (e) => {
+        detectorBins = parseInt(e.target.value);
+        document.getElementById('bins-value').textContent = detectorBins;
+        generateProjection();
+      });
+
+      document.getElementById('noise-slider').addEventListener('input', (e) => {
+        noiseLevel = parseFloat(e.target.value);
+        document.getElementById('noise-value').textContent = `${noiseLevel}%`;
+        generateProjection();
+      });
+
+      document.getElementById('threshold-slider').addEventListener('input', (e) => {
+        threshold = parseFloat(e.target.value);
+        document.getElementById('threshold-value').textContent = threshold.toFixed(2);
+        generateProjection();
+      });
+
+      // Normalize toggle
+      document.getElementById('normalize-toggle').addEventListener('click', (e) => {
+        e.target.classList.toggle('active');
+        normalizeEnabled = e.target.classList.contains('active');
+        generateProjection();
+      });
+
+      // Buttons
+      document.getElementById('generate-btn').addEventListener('click', generateProjection);
+      document.getElementById('reset-btn').addEventListener('click', resetAll);
+      document.getElementById('record-btn').addEventListener('click', recordProjection);
+      document.getElementById('clear-sinogram-btn').addEventListener('click', clearSinogram);
+    }
+
+    // Resize profile canvas to maintain aspect ratio
+    function resizeProfileCanvas() {
+      const canvas = document.getElementById('profile-canvas');
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      generateProjection();
+    }
+
+    // Config change handler
+    async function onConfigChange(config) {
+      const title = config.app_title || defaultConfig.app_title;
+      document.getElementById('app-title').textContent = title;
+    }
+
+    // Initialize SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['app_title', config.app_title || defaultConfig.app_title]
+        ])
+      });
+    }
+
+    // Initialize app
+    initCanvases();
+    initEventListeners();
+    selectPreset('circle');
+    
+    // Handle window resize
+    window.addEventListener('resize', resizeProfileCanvas);
+    setTimeout(resizeProfileCanvas, 100);
+
+    // Initial config render
+    onConfigChange(window.elementSdk?.config || defaultConfig);
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c0e1052e6f28d08',t:'MTc2ODkwNjc4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
