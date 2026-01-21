@@ -273,6 +273,18 @@
       return statuses[nextIndex];
     }
 
+    // Normalize raw attendance values to canonical statuses
+    function normalizeStatus(val) {
+      if (val === null || val === undefined) return '-';
+      const s = String(val).trim().toLowerCase();
+      if (!s) return '-';
+      if (s === '-' || s === 'none') return '-';
+      if (/^p(?:resent)?$/.test(s)) return 'Present';
+      if (/^a(?:bsent)?$/.test(s)) return 'Absent';
+      if (/^l(?:ate)?$/.test(s)) return 'Late';
+      return null; // unknown status
+    }
+
     // Get initials from name
     function getInitials(name, lastName) {
       const first = name ? name.charAt(0).toUpperCase() : '';
@@ -356,16 +368,53 @@
     function extractGroupInfo(groupValue) {
       let num = '';
       let title = '';
-      if (typeof groupValue === 'string') {
-        const m = groupValue.match(/^\s*(\d+)\s*\.\s*(.*)\s*$/);
-        if (m) {
-          num = parseInt(m[1], 10);
-          title = m[2] || '';
-        }
-      } else if (typeof groupValue === 'number') {
-        num = groupValue;
+      if (groupValue === null || groupValue === undefined) {
+        return { num, title };
       }
-      if (!title && num) title = `Group ${num}`;
+      if (typeof groupValue === 'number') {
+        num = groupValue;
+        title = `Group ${num}`;
+        return { num, title };
+      }
+      const raw = String(groupValue).trim();
+      if (!raw) return { num, title };
+
+      // Pattern 1: pure number, e.g., "3"
+      let m = raw.match(/^\s*(\d{1,2})\s*$/);
+      if (m) {
+        num = parseInt(m[1], 10);
+        title = `Group ${num}`;
+        return { num, title };
+      }
+
+      // Pattern 2: leading number with optional separator and title
+      // Matches: "3. Team A", "3 - Team A", "3: Team A", "3 Team A"
+      m = raw.match(/^\s*(\d{1,2})\s*(?:[.)]|[-:–—])?\s*(.*)$/);
+      if (m) {
+        num = parseInt(m[1], 10);
+        title = (m[2] || '').trim();
+        if (!title) title = `Group ${num}`;
+        return { num, title };
+      }
+
+      // Pattern 3: prefixed with word, e.g., "Group 3", "Grp 3", optionally followed by title
+      m = raw.match(/^\s*gr(?:oup|p)\s*(\d{1,2})(?:\s*[.)]|\s*[-:–—])?\s*(.*)$/i);
+      if (m) {
+        num = parseInt(m[1], 10);
+        title = (m[2] || '').trim();
+        if (!title) title = `Group ${num}`;
+        return { num, title };
+      }
+
+      // Fallback: find a small number anywhere (avoid picking years)
+      m = raw.match(/\b(\d{1,2})\b/);
+      if (m) {
+        num = parseInt(m[1], 10);
+        const after = raw.replace(/^.*?\b\d{1,2}\b\s*[.)-:–—]?\s*/, '');
+        title = after.trim() || `Group ${num}`;
+        return { num, title };
+      }
+
       return { num, title };
     }
 
@@ -377,7 +426,7 @@
       const classStudents = roster.filter(s => s['Class and Section'] === selectedClass);
       for (const s of classStudents) {
         const a = assigns[s.ID];
-        if (a && a.num === groupNum) return a.title || '';
+        if (a && a.num === groupNum) return a.title || (`Group ${a.num}`);
       }
       return '';
     }
@@ -547,7 +596,7 @@
       return `
         <div class="group-panel rounded-2xl shadow-lg border border-emerald-100 overflow-hidden">
           <div class="bg-gradient-to-r from-emerald-700 to-teal-700 px-4 py-3 flex items-center justify-between">
-            <h3 class="text-white font-bold text-lg">${groupNum}. &quot;${headerTitle}&quot;</h3>
+            <h3 class="text-white font-bold text-lg">${groupNum}. ${headerTitle}</h3>
           </div>
           <div class="p-4 grid grid-cols-2 gap-3">
             ${tilesHtml}
@@ -874,6 +923,7 @@
           const newDateColByISO = {};
           const seenIds = new Set();
           const allISODateHeaders = new Set();
+          let sawObjectRowsWithDuplicateHeaders = false;
 
           for (const [classSection, sheet] of Object.entries(payload.sheets)) {
             const headers = Array.isArray(sheet.headers) ? sheet.headers : [];
@@ -881,15 +931,29 @@
             const dateISOHeaders = dateHeaders.map(parseDateHeaderToISO).filter(Boolean);
             dateISOHeaders.forEach(d => allISODateHeaders.add(d));
 
-            // Map each date column to its adjacent "Group" column index, if present
+            // Detect duplicate header names and whether rows are arrays or objects
+            const headerCounts = {};
+            headers.forEach(h => { const k = String(h || ''); headerCounts[k] = (headerCounts[k] || 0) + 1; });
+            const hasDuplicateHeaders = Object.values(headerCounts).some(c => c > 1);
+
+            // Helper: robust date header detector using ISO parse
+            const isDateHeader = (h) => !!parseDateHeaderToISO(String(h || '').trim());
+
+            // Map each date column to the immediately adjacent group column (to the right),
+            // if the next header is not another date header.
             const dateCols = [];
             newDateColByISO[classSection] = newDateColByISO[classSection] || {};
             for (let i = 0; i < headers.length; i++) {
-              const h = headers[i];
-              if (/\w{3,}\s\d{1,2},\s\d{4}/.test(h)) {
+              const h = String(headers[i] || '').trim();
+              if (isDateHeader(h)) {
                 const iso = parseDateHeaderToISO(h);
-                const groupIndex = (i + 1 < headers.length && headers[i + 1] === 'Group') ? i + 1 : -1;
-                dateCols.push({ header: h, iso, groupIndex });
+                let groupIndex = -1;
+                if (i + 1 < headers.length) {
+                  const nextH = String(headers[i + 1] || '').trim();
+                  if (!isDateHeader(nextH)) groupIndex = i + 1;
+                }
+                // Store trimmed and raw header plus indices for robust reads
+                dateCols.push({ header: h, rawHeader: headers[i], dateIndex: i, iso, groupIndex });
                 if (iso) {
                   // ColumnNumber is 1-based index in the sheet
                   newDateColByISO[classSection][iso] = i + 1;
@@ -898,6 +962,8 @@
             }
             newRowByStudentId[classSection] = newRowByStudentId[classSection] || {};
             const rowsArr = sheet.rows || [];
+            const rowsAreArray = Array.isArray(rowsArr[0]);
+            const objectWithDuplicate = !rowsAreArray && hasDuplicateHeaders;
             for (let rIdx = 0; rIdx < rowsArr.length; rIdx++) {
               const row = rowsArr[rIdx];
               // Optionally keep a baseline group from any top-level Group field
@@ -930,24 +996,41 @@
               }
 
               // For each date column, record attendance and per-date group assignment
-              dateCols.forEach(col => {
-                const { header: dateH, iso, groupIndex } = col;
+              dateCols.forEach(({ header: dateH, rawHeader, dateIndex, iso, groupIndex }) => {
                 if (!iso) return;
                 // Attendance
-                const status = row[dateH];
+                let statusRaw;
+                if (Array.isArray(row)) {
+                  statusRaw = row[dateIndex];
+                } else {
+                  // Use original, untrimmed header to avoid key mismatches
+                  statusRaw = row[rawHeader];
+                }
+                const status = normalizeStatus(statusRaw);
                 if (status && ['Present', 'Absent', 'Late', '-'].includes(status)) {
                   const aKey = getAttendanceKey(student['Class and Section'], iso);
                   if (!newAttendance[aKey]) newAttendance[aKey] = {};
                   newAttendance[aKey][student.ID] = status;
                 }
-                // Group assignment
+                // Group assignment from the adjacent (right) column for that date, if present
                 if (groupIndex !== -1) {
-                  const groupRawForDate = row[headers[groupIndex]];
-                  const info = extractGroupInfo(groupRawForDate);
-                  if (info && info.num) {
-                    const gKey = getAttendanceKey(student['Class and Section'], iso);
-                    if (!newGroupAssignments[gKey]) newGroupAssignments[gKey] = {};
-                    newGroupAssignments[gKey][student.ID] = { num: info.num, title: info.title || '' };
+                  if (objectWithDuplicate) {
+                    // Avoid wrong mapping when duplicate headers exist with object rows
+                    sawObjectRowsWithDuplicateHeaders = true;
+                  } else {
+                    let groupRawForDate;
+                    if (Array.isArray(row)) {
+                      groupRawForDate = row[groupIndex];
+                    } else {
+                      const groupHeader = headers[groupIndex];
+                      groupRawForDate = row[groupHeader];
+                    }
+                    const info = extractGroupInfo(groupRawForDate);
+                    if (info && info.num) {
+                      const gKey = getAttendanceKey(student['Class and Section'], iso);
+                      if (!newGroupAssignments[gKey]) newGroupAssignments[gKey] = {};
+                      newGroupAssignments[gKey][student.ID] = { num: info.num, title: info.title || '' };
+                    }
                   }
                 }
               });
@@ -973,6 +1056,9 @@
 
           updateHeader();
           renderGroups();
+          if (sawObjectRowsWithDuplicateHeaders) {
+            showToast('Detected duplicate headers with object rows; per-date groups require array rows aligned to headers.', 'warning');
+          }
           showToast('Classes loaded', 'success');
         } catch (err) {
           console.error('Failed to load classes:', err);
