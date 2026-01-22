@@ -93,7 +93,7 @@
      </div><!-- Show Photos Toggle --> <label class="flex items-center gap-2 cursor-pointer"> <input type="checkbox" id="show-photos" checked class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"> <span class="text-sm font-semibold text-slate-600">Show Photos</span> </label> <!-- Search -->
      <div class="flex-1 min-w-[200px]"><input type="text" id="search-box" placeholder="Search by Name, Nickname, ID, or Email..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
      </div><!-- Action Buttons -->
-    <div class="flex gap-2"><button id="import-btn" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors"> Load Classes </button> <button id="export-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors"> Export CSV </button>
+    <div class="flex gap-2"><button id="import-btn" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors"> Load Classes </button> <button id="export-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors"> Export CSV </button> <button id="logout-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg transition-colors hidden"> Logout </button>
      </div>
     </div>
    </div><!-- Main Content - Groups Grid -->
@@ -725,6 +725,8 @@
           try { data = await resp.json(); } catch { text = await resp.text(); }
           if ((data && (data.ok === true || data.success === true)) || (!data && /ok|success|true/i.test(text))) {
             isAdmin = true; adminUser = username; saveAuthState();
+            const lb = document.getElementById('logout-btn');
+            if (lb) lb.classList.remove('hidden');
             hideLoginModal();
             showToast('Login successful', 'success');
             return true;
@@ -1123,6 +1125,20 @@
       const newExportBtn = document.getElementById('export-btn');
       if (newExportBtn) {
         newExportBtn.addEventListener('click', (e) => { if (!ensureAdmin()) return; exportCSV(); });
+      }
+      
+      // Wire logout button and set initial visibility
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+        if (isAdmin) logoutBtn.classList.remove('hidden'); else logoutBtn.classList.add('hidden');
+        logoutBtn.addEventListener('click', () => {
+          isAdmin = false;
+          adminUser = '';
+          saveAuthState();
+          showToast('Logged out', 'info');
+          logoutBtn.classList.add('hidden');
+          showLoginModal();
+        });
       }
       
       // Initial render
