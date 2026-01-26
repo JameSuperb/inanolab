@@ -1,0 +1,3129 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MicroMeasure (ImageJ-lite)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
+    
+    * { box-sizing: border-box; }
+    
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --text-primary: #f1f5f9;
+      --accent-primary: #3b82f6;
+      --accent-secondary: #64748b;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    
+    .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-track { background: var(--bg-secondary); }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--accent-secondary); border-radius: 3px; }
+    
+    .tab-btn { transition: all 0.2s ease; }
+    .tab-btn.active { 
+      background: var(--accent-primary); 
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    .tool-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .btn-primary {
+      background: var(--accent-primary);
+      transition: all 0.2s ease;
+    }
+    .btn-primary:hover { 
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    .btn-primary:disabled {
+      background: #475569;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .btn-secondary {
+      background: var(--accent-secondary);
+      transition: all 0.2s ease;
+    }
+    .btn-secondary:hover { background: #475569; }
+    
+    .btn-danger {
+      background: #dc2626;
+      transition: all 0.2s ease;
+    }
+    .btn-danger:hover { background: #b91c1c; }
+    
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: transparent;
+    }
+    input[type="range"]::-webkit-slider-track {
+      height: 6px;
+      background: linear-gradient(to bottom, #1e293b, #334155, #1e293b);
+      border-radius: 3px;
+      border: 1px solid #64748b;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.1);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: linear-gradient(to bottom, #60a5fa, #3b82f6);
+      border-radius: 50%;
+      cursor: pointer;
+      margin-top: -6px;
+      border: 2px solid #1e293b;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.6), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      background: linear-gradient(to bottom, #93c5fd, #60a5fa);
+      box-shadow: 0 3px 8px rgba(59, 130, 246, 0.8), inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+    
+    .canvas-container {
+      position: relative;
+      overflow: hidden;
+      background: #000;
+      border-radius: 8px;
+    }
+    
+    /* Mobile performance & interaction hints for canvases */
+    #mainCanvas, #overlayCanvas {
+      will-change: transform;
+      touch-action: none;
+    }
+    
+    .canvas-container.drag-over {
+      outline: 3px dashed #3b82f6;
+      outline-offset: -8px;
+      background: rgba(59, 130, 246, 0.1);
+    }
+    
+    #mainCanvas, #overlayCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    
+    .measurement-item {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+    
+    .histogram-canvas {
+      background: var(--bg-primary);
+      border-radius: 8px;
+    }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-badge.warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .status-badge.success { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+    
+    .particle-table {
+      font-size: 11px;
+      width: 100%;
+    }
+    .particle-table th, .particle-table td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .particle-table th { 
+      background: rgba(0,0,0,0.3);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+    
+    .processing-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .processing-content {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 400px;
+      width: 90%;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(59, 130, 246, 0.2);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 16px;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full overflow-auto">
+  <div class="min-h-full flex flex-col"><!-- Header -->
+   <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 px-4 py-3 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-3">
+     <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
+      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+      </svg>
+     </div>
+     <div>
+      <h1 id="appTitle" class="text-lg font-bold text-white">MicroMeasure</h1>
+      <p class="text-xs text-slate-400">Image Analysis</p>
+     </div>
+    </div>
+    <div class="flex items-center gap-3"><span id="guidanceStatus" class="status-badge warning"> <span class="w-2 h-2 rounded-full bg-current"></span> Load an image </span> <button id="helpBtn" class="btn-secondary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2" title="Documentation">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg> Help </button> <button id="saveScreenshot" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2" disabled>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg> Save Image </button>
+    </div>
+   </header><!-- Main Content -->
+   <div class="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-hidden"><!-- Left Panel - Image Viewer -->
+    <div class="lg:w-2/3 flex flex-col gap-3 min-h-0"><!-- Image Controls -->
+     <div class="tool-card p-3 flex flex-wrap items-center gap-4"><label class="btn-primary px-4 py-2 rounded-lg cursor-pointer text-sm font-medium flex items-center gap-2">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+       </svg> Load Image <input type="file" id="imageInput" accept="image/*" class="hidden"> </label>
+      <div class="flex items-center gap-3 bg-slate-900/30 rounded-lg px-3 py-2 border border-slate-700/50"><span class="text-xs text-slate-400">Zoom:</span>
+       <div class="bg-slate-800 rounded px-3 py-1.5 flex items-center gap-2"><input type="range" id="zoomSlider" min="50" max="300" value="100" class="w-32"> <span id="zoomValue" class="text-xs mono w-10">100%</span>
+       </div>
+      </div>
+      <div id="imageDimensions" class="text-xs text-slate-400 mono hidden"><span id="imgWidth">0</span> × <span id="imgHeight">0</span> px
+      </div><button id="fitToView" class="btn-secondary px-3 py-1.5 rounded-lg text-xs hidden">Fit to View</button> <!-- Scale Calibration Section -->
+      <div class="flex items-center gap-2 bg-slate-900/30 rounded-lg px-3 py-2 border border-slate-700/50">
+       <svg class="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+       </svg><span class="text-xs text-slate-400 whitespace-nowrap">Scale:</span> <button id="setScaleBtn" class="btn-primary px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 whitespace-nowrap" disabled> Set Scale </button>
+       <div id="scaleInfo" class="hidden flex items-center gap-2"><span id="scaleValue" class="mono text-green-400 text-xs whitespace-nowrap">-</span> <button id="resetScaleBtn" class="btn-secondary px-2 py-1 rounded-lg text-xs" title="Reset Scale">Reset</button>
+       </div>
+      </div>
+      <div class="flex items-center gap-3 bg-slate-900/30 rounded-lg px-3 py-2 border border-slate-700/50 ml-auto hidden" id="panControls"><span class="text-xs text-slate-400">Pan:</span>
+       <div class="flex items-center gap-1"><button id="panLeft" class="btn-secondary px-2 py-1 rounded text-xs" title="Pan Left">←</button>
+        <div class="flex flex-col gap-1"><button id="panUp" class="btn-secondary px-2 py-0.5 rounded text-xs leading-none" title="Pan Up">↑</button> <button id="panDown" class="btn-secondary px-2 py-0.5 rounded text-xs leading-none" title="Pan Down">↓</button>
+        </div><button id="panRight" class="btn-secondary px-2 py-1 rounded text-xs" title="Pan Right">→</button>
+       </div><button id="resetPan" class="btn-secondary px-2 py-1 rounded text-xs" title="Reset Pan">🎯</button>
+      </div>
+     </div><!-- Calibration Inputs Panel -->
+     <div id="calibrationInputs" class="hidden tool-card p-3">
+      <div class="grid grid-cols-2 gap-3">
+       <div><label class="text-xs text-slate-400 block mb-1">Known Length</label> <input type="number" id="knownLength" step="any" min="0" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm" placeholder="e.g., 100">
+       </div>
+       <div><label class="text-xs text-slate-400 block mb-1">Unit</label> <select id="unitSelect" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm"> <option value="nm">nm</option> <option value="μm" selected>μm</option> <option value="mm">mm</option> </select>
+       </div>
+       <div class="col-span-2 flex gap-2"><button id="saveScale" class="btn-primary px-4 py-2 rounded-lg text-sm flex-1">Save Scale</button> <button id="cancelScale" class="btn-secondary px-4 py-2 rounded-lg text-sm">Cancel</button>
+       </div>
+      </div>
+     </div><!-- Canvas Container -->
+     <div class="flex-1 tool-card overflow-hidden min-h-[300px] lg:min-h-0">
+      <div id="canvasWrapper" class="canvas-container w-full h-full flex items-center justify-center">
+       <div id="noImagePlaceholder" class="text-center p-8 pointer-events-none">
+        <svg class="w-16 h-16 mx-auto text-slate-600 mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <p class="text-slate-500 text-sm">Load an image to begin analysis</p>
+        <p class="text-slate-600 text-xs mt-1">Supports PNG, JPG, TIFF formats</p>
+        <p class="text-slate-500 text-xs mt-3">↓ Drag &amp; drop an image here</p>
+       </div>
+       <canvas id="mainCanvas" class="hidden"></canvas>
+       <canvas id="overlayCanvas" class="hidden"></canvas>
+      </div>
+     </div>
+    </div><!-- Right Panel - Tools -->
+    <div class="lg:w-1/3 flex flex-col gap-3 min-h-0"><!-- Tool Tabs -->
+     <div class="tool-card p-2 flex gap-1 flex-wrap"><button class="tab-btn active px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="length">Length</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="area">Area</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="particles">Particles</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="holes">Holes</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="results">Results</button>
+     </div><!-- Tool Content -->
+     <div class="tool-card flex-1 p-4 overflow-y-auto scrollbar-thin min-h-[200px]"><!-- Length Tab -->
+      <div id="lengthTab" class="tab-content">
+       <p class="text-xs text-slate-400 mb-3">Click two points on the image to measure distance.</p>
+       <div id="editLengthModeControls" class="hidden bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 mb-3">
+        <p class="text-xs text-yellow-300 mb-2 font-medium">✏️ Editing Length <span id="editingLengthLabel"></span></p>
+        <p class="text-xs text-slate-400 mb-3">Drag the endpoints to adjust the line.</p>
+        <div class="flex gap-2"><button id="saveLengthEdit" class="btn-primary px-3 py-1.5 rounded-lg text-xs flex-1">Save Changes</button> <button id="cancelLengthEdit" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1">Cancel</button>
+        </div>
+       </div>
+       <div id="lengthMeasurements" class="max-h-48 overflow-y-auto scrollbar-thin mb-3"></div><button id="clearLengths" class="btn-danger px-3 py-1.5 rounded-lg text-xs w-full hidden">Clear All Lengths</button>
+      </div><!-- Area Tab -->
+      <div id="areaTab" class="tab-content hidden">
+       <p id="areaInstructions" class="text-xs text-slate-400 mb-3">Click points to create polygon.</p><button id="closePolygonBtn" class="hidden btn-primary px-4 py-2 rounded-lg text-sm w-full mb-3">Close Polygon (3+ points)</button>
+       <div id="editModeControls" class="hidden bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 mb-3">
+        <p class="text-xs text-yellow-300 mb-2 font-medium">✏️ Editing Area <span id="editingAreaLabel"></span></p>
+        <p class="text-xs text-slate-400 mb-3">Drag points to adjust shape. Click edge to add point. Right-click point to delete.</p>
+        <div class="flex gap-2"><button id="saveAreaEdit" class="btn-primary px-3 py-1.5 rounded-lg text-xs flex-1">Save Changes</button> <button id="cancelAreaEdit" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1">Cancel</button>
+        </div>
+       </div>
+       <div id="areaMeasurements" class="max-h-48 overflow-y-auto scrollbar-thin mb-3"></div><button id="clearAreas" class="btn-danger px-3 py-1.5 rounded-lg text-xs w-full hidden">Clear All Areas</button>
+      </div><!-- Particles Tab -->
+      <div id="particlesTab" class="tab-content hidden">
+       <div class="space-y-3"><!-- ROI Selection -->
+        <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+         <h4 class="text-xs font-semibold mb-2 text-blue-400">Region of Interest</h4>
+         <div id="particleROIControls"><button id="selectParticleROI" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full mb-2 disabled:opacity-50" disabled> 📐 Select ROI (Draw Rectangle) </button>
+          <div id="particleROIInfo" class="hidden">
+           <div class="text-xs text-slate-400 mb-2"><span class="font-medium text-green-400">ROI Active:</span> <span id="particleROIDimensions" class="mono ml-1"></span>
+           </div><button id="clearParticleROI" class="btn-danger px-2 py-1 rounded-lg text-xs w-full">Clear ROI (Use Full Image)</button>
+          </div>
+         </div>
+        </div><!-- Preprocessing Section -->
+        <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+         <h4 class="text-xs font-semibold mb-2 text-blue-400">Preprocessing</h4><label class="flex items-center gap-2 text-xs cursor-pointer mb-2"> <input type="checkbox" id="backgroundSubtraction" class="accent-blue-500"> Background subtraction </label>
+         <div id="backgroundOptions" class="ml-5 mb-2 hidden"><label class="text-xs text-slate-400">Rolling ball radius (px)</label> <input type="number" id="rollingBallRadius" value="50" min="10" max="200" step="10" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-xs mt-1">
+         </div>
+         <div class="mb-2"><label class="text-xs text-slate-400 block mb-1">Smoothing</label> <select id="smoothingMethod" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-xs"> <option value="none">None</option> <option value="gaussian3">Gaussian 3×3</option> <option value="median3">Median 3×3</option> <option value="median5">Median 5×5</option> </select>
+         </div><label class="flex items-center gap-2 text-xs cursor-pointer"> <input type="checkbox" id="morphologicalOpening" class="accent-blue-500"> Morphological opening (remove small objects) </label>
+        </div><!-- Thresholding Section -->
+        <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+         <h4 class="text-xs font-semibold mb-2 text-blue-400">Thresholding</h4>
+         <div class="flex items-center gap-2 mb-2"><button id="autoThresholdBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1">Auto (Otsu)</button> <label class="flex items-center gap-2 text-xs cursor-pointer"> <input type="checkbox" id="adaptiveThreshold" class="accent-blue-500"> Adaptive </label>
+         </div>
+         <div id="manualThresholdControls"><label class="text-xs text-slate-400 flex justify-between"> <span>Manual Threshold</span> <span id="thresholdValue" class="mono">128</span> </label> <input type="range" id="particleThreshold" min="0" max="255" value="128" class="w-full mt-1">
+         </div>
+         <div id="adaptiveThresholdControls" class="hidden mt-2"><label class="text-xs text-slate-400">Block size (px)</label> <input type="number" id="adaptiveBlockSize" value="32" min="8" max="128" step="8" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-xs mt-1">
+         </div>
+        </div>
+        <div class="flex items-center gap-2"><label class="flex items-center gap-2 text-xs cursor-pointer"> <input type="radio" name="particlePolarity" value="bright" checked class="accent-blue-500"> Particles are bright </label> <label class="flex items-center gap-2 text-xs cursor-pointer"> <input type="radio" name="particlePolarity" value="dark" class="accent-blue-500"> Particles are dark </label>
+        </div>
+        <div><label class="text-xs text-slate-400" id="minParticleAreaLabel">Min Area (px²)</label> <input type="number" id="minParticleArea" value="10" min="0.001" step="any" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm mt-1" disabled>
+         <p class="text-xs text-slate-500 mt-1">Set scale first to enable</p>
+        </div><button id="analyzeParticles" class="btn-primary px-4 py-2 rounded-lg text-sm w-full disabled:opacity-50" disabled>Analyze Particles</button>
+        <div id="particleResults" class="hidden">
+         <div class="bg-slate-900/50 rounded-lg p-3 mt-3">
+          <h4 class="text-xs font-semibold mb-2">Summary Statistics</h4>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+           <div>
+            <span class="text-slate-400">Count:</span> <span id="particleCount" class="mono">-</span>
+           </div>
+           <div>
+            <span class="text-slate-400">Mean Area:</span> <span id="particleMeanArea" class="mono">-</span>
+           </div>
+           <div>
+            <span class="text-slate-400">Mean ECD:</span> <span id="particleMeanECD" class="mono">-</span>
+           </div>
+           <div>
+            <span class="text-slate-400">Std Dev:</span> <span id="particleStdDev" class="mono">-</span>
+           </div>
+          </div>
+         </div>
+         <div class="mt-3">
+          <h4 class="text-xs font-semibold mb-2">ECD Histogram</h4>
+          <canvas id="particleHistogram" class="histogram-canvas w-full h-24"></canvas>
+         </div>
+        </div>
+       </div>
+      </div><!-- Holes Tab -->
+      <div id="holesTab" class="tab-content hidden">
+       <div class="space-y-3"><!-- ROI Selection -->
+        <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+         <h4 class="text-xs font-semibold mb-2 text-blue-400">Region of Interest</h4>
+         <div id="holeROIControls"><button id="selectHoleROI" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full mb-2 disabled:opacity-50" disabled> 📐 Select ROI (Draw Rectangle) </button>
+          <div id="holeROIInfo" class="hidden">
+           <div class="text-xs text-slate-400 mb-2"><span class="font-medium text-green-400">ROI Active:</span> <span id="holeROIDimensions" class="mono ml-1"></span>
+           </div><button id="clearHoleROI" class="btn-danger px-2 py-1 rounded-lg text-xs w-full">Clear ROI (Use Full Image)</button>
+          </div>
+         </div>
+        </div><!-- Preprocessing Section -->
+        <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+         <h4 class="text-xs font-semibold mb-2 text-blue-400">Preprocessing</h4><label class="flex items-center gap-2 text-xs cursor-pointer mb-2"> <input type="checkbox" id="holeBackgroundSubtraction" class="accent-blue-500"> Background subtraction </label>
+         <div id="holeBackgroundOptions" class="ml-5 mb-2 hidden"><label class="text-xs text-slate-400">Rolling ball radius (px)</label> <input type="number" id="holeRollingBallRadius" value="50" min="10" max="200" step="10" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-xs mt-1">
+         </div>
+         <div class="mb-2"><label class="text-xs text-slate-400 block mb-1">Smoothing</label> <select id="holeSmoothingMethod" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-1.5 text-xs"> <option value="none">None</option> <option value="gaussian3">Gaussian 3×3</option> <option value="median3">Median 3×3</option> <option value="median5">Median 5×5</option> </select>
+         </div><label class="flex items-center gap-2 text-xs cursor-pointer"> <input type="checkbox" id="holeMorphologicalOpening" class="accent-blue-500"> Morphological opening (remove small objects) </label>
+        </div><!-- Thresholding Section -->
+        <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+         <h4 class="text-xs font-semibold mb-2 text-blue-400">Thresholding</h4>
+         <div class="flex items-center gap-2 mb-2"><button id="autoThresholdHoleBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1">Auto (Otsu)</button> <label class="flex items-center gap-2 text-xs cursor-pointer"> <input type="checkbox" id="adaptiveThresholdHole" class="accent-blue-500"> Adaptive </label>
+         </div>
+         <div id="manualThresholdHoleControls"><label class="text-xs text-slate-400 flex justify-between"> <span>Manual Threshold</span> <span id="holeThresholdValue" class="mono">128</span> </label> <input type="range" id="holeThreshold" min="0" max="255" value="128" class="w-full mt-1">
+         </div>
+         <div id="adaptiveThresholdHoleControls" class="hidden mt-2"><label class="text-xs text-slate-400">Block size (px)</label> <input type="number" id="holeAdaptiveBlockSize" value="32" min="8" max="128" step="8" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-2 py-1 text-xs mt-1">
+         </div>
+        </div>
+        <div class="flex items-center gap-2"><label class="flex items-center gap-2 text-xs cursor-pointer"> <input type="radio" name="holePolarity" value="dark" checked class="accent-blue-500"> Holes are dark </label> <label class="flex items-center gap-2 text-xs cursor-pointer"> <input type="radio" name="holePolarity" value="bright" class="accent-blue-500"> Holes are bright </label>
+        </div>
+        <div><label class="text-xs text-slate-400" id="minHoleAreaLabel">Min Area (px²)</label> <input type="number" id="minHoleArea" value="10" min="0.001" step="any" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm mt-1" disabled>
+         <p class="text-xs text-slate-500 mt-1">Set scale first to enable</p>
+        </div><button id="analyzeHoles" class="btn-primary px-4 py-2 rounded-lg text-sm w-full disabled:opacity-50" disabled>Analyze Holes</button>
+        <div id="holeResults" class="hidden">
+         <div class="bg-slate-900/50 rounded-lg p-3 mt-3">
+          <h4 class="text-xs font-semibold mb-2">Summary Statistics</h4>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+           <div>
+            <span class="text-slate-400">Count:</span> <span id="holeCount" class="mono">-</span>
+           </div>
+           <div>
+            <span class="text-slate-400">Mean Area:</span> <span id="holeMeanArea" class="mono">-</span>
+           </div>
+           <div>
+            <span class="text-slate-400">Mean ECD:</span> <span id="holeMeanECD" class="mono">-</span>
+           </div>
+           <div>
+            <span class="text-slate-400">Std Dev:</span> <span id="holeStdDev" class="mono">-</span>
+           </div>
+          </div>
+         </div>
+         <div class="mt-3">
+          <h4 class="text-xs font-semibold mb-2">ECD Histogram</h4>
+          <canvas id="holeHistogram" class="histogram-canvas w-full h-24"></canvas>
+         </div>
+        </div>
+       </div>
+      </div><!-- Results Tab -->
+      <div id="resultsTab" class="tab-content hidden">
+       <div class="flex gap-2 mb-3 flex-wrap"><button id="copyTable" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[80px]">Copy TSV</button> <button id="downloadCSV" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[100px]">Download CSV</button> <button id="resetProject" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[60px]">Reset</button>
+       </div>
+       <div class="overflow-x-auto">
+        <table id="resultsTable" class="particle-table">
+         <thead>
+          <tr>
+           <th>Type</th>
+           <th>ID</th>
+           <th>Value (px)</th>
+           <th>Value (real)</th>
+          </tr>
+         </thead>
+         <tbody id="resultsBody"></tbody>
+        </table>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div><!-- Processing Modal -->
+  <div id="processingModal" class="processing-modal hidden">
+   <div class="processing-content">
+    <div class="spinner"></div>
+    <h3 id="processingTitle" class="text-lg font-semibold text-center mb-2">Processing Image</h3>
+    <p id="processingStep" class="text-sm text-slate-400 text-center mb-1">Initializing...</p>
+    <p id="processingTime" class="text-xs text-slate-500 text-center mono">Estimating time...</p>
+    <div class="progress-bar-container">
+     <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+    </div>
+   </div>
+  </div><!-- Documentation Modal -->
+  <div id="docModal" class="processing-modal hidden">
+   <div class="processing-content max-w-3xl max-h-[90vh] flex flex-col">
+    <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-700 flex-shrink-0">
+     <h2 class="text-xl font-bold text-blue-400">MicroMeasure Documentation</h2><button id="closeDocBtn" class="text-slate-400 hover:text-white text-2xl leading-none">×</button>
+    </div>
+    <div class="space-y-6 text-sm overflow-y-auto scrollbar-thin flex-1"><!-- Project Information -->
+     <section>
+      <h3 class="text-xl font-bold text-blue-400 mb-3">Web-Based Image Analysis and Measurement Tool</h3>
+      <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 space-y-2">
+       <p><strong>Version:</strong> 1.0</p>
+       <p><strong>Website:</strong> <a href="https://www.inanolab.com/micromeasure.html" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline">https://www.inanolab.com/micromeasure.html</a></p>
+       <p><strong>Developer / Programmer:</strong> Dr. James Salveo Olarve</p>
+       <p><strong>Affiliation:</strong> i-Nano Research Facility, De La Salle University Manila</p>
+      </div>
+     </section><!-- Overview -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">📖 Overview</h3>
+      <p class="text-slate-300 mb-2">MicroMeasure is a browser-based image analysis application designed for quantitative measurements of scientific images, particularly microscopy images such as scanning electron microscopy (SEM) micrographs. The application provides intuitive tools for measuring length, area, particle size, and hole size, without requiring software installation.</p>
+      <p class="text-slate-300">MicroMeasure is inspired by widely used scientific image analysis platforms (e.g., ImageJ) but optimized for fast, web-based workflows and educational use.</p>
+     </section><!-- Intended Users -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">👥 Intended Users</h3>
+      <p class="text-slate-300 mb-2">MicroMeasure is intended for:</p>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li>Researchers and laboratory personnel</li>
+       <li>Graduate and undergraduate students</li>
+       <li>Educators and instructors</li>
+       <li>Materials science, physics, chemistry, biology, and engineering users</li>
+      </ul>
+     </section><!-- Quick Start -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">������� Quick Start</h3>
+      <ol class="list-decimal list-inside space-y-2 text-slate-300">
+       <li><strong>Load an image</strong> - Click "Load Image" or drag &amp; drop an image file</li>
+       <li><strong>Set the scale</strong> - Click "Set Scale", draw a line of known length, then enter the real-world measurement</li>
+       <li><strong>Make measurements</strong> - Use the tabs to measure lengths, areas, particles, or holes</li>
+       <li><strong>Export results</strong> - Go to Results tab to copy, download, or save your data</li>
+      </ol>
+     </section><!-- Scale Calibration -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">📏 Scale Calibration</h3>
+      <p class="text-slate-300 mb-2">Before making real-world measurements, you must calibrate the scale:</p>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li>Click the <strong>Set Scale</strong> button in the image controls</li>
+       <li>Click two points on a feature of known length (e.g., a scale bar)</li>
+       <li>Enter the known length and select the unit (nm, μm, mm)</li>
+       <li>Click <strong>Save Scale</strong> to apply calibration</li>
+       <li>All measurements will now show both pixel and real-world values</li>
+       <li>Use <strong>Reset</strong> to clear calibration if needed</li>
+      </ul>
+     </section><!-- Length Measurements -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">📐 Length Measurements</h3>
+      <p class="text-slate-300 mb-2">Measure distances between two points:</p>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li>Switch to the <strong>Length</strong> tab</li>
+       <li>Click two points on the image to create a measurement</li>
+       <li>Each measurement is labeled (L1, L2, etc.)</li>
+       <li>Use the <strong>Edit (✏️)</strong> button to adjust endpoints by dragging</li>
+       <li>Use the <strong>Eye (👁)</strong> button to show/hide measurements</li>
+       <li>Click the <strong>��</strong> button to delete a measurement</li>
+      </ul>
+     </section><!-- Area Measurements -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">📊 Area Measurements</h3>
+      <p class="text-slate-300 mb-2">Measure polygon areas by defining vertices:</p>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li>Switch to the <strong>Area</strong> tab</li>
+       <li>Click points to create a polygon outline</li>
+       <li>Click <strong>Close Polygon</strong> when you have 3+ points, or double-click to close</li>
+       <li>Each area is labeled (A1, A2, etc.)</li>
+       <li>Use <strong>Edit</strong> to adjust vertices by dragging points</li>
+       <li>While editing, right-click a point to delete it, or click an edge to add a point</li>
+       <li>Use <strong>Eye</strong> to show/hide, <strong>×</strong> to delete</li>
+      </ul>
+     </section><!-- Particle Analysis -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">🔬 Particle Analysis</h3>
+      <p class="text-slate-300 mb-2">Automatically detect and measure particles:</p>
+      <h4 class="font-semibold text-blue-300 mt-3 mb-1">Region of Interest (ROI)</h4>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li>Click <strong>Select ROI</strong> to restrict analysis to a specific region</li>
+       <li>Click and drag to draw a rectangular region</li>
+       <li>Click <strong>Clear ROI</strong> to analyze the full image</li>
+      </ul>
+      <h4 class="font-semibold text-blue-300 mt-3 mb-1">Preprocessing Options</h4>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li><strong>Background subtraction</strong> - Removes uneven illumination (rolling ball method)</li>
+       <li><strong>Smoothing</strong> - Reduces noise using Gaussian or Median filters</li>
+       <li><strong>Morphological opening</strong> - Removes small noise objects</li>
+      </ul>
+      <h4 class="font-semibold text-blue-300 mt-3 mb-1">Thresholding</h4>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li><strong>Auto (Otsu)</strong> - Automatically calculates optimal threshold</li>
+       <li><strong>Manual</strong> - Adjust threshold slider (0-255)</li>
+       <li><strong>Adaptive</strong> - Local thresholding for uneven backgrounds</li>
+       <li>Select whether particles are <strong>bright</strong> or <strong>dark</strong></li>
+      </ul>
+      <h4 class="font-semibold text-blue-300 mt-3 mb-1">Analysis</h4>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li>Set <strong>Min Area</strong> to filter out small noise (in real units if calibrated)</li>
+       <li>Click <strong>Analyze Particles</strong></li>
+       <li>View count, mean area, mean ECD (Equivalent Circular Diameter), and size distribution</li>
+       <li>Each detected particle is outlined in orange on the image</li>
+      </ul>
+     </section><!-- Hole Analysis -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">🕳️ Hole Analysis</h3>
+      <p class="text-slate-300 mb-2">Automatically detect and measure holes/voids in materials:</p>
+      <h4 class="font-semibold text-blue-300 mt-3 mb-1">Region of Interest (ROI)</h4>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li>Click <strong>Select ROI</strong> to restrict analysis to a specific region</li>
+       <li>Click and drag to draw a rectangular region</li>
+       <li>Click <strong>Clear ROI</strong> to analyze the full image</li>
+      </ul>
+      <h4 class="font-semibold text-blue-300 mt-3 mb-1">Preprocessing Options</h4>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li><strong>Background subtraction</strong> - Removes uneven illumination (rolling ball method)</li>
+       <li><strong>Smoothing</strong> - Reduces noise using Gaussian or Median filters</li>
+       <li><strong>Morphological opening</strong> - Removes small noise objects</li>
+      </ul>
+      <h4 class="font-semibold text-blue-300 mt-3 mb-1">Thresholding</h4>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li><strong>Auto (Otsu)</strong> - Automatically calculates optimal threshold</li>
+       <li><strong>Manual</strong> - Adjust threshold slider (0-255)</li>
+       <li><strong>Adaptive</strong> - Local thresholding for uneven backgrounds</li>
+       <li>Select whether holes are <strong>dark</strong> or <strong>bright</strong></li>
+      </ul>
+      <h4 class="font-semibold text-blue-300 mt-3 mb-1">Analysis</h4>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li>Set <strong>Min Area</strong> to filter out small noise (in real units if calibrated)</li>
+       <li>Click <strong>Analyze Holes</strong></li>
+       <li>View count, mean area, mean ECD (Equivalent Circular Diameter), and size distribution</li>
+       <li>Each detected hole is outlined in purple on the image</li>
+      </ul>
+     </section><!-- Navigation & Controls -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">��� Navigation &amp; Controls</h3>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li><strong>Zoom</strong> - Use the slider, mouse wheel, or pinch gesture</li>
+       <li><strong>Pan</strong> - Middle-click drag, Alt+drag, two-finger drag, or use arrow buttons/keys</li>
+       <li><strong>Fit to View</strong> - Automatically adjusts zoom to fit the image</li>
+       <li><strong>Drag &amp; Drop</strong> - Drag image files directly onto the canvas</li>
+      </ul>
+     </section><!-- Results & Export -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">📥 Results &amp; Export</h3>
+      <p class="text-slate-300 mb-2">Access all measurements in the Results tab:</p>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li><strong>Save Image</strong> - Export image with all measurements overlaid (PNG)</li>
+       <li><strong>Copy TSV</strong> - Copy table data as tab-separated values (paste into spreadsheets)</li>
+       <li><strong>Download CSV</strong> - Export all measurements as a CSV file</li>
+       <li><strong>Reset</strong> - Clear all measurements and start fresh (keeps the image)</li>
+      </ul>
+     </section><!-- Tips & Tricks -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">💡 Tips &amp; Tricks</h3>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li>Always calibrate scale first for accurate real-world measurements</li>
+       <li>Use ROI selection to speed up particle/hole analysis on large images</li>
+       <li>Try Auto (Otsu) threshold first, then adjust manually if needed</li>
+       <li>Adaptive thresholding works best for images with uneven lighting</li>
+       <li>Background subtraction is useful for removing gradients in microscopy images</li>
+       <li>Increase smoothing to reduce noise, but be careful not to blur features</li>
+       <li>Morphological opening removes small speckles without affecting larger particles</li>
+       <li>The Save Image button is only enabled when you have measurements on the image</li>
+      </ul>
+     </section><!-- Keyboard Shortcuts -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">⌨️ Keyboard Shortcuts</h3>
+      <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+       <li><strong>Arrow Keys</strong> - Pan the image</li>
+       <li><strong>Mouse Wheel</strong> - Zoom in/out</li>
+       <li><strong>Alt + Left Click</strong> - Pan the image</li>
+      </ul>
+     </section><!-- Citation Recommendation -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">📚 Citation Recommendation</h3>
+      <p class="text-slate-300 mb-2">If you use MicroMeasure in academic work:</p>
+      <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+       <p class="text-slate-300 text-sm font-mono leading-relaxed">Olarve, J. S. L. (2026). MicroMeasure: A web-based image analysis and measurement tool. i-Nano Research Facility, De La Salle University Manila. Retrieved from https://www.inanolab.com/micromeasure.html</p>
+       <p class="text-slate-400 text-xs mt-3 italic">(Updated citation will be provided once DOI is assigned.)</p>
+      </div>
+     </section><!-- Disclaimer -->
+     <section>
+      <h3 class="text-lg font-semibold text-white mb-2">⚠️ Disclaimer</h3>
+      <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 space-y-2">
+       <p class="text-slate-300 text-sm">MicroMeasure is provided for research and educational purposes only.</p>
+       <p class="text-slate-300 text-sm">While every effort has been made to ensure accuracy, the developer makes no guarantees regarding absolute measurement correctness for all imaging conditions. Users are solely responsible for verifying calibration accuracy and validating results for their specific applications.</p>
+       <p class="text-slate-300 text-sm">MicroMeasure does not replace certified metrology software or instrument calibration standards.</p>
+      </div>
+     </section>
+    </div>
+    <div class="mt-6 pt-4 border-t border-slate-700"><button id="closeDocBtnBottom" class="btn-primary px-6 py-2 rounded-lg text-sm w-full">Close Documentation</button>
+    </div>
+   </div>
+  </div>
+  <script>
+    // ========== STATE ==========
+    const state = {
+      image: null,
+      imageData: null,
+      zoom: 100,
+      panX: 0,
+      panY: 0,
+      isPanning: false,
+      lastPanX: 0,
+      lastPanY: 0,
+      
+      // Calibration
+      isCalibrated: false,
+      unitsPerPixel: 0,
+      unit: 'μm',
+      calibrationLine: null,
+      isSettingScale: false,
+      scalePoints: [],
+      
+      // Current tool
+      currentTool: 'length',
+      
+      // Length measurements
+      lengthPoints: [],
+      lengths: [],
+      editingLengthIndex: null,
+      draggedLengthPoint: null, // 'p1' or 'p2'
+      
+      // Area measurements
+      areaPoints: [],
+      areas: [],
+      editingAreaIndex: null,
+      draggedPointIndex: null,
+      
+      // Particles
+      particles: [],
+      
+      // Holes
+      holes: [],
+      
+      // ROI (Region of Interest)
+      roi: null, // {x, y, width, height}
+      isDrawingROI: false,
+      roiStart: null,
+      roiMode: null // 'particles' or 'holes'
+    };
+    
+    // ========== DOM ELEMENTS ==========
+    const elements = {
+      imageInput: document.getElementById('imageInput'),
+      mainCanvas: document.getElementById('mainCanvas'),
+      overlayCanvas: document.getElementById('overlayCanvas'),
+      canvasWrapper: document.getElementById('canvasWrapper'),
+      noImagePlaceholder: document.getElementById('noImagePlaceholder'),
+      zoomSlider: document.getElementById('zoomSlider'),
+      zoomValue: document.getElementById('zoomValue'),
+      imageDimensions: document.getElementById('imageDimensions'),
+      imgWidth: document.getElementById('imgWidth'),
+      imgHeight: document.getElementById('imgHeight'),
+      fitToView: document.getElementById('fitToView'),
+      panLeft: document.getElementById('panLeft'),
+      panRight: document.getElementById('panRight'),
+      panUp: document.getElementById('panUp'),
+      panDown: document.getElementById('panDown'),
+      resetPan: document.getElementById('resetPan'),
+      setScaleBtn: document.getElementById('setScaleBtn'),
+      calibrationInputs: document.getElementById('calibrationInputs'),
+      knownLength: document.getElementById('knownLength'),
+      unitSelect: document.getElementById('unitSelect'),
+      saveScale: document.getElementById('saveScale'),
+      cancelScale: document.getElementById('cancelScale'),
+      scaleInfo: document.getElementById('scaleInfo'),
+      scaleValue: document.getElementById('scaleValue'),
+      calLineLength: document.getElementById('calLineLength'),
+      resetScaleBtn: document.getElementById('resetScaleBtn'),
+      guidanceStatus: document.getElementById('guidanceStatus'),
+      appTitle: document.getElementById('appTitle'),
+      
+      // Tabs
+      tabBtns: document.querySelectorAll('.tab-btn'),
+      tabContents: document.querySelectorAll('.tab-content'),
+      
+      // Length
+      lengthMeasurements: document.getElementById('lengthMeasurements'),
+      clearLengths: document.getElementById('clearLengths'),
+      editLengthModeControls: document.getElementById('editLengthModeControls'),
+      editingLengthLabel: document.getElementById('editingLengthLabel'),
+      saveLengthEdit: document.getElementById('saveLengthEdit'),
+      cancelLengthEdit: document.getElementById('cancelLengthEdit'),
+      
+      // Area
+      areaMeasurements: document.getElementById('areaMeasurements'),
+      clearAreas: document.getElementById('clearAreas'),
+      areaInstructions: document.getElementById('areaInstructions'),
+      closePolygonBtn: document.getElementById('closePolygonBtn'),
+      editModeControls: document.getElementById('editModeControls'),
+      editingAreaLabel: document.getElementById('editingAreaLabel'),
+      saveAreaEdit: document.getElementById('saveAreaEdit'),
+      cancelAreaEdit: document.getElementById('cancelAreaEdit'),
+      
+      // Particles
+      backgroundSubtraction: document.getElementById('backgroundSubtraction'),
+      backgroundOptions: document.getElementById('backgroundOptions'),
+      rollingBallRadius: document.getElementById('rollingBallRadius'),
+      smoothingMethod: document.getElementById('smoothingMethod'),
+      morphologicalOpening: document.getElementById('morphologicalOpening'),
+      autoThresholdBtn: document.getElementById('autoThresholdBtn'),
+      adaptiveThreshold: document.getElementById('adaptiveThreshold'),
+      manualThresholdControls: document.getElementById('manualThresholdControls'),
+      adaptiveThresholdControls: document.getElementById('adaptiveThresholdControls'),
+      adaptiveBlockSize: document.getElementById('adaptiveBlockSize'),
+      particleThreshold: document.getElementById('particleThreshold'),
+      thresholdValue: document.getElementById('thresholdValue'),
+      minParticleArea: document.getElementById('minParticleArea'),
+      minParticleAreaLabel: document.getElementById('minParticleAreaLabel'),
+      analyzeParticles: document.getElementById('analyzeParticles'),
+      particleResults: document.getElementById('particleResults'),
+      particleCount: document.getElementById('particleCount'),
+      particleMeanArea: document.getElementById('particleMeanArea'),
+      particleMeanECD: document.getElementById('particleMeanECD'),
+      particleStdDev: document.getElementById('particleStdDev'),
+      particleHistogram: document.getElementById('particleHistogram'),
+      
+      // ROI controls
+      selectParticleROI: document.getElementById('selectParticleROI'),
+      clearParticleROI: document.getElementById('clearParticleROI'),
+      particleROIInfo: document.getElementById('particleROIInfo'),
+      particleROIDimensions: document.getElementById('particleROIDimensions'),
+      selectHoleROI: document.getElementById('selectHoleROI'),
+      clearHoleROI: document.getElementById('clearHoleROI'),
+      holeROIInfo: document.getElementById('holeROIInfo'),
+      holeROIDimensions: document.getElementById('holeROIDimensions'),
+      
+      // Holes
+      holeThreshold: document.getElementById('holeThreshold'),
+      holeThresholdValue: document.getElementById('holeThresholdValue'),
+      minHoleArea: document.getElementById('minHoleArea'),
+      minHoleAreaLabel: document.getElementById('minHoleAreaLabel'),
+      smoothHoles: document.getElementById('smoothHoles'),
+      analyzeHoles: document.getElementById('analyzeHoles'),
+      holeResults: document.getElementById('holeResults'),
+      holeCount: document.getElementById('holeCount'),
+      holeMeanArea: document.getElementById('holeMeanArea'),
+      holeMeanECD: document.getElementById('holeMeanECD'),
+      holeStdDev: document.getElementById('holeStdDev'),
+      holeHistogram: document.getElementById('holeHistogram'),
+      
+      // Results
+      saveScreenshot: document.getElementById('saveScreenshot'),
+      copyTable: document.getElementById('copyTable'),
+      downloadCSV: document.getElementById('downloadCSV'),
+      resetProject: document.getElementById('resetProject'),
+      resultsBody: document.getElementById('resultsBody'),
+      
+      // Processing modal
+      processingModal: document.getElementById('processingModal'),
+      processingTitle: document.getElementById('processingTitle'),
+      processingStep: document.getElementById('processingStep'),
+      processingTime: document.getElementById('processingTime'),
+      progressBar: document.getElementById('progressBar')
+    };
+    
+    const mainCtx = elements.mainCanvas.getContext('2d');
+    const overlayCtx = elements.overlayCanvas.getContext('2d');
+    
+    // ========== CONFIG ==========
+    const defaultConfig = {
+      app_title: 'MicroMeasure'
+    };
+    
+    let config = { ...defaultConfig };
+    
+    // ========== ELEMENT SDK ==========
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (newConfig) => {
+          config = { ...defaultConfig, ...newConfig };
+          elements.appTitle.textContent = config.app_title || defaultConfig.app_title;
+        },
+        mapToCapabilities: () => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (cfg) => new Map([
+          ['app_title', cfg.app_title || defaultConfig.app_title]
+        ])
+      });
+    }
+    
+    // ========== IMAGE LOADING ==========
+    function loadImage(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          state.image = img;
+          state.imageData = null;
+          
+          elements.mainCanvas.width = img.width;
+          elements.mainCanvas.height = img.height;
+          elements.overlayCanvas.width = img.width;
+          elements.overlayCanvas.height = img.height;
+          
+          elements.imgWidth.textContent = img.width;
+          elements.imgHeight.textContent = img.height;
+          elements.imageDimensions.classList.remove('hidden');
+          elements.fitToView.classList.remove('hidden');
+          document.getElementById('panControls').classList.remove('hidden');
+          
+          elements.noImagePlaceholder.classList.add('hidden');
+          elements.mainCanvas.classList.remove('hidden');
+          elements.overlayCanvas.classList.remove('hidden');
+          
+          elements.setScaleBtn.disabled = false;
+          elements.analyzeParticles.disabled = false;
+          elements.analyzeHoles.disabled = false;
+          elements.selectParticleROI.disabled = false;
+          elements.selectHoleROI.disabled = false;
+          
+          // Reset pan and defer initial fit-to-view for placement
+          state.panX = 0;
+          state.panY = 0;
+          requestAnimationFrame(() => {
+            fitToView();
+            drawMainCanvas();
+            drawOverlay();
+            updateGuidance();
+          });
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+    
+    function fitToView() {
+      const wrapper = elements.canvasWrapper;
+      const wrapperW = wrapper.clientWidth;
+      const wrapperH = wrapper.clientHeight;
+      
+      // Guard against zero-size wrapper (mobile layout settling)
+      if (!wrapperW || !wrapperH) {
+        requestAnimationFrame(fitToView);
+        return;
+      }
+      
+      const scaleX = wrapperW / state.image.width;
+      const scaleY = wrapperH / state.image.height;
+      const scale = Math.min(scaleX, scaleY) * 0.95;
+      
+      state.zoom = Math.max(50, Math.min(300, Math.round(scale * 100)));
+      elements.zoomSlider.value = state.zoom;
+      elements.zoomValue.textContent = state.zoom + '%';
+      
+      state.panX = 0;
+      state.panY = 0;
+      
+      updateCanvasTransform();
+    }
+    
+    function updateCanvasTransform() {
+      const scale = state.zoom / 100;
+      // Center in wrapper using translate, then apply pan in screen pixels
+      const wrapper = elements.canvasWrapper;
+      const wrapperW = wrapper.clientWidth;
+      const wrapperH = wrapper.clientHeight;
+      const canvasW = state.image.width * scale;
+      const canvasH = state.image.height * scale;
+
+      const centerX = (wrapperW - canvasW) / 2;
+      const centerY = (wrapperH - canvasH) / 2;
+
+      // Ensure absolute position baseline is 0,0 and use a single transform
+      elements.mainCanvas.style.left = '0px';
+      elements.mainCanvas.style.top = '0px';
+      elements.overlayCanvas.style.left = '0px';
+      elements.overlayCanvas.style.top = '0px';
+
+      const transform = `translate(${centerX + state.panX}px, ${centerY + state.panY}px) scale(${scale})`;
+      elements.mainCanvas.style.transformOrigin = 'top left';
+      elements.overlayCanvas.style.transformOrigin = 'top left';
+      elements.mainCanvas.style.transform = transform;
+      elements.overlayCanvas.style.transform = transform;
+    }
+    
+    function drawMainCanvas() {
+      mainCtx.clearRect(0, 0, elements.mainCanvas.width, elements.mainCanvas.height);
+      mainCtx.drawImage(state.image, 0, 0);
+    }
+    
+    // ========== OVERLAY DRAWING ==========
+    function drawOverlay() {
+      overlayCtx.clearRect(0, 0, elements.overlayCanvas.width, elements.overlayCanvas.height);
+      
+      // Draw calibration line
+      if (state.calibrationLine) {
+        drawLine(state.calibrationLine.p1, state.calibrationLine.p2, '#fbbf24', 2, true);
+      }
+      
+      // Draw scale setting points
+      if (state.isSettingScale && state.scalePoints.length > 0) {
+        drawPoint(state.scalePoints[0], '#fbbf24');
+        if (state.scalePoints.length === 2) {
+          drawLine(state.scalePoints[0], state.scalePoints[1], '#fbbf24', 2);
+        }
+      }
+      
+      // Draw length measurements
+      state.lengths.forEach((len, i) => {
+        if (len.visible !== false) {
+          const isEditing = state.editingLengthIndex === i;
+          drawLine(len.p1, len.p2, isEditing ? '#fbbf24' : '#3b82f6', 2);
+          
+          // Draw edit handles for editing length
+          if (isEditing) {
+            overlayCtx.fillStyle = '#fbbf24';
+            overlayCtx.beginPath();
+            overlayCtx.arc(len.p1.x, len.p1.y, 8, 0, Math.PI * 2);
+            overlayCtx.fill();
+            overlayCtx.strokeStyle = '#fff';
+            overlayCtx.lineWidth = 2;
+            overlayCtx.stroke();
+            
+            overlayCtx.beginPath();
+            overlayCtx.arc(len.p2.x, len.p2.y, 8, 0, Math.PI * 2);
+            overlayCtx.fill();
+            overlayCtx.stroke();
+          } else {
+            drawPoint(len.p1, '#3b82f6');
+            drawPoint(len.p2, '#3b82f6');
+          }
+          
+          // Create measurement text only for non-editing lengths
+          if (!isEditing) {
+            const pixelText = `${formatNumber(len.pixelLength)} px`;
+            const realText = state.isCalibrated ? `${formatNumber(len.realLength)} ${state.unit}` : '';
+            const labelText = realText ? `L${i+1}: ${realText}` : `L${i+1}: ${pixelText}`;
+            
+            drawMeasurementLabel(midpoint(len.p1, len.p2), labelText, '#3b82f6');
+          }
+        }
+      });
+      
+      // Draw current length points
+      if (state.currentTool === 'length' && state.lengthPoints.length > 0) {
+        drawPoint(state.lengthPoints[0], '#3b82f6');
+      }
+      
+      // Draw area polygons
+      state.areas.forEach((area, i) => {
+        if (area.visible === false) return;
+        
+        const isEditing = state.editingAreaIndex === i;
+        drawPolygon(area.points, isEditing ? '#fbbf24' : '#22c55e');
+        
+        // Draw edit handles for editing area
+        if (isEditing) {
+          area.points.forEach((p, pi) => {
+            overlayCtx.fillStyle = '#fbbf24';
+            overlayCtx.beginPath();
+            overlayCtx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+            overlayCtx.fill();
+            overlayCtx.strokeStyle = '#fff';
+            overlayCtx.lineWidth = 2;
+            overlayCtx.stroke();
+          });
+        } else {
+          // Create measurement text only for non-editing areas
+          const pixelText = `${formatNumber(area.pixelArea)} px²`;
+          const realText = state.isCalibrated ? `${formatNumber(area.realArea)} ${state.unit}²` : '';
+          const labelText = realText ? `A${i+1}: ${realText}` : `A${i+1}: ${pixelText}`;
+          
+          drawMeasurementLabel(centroid(area.points), labelText, '#22c55e');
+        }
+      });
+      
+      // Draw current area points
+      if (state.currentTool === 'area' && state.areaPoints.length > 0) {
+        overlayCtx.strokeStyle = '#22c55e';
+        overlayCtx.lineWidth = 2;
+        overlayCtx.setLineDash([5, 5]);
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(state.areaPoints[0].x, state.areaPoints[0].y);
+        state.areaPoints.forEach(p => overlayCtx.lineTo(p.x, p.y));
+        overlayCtx.stroke();
+        overlayCtx.setLineDash([]);
+        state.areaPoints.forEach(p => drawPoint(p, '#22c55e'));
+      }
+      
+      // Draw particles
+      state.particles.forEach((p, i) => {
+        drawBoundingBox(p.bbox, '#f97316');
+      });
+      
+      // Draw holes
+      state.holes.forEach((h, i) => {
+        drawBoundingBox(h.bbox, '#a855f7');
+      });
+      
+      // Draw ROI rectangle
+      if (state.roi) {
+        overlayCtx.strokeStyle = '#fbbf24';
+        overlayCtx.lineWidth = 3;
+        overlayCtx.setLineDash([10, 5]);
+        overlayCtx.strokeRect(state.roi.x, state.roi.y, state.roi.width, state.roi.height);
+        overlayCtx.setLineDash([]);
+        
+        // Draw ROI label
+        const roiLabel = `ROI: ${Math.round(state.roi.width)}×${Math.round(state.roi.height)} px`;
+        overlayCtx.font = 'bold 13px Inter, sans-serif';
+        overlayCtx.fillStyle = '#fbbf24';
+        overlayCtx.textAlign = 'left';
+        overlayCtx.textBaseline = 'bottom';
+        
+        const padding = 4;
+        const metrics = overlayCtx.measureText(roiLabel);
+        const labelX = state.roi.x;
+        const labelY = state.roi.y - 5;
+        
+        overlayCtx.fillStyle = 'rgba(0,0,0,0.85)';
+        overlayCtx.fillRect(labelX, labelY - 16, metrics.width + padding * 2, 18);
+        
+        overlayCtx.fillStyle = '#fbbf24';
+        overlayCtx.fillText(roiLabel, labelX + padding, labelY);
+      }
+    }
+    
+    function drawLine(p1, p2, color, width, dashed = false) {
+      overlayCtx.strokeStyle = color;
+      overlayCtx.lineWidth = width;
+      overlayCtx.setLineDash(dashed ? [8, 4] : []);
+      overlayCtx.beginPath();
+      overlayCtx.moveTo(p1.x, p1.y);
+      overlayCtx.lineTo(p2.x, p2.y);
+      overlayCtx.stroke();
+      overlayCtx.setLineDash([]);
+    }
+    
+    function drawPoint(p, color) {
+      overlayCtx.fillStyle = color;
+      overlayCtx.beginPath();
+      overlayCtx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+      overlayCtx.fill();
+      overlayCtx.strokeStyle = '#fff';
+      overlayCtx.lineWidth = 1;
+      overlayCtx.stroke();
+    }
+    
+    function drawPolygon(points, color) {
+      if (points.length < 3) return;
+      overlayCtx.fillStyle = color + '40';
+      overlayCtx.strokeStyle = color;
+      overlayCtx.lineWidth = 2;
+      overlayCtx.beginPath();
+      overlayCtx.moveTo(points[0].x, points[0].y);
+      points.forEach(p => overlayCtx.lineTo(p.x, p.y));
+      overlayCtx.closePath();
+      overlayCtx.fill();
+      overlayCtx.stroke();
+    }
+    
+    function drawBoundingBox(bbox, color) {
+      overlayCtx.strokeStyle = color;
+      overlayCtx.lineWidth = 1;
+      overlayCtx.strokeRect(bbox.x, bbox.y, bbox.w, bbox.h);
+    }
+    
+    function drawLabel(p, text, color) {
+      overlayCtx.font = '12px Inter, sans-serif';
+      overlayCtx.fillStyle = color;
+      overlayCtx.textAlign = 'center';
+      overlayCtx.textBaseline = 'middle';
+      
+      const padding = 4;
+      const metrics = overlayCtx.measureText(text);
+      const w = metrics.width + padding * 2;
+      const h = 16;
+      
+      overlayCtx.fillStyle = 'rgba(0,0,0,0.7)';
+      overlayCtx.fillRect(p.x - w/2, p.y - h/2, w, h);
+      
+      overlayCtx.fillStyle = color;
+      overlayCtx.fillText(text, p.x, p.y);
+    }
+    
+    function formatNumber(num) {
+      return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    }
+    
+    function drawMeasurementLabel(p, text, color) {
+      overlayCtx.font = 'bold 13px Inter, sans-serif';
+      overlayCtx.textAlign = 'center';
+      overlayCtx.textBaseline = 'middle';
+      
+      const padding = 6;
+      const metrics = overlayCtx.measureText(text);
+      const w = metrics.width + padding * 2;
+      const h = 20;
+      
+      // Draw background with border
+      overlayCtx.fillStyle = 'rgba(0,0,0,0.85)';
+      overlayCtx.fillRect(p.x - w/2, p.y - h/2, w, h);
+      
+      overlayCtx.strokeStyle = color;
+      overlayCtx.lineWidth = 2;
+      overlayCtx.strokeRect(p.x - w/2, p.y - h/2, w, h);
+      
+      // Draw text
+      overlayCtx.fillStyle = '#ffffff';
+      overlayCtx.fillText(text, p.x, p.y);
+    }
+    
+    function midpoint(p1, p2) {
+      return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    }
+    
+    function centroid(points) {
+      const n = points.length;
+      const sum = points.reduce((acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }), { x: 0, y: 0 });
+      return { x: sum.x / n, y: sum.y / n };
+    }
+    
+    // ========== COORDINATE CONVERSION ==========
+    function canvasCoords(e) {
+      const rect = elements.overlayCanvas.getBoundingClientRect();
+      const scale = state.zoom / 100;
+      return {
+        x: (e.clientX - rect.left) / scale,
+        y: (e.clientY - rect.top) / scale
+      };
+    }
+    
+    // ========== GUIDANCE SYSTEM ==========
+    function updateGuidance() {
+      // Step 1: Load an image
+      if (!state.image) {
+        elements.guidanceStatus.className = 'status-badge warning';
+        elements.guidanceStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-current"></span>Load an image';
+        elements.guidanceStatus.style.display = '';
+        return;
+      }
+      
+      // Step 2: Set the scale
+      if (!state.isCalibrated) {
+        elements.guidanceStatus.className = 'status-badge warning';
+        elements.guidanceStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-current"></span>Set the scale';
+        elements.guidanceStatus.style.display = '';
+        return;
+      }
+      
+      // Step 3: Make a measurement
+      if (state.lengths.length === 0 && state.areas.length === 0 && state.particles.length === 0 && state.holes.length === 0) {
+        elements.guidanceStatus.className = 'status-badge warning';
+        elements.guidanceStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-current"></span>Make a measurement';
+        elements.guidanceStatus.style.display = '';
+        return;
+      }
+      
+      // All steps completed - hide the guidance
+      elements.guidanceStatus.style.display = 'none';
+    }
+    
+    // Update the Save Image button state
+    function updateSaveButtonState() {
+      const hasMeasurements = state.lengths.length > 0 || state.areas.length > 0 || state.particles.length > 0 || state.holes.length > 0;
+      const canSave = state.image && hasMeasurements;
+      elements.saveScreenshot.disabled = !canSave;
+    }
+    
+    // ========== CALIBRATION ==========
+    function setScale() {
+      state.isSettingScale = true;
+      state.scalePoints = [];
+      elements.calibrationInputs.classList.remove('hidden');
+      elements.setScaleBtn.textContent = 'Drawing...';
+      elements.setScaleBtn.disabled = true;
+    }
+    
+    function saveScale() {
+      const knownLength = parseFloat(elements.knownLength.value);
+      if (!knownLength || knownLength <= 0 || state.scalePoints.length !== 2) return;
+      
+      const p1 = state.scalePoints[0];
+      const p2 = state.scalePoints[1];
+      const pixelLength = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+      
+      state.unitsPerPixel = knownLength / pixelLength;
+      state.unit = elements.unitSelect.value;
+      state.isCalibrated = true;
+      state.calibrationLine = { p1, p2 };
+      state.isSettingScale = false;
+      state.scalePoints = [];
+      
+      elements.calibrationInputs.classList.add('hidden');
+      elements.scaleInfo.classList.remove('hidden');
+      elements.scaleValue.textContent = state.unitsPerPixel.toFixed(4) + ' ' + state.unit + '/px';
+      elements.setScaleBtn.textContent = 'Set Scale';
+      elements.setScaleBtn.disabled = false;
+      
+      // Enable min area inputs and update labels to use real units
+      elements.minParticleArea.disabled = false;
+      elements.minHoleArea.disabled = false;
+      elements.minParticleAreaLabel.textContent = `Min Area (${state.unit}²)`;
+      elements.minHoleAreaLabel.textContent = `Min Area (${state.unit}²)`;
+      
+      // Convert current pixel values to real units
+      const currentParticleAreaPx = parseFloat(elements.minParticleArea.value) || 10;
+      const currentHoleAreaPx = parseFloat(elements.minHoleArea.value) || 10;
+      const areaConversion = Math.pow(state.unitsPerPixel, 2);
+      
+      elements.minParticleArea.value = (currentParticleAreaPx * areaConversion).toFixed(4);
+      elements.minHoleArea.value = (currentHoleAreaPx * areaConversion).toFixed(4);
+      
+      // Update placeholder text
+      elements.minParticleArea.nextElementSibling.textContent = `Value in ${state.unit}²`;
+      elements.minHoleArea.nextElementSibling.textContent = `Value in ${state.unit}²`;
+      
+      drawOverlay();
+      updateMeasurementDisplays();
+      updateGuidance();
+    }
+    
+    function cancelScale() {
+      state.isSettingScale = false;
+      state.scalePoints = [];
+      elements.calibrationInputs.classList.add('hidden');
+      elements.setScaleBtn.textContent = 'Set Scale';
+      elements.setScaleBtn.disabled = false;
+      drawOverlay();
+    }
+    
+    function resetScale() {
+      state.isCalibrated = false;
+      state.calibrationLine = null;
+      state.unitsPerPixel = 0;
+      
+      elements.scaleInfo.classList.add('hidden');
+      elements.setScaleBtn.disabled = false;
+      elements.setScaleBtn.textContent = 'Set Scale';
+      
+      // Reset min area inputs back to pixels
+      elements.minParticleArea.disabled = true;
+      elements.minHoleArea.disabled = true;
+      elements.minParticleAreaLabel.textContent = 'Min Area (px²)';
+      elements.minHoleAreaLabel.textContent = 'Min Area (px²)';
+      
+      // Convert current real values back to pixels (or reset to default)
+      const currentParticleAreaReal = parseFloat(elements.minParticleArea.value);
+      const currentHoleAreaReal = parseFloat(elements.minHoleArea.value);
+      
+      // If we had a previous calibration, convert back; otherwise use default
+      if (state.unitsPerPixel > 0) {
+        const areaConversion = Math.pow(state.unitsPerPixel, 2);
+        elements.minParticleArea.value = Math.round(currentParticleAreaReal / areaConversion);
+        elements.minHoleArea.value = Math.round(currentHoleAreaReal / areaConversion);
+      } else {
+        elements.minParticleArea.value = 10;
+        elements.minHoleArea.value = 10;
+      }
+      
+      // Update placeholder text
+      elements.minParticleArea.nextElementSibling.textContent = 'Set scale first to enable';
+      elements.minHoleArea.nextElementSibling.textContent = 'Set scale first to enable';
+      
+      // Recalculate measurements to remove real values
+      state.lengths.forEach(len => {
+        len.realLength = null;
+      });
+      state.areas.forEach(area => {
+        area.realArea = null;
+      });
+      state.particles.forEach(p => {
+        p.areaReal = null;
+        p.ecdReal = null;
+      });
+      state.holes.forEach(h => {
+        h.areaReal = null;
+        h.ecdReal = null;
+      });
+      
+      updateLengthDisplay();
+      updateAreaDisplay();
+      if (state.particles.length) updateParticleResults();
+      if (state.holes.length) updateHoleResults();
+      updateResultsTable();
+      drawOverlay();
+      updateGuidance();
+    }
+    
+    // ========== LENGTH MEASUREMENT ==========
+    function measureLength(p1, p2) {
+      const pixelLength = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+      const realLength = state.isCalibrated ? pixelLength * state.unitsPerPixel : null;
+      return { p1, p2, pixelLength, realLength };
+    }
+    
+    function addLengthMeasurement(len) {
+      state.lengths.push(len);
+      updateLengthDisplay();
+      updateResultsTable();
+      drawOverlay();
+      updateGuidance();
+      updateSaveButtonState();
+    }
+    
+    function updateLengthDisplay() {
+      elements.lengthMeasurements.innerHTML = state.lengths.map((len, i) => `
+        <div class="measurement-item">
+          <div>
+            <span class="font-medium">L${i+1}:</span>
+            <span class="mono">${formatNumber(len.pixelLength)} px</span>
+            ${state.isCalibrated ? `<span class="mono text-blue-400 ml-2">${formatNumber(len.realLength)} ${state.unit}</span>` : ''}
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleLengthVisibility(${i})" class="text-slate-400 hover:text-blue-400 text-sm" title="${len.visible !== false ? 'Hide' : 'Show'}">
+              ${len.visible !== false ? '👁' : '🔍'}
+            </button>
+            <button onclick="editLengthMeasurement(${i})" class="text-slate-400 hover:text-yellow-400 text-sm" title="Edit">✏️</button>
+            <button onclick="deleteLengthMeasurement(${i})" class="text-red-400 hover:text-red-300 text-lg leading-none">&times;</button>
+          </div>
+        </div>
+      `).join('');
+      elements.clearLengths.classList.toggle('hidden', state.lengths.length === 0);
+    }
+    
+    window.deleteLengthMeasurement = function(index) {
+      state.lengths.splice(index, 1);
+      updateLengthDisplay();
+      updateResultsTable();
+      drawOverlay();
+      updateSaveButtonState();
+    };
+    
+    window.toggleLengthVisibility = function(index) {
+      state.lengths[index].visible = state.lengths[index].visible === false ? true : false;
+      updateLengthDisplay();
+      drawOverlay();
+    };
+    
+    window.editLengthMeasurement = function(index) {
+      state.editingLengthIndex = index;
+      state.currentTool = 'length';
+      
+      // Switch to length tab UI
+      elements.tabBtns.forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-tab="length"]').classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+      document.getElementById('lengthTab').classList.remove('hidden');
+      
+      // Show edit mode controls
+      elements.editLengthModeControls.classList.remove('hidden');
+      elements.editingLengthLabel.textContent = `L${index + 1}`;
+      
+      drawOverlay();
+    };
+    
+    function saveLengthEdit() {
+      if (state.editingLengthIndex !== null) {
+        const len = state.lengths[state.editingLengthIndex];
+        const pixelLength = Math.sqrt(Math.pow(len.p2.x - len.p1.x, 2) + Math.pow(len.p2.y - len.p1.y, 2));
+        len.pixelLength = pixelLength;
+        len.realLength = state.isCalibrated ? pixelLength * state.unitsPerPixel : null;
+        
+        exitLengthEditMode();
+        updateLengthDisplay();
+        updateResultsTable();
+      }
+    }
+    
+    function cancelLengthEdit() {
+      exitLengthEditMode();
+    }
+    
+    function exitLengthEditMode() {
+      state.editingLengthIndex = null;
+      state.draggedLengthPoint = null;
+      elements.editLengthModeControls.classList.add('hidden');
+      drawOverlay();
+    }
+    
+    function clearAllLengths() {
+      state.lengths = [];
+      state.lengthPoints = [];
+      updateLengthDisplay();
+      updateResultsTable();
+      drawOverlay();
+      updateSaveButtonState();
+    }
+    
+    // ========== AREA MEASUREMENT ==========
+    function measurePolygonArea(points) {
+      if (points.length < 3) return 0;
+      let area = 0;
+      const n = points.length;
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        area += points[i].x * points[j].y;
+        area -= points[j].x * points[i].y;
+      }
+      return Math.abs(area / 2);
+    }
+    
+    function addAreaMeasurement(points) {
+      const pixelArea = measurePolygonArea(points);
+      const realArea = state.isCalibrated ? pixelArea * Math.pow(state.unitsPerPixel, 2) : null;
+      state.areas.push({ points: [...points], pixelArea, realArea });
+      updateAreaDisplay();
+      updateResultsTable();
+      drawOverlay();
+      updateGuidance();
+      updateSaveButtonState();
+    }
+    
+    function updateAreaDisplay() {
+      elements.areaMeasurements.innerHTML = state.areas.map((area, i) => `
+        <div class="measurement-item">
+          <div>
+            <span class="font-medium">A${i+1}:</span>
+            <span class="mono">${formatNumber(area.pixelArea)} px²</span>
+            ${state.isCalibrated ? `<span class="mono text-green-400 ml-2">${formatNumber(area.realArea)} ${state.unit}²</span>` : ''}
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleAreaVisibility(${i})" class="text-slate-400 hover:text-green-400 text-sm" title="${area.visible !== false ? 'Hide' : 'Show'}">
+              ${area.visible !== false ? '👁' : '🔍'}
+            </button>
+            <button onclick="editAreaMeasurement(${i})" class="text-slate-400 hover:text-yellow-400 text-sm" title="Edit">✏���������</button>
+            <button onclick="deleteAreaMeasurement(${i})" class="text-red-400 hover:text-red-300 text-lg leading-none">&times;</button>
+          </div>
+        </div>
+      `).join('');
+      elements.clearAreas.classList.toggle('hidden', state.areas.length === 0);
+    }
+    
+    window.deleteAreaMeasurement = function(index) {
+      state.areas.splice(index, 1);
+      updateAreaDisplay();
+      updateResultsTable();
+      drawOverlay();
+      updateSaveButtonState();
+    };
+    
+    window.toggleAreaVisibility = function(index) {
+      state.areas[index].visible = state.areas[index].visible === false ? true : false;
+      updateAreaDisplay();
+      drawOverlay();
+    };
+    
+    window.editAreaMeasurement = function(index) {
+      state.editingAreaIndex = index;
+      state.currentTool = 'area';
+      
+      // Switch to area tab UI
+      elements.tabBtns.forEach(b => b.classList.remove('active'));
+      document.querySelector('[data-tab="area"]').classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+      document.getElementById('areaTab').classList.remove('hidden');
+      
+      // Show edit mode controls
+      elements.areaInstructions.classList.add('hidden');
+      elements.editModeControls.classList.remove('hidden');
+      elements.editingAreaLabel.textContent = `A${index + 1}`;
+      
+      drawOverlay();
+    };
+    
+    function saveAreaEdit() {
+      if (state.editingAreaIndex !== null) {
+        const area = state.areas[state.editingAreaIndex];
+        area.pixelArea = measurePolygonArea(area.points);
+        area.realArea = state.isCalibrated ? area.pixelArea * Math.pow(state.unitsPerPixel, 2) : null;
+        
+        exitAreaEditMode();
+        updateAreaDisplay();
+        updateResultsTable();
+      }
+    }
+    
+    function cancelAreaEdit() {
+      exitAreaEditMode();
+    }
+    
+    function exitAreaEditMode() {
+      state.editingAreaIndex = null;
+      state.draggedPointIndex = null;
+      elements.areaInstructions.classList.remove('hidden');
+      elements.editModeControls.classList.add('hidden');
+      drawOverlay();
+    }
+    
+    function clearAllAreas() {
+      state.areas = [];
+      state.areaPoints = [];
+      updateAreaDisplay();
+      updateResultsTable();
+      drawOverlay();
+      updateSaveButtonState();
+    }
+    
+    // ========== PARTICLE/HOLE ANALYSIS ==========
+    function getImageData() {
+      if (!state.imageData) {
+        const canvas = document.createElement('canvas');
+        canvas.width = state.image.width;
+        canvas.height = state.image.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(state.image, 0, 0);
+        state.imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      }
+      return state.imageData;
+    }
+    
+    function toGrayscale(imageData) {
+      const data = imageData.data;
+      const gray = new Uint8Array(imageData.width * imageData.height);
+      for (let i = 0; i < gray.length; i++) {
+        const idx = i * 4;
+        gray[i] = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
+      }
+      return gray;
+    }
+    
+    function blur3x3(gray, width, height) {
+      const result = new Uint8Array(gray.length);
+      const kernel = [1, 2, 1, 2, 4, 2, 1, 2, 1];
+      const kernelSum = 16;
+      
+      for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+          let sum = 0;
+          let ki = 0;
+          for (let ky = -1; ky <= 1; ky++) {
+            for (let kx = -1; kx <= 1; kx++) {
+              sum += gray[(y + ky) * width + (x + kx)] * kernel[ki++];
+            }
+          }
+          result[y * width + x] = Math.round(sum / kernelSum);
+        }
+      }
+      return result;
+    }
+    
+    function medianFilter(gray, width, height, kernelSize) {
+      const result = new Uint8Array(gray.length);
+      const half = Math.floor(kernelSize / 2);
+      const values = [];
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          values.length = 0;
+          
+          for (let ky = -half; ky <= half; ky++) {
+            for (let kx = -half; kx <= half; kx++) {
+              const ny = y + ky;
+              const nx = x + kx;
+              if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
+                values.push(gray[ny * width + nx]);
+              }
+            }
+          }
+          
+          values.sort((a, b) => a - b);
+          result[y * width + x] = values[Math.floor(values.length / 2)];
+        }
+      }
+      
+      return result;
+    }
+    
+    function backgroundSubtractRollingBall(gray, width, height, radius) {
+      // Gaussian blur approximation of rolling ball
+      const background = new Uint8Array(gray.length);
+      const result = new Uint8Array(gray.length);
+      
+      // Create large Gaussian kernel
+      const kernelSize = radius * 2 + 1;
+      const half = radius;
+      const sigma = radius / 3;
+      const kernel = [];
+      let kernelSum = 0;
+      
+      for (let y = -half; y <= half; y++) {
+        for (let x = -half; x <= half; x++) {
+          const weight = Math.exp(-(x * x + y * y) / (2 * sigma * sigma));
+          kernel.push(weight);
+          kernelSum += weight;
+        }
+      }
+      
+      // Normalize kernel
+      for (let i = 0; i < kernel.length; i++) {
+        kernel[i] /= kernelSum;
+      }
+      
+      // Apply large blur to estimate background
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          let sum = 0;
+          let ki = 0;
+          
+          for (let ky = -half; ky <= half; ky++) {
+            for (let kx = -half; kx <= half; kx++) {
+              const ny = y + ky;
+              const nx = x + kx;
+              if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
+                sum += gray[ny * width + nx] * kernel[ki];
+              }
+              ki++;
+            }
+          }
+          
+          background[y * width + x] = Math.round(sum);
+        }
+      }
+      
+      // Subtract background
+      for (let i = 0; i < gray.length; i++) {
+        const val = gray[i] - background[i] + 128;
+        result[i] = Math.max(0, Math.min(255, val));
+      }
+      
+      return result;
+    }
+    
+    function otsuThreshold(gray) {
+      // Compute histogram
+      const histogram = new Array(256).fill(0);
+      for (let i = 0; i < gray.length; i++) {
+        histogram[gray[i]]++;
+      }
+      
+      const total = gray.length;
+      let sum = 0;
+      for (let i = 0; i < 256; i++) {
+        sum += i * histogram[i];
+      }
+      
+      let sumB = 0;
+      let wB = 0;
+      let wF = 0;
+      let maxVariance = 0;
+      let threshold = 0;
+      
+      for (let t = 0; t < 256; t++) {
+        wB += histogram[t];
+        if (wB === 0) continue;
+        
+        wF = total - wB;
+        if (wF === 0) break;
+        
+        sumB += t * histogram[t];
+        
+        const mB = sumB / wB;
+        const mF = (sum - sumB) / wF;
+        
+        const variance = wB * wF * (mB - mF) * (mB - mF);
+        
+        if (variance > maxVariance) {
+          maxVariance = variance;
+          threshold = t;
+        }
+      }
+      
+      return threshold;
+    }
+    
+    function adaptiveThreshold(gray, width, height, blockSize, brightIsObject) {
+      const binary = new Uint8Array(gray.length);
+      const half = Math.floor(blockSize / 2);
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          // Calculate local mean
+          let sum = 0;
+          let count = 0;
+          
+          for (let ky = -half; ky <= half; ky++) {
+            for (let kx = -half; kx <= half; kx++) {
+              const ny = y + ky;
+              const nx = x + kx;
+              if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
+                sum += gray[ny * width + nx];
+                count++;
+              }
+            }
+          }
+          
+          const localMean = sum / count;
+          const threshold = localMean - 5; // Small constant
+          
+          const i = y * width + x;
+          if (brightIsObject) {
+            binary[i] = gray[i] >= threshold ? 1 : 0;
+          } else {
+            binary[i] = gray[i] < threshold ? 1 : 0;
+          }
+        }
+      }
+      
+      return binary;
+    }
+    
+    function morphologicalErode(binary, width, height) {
+      const result = new Uint8Array(binary.length);
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = y * width + x;
+          
+          if (binary[i] === 0) {
+            result[i] = 0;
+            continue;
+          }
+          
+          // Check 8-connected neighbors
+          let isEdge = false;
+          for (let ky = -1; ky <= 1; ky++) {
+            for (let kx = -1; kx <= 1; kx++) {
+              const ny = y + ky;
+              const nx = x + kx;
+              if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
+                if (binary[ny * width + nx] === 0) {
+                  isEdge = true;
+                  break;
+                }
+              }
+            }
+            if (isEdge) break;
+          }
+          
+          result[i] = isEdge ? 0 : 1;
+        }
+      }
+      
+      return result;
+    }
+    
+    function morphologicalDilate(binary, width, height) {
+      const result = new Uint8Array(binary.length);
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = y * width + x;
+          
+          if (binary[i] === 1) {
+            result[i] = 1;
+            continue;
+          }
+          
+          // Check 8-connected neighbors
+          let hasNeighbor = false;
+          for (let ky = -1; ky <= 1; ky++) {
+            for (let kx = -1; kx <= 1; kx++) {
+              const ny = y + ky;
+              const nx = x + kx;
+              if (ny >= 0 && ny < height && nx >= 0 && nx < width) {
+                if (binary[ny * width + nx] === 1) {
+                  hasNeighbor = true;
+                  break;
+                }
+              }
+            }
+            if (hasNeighbor) break;
+          }
+          
+          result[i] = hasNeighbor ? 1 : 0;
+        }
+      }
+      
+      return result;
+    }
+    
+    function morphologicalOpening(binary, width, height) {
+      const eroded = morphologicalErode(binary, width, height);
+      return morphologicalDilate(eroded, width, height);
+    }
+    
+    function thresholdAndLabelComponents(gray, width, height, threshold, brightIsObject, minArea, useAdaptive, blockSize, roi) {
+      // Default ROI is the entire image
+      if (!roi) {
+        roi = { x: 0, y: 0, width: width, height: height };
+      }
+      
+      // Ensure ROI is within bounds
+      const roiX = Math.max(0, Math.floor(roi.x));
+      const roiY = Math.max(0, Math.floor(roi.y));
+      const roiWidth = Math.min(width - roiX, Math.ceil(roi.width));
+      const roiHeight = Math.min(height - roiY, Math.ceil(roi.height));
+      
+      let binary;
+      
+      if (useAdaptive) {
+        binary = adaptiveThreshold(gray, width, height, blockSize, brightIsObject);
+      } else {
+        // Standard global threshold
+        binary = new Uint8Array(gray.length);
+        for (let i = 0; i < gray.length; i++) {
+          if (brightIsObject) {
+            binary[i] = gray[i] >= threshold ? 1 : 0;
+          } else {
+            binary[i] = gray[i] < threshold ? 1 : 0;
+          }
+        }
+      }
+      
+      // Apply morphological opening if requested
+      if (elements.morphologicalOpening && elements.morphologicalOpening.checked) {
+        binary = morphologicalOpening(binary, width, height);
+      }
+      
+      // Connected component labeling (8-connected) - only within ROI
+      const labels = new Int32Array(gray.length);
+      let currentLabel = 0;
+      const equivalences = new Map();
+      
+      function find(label) {
+        if (!equivalences.has(label)) return label;
+        let root = label;
+        while (equivalences.has(root)) root = equivalences.get(root);
+        // Path compression
+        let l = label;
+        while (equivalences.has(l)) {
+          const next = equivalences.get(l);
+          equivalences.set(l, root);
+          l = next;
+        }
+        return root;
+      }
+      
+      function union(a, b) {
+        const rootA = find(a);
+        const rootB = find(b);
+        if (rootA !== rootB) {
+          equivalences.set(Math.max(rootA, rootB), Math.min(rootA, rootB));
+        }
+      }
+      
+      // First pass - only within ROI
+      for (let y = roiY; y < roiY + roiHeight; y++) {
+        for (let x = roiX; x < roiX + roiWidth; x++) {
+          const i = y * width + x;
+          if (binary[i] === 0) continue;
+          
+          const neighbors = [];
+          if (y > roiY && x > roiX && labels[(y-1) * width + (x-1)]) neighbors.push(labels[(y-1) * width + (x-1)]);
+          if (y > roiY && labels[(y-1) * width + x]) neighbors.push(labels[(y-1) * width + x]);
+          if (y > roiY && x < roiX + roiWidth - 1 && labels[(y-1) * width + (x+1)]) neighbors.push(labels[(y-1) * width + (x+1)]);
+          if (x > roiX && labels[y * width + (x-1)]) neighbors.push(labels[y * width + (x-1)]);
+          
+          if (neighbors.length === 0) {
+            labels[i] = ++currentLabel;
+          } else {
+            const minLabel = Math.min(...neighbors);
+            labels[i] = minLabel;
+            neighbors.forEach(n => union(minLabel, n));
+          }
+        }
+      }
+      
+      // Second pass - resolve equivalences and compute properties
+      const components = new Map();
+      
+      for (let y = roiY; y < roiY + roiHeight; y++) {
+        for (let x = roiX; x < roiX + roiWidth; x++) {
+          const i = y * width + x;
+          if (labels[i] === 0) continue;
+          
+          const root = find(labels[i]);
+          labels[i] = root;
+          
+          if (!components.has(root)) {
+            components.set(root, {
+              area: 0,
+              minX: width, maxX: 0, minY: height, maxY: 0,
+              pixels: []
+            });
+          }
+          
+          const comp = components.get(root);
+          comp.area++;
+          comp.minX = Math.min(comp.minX, x);
+          comp.maxX = Math.max(comp.maxX, x);
+          comp.minY = Math.min(comp.minY, y);
+          comp.maxY = Math.max(comp.maxY, y);
+        }
+      }
+      
+      // Filter by min area and compute final properties
+      const result = [];
+      components.forEach((comp, label) => {
+        if (comp.area >= minArea) {
+          const ecd = 2 * Math.sqrt(comp.area / Math.PI);
+          result.push({
+            id: result.length + 1,
+            areaPx: comp.area,
+            areaReal: state.isCalibrated ? comp.area * Math.pow(state.unitsPerPixel, 2) : null,
+            ecdPx: ecd,
+            ecdReal: state.isCalibrated ? ecd * state.unitsPerPixel : null,
+            bbox: {
+              x: comp.minX,
+              y: comp.minY,
+              w: comp.maxX - comp.minX + 1,
+              h: comp.maxY - comp.minY + 1
+            }
+          });
+        }
+      });
+      
+      return result;
+    }
+    
+    function computeStats(components, key) {
+      if (components.length === 0) return { count: 0, mean: 0, std: 0 };
+      
+      const values = components.map(c => c[key]);
+      const mean = values.reduce((a, b) => a + b, 0) / values.length;
+      const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
+      
+      return {
+        count: components.length,
+        mean,
+        std: Math.sqrt(variance)
+      };
+    }
+    
+    function drawHistogram(canvas, data, color) {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width = canvas.clientWidth * 2;
+      const h = canvas.height = canvas.clientHeight * 2;
+      ctx.scale(2, 2);
+      
+      const width = w / 2;
+      const height = h / 2;
+      
+      ctx.clearRect(0, 0, width, height);
+      
+      if (data.length === 0) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '11px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data', width / 2, height / 2);
+        return;
+      }
+      
+      // Create histogram bins
+      const numBins = Math.min(20, Math.max(5, Math.ceil(Math.sqrt(data.length))));
+      const min = Math.min(...data);
+      const max = Math.max(...data);
+      const range = max - min || 1;
+      const binWidth = range / numBins;
+      
+      const bins = new Array(numBins).fill(0);
+      data.forEach(v => {
+        const bin = Math.min(numBins - 1, Math.floor((v - min) / binWidth));
+        bins[bin]++;
+      });
+      
+      const maxCount = Math.max(...bins);
+      const barWidth = (width - 40) / numBins;
+      const chartHeight = height - 20;
+      
+      // Draw bars
+      ctx.fillStyle = color;
+      bins.forEach((count, i) => {
+        const barHeight = (count / maxCount) * (chartHeight - 10);
+        ctx.fillRect(30 + i * barWidth + 1, chartHeight - barHeight, barWidth - 2, barHeight);
+      });
+      
+      // Draw axis labels
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '9px JetBrains Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText(min.toFixed(1), 30, height - 2);
+      ctx.fillText(max.toFixed(1), width - 10, height - 2);
+      
+      ctx.textAlign = 'right';
+      ctx.fillText(maxCount.toString(), 25, 12);
+      ctx.fillText('0', 25, chartHeight);
+    }
+    
+    // ========== ROI SELECTION ==========
+    function startROISelection(mode) {
+      state.roiMode = mode;
+      state.isDrawingROI = true;
+      state.roi = null;
+      
+      // Update UI
+      if (mode === 'particles') {
+        elements.selectParticleROI.textContent = '✏️ Drawing ROI... (Click & Drag)';
+        elements.selectParticleROI.classList.remove('btn-secondary');
+        elements.selectParticleROI.classList.add('btn-primary');
+      } else {
+        elements.selectHoleROI.textContent = '✏️ Drawing ROI... (Click & Drag)';
+        elements.selectHoleROI.classList.remove('btn-secondary');
+        elements.selectHoleROI.classList.add('btn-primary');
+      }
+      
+      elements.overlayCanvas.style.cursor = 'crosshair';
+      drawOverlay();
+    }
+    
+    function finishROISelection() {
+      state.isDrawingROI = false;
+      state.roiStart = null;
+      
+      if (!state.roi) {
+        // User cancelled, reset buttons
+        if (state.roiMode === 'particles') {
+          elements.selectParticleROI.textContent = '📐 Select ROI (Draw Rectangle)';
+          elements.selectParticleROI.classList.add('btn-secondary');
+          elements.selectParticleROI.classList.remove('btn-primary');
+        } else {
+          elements.selectHoleROI.textContent = '📐 Select ROI (Draw Rectangle)';
+          elements.selectHoleROI.classList.add('btn-secondary');
+          elements.selectHoleROI.classList.remove('btn-primary');
+        }
+        state.roiMode = null;
+        return;
+      }
+      
+      // Update UI to show ROI is active
+      const roiText = `${Math.round(state.roi.width)}×${Math.round(state.roi.height)} px at (${Math.round(state.roi.x)}, ${Math.round(state.roi.y)})`;
+      
+      if (state.roiMode === 'particles') {
+        elements.particleROIDimensions.textContent = roiText;
+        elements.particleROIInfo.classList.remove('hidden');
+        elements.selectParticleROI.classList.add('hidden');
+      } else {
+        elements.holeROIDimensions.textContent = roiText;
+        elements.holeROIInfo.classList.remove('hidden');
+        elements.selectHoleROI.classList.add('hidden');
+      }
+      
+      state.roiMode = null;
+      elements.overlayCanvas.style.cursor = 'crosshair';
+    }
+    
+    function clearROI(mode) {
+      state.roi = null;
+      
+      if (mode === 'particles') {
+        elements.particleROIInfo.classList.add('hidden');
+        elements.selectParticleROI.classList.remove('hidden');
+        elements.selectParticleROI.textContent = '📐 Select ROI (Draw Rectangle)';
+        elements.selectParticleROI.classList.add('btn-secondary');
+        elements.selectParticleROI.classList.remove('btn-primary');
+      } else {
+        elements.holeROIInfo.classList.add('hidden');
+        elements.selectHoleROI.classList.remove('hidden');
+        elements.selectHoleROI.textContent = '📐 Select ROI (Draw Rectangle)';
+        elements.selectHoleROI.classList.add('btn-secondary');
+        elements.selectHoleROI.classList.remove('btn-primary');
+      }
+      
+      drawOverlay();
+    }
+    
+    // ========== PROGRESS MODAL ==========
+    function showProcessingModal(title = 'Processing Image') {
+      elements.processingTitle.textContent = title;
+      elements.processingStep.textContent = 'Initializing...';
+      elements.processingTime.textContent = 'Estimating time...';
+      elements.progressBar.style.width = '0%';
+      elements.processingModal.classList.remove('hidden');
+    }
+    
+    function updateProgress(step, progress, timeLeft = null) {
+      elements.processingStep.textContent = step;
+      elements.progressBar.style.width = progress + '%';
+      
+      if (timeLeft !== null) {
+        if (timeLeft < 1) {
+          elements.processingTime.textContent = 'Less than 1 second remaining';
+        } else if (timeLeft === 1) {
+          elements.processingTime.textContent = '1 second remaining';
+        } else {
+          elements.processingTime.textContent = `${Math.ceil(timeLeft)} seconds remaining`;
+        }
+      }
+    }
+    
+    function hideProcessingModal() {
+      elements.processingModal.classList.add('hidden');
+    }
+    
+    // Async wrapper to allow UI updates during processing
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    async function analyzeParticles() {
+      const startTime = Date.now();
+      showProcessingModal('Analyzing Particles');
+      
+      await sleep(50); // Let modal render
+      
+      const imageData = getImageData();
+      
+      // Determine analysis region
+      const roi = state.roi || { x: 0, y: 0, width: imageData.width, height: imageData.height };
+      
+      const totalSteps = 4;
+      let currentStep = 0;
+      
+      // Step 1: Convert to grayscale
+      updateProgress('Converting to grayscale...', (++currentStep / totalSteps) * 100, null);
+      await sleep(10);
+      let gray = toGrayscale(imageData);
+      
+      // Step 2: Background subtraction
+      if (elements.backgroundSubtraction.checked) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const estimated = elapsed * (totalSteps / currentStep) - elapsed;
+        updateProgress('Subtracting background...', (++currentStep / totalSteps) * 100, estimated);
+        await sleep(10);
+        const radius = parseInt(elements.rollingBallRadius.value);
+        gray = backgroundSubtractRollingBall(gray, imageData.width, imageData.height, radius);
+      } else {
+        currentStep++;
+      }
+      
+      // Step 3: Smoothing
+      const smoothMethod = elements.smoothingMethod.value;
+      if (smoothMethod !== 'none') {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const estimated = elapsed * (totalSteps / currentStep) - elapsed;
+        updateProgress('Applying smoothing filter...', (++currentStep / totalSteps) * 100, estimated);
+        await sleep(10);
+        
+        if (smoothMethod === 'gaussian3') {
+          gray = blur3x3(gray, imageData.width, imageData.height);
+        } else if (smoothMethod === 'median3') {
+          gray = medianFilter(gray, imageData.width, imageData.height, 3);
+        } else if (smoothMethod === 'median5') {
+          gray = medianFilter(gray, imageData.width, imageData.height, 5);
+        }
+      } else {
+        currentStep++;
+      }
+      
+      // Step 4: Thresholding and labeling
+      const elapsed = (Date.now() - startTime) / 1000;
+      const estimated = elapsed * (totalSteps / currentStep) - elapsed;
+      updateProgress('Detecting particles...', (++currentStep / totalSteps) * 100, estimated);
+      await sleep(10);
+      
+      const threshold = parseInt(elements.particleThreshold.value);
+      const minAreaInput = parseFloat(elements.minParticleArea.value) || 0.001;
+      // If calibrated, convert from real units back to pixels
+      const minArea = state.isCalibrated ? Math.round(minAreaInput / Math.pow(state.unitsPerPixel, 2)) : Math.round(minAreaInput);
+      const brightIsObject = document.querySelector('input[name="particlePolarity"]:checked').value === 'bright';
+      const useAdaptive = elements.adaptiveThreshold.checked;
+      const blockSize = parseInt(elements.adaptiveBlockSize.value);
+      
+      state.particles = thresholdAndLabelComponents(
+        gray, 
+        imageData.width, 
+        imageData.height, 
+        threshold, 
+        brightIsObject, 
+        minArea,
+        useAdaptive,
+        blockSize,
+        roi
+      );
+      
+      // Finalize
+      updateProgress('Finalizing results...', 100, 0);
+      await sleep(10);
+      
+      updateParticleResults();
+      updateResultsTable();
+      drawOverlay();
+      updateGuidance();
+      updateSaveButtonState();
+      
+      // Show completion briefly before hiding
+      await sleep(300);
+      hideProcessingModal();
+    }
+    
+    function updateParticleResults() {
+      const stats = computeStats(state.particles, 'areaPx');
+      const ecdStats = computeStats(state.particles, 'ecdPx');
+      
+      elements.particleCount.textContent = stats.count;
+      elements.particleMeanArea.textContent = formatNumber(stats.mean) + ' px²' + 
+        (state.isCalibrated ? ` (${formatNumber(stats.mean * Math.pow(state.unitsPerPixel, 2))} ${state.unit}²)` : '');
+      elements.particleMeanECD.textContent = formatNumber(ecdStats.mean) + ' px' +
+        (state.isCalibrated ? ` (${formatNumber(ecdStats.mean * state.unitsPerPixel)} ${state.unit})` : '');
+      elements.particleStdDev.textContent = formatNumber(ecdStats.std) + ' px';
+      
+      elements.particleResults.classList.remove('hidden');
+      drawHistogram(elements.particleHistogram, state.particles.map(p => p.ecdPx), '#f97316');
+    }
+    
+    async function analyzeHoles() {
+      const startTime = Date.now();
+      showProcessingModal('Analyzing Holes');
+      
+      await sleep(50); // Let modal render
+      
+      const imageData = getImageData();
+      
+      // Determine analysis region
+      const roi = state.roi || { x: 0, y: 0, width: imageData.width, height: imageData.height };
+      
+      const totalSteps = 4;
+      let currentStep = 0;
+      
+      // Step 1: Convert to grayscale
+      updateProgress('Converting to grayscale...', (++currentStep / totalSteps) * 100, null);
+      await sleep(10);
+      let gray = toGrayscale(imageData);
+      
+      // Step 2: Background subtraction
+      if (document.getElementById('holeBackgroundSubtraction').checked) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const estimated = elapsed * (totalSteps / currentStep) - elapsed;
+        updateProgress('Subtracting background...', (++currentStep / totalSteps) * 100, estimated);
+        await sleep(10);
+        const radius = parseInt(document.getElementById('holeRollingBallRadius').value);
+        gray = backgroundSubtractRollingBall(gray, imageData.width, imageData.height, radius);
+      } else {
+        currentStep++;
+      }
+      
+      // Step 3: Smoothing
+      const smoothMethod = document.getElementById('holeSmoothingMethod').value;
+      if (smoothMethod !== 'none') {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const estimated = elapsed * (totalSteps / currentStep) - elapsed;
+        updateProgress('Applying smoothing filter...', (++currentStep / totalSteps) * 100, estimated);
+        await sleep(10);
+        
+        if (smoothMethod === 'gaussian3') {
+          gray = blur3x3(gray, imageData.width, imageData.height);
+        } else if (smoothMethod === 'median3') {
+          gray = medianFilter(gray, imageData.width, imageData.height, 3);
+        } else if (smoothMethod === 'median5') {
+          gray = medianFilter(gray, imageData.width, imageData.height, 5);
+        }
+      } else {
+        currentStep++;
+      }
+      
+      // Step 4: Thresholding and labeling
+      const elapsed = (Date.now() - startTime) / 1000;
+      const estimated = elapsed * (totalSteps / currentStep) - elapsed;
+      updateProgress('Detecting holes...', (++currentStep / totalSteps) * 100, estimated);
+      await sleep(10);
+      
+      const threshold = parseInt(elements.holeThreshold.value);
+      const minAreaInput = parseFloat(elements.minHoleArea.value) || 0.001;
+      // If calibrated, convert from real units back to pixels
+      const minArea = state.isCalibrated ? Math.round(minAreaInput / Math.pow(state.unitsPerPixel, 2)) : Math.round(minAreaInput);
+      const darkIsObject = document.querySelector('input[name="holePolarity"]:checked').value === 'dark';
+      const useAdaptive = document.getElementById('adaptiveThresholdHole').checked;
+      const blockSize = parseInt(document.getElementById('holeAdaptiveBlockSize').value);
+      const useMorphOpening = document.getElementById('holeMorphologicalOpening').checked;
+      
+      // Store original morphological setting and temporarily set it for this analysis
+      const originalMorphSetting = elements.morphologicalOpening ? elements.morphologicalOpening.checked : false;
+      if (elements.morphologicalOpening) {
+        elements.morphologicalOpening.checked = useMorphOpening;
+      }
+      
+      state.holes = thresholdAndLabelComponents(
+        gray, 
+        imageData.width, 
+        imageData.height, 
+        threshold, 
+        !darkIsObject, 
+        minArea,
+        useAdaptive,
+        blockSize,
+        roi
+      );
+      
+      // Restore original morphological setting
+      if (elements.morphologicalOpening) {
+        elements.morphologicalOpening.checked = originalMorphSetting;
+      }
+      
+      // Finalize
+      updateProgress('Finalizing results...', 100, 0);
+      await sleep(10);
+      
+      updateHoleResults();
+      updateResultsTable();
+      drawOverlay();
+      updateGuidance();
+      updateSaveButtonState();
+      
+      // Show completion briefly before hiding
+      await sleep(300);
+      hideProcessingModal();
+    }
+    
+    function updateHoleResults() {
+      const stats = computeStats(state.holes, 'areaPx');
+      const ecdStats = computeStats(state.holes, 'ecdPx');
+      
+      elements.holeCount.textContent = stats.count;
+      elements.holeMeanArea.textContent = formatNumber(stats.mean) + ' px²' +
+        (state.isCalibrated ? ` (${formatNumber(stats.mean * Math.pow(state.unitsPerPixel, 2))} ${state.unit}²)` : '');
+      elements.holeMeanECD.textContent = formatNumber(ecdStats.mean) + ' px' +
+        (state.isCalibrated ? ` (${formatNumber(ecdStats.mean * state.unitsPerPixel)} ${state.unit})` : '');
+      elements.holeStdDev.textContent = formatNumber(ecdStats.std) + ' px';
+      
+      elements.holeResults.classList.remove('hidden');
+      drawHistogram(elements.holeHistogram, state.holes.map(h => h.ecdPx), '#a855f7');
+    }
+    
+    function updateMeasurementDisplays() {
+      // Recalculate real values with new scale
+      state.lengths.forEach(len => {
+        len.realLength = state.isCalibrated ? len.pixelLength * state.unitsPerPixel : null;
+      });
+      state.areas.forEach(area => {
+        area.realArea = state.isCalibrated ? area.pixelArea * Math.pow(state.unitsPerPixel, 2) : null;
+      });
+      state.particles.forEach(p => {
+        p.areaReal = state.isCalibrated ? p.areaPx * Math.pow(state.unitsPerPixel, 2) : null;
+        p.ecdReal = state.isCalibrated ? p.ecdPx * state.unitsPerPixel : null;
+      });
+      state.holes.forEach(h => {
+        h.areaReal = state.isCalibrated ? h.areaPx * Math.pow(state.unitsPerPixel, 2) : null;
+        h.ecdReal = state.isCalibrated ? h.ecdPx * state.unitsPerPixel : null;
+      });
+      
+      updateLengthDisplay();
+      updateAreaDisplay();
+      if (state.particles.length) updateParticleResults();
+      if (state.holes.length) updateHoleResults();
+      updateResultsTable();
+    }
+    
+    // ========== RESULTS TABLE ==========
+    function updateResultsTable() {
+      let html = '';
+      
+      state.lengths.forEach((len, i) => {
+        html += `<tr>
+          <td>Length</td>
+          <td>L${i+1}</td>
+          <td class="mono">${len.pixelLength.toFixed(2)} px</td>
+          <td class="mono">${state.isCalibrated ? len.realLength.toFixed(2) + ' ' + state.unit : '-'}</td>
+        </tr>`;
+      });
+      
+      state.areas.forEach((area, i) => {
+        html += `<tr>
+          <td>Area</td>
+          <td>A${i+1}</td>
+          <td class="mono">${area.pixelArea.toFixed(2)} px²</td>
+          <td class="mono">${state.isCalibrated ? area.realArea.toFixed(2) + ' ' + state.unit + '²' : '-'}</td>
+        </tr>`;
+      });
+      
+      state.particles.forEach(p => {
+        html += `<tr>
+          <td>Particle</td>
+          <td>P${p.id}</td>
+          <td class="mono">${p.areaPx} px² / ECD: ${p.ecdPx.toFixed(1)} px</td>
+          <td class="mono">${state.isCalibrated ? p.areaReal.toFixed(2) + ' ' + state.unit + '² / ' + p.ecdReal.toFixed(2) + ' ' + state.unit : '-'}</td>
+        </tr>`;
+      });
+      
+      state.holes.forEach(h => {
+        html += `<tr>
+          <td>Hole</td>
+          <td>H${h.id}</td>
+          <td class="mono">${h.areaPx} px² / ECD: ${h.ecdPx.toFixed(1)} px</td>
+          <td class="mono">${state.isCalibrated ? h.areaReal.toFixed(2) + ' ' + state.unit + '² / ' + h.ecdReal.toFixed(2) + ' ' + state.unit : '-'}</td>
+        </tr>`;
+      });
+      
+      elements.resultsBody.innerHTML = html || '<tr><td colspan="4" class="text-center text-slate-500 py-4">No measurements yet</td></tr>';
+    }
+    
+    function saveScreenshot() {
+      if (!state.image) return;
+      
+      // Create a temporary canvas to combine main image and overlay
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = state.image.width;
+      exportCanvas.height = state.image.height;
+      const exportCtx = exportCanvas.getContext('2d');
+      
+      // Draw the main image
+      exportCtx.drawImage(state.image, 0, 0);
+      
+      // Draw the overlay on top
+      exportCtx.drawImage(elements.overlayCanvas, 0, 0);
+      
+      // Convert to blob and download
+      exportCanvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'micromeasure_screenshot.png';
+        a.click();
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    }
+    
+    function exportCSV() {
+      let csv = 'Type,ID,Value_px,Value_real,Unit\n';
+      
+      state.lengths.forEach((len, i) => {
+        csv += `Length,L${i+1},${len.pixelLength.toFixed(4)},${state.isCalibrated ? len.realLength.toFixed(4) : ''},${state.unit}\n`;
+      });
+      
+      state.areas.forEach((area, i) => {
+        csv += `Area,A${i+1},${area.pixelArea.toFixed(4)},${state.isCalibrated ? area.realArea.toFixed(4) : ''},${state.unit}²\n`;
+      });
+      
+      state.particles.forEach(p => {
+        csv += `Particle_Area,P${p.id},${p.areaPx},${state.isCalibrated ? p.areaReal.toFixed(4) : ''},${state.unit}²\n`;
+        csv += `Particle_ECD,P${p.id},${p.ecdPx.toFixed(4)},${state.isCalibrated ? p.ecdReal.toFixed(4) : ''},${state.unit}\n`;
+      });
+      
+      state.holes.forEach(h => {
+        csv += `Hole_Area,H${h.id},${h.areaPx},${state.isCalibrated ? h.areaReal.toFixed(4) : ''},${state.unit}²\n`;
+        csv += `Hole_ECD,H${h.id},${h.ecdPx.toFixed(4)},${state.isCalibrated ? h.ecdReal.toFixed(4) : ''},${state.unit}\n`;
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'micromeasure_results.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    function copyTableTSV() {
+      let tsv = 'Type\tID\tValue_px\tValue_real\tUnit\n';
+      
+      state.lengths.forEach((len, i) => {
+        tsv += `Length\tL${i+1}\t${len.pixelLength.toFixed(4)}\t${state.isCalibrated ? len.realLength.toFixed(4) : ''}\t${state.unit}\n`;
+      });
+      
+      state.areas.forEach((area, i) => {
+        tsv += `Area\tA${i+1}\t${area.pixelArea.toFixed(4)}\t${state.isCalibrated ? area.realArea.toFixed(4) : ''}\t${state.unit}²\n`;
+      });
+      
+      state.particles.forEach(p => {
+        tsv += `Particle_Area\tP${p.id}\t${p.areaPx}\t${state.isCalibrated ? p.areaReal.toFixed(4) : ''}\t${state.unit}²\n`;
+        tsv += `Particle_ECD\tP${p.id}\t${p.ecdPx.toFixed(4)}\t${state.isCalibrated ? p.ecdReal.toFixed(4) : ''}\t${state.unit}\n`;
+      });
+      
+      state.holes.forEach(h => {
+        tsv += `Hole_Area\tH${h.id}\t${h.areaPx}\t${state.isCalibrated ? h.areaReal.toFixed(4) : ''}\t${state.unit}²\n`;
+        tsv += `Hole_ECD\tH${h.id}\t${h.ecdPx.toFixed(4)}\t${state.isCalibrated ? h.ecdReal.toFixed(4) : ''}\t${state.unit}\n`;
+      });
+      
+      navigator.clipboard.writeText(tsv);
+    }
+    
+    function resetProject() {
+      state.isCalibrated = false;
+      state.calibrationLine = null;
+      state.lengths = [];
+      state.lengthPoints = [];
+      state.areas = [];
+      state.areaPoints = [];
+      state.particles = [];
+      state.holes = [];
+      state.roi = null;
+      state.isDrawingROI = false;
+      state.roiStart = null;
+      state.roiMode = null;
+      
+      elements.scaleInfo.classList.add('hidden');
+      elements.particleResults.classList.add('hidden');
+      elements.holeResults.classList.add('hidden');
+      
+      // Reset ROI UI
+      elements.particleROIInfo.classList.add('hidden');
+      elements.selectParticleROI.classList.remove('hidden');
+      elements.selectParticleROI.textContent = '📐 Select ROI (Draw Rectangle)';
+      elements.selectParticleROI.classList.add('btn-secondary');
+      elements.selectParticleROI.classList.remove('btn-primary');
+      
+      elements.holeROIInfo.classList.add('hidden');
+      elements.selectHoleROI.classList.remove('hidden');
+      elements.selectHoleROI.textContent = '📐 Select ROI (Draw Rectangle)';
+      elements.selectHoleROI.classList.add('btn-secondary');
+      elements.selectHoleROI.classList.remove('btn-primary');
+      
+      updateLengthDisplay();
+      updateAreaDisplay();
+      updateResultsTable();
+      drawOverlay();
+      updateGuidance();
+      updateSaveButtonState();
+    }
+    
+    // ========== EVENT LISTENERS ==========
+    elements.imageInput.addEventListener('change', (e) => {
+      if (e.target.files[0]) loadImage(e.target.files[0]);
+    });
+    
+    elements.zoomSlider.addEventListener('input', (e) => {
+      state.zoom = parseInt(e.target.value);
+      elements.zoomValue.textContent = state.zoom + '%';
+      if (state.image) updateCanvasTransform();
+    });
+    
+    elements.fitToView.addEventListener('click', fitToView);
+    
+    // Pan buttons
+    elements.panLeft.addEventListener('click', () => {
+      state.panX += 50;
+      updateCanvasTransform();
+    });
+    
+    elements.panRight.addEventListener('click', () => {
+      state.panX -= 50;
+      updateCanvasTransform();
+    });
+    
+    elements.panUp.addEventListener('click', () => {
+      state.panY += 50;
+      updateCanvasTransform();
+    });
+    
+    elements.panDown.addEventListener('click', () => {
+      state.panY -= 50;
+      updateCanvasTransform();
+    });
+    
+    elements.resetPan.addEventListener('click', () => {
+      state.panX = 0;
+      state.panY = 0;
+      updateCanvasTransform();
+    });
+    
+    elements.setScaleBtn.addEventListener('click', setScale);
+    elements.saveScale.addEventListener('click', saveScale);
+    elements.cancelScale.addEventListener('click', cancelScale);
+    elements.resetScaleBtn.addEventListener('click', resetScale);
+    elements.clearLengths.addEventListener('click', clearAllLengths);
+    elements.saveLengthEdit.addEventListener('click', saveLengthEdit);
+    elements.cancelLengthEdit.addEventListener('click', cancelLengthEdit);
+    elements.clearAreas.addEventListener('click', clearAllAreas);
+    elements.closePolygonBtn.addEventListener('click', () => {
+      if (state.areaPoints.length >= 3) {
+        addAreaMeasurement(state.areaPoints);
+        state.areaPoints = [];
+        elements.closePolygonBtn.classList.add('hidden');
+        drawOverlay();
+      }
+    });
+    elements.saveAreaEdit.addEventListener('click', saveAreaEdit);
+    elements.cancelAreaEdit.addEventListener('click', cancelAreaEdit);
+    elements.analyzeParticles.addEventListener('click', analyzeParticles);
+    elements.analyzeHoles.addEventListener('click', analyzeHoles);
+    elements.selectParticleROI.addEventListener('click', () => startROISelection('particles'));
+    elements.clearParticleROI.addEventListener('click', () => clearROI('particles'));
+    elements.selectHoleROI.addEventListener('click', () => startROISelection('holes'));
+    elements.clearHoleROI.addEventListener('click', () => clearROI('holes'));
+    elements.saveScreenshot.addEventListener('click', saveScreenshot);
+    elements.copyTable.addEventListener('click', copyTableTSV);
+    elements.downloadCSV.addEventListener('click', exportCSV);
+    elements.resetProject.addEventListener('click', resetProject);
+    
+    // Documentation modal
+    document.getElementById('helpBtn').addEventListener('click', () => {
+      document.getElementById('docModal').classList.remove('hidden');
+    });
+    
+    document.getElementById('closeDocBtn').addEventListener('click', () => {
+      document.getElementById('docModal').classList.add('hidden');
+    });
+    
+    document.getElementById('closeDocBtnBottom').addEventListener('click', () => {
+      document.getElementById('docModal').classList.add('hidden');
+    });
+    
+    // Close documentation modal when clicking outside
+    document.getElementById('docModal').addEventListener('click', (e) => {
+      if (e.target.id === 'docModal') {
+        document.getElementById('docModal').classList.add('hidden');
+      }
+    });
+    
+    // Particle preprocessing UI controls
+    elements.backgroundSubtraction.addEventListener('change', (e) => {
+      elements.backgroundOptions.classList.toggle('hidden', !e.target.checked);
+    });
+    
+    elements.adaptiveThreshold.addEventListener('change', (e) => {
+      elements.manualThresholdControls.classList.toggle('hidden', e.target.checked);
+      elements.adaptiveThresholdControls.classList.toggle('hidden', !e.target.checked);
+    });
+    
+    // Hole preprocessing UI controls
+    document.getElementById('holeBackgroundSubtraction').addEventListener('change', (e) => {
+      document.getElementById('holeBackgroundOptions').classList.toggle('hidden', !e.target.checked);
+    });
+    
+    document.getElementById('adaptiveThresholdHole').addEventListener('change', (e) => {
+      document.getElementById('manualThresholdHoleControls').classList.toggle('hidden', e.target.checked);
+      document.getElementById('adaptiveThresholdHoleControls').classList.toggle('hidden', !e.target.checked);
+    });
+    
+    document.getElementById('autoThresholdHoleBtn').addEventListener('click', () => {
+      if (!state.image) return;
+      
+      const imageData = getImageData();
+      let gray = toGrayscale(imageData);
+      
+      // Apply same preprocessing as hole analysis
+      if (document.getElementById('holeBackgroundSubtraction').checked) {
+        const radius = parseInt(document.getElementById('holeRollingBallRadius').value);
+        gray = backgroundSubtractRollingBall(gray, imageData.width, imageData.height, radius);
+      }
+      
+      const smoothMethod = document.getElementById('holeSmoothingMethod').value;
+      if (smoothMethod === 'gaussian3') {
+        gray = blur3x3(gray, imageData.width, imageData.height);
+      } else if (smoothMethod === 'median3') {
+        gray = medianFilter(gray, imageData.width, imageData.height, 3);
+      } else if (smoothMethod === 'median5') {
+        gray = medianFilter(gray, imageData.width, imageData.height, 5);
+      }
+      
+      const threshold = otsuThreshold(gray);
+      elements.holeThreshold.value = threshold;
+      elements.holeThresholdValue.textContent = threshold;
+    });
+    
+    elements.autoThresholdBtn.addEventListener('click', () => {
+      if (!state.image) return;
+      
+      const imageData = getImageData();
+      let gray = toGrayscale(imageData);
+      
+      // Apply same preprocessing as particle analysis
+      if (elements.backgroundSubtraction.checked) {
+        const radius = parseInt(elements.rollingBallRadius.value);
+        gray = backgroundSubtractRollingBall(gray, imageData.width, imageData.height, radius);
+      }
+      
+      const smoothMethod = elements.smoothingMethod.value;
+      if (smoothMethod === 'gaussian3') {
+        gray = blur3x3(gray, imageData.width, imageData.height);
+      } else if (smoothMethod === 'median3') {
+        gray = medianFilter(gray, imageData.width, imageData.height, 3);
+      } else if (smoothMethod === 'median5') {
+        gray = medianFilter(gray, imageData.width, imageData.height, 5);
+      }
+      
+      const threshold = otsuThreshold(gray);
+      elements.particleThreshold.value = threshold;
+      elements.thresholdValue.textContent = threshold;
+    });
+    
+    elements.particleThreshold.addEventListener('input', (e) => {
+      elements.thresholdValue.textContent = e.target.value;
+    });
+    
+    elements.holeThreshold.addEventListener('input', (e) => {
+      elements.holeThresholdValue.textContent = e.target.value;
+    });
+    
+    // Tab switching
+    elements.tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        elements.tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const tab = btn.dataset.tab;
+        state.currentTool = tab;
+        
+        // Clear in-progress area when switching away from area tool
+        if (tab !== 'area' && state.areaPoints.length > 0) {
+          state.areaPoints = [];
+          elements.closePolygonBtn.classList.add('hidden');
+          drawOverlay();
+        }
+        
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+        document.getElementById(tab + 'Tab').classList.remove('hidden');
+      });
+    });
+    
+    // Canvas interactions
+    elements.overlayCanvas.addEventListener('mousedown', (e) => {
+      if (e.button === 1 || (e.button === 0 && e.altKey)) {
+        state.isPanning = true;
+        state.lastPanX = e.clientX;
+        state.lastPanY = e.clientY;
+        elements.overlayCanvas.style.cursor = 'grabbing';
+        return;
+      }
+      
+      // ROI drawing mode
+      if (state.isDrawingROI && e.button === 0) {
+        const coords = canvasCoords(e);
+        state.roiStart = coords;
+        return;
+      }
+      
+      // Check if clicking on a length endpoint in edit mode
+      if (state.editingLengthIndex !== null && e.button === 0) {
+        const coords = canvasCoords(e);
+        const len = state.lengths[state.editingLengthIndex];
+        
+        const dist1 = Math.sqrt(Math.pow(coords.x - len.p1.x, 2) + Math.pow(coords.y - len.p1.y, 2));
+        const dist2 = Math.sqrt(Math.pow(coords.x - len.p2.x, 2) + Math.pow(coords.y - len.p2.y, 2));
+        
+        if (dist1 < 10) {
+          state.draggedLengthPoint = 'p1';
+          elements.overlayCanvas.style.cursor = 'move';
+          return;
+        } else if (dist2 < 10) {
+          state.draggedLengthPoint = 'p2';
+          elements.overlayCanvas.style.cursor = 'move';
+          return;
+        }
+      }
+      
+      // Check if clicking on a point handle in edit mode
+      if (state.editingAreaIndex !== null && e.button === 0) {
+        const coords = canvasCoords(e);
+        const area = state.areas[state.editingAreaIndex];
+        
+        for (let i = 0; i < area.points.length; i++) {
+          const p = area.points[i];
+          const dist = Math.sqrt(Math.pow(coords.x - p.x, 2) + Math.pow(coords.y - p.y, 2));
+          if (dist < 10) {
+            state.draggedPointIndex = i;
+            elements.overlayCanvas.style.cursor = 'move';
+            return;
+          }
+        }
+      }
+    });
+    
+    elements.overlayCanvas.addEventListener('mousemove', (e) => {
+      if (state.isPanning) {
+        state.panX += e.clientX - state.lastPanX;
+        state.panY += e.clientY - state.lastPanY;
+        state.lastPanX = e.clientX;
+        state.lastPanY = e.clientY;
+        updateCanvasTransform();
+        return;
+      }
+      
+      // ROI drawing mode
+      if (state.isDrawingROI && state.roiStart) {
+        const coords = canvasCoords(e);
+        const x = Math.min(state.roiStart.x, coords.x);
+        const y = Math.min(state.roiStart.y, coords.y);
+        const width = Math.abs(coords.x - state.roiStart.x);
+        const height = Math.abs(coords.y - state.roiStart.y);
+        
+        state.roi = { x, y, width, height };
+        drawOverlay();
+        return;
+      }
+      
+      // Handle length point dragging in edit mode
+      if (state.draggedLengthPoint !== null && state.editingLengthIndex !== null) {
+        const coords = canvasCoords(e);
+        const len = state.lengths[state.editingLengthIndex];
+        len[state.draggedLengthPoint] = coords;
+        drawOverlay();
+      }
+      
+      // Handle point dragging in edit mode
+      if (state.draggedPointIndex !== null && state.editingAreaIndex !== null) {
+        const coords = canvasCoords(e);
+        const area = state.areas[state.editingAreaIndex];
+        area.points[state.draggedPointIndex] = coords;
+        drawOverlay();
+      }
+    });
+    
+    elements.overlayCanvas.addEventListener('mouseup', () => {
+      state.isPanning = false;
+      state.draggedPointIndex = null;
+      state.draggedLengthPoint = null;
+      
+      // Finish ROI drawing
+      if (state.isDrawingROI && state.roiStart) {
+        finishROISelection();
+      }
+      
+      const cursor = state.editingAreaIndex !== null || state.editingLengthIndex !== null ? 'pointer' : 'crosshair';
+      elements.overlayCanvas.style.cursor = cursor;
+    });
+    
+    elements.overlayCanvas.addEventListener('mouseleave', () => {
+      state.isPanning = false;
+    });
+    
+    elements.overlayCanvas.addEventListener('click', (e) => {
+      if (!state.image) return;
+      
+      // Don't allow other interactions while drawing ROI
+      if (state.isDrawingROI) return;
+      
+      const coords = canvasCoords(e);
+      
+      // Setting scale mode
+      if (state.isSettingScale) {
+        state.scalePoints.push(coords);
+        if (state.scalePoints.length === 2) {
+          elements.setScaleBtn.textContent = 'Set Scale';
+        }
+        drawOverlay();
+        return;
+      }
+      
+      // Length tool
+      if (state.currentTool === 'length') {
+        state.lengthPoints.push(coords);
+        if (state.lengthPoints.length === 2) {
+          const len = measureLength(state.lengthPoints[0], state.lengthPoints[1]);
+          addLengthMeasurement(len);
+          state.lengthPoints = [];
+        }
+        drawOverlay();
+      }
+      
+      // Area tool
+      if (state.currentTool === 'area') {
+        // In edit mode, don't add new points with regular click
+        if (state.editingAreaIndex !== null) {
+          return;
+        }
+        
+        state.areaPoints.push(coords);
+        
+        // Show close button when 3+ points
+        if (state.areaPoints.length >= 3) {
+          elements.closePolygonBtn.classList.remove('hidden');
+          elements.closePolygonBtn.textContent = `Close Polygon (${state.areaPoints.length} points)`;
+        }
+        
+        drawOverlay();
+      }
+    });
+    
+    elements.overlayCanvas.addEventListener('dblclick', (e) => {
+      if (state.currentTool === 'area' && state.areaPoints.length >= 3) {
+        addAreaMeasurement(state.areaPoints);
+        state.areaPoints = [];
+      }
+    });
+    
+    // Touch support for mobile
+    let touchStartTime = 0;
+    let lastTap = 0;
+    
+    elements.overlayCanvas.addEventListener('touchstart', (e) => {
+      touchStartTime = Date.now();
+      if (e.touches.length === 2) {
+        state.isPanning = true;
+        state.lastPanX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        state.lastPanY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      }
+    });
+    
+    elements.overlayCanvas.addEventListener('touchmove', (e) => {
+      if (state.isPanning && e.touches.length === 2) {
+        const x = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const y = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        state.panX += x - state.lastPanX;
+        state.panY += y - state.lastPanY;
+        state.lastPanX = x;
+        state.lastPanY = y;
+        updateCanvasTransform();
+        e.preventDefault();
+      }
+    });
+    
+    elements.overlayCanvas.addEventListener('touchend', (e) => {
+      state.isPanning = false;
+      
+      if (Date.now() - touchStartTime < 300 && e.changedTouches.length === 1) {
+        const touch = e.changedTouches[0];
+        const now = Date.now();
+        
+        // Detect double tap
+        if (now - lastTap < 300) {
+          if (state.currentTool === 'area' && state.areaPoints.length >= 3) {
+            addAreaMeasurement(state.areaPoints);
+            state.areaPoints = [];
+          }
+          lastTap = 0;
+        } else {
+          lastTap = now;
+          
+          // Simulate click
+          const rect = elements.overlayCanvas.getBoundingClientRect();
+          const scale = state.zoom / 100;
+          const coords = {
+            x: (touch.clientX - rect.left) / scale,
+            y: (touch.clientY - rect.top) / scale
+          };
+          
+          if (state.isSettingScale) {
+            state.scalePoints.push(coords);
+            if (state.scalePoints.length === 2) {
+              elements.setScaleBtn.textContent = 'Set Scale';
+            }
+            drawOverlay();
+            return;
+          }
+          
+          if (state.currentTool === 'length') {
+            state.lengthPoints.push(coords);
+            if (state.lengthPoints.length === 2) {
+              const len = measureLength(state.lengthPoints[0], state.lengthPoints[1]);
+              addLengthMeasurement(len);
+              state.lengthPoints = [];
+            }
+            drawOverlay();
+          }
+          
+          if (state.currentTool === 'area') {
+            state.areaPoints.push(coords);
+            drawOverlay();
+          }
+        }
+      }
+    });
+    
+    // Set crosshair cursor when image loaded
+    elements.overlayCanvas.style.cursor = 'crosshair';
+    // Hint browser that these elements will transform frequently
+    elements.mainCanvas.style.willChange = 'transform';
+    elements.overlayCanvas.style.willChange = 'transform';
+    
+    // Mouse wheel zoom
+    elements.canvasWrapper.addEventListener('wheel', (e) => {
+      if (!state.image) return;
+      
+      e.preventDefault();
+      
+      const zoomStep = 10;
+      const delta = e.deltaY < 0 ? zoomStep : -zoomStep;
+      const newZoom = Math.max(50, Math.min(300, state.zoom + delta));
+      
+      if (newZoom !== state.zoom) {
+        state.zoom = newZoom;
+        elements.zoomSlider.value = state.zoom;
+        elements.zoomValue.textContent = state.zoom + '%';
+        updateCanvasTransform();
+      }
+    }, { passive: false });
+    
+    // Keyboard controls for panning
+    document.addEventListener('keydown', (e) => {
+      if (!state.image) return;
+      
+      const panStep = 50;
+      let handled = false;
+      
+      switch(e.key) {
+        case 'ArrowLeft':
+          state.panX += panStep;
+          handled = true;
+          break;
+        case 'ArrowRight':
+          state.panX -= panStep;
+          handled = true;
+          break;
+        case 'ArrowUp':
+          state.panY += panStep;
+          handled = true;
+          break;
+        case 'ArrowDown':
+          state.panY -= panStep;
+          handled = true;
+          break;
+      }
+      
+      if (handled) {
+        e.preventDefault();
+        updateCanvasTransform();
+      }
+    });
+
+    // Recenter on viewport changes (mobile orientation/resize)
+    let _resizeTimer = null;
+    function _scheduleTransformUpdate() {
+      if (!state.image) return;
+      if (_resizeTimer) clearTimeout(_resizeTimer);
+      _resizeTimer = setTimeout(() => {
+        updateCanvasTransform();
+      }, 150);
+    }
+    window.addEventListener('resize', _scheduleTransformUpdate);
+    window.addEventListener('orientationchange', _scheduleTransformUpdate);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', _scheduleTransformUpdate);
+    }
+    
+    // Drag and Drop support
+    elements.canvasWrapper.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      elements.canvasWrapper.classList.add('drag-over');
+    });
+    
+    elements.canvasWrapper.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // Only remove class if leaving the wrapper itself, not child elements
+      if (e.target === elements.canvasWrapper) {
+        elements.canvasWrapper.classList.remove('drag-over');
+      }
+    });
+    
+    elements.canvasWrapper.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      elements.canvasWrapper.classList.remove('drag-over');
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type.startsWith('image/')) {
+        loadImage(files[0]);
+      }
+    });
+
+    // Mobile-friendly tap to load (fallback when drag-drop isn't available)
+    elements.canvasWrapper.addEventListener('click', () => {
+      if (!state.image && elements.imageInput) {
+        elements.imageInput.click();
+      }
+    });
+    elements.canvasWrapper.addEventListener('touchend', () => {
+      if (!state.image && elements.imageInput) {
+        elements.imageInput.click();
+      }
+    });
+    
+    // Initial results table
+    updateResultsTable();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c3ef893f29508d1',t:'MTc2OTQxOTYxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
