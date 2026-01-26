@@ -466,7 +466,12 @@
     // Open student info modal
     function openStudentInfo(studentId) {
       try {
-        const student = roster.find(s => String(s.ID) === String(studentId));
+        // Prefer the student in the currently selected class when IDs exist in multiple classes
+        let student = roster.find(s => String(s.ID) === String(studentId) && s['Class and Section'] === selectedClass);
+        if (!student) {
+          // Fallback to first matching ID if class-specific entry isn't found
+          student = roster.find(s => String(s.ID) === String(studentId));
+        }
         if (!student) return;
         const modal = document.getElementById('student-info-modal');
         const siPhoto = document.getElementById('si-photo');
@@ -789,7 +794,14 @@
       
       const students = [];
       const warnings = [];
-      const existingIds = new Set(roster.map(s => s.ID));
+      // Track existing IDs per class to allow the same ID in different classes
+      const existingIdsByClass = new Map();
+      roster.forEach(s => {
+        const klass = s['Class and Section'] || '';
+        const id = s.ID;
+        if (!existingIdsByClass.has(klass)) existingIdsByClass.set(klass, new Set());
+        existingIdsByClass.get(klass).add(id);
+      });
       
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split('\t').map(v => v.trim());
@@ -806,14 +818,18 @@
         if (info.title) student.GroupTitle = info.title;
         if (typeof student.Group === 'string') student.OriginalGroup = student.Group;
         
-        if (existingIds.has(student.ID)) {
-          warnings.push(`Skipped duplicate ID: ${student.ID}`);
+        const klass = student['Class and Section'] || '';
+        if (!existingIdsByClass.has(klass)) existingIdsByClass.set(klass, new Set());
+        const classSet = existingIdsByClass.get(klass);
+
+        if (classSet.has(student.ID)) {
+          warnings.push(`Skipped duplicate ID in ${klass}: ${student.ID}`);
           continue;
         }
-        
+
         if (student.ID) {
           students.push(student);
-          existingIds.add(student.ID);
+          classSet.add(student.ID);
         }
       }
       
@@ -923,7 +939,7 @@
           const newGroupAssignments = {};
           const newRowByStudentId = {};
           const newDateColByISO = {};
-          const seenIds = new Set();
+          const seenIdsByClass = {};
           const allISODateHeaders = new Set();
           let sawObjectRowsWithDuplicateHeaders = false;
 
@@ -987,9 +1003,14 @@
                 OriginalGroup: typeof groupRaw === 'string' ? groupRaw : ''
               };
 
-              if (student.ID && !seenIds.has(student.ID)) {
+              // De-duplicate per class instead of globally, so students
+              // enrolled in multiple classes are kept for each class.
+              if (!seenIdsByClass[classSection]) {
+                seenIdsByClass[classSection] = new Set();
+              }
+              if (student.ID && !seenIdsByClass[classSection].has(student.ID)) {
                 newRoster.push(student);
-                seenIds.add(student.ID);
+                seenIdsByClass[classSection].add(student.ID);
               }
 
               // Record RowNumber (1-based). Header is row 1; first data row is 2.

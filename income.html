@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Income Analysis Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'DM Sans', sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 3px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full bg-slate-50 text-slate-800">
+  <div id="app" class="h-full w-full overflow-auto scrollbar-thin">
+   <div class="min-h-full p-6 md:p-8 max-w-7xl mx-auto"><!-- Header -->
+    <header class="mb-8">
+     <h1 id="dashboard-title" class="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Income Analysis Dashboard</h1>
+     <p class="text-slate-500 text-sm">Track and analyze your income streams</p>
+    </header><!-- Filters -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+     <div class="flex flex-wrap gap-4 items-end">
+      <div class="flex-1 min-w-[160px]"><label class="block text-xs font-medium text-slate-500 mb-1.5">Filter by Tag</label> <select id="filter-tag" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="all">All Tags</option> </select>
+      </div>
+      <div class="flex-1 min-w-[160px]"><label class="block text-xs font-medium text-slate-500 mb-1.5">Filter by Month</label> <select id="filter-month" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="all">All Months</option> </select>
+      </div><button id="import-btn" class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+       </svg> Import </button>
+       <button id="sync-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h10a4 4 0 000-8h-1" />
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 15a4 4 0 010-8h10a4 4 0 010 8" />
+       </svg> Sync Google Sheets </button>
+       <button id="export-btn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v16a2 2 0 002 2h12a2 2 0 002-2V4M8 12l4 4m0 0l4-4m-4 4V2" />
+       </svg> Export TSV </button>
+       <button id="clear-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M6 7h12M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+       </svg> Clear All </button>
+       <button id="add-entry-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+       </svg> Add Entry </button>
+     </div>
+    </div><!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+      <div class="flex items-center justify-between mb-3"><span class="text-xs font-medium text-slate-500 uppercase tracking-wide">Total Income</span>
+       <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+       </div>
+      </div>
+      <p id="total-income" class="text-2xl font-bold text-slate-900">$0.00</p>
+      <p id="total-entries" class="text-xs text-slate-400 mt-1">0 entries</p>
+     </div>
+     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+      <div class="flex items-center justify-between mb-3"><span class="text-xs font-medium text-slate-500 uppercase tracking-wide">Average Payout</span>
+       <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+       </div>
+      </div>
+      <p id="avg-income" class="text-2xl font-bold text-slate-900">$0.00</p>
+      <p class="text-xs text-slate-400 mt-1">per payout</p>
+     </div>
+     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+      <div class="flex items-center justify-between mb-3"><span class="text-xs font-medium text-slate-500 uppercase tracking-wide">Highest Payout</span>
+       <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
+       </div>
+      </div>
+      <p id="highest-income" class="text-2xl font-bold text-slate-900">$0.00</p>
+      <p id="highest-source" class="text-xs text-slate-400 mt-1">—</p>
+     </div>
+    </div><!-- Chart and Insights -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6"><!-- Chart -->
+     <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+      <h2 class="text-sm font-semibold text-slate-700 mb-4">Income by Date</h2>
+      <div class="flex gap-3">
+       <div id="chart-y-axis" class="flex flex-col justify-between text-xs text-slate-500 text-right pr-2 border-r border-slate-200" style="min-width: 60px; height: 256px;">
+       </div>
+       <div id="chart-container" class="flex-1 h-64 flex items-end justify-start gap-2 overflow-x-auto scrollbar-thin pb-2">
+        <div class="flex-1 flex items-center justify-center text-slate-400 text-sm">
+         <p>Add income entries to see the chart</p>
+        </div>
+       </div>
+      </div>
+      <div id="chart-legend" class="flex flex-wrap gap-3 mt-4 pt-4 border-t border-slate-100"></div>
+     </div><!-- Insights -->
+     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+      <h2 class="text-sm font-semibold text-slate-700 mb-4">Insights</h2>
+      <div id="insights-container" class="space-y-3">
+       <div class="p-3 bg-slate-50 rounded-lg">
+        <p class="text-sm text-slate-500">Add income entries to see insights and trends.</p>
+       </div>
+      </div>
+     </div>
+    </div><!-- Monthly Income Chart -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-6">
+     <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-semibold text-slate-700">Monthly Income Trends</h2><select id="monthly-chart-year" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="">Select Year</option> </select>
+     </div>
+      <div id="monthly-stats" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+       <div class="p-3 bg-slate-50 rounded-lg">
+        <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Total Year Income</p>
+        <p id="monthly-total-income" class="text-lg font-semibold text-slate-900 mt-1">—</p>
+       </div>
+       <div class="p-3 bg-slate-50 rounded-lg">
+        <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Average Monthly Income</p>
+        <p id="monthly-average-income" class="text-lg font-semibold text-slate-900 mt-1">—</p>
+       </div>
+       <div class="p-3 bg-slate-50 rounded-lg">
+        <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Highest Payout</p>
+        <p id="monthly-highest-payout" class="text-lg font-semibold text-slate-900 mt-1">—</p>
+       </div>
+      </div>
+     <div class="flex gap-3">
+      <div id="monthly-chart-y-axis" class="flex flex-col justify-between text-xs text-slate-500 text-right pr-2 border-r border-slate-200" style="min-width: 60px; height: 320px;">
+      </div>
+      <div id="monthly-chart-container" class="flex-1 h-80 flex items-end justify-start gap-3 overflow-x-auto scrollbar-thin pb-2">
+       <div class="flex-1 flex items-center justify-center text-slate-400 text-sm">
+        <p>Add income entries to see monthly trends</p>
+       </div>
+      </div>
+     </div>
+     <div id="monthly-chart-legend" class="flex flex-wrap gap-3 mt-4 pt-4 border-t border-slate-100"></div>
+    </div><!-- Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+     <div class="p-5 border-b border-slate-100">
+      <h2 class="text-sm font-semibold text-slate-700">Income Entries</h2>
+     </div>
+     <div class="overflow-x-auto">
+      <table class="w-full">
+       <thead class="bg-slate-50">
+        <tr>
+         <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wide px-5 py-3">Tag</th>
+         <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wide px-5 py-3">Amount</th>
+         <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wide px-5 py-3">Date Posted</th>
+         <th class="text-left text-xs font-medium text-slate-500 uppercase tracking-wide px-5 py-3">Description</th>
+         <th class="text-right text-xs font-medium text-slate-500 uppercase tracking-wide px-5 py-3">Actions</th>
+        </tr>
+       </thead>
+       <tbody id="entries-table" class="divide-y divide-slate-100">
+        <tr id="empty-state">
+         <td colspan="5" class="px-5 py-12 text-center text-slate-400 text-sm">
+          <div class="flex flex-col items-center">
+           <svg class="w-12 h-12 text-slate-300 mb-3" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+           </svg>
+           <p>No income entries yet</p>
+           <p class="text-xs mt-1">Click "Add Entry" to get started</p>
+          </div></td>
+        </tr>
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div><!-- Add/Edit Modal -->
+   <div id="modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+     <div class="p-6 border-b border-slate-100">
+      <h3 id="modal-title" class="text-lg font-semibold text-slate-900">Add Income Entry</h3>
+     </div>
+     <form id="entry-form" class="p-6 space-y-4"><input type="hidden" id="entry-id">
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Tag</label> <select id="entry-tag" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"> <option value="">Select a tag...</option> <option value="Salary">Salary</option> <option value="Consulting">Consulting</option> <option value="Honoraria">Honoraria</option> <option value="Research Grant">Research Grant</option> <option value="Freelance">Freelance</option> <option value="Investment">Investment</option> <option value="Other">Other</option> </select>
+      </div>
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Amount</label>
+       <div class="relative"><span id="modal-currency" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">$</span> <input type="number" id="entry-amount" step="0.01" min="0" required placeholder="0.00" class="w-full pl-7 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+       </div>
+      </div>
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Date Posted</label> <input type="date" id="entry-date" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent">
+      </div>
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Description</label> <textarea id="entry-description" rows="2" placeholder="Brief description..." class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"></textarea>
+      </div>
+      <div class="flex gap-3 pt-2"><button type="button" id="cancel-btn" class="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors">Cancel</button> <button type="submit" id="submit-btn" class="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors">Save Entry</button>
+      </div>
+     </form>
+    </div>
+   </div><!-- Import Modal -->
+   <div id="import-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+     <div class="p-6 border-b border-slate-100">
+      <h3 class="text-lg font-semibold text-slate-900">Import Income Data</h3>
+      <p class="text-sm text-slate-500 mt-1">Paste your tab-separated data below (from Excel or spreadsheet)</p>
+     </div>
+     <div class="p-6 flex-1 overflow-y-auto">
+      <div class="space-y-4">
+      <div><label class="block text-sm font-medium text-slate-700 mb-1.5">Paste Data</label> <textarea id="import-data" rows="12" placeholder="Tag	Amount	Date Posted	Description
+    PAPSI Income	2600	January 8, 2024	2023 Christmas Promo
+    PAPSI Income	5500	January 8, 2024	2023 Christmas Promo" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-mono resize-none"></textarea>
+        <p class="text-xs text-slate-500 mt-1.5">Format: Tab-separated columns (Tag, Amount, Date, Description). First row is skipped as header.</p>
+       </div>
+       <div id="import-preview" class="hidden"><label class="block text-sm font-medium text-slate-700 mb-2">Preview (<span id="preview-count">0</span> entries)</label>
+        <div class="bg-slate-50 rounded-lg p-4 max-h-48 overflow-y-auto scrollbar-thin">
+         <div id="preview-list" class="space-y-2"></div>
+        </div>
+       </div>
+       <div id="import-error" class="hidden p-3 bg-red-50 border border-red-200 rounded-lg">
+        <p class="text-sm text-red-600"></p>
+       </div>
+      </div>
+     </div>
+     <div class="p-6 border-t border-slate-100 flex gap-3"><button id="cancel-import-btn" class="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors">Cancel</button> <button id="preview-import-btn" class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">Preview Data</button> <button id="confirm-import-btn" class="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>Import All</button>
+     </div>
+    </div>
+   </div><!-- Delete Confirmation -->
+   <div id="delete-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+     <div class="text-center">
+      <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+       <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+       </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-slate-900 mb-2">Delete Entry?</h3>
+      <p class="text-sm text-slate-500 mb-6">This action cannot be undone.</p>
+      <div class="flex gap-3"><button id="cancel-delete-btn" class="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors">Cancel</button> <button id="confirm-delete-btn" class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors">Delete</button>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const GOOGLE_TSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSFuFFiMqMZU4CsMmGLzHBgnCL9D5UG-fRpLeJNv9Ci5yApzF851-YlaYY2vJ0OKJ3Q60F3xtk6OGzg/pub?gid=0&single=true&output=tsv';
+
+    // Local data SDK (replaces Canva Data SDK) using localStorage
+    (function() {
+      const STORAGE_KEY = 'income_entries_v1';
+      const load = () => {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          const arr = raw ? JSON.parse(raw) : [];
+          return Array.isArray(arr) ? arr : [];
+        } catch (_) { return []; }
+      };
+      const save = (arr) => {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (_) {}
+      };
+      const ensureIds = (arr) => arr.map(e => {
+        const id = e.id || Date.now().toString() + Math.random().toString(36).slice(2);
+        return { ...e, id, __backendId: id };
+      });
+      const emit = (handler, arr) => {
+        if (handler && typeof handler.onDataChanged === 'function') {
+          handler.onDataChanged(arr);
+        }
+      };
+      if (!window.dataSdk) {
+        let handlerRef = null;
+        window.dataSdk = {
+          async init(handler) {
+            handlerRef = handler;
+            const data = ensureIds(load());
+            save(data);
+            emit(handlerRef, data);
+            return { isOk: true };
+          },
+          async create(item) {
+            const current = ensureIds(load());
+            const id = item.id || Date.now().toString();
+            const newItem = { ...item, id, __backendId: id };
+            current.push(newItem);
+            save(current);
+            emit(handlerRef, current);
+            return { isOk: true };
+          },
+          async update(item) {
+            const current = ensureIds(load());
+            const key = item.__backendId || item.id;
+            const idx = current.findIndex(e => e.__backendId === key || e.id === key);
+            if (idx >= 0) {
+              const id = current[idx].id;
+              current[idx] = { ...current[idx], ...item, id, __backendId: id };
+              save(current);
+              emit(handlerRef, current);
+              return { isOk: true };
+            }
+            return { isOk: false };
+          },
+          async delete(item) {
+            const current = ensureIds(load());
+            const key = item.__backendId || item.id;
+            const filtered = current.filter(e => !(e.__backendId === key || e.id === key));
+            save(filtered);
+            emit(handlerRef, filtered);
+            return { isOk: true };
+          },
+          async clear() {
+            save([]);
+            emit(handlerRef, []);
+            return { isOk: true };
+          }
+        };
+      }
+    })();
+
+    const defaultConfig = {
+      dashboard_title: 'Income Analysis Dashboard',
+      currency_symbol: '₱',
+      background_color: '#f8fafc',
+      surface_color: '#ffffff',
+      text_color: '#1e293b',
+      primary_action_color: '#059669',
+      secondary_action_color: '#64748b'
+    };
+
+    let config = { ...defaultConfig };
+    let allData = [];
+    let entryToDelete = null;
+
+    const tagColors = {
+      'Salary': { bg: '#dcfce7', text: '#166534', bar: '#22c55e' },
+      'Consulting': { bg: '#dbeafe', text: '#1e40af', bar: '#3b82f6' },
+      'Honoraria': { bg: '#fef3c7', text: '#92400e', bar: '#f59e0b' },
+      'Research Grant': { bg: '#f3e8ff', text: '#7c3aed', bar: '#a855f7' },
+      'Freelance': { bg: '#fce7f3', text: '#be185d', bar: '#ec4899' },
+      'Investment': { bg: '#ccfbf1', text: '#0f766e', bar: '#14b8a6' },
+      'Other': { bg: '#f1f5f9', text: '#475569', bar: '#64748b' }
+    };
+
+    function formatCurrency(amount) {
+      const symbol = config.currency_symbol || '$';
+      return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function getMonthYear(dateStr) {
+      const date = new Date(dateStr);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function getMonthYearLabel(monthYear) {
+      const [year, month] = monthYear.split('-');
+      const date = new Date(year, parseInt(month) - 1);
+      return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    function getFilteredData() {
+      const tagFilter = document.getElementById('filter-tag').value;
+      const monthFilter = document.getElementById('filter-month').value;
+      
+      return allData.filter(entry => {
+        const tagMatch = tagFilter === 'all' || entry.tag === tagFilter;
+        const monthMatch = monthFilter === 'all' || getMonthYear(entry.date) === monthFilter;
+        return tagMatch && monthMatch;
+      });
+    }
+
+    function updateFilters() {
+      const tagSelect = document.getElementById('filter-tag');
+      const monthSelect = document.getElementById('filter-month');
+      
+      const currentTag = tagSelect.value;
+      const currentMonth = monthSelect.value;
+      
+      const tags = [...new Set(allData.map(e => e.tag))].sort();
+      const months = [...new Set(allData.map(e => getMonthYear(e.date)))].sort().reverse();
+      
+      tagSelect.innerHTML = '<option value="all">All Tags</option>' + 
+        tags.map(tag => `<option value="${tag}"${tag === currentTag ? ' selected' : ''}>${tag}</option>`).join('');
+      
+      monthSelect.innerHTML = '<option value="all">All Months</option>' + 
+        months.map(m => `<option value="${m}"${m === currentMonth ? ' selected' : ''}>${getMonthYearLabel(m)}</option>`).join('');
+    }
+
+    function updateSummaryCards(data) {
+      const total = data.reduce((sum, e) => sum + e.amount, 0);
+      const avg = data.length > 0 ? total / data.length : 0;
+      const highest = data.length > 0 ? data.reduce((max, e) => e.amount > max.amount ? e : max, data[0]) : null;
+      
+      document.getElementById('total-income').textContent = formatCurrency(total);
+      document.getElementById('total-entries').textContent = `${data.length} ${data.length === 1 ? 'entry' : 'entries'}`;
+      document.getElementById('avg-income').textContent = formatCurrency(avg);
+      document.getElementById('highest-income').textContent = highest ? formatCurrency(highest.amount) : '$0.00';
+      document.getElementById('highest-source').textContent = highest ? `${highest.tag}` : '—';
+    }
+
+    function updateChart(data) {
+      const container = document.getElementById('chart-container');
+      const legend = document.getElementById('chart-legend');
+      const yAxis = document.getElementById('chart-y-axis');
+      
+      if (data.length === 0) {
+        container.innerHTML = '<div class="flex-1 flex items-center justify-center text-slate-400 text-sm"><p>Add income entries to see the chart</p></div>';
+        legend.innerHTML = '';
+        yAxis.innerHTML = '';
+        return;
+      }
+      
+      const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+      const maxAmount = Math.max(...sortedData.map(e => e.amount));
+      const usedTags = [...new Set(sortedData.map(e => e.tag))];
+      
+      // Create Y-axis scale (5 divisions)
+      const divisions = 5;
+      const yAxisLabels = [];
+      for (let i = divisions; i >= 0; i--) {
+        const value = (maxAmount / divisions) * i;
+        yAxisLabels.push(formatCurrency(value));
+      }
+      yAxis.innerHTML = yAxisLabels.map(label => `<div>${label}</div>`).join('');
+      
+      container.innerHTML = sortedData.map(entry => {
+        const height = maxAmount > 0 ? (entry.amount / maxAmount) * 100 : 0;
+        const colors = tagColors[entry.tag] || tagColors['Other'];
+        return `
+          <div class="flex flex-col items-center min-w-[60px] group">
+            <div class="relative h-48 w-10 bg-slate-100 rounded-t-lg overflow-hidden flex items-end">
+              <div class="w-full rounded-t-lg transition-all duration-300 group-hover:opacity-80" 
+                   style="height: ${Math.max(height, 2)}%; background-color: ${colors.bar};">
+              </div>
+              <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                ${formatCurrency(entry.amount)}
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 mt-2 text-center">${new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+          </div>
+        `;
+      }).join('');
+      
+      legend.innerHTML = usedTags.map(tag => {
+        const colors = tagColors[tag] || tagColors['Other'];
+        return `
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded" style="background-color: ${colors.bar};"></div>
+            <span class="text-xs text-slate-600">${tag}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateMonthlyChart(data) {
+      const container = document.getElementById('monthly-chart-container');
+      const legend = document.getElementById('monthly-chart-legend');
+      const yearSelect = document.getElementById('monthly-chart-year');
+      const yAxis = document.getElementById('monthly-chart-y-axis');
+      const statTotal = document.getElementById('monthly-total-income');
+      const statAvg = document.getElementById('monthly-average-income');
+      const statHigh = document.getElementById('monthly-highest-payout');
+      
+      if (data.length === 0) {
+        container.innerHTML = '<div class="flex-1 flex items-center justify-center text-slate-400 text-sm"><p>Add income entries to see monthly trends</p></div>';
+        legend.innerHTML = '';
+        yearSelect.innerHTML = '<option value="">Select Year</option>';
+        yAxis.innerHTML = '';
+        if (statTotal) statTotal.textContent = '—';
+        if (statAvg) statAvg.textContent = '—';
+        if (statHigh) statHigh.textContent = '—';
+        return;
+      }
+      
+      // Get all available years and populate dropdown
+      const years = [...new Set(data.map(e => new Date(e.date).getFullYear()))].sort((a, b) => b - a);
+      const currentYear = yearSelect.value || years[0].toString();
+      
+      yearSelect.innerHTML = '<option value="">Select Year</option>' + 
+        years.map(year => `<option value="${year}"${year.toString() === currentYear ? ' selected' : ''}>${year}</option>`).join('');
+      
+      if (!currentYear) {
+        container.innerHTML = '<div class="flex-1 flex items-center justify-center text-slate-400 text-sm"><p>Select a year to view monthly trends</p></div>';
+        legend.innerHTML = '';
+        yAxis.innerHTML = '';
+        if (statTotal) statTotal.textContent = '—';
+        if (statAvg) statAvg.textContent = '—';
+        if (statHigh) statHigh.textContent = '—';
+        return;
+      }
+      
+      // Filter data for selected year
+      const yearData = data.filter(e => new Date(e.date).getFullYear().toString() === currentYear);
+      
+      if (yearData.length === 0) {
+        container.innerHTML = '<div class="flex-1 flex items-center justify-center text-slate-400 text-sm"><p>No data for selected year</p></div>';
+        legend.innerHTML = '';
+        yAxis.innerHTML = '';
+        if (statTotal) statTotal.textContent = '—';
+        if (statAvg) statAvg.textContent = '—';
+        if (statHigh) statHigh.textContent = '—';
+        return;
+      }
+
+      // Update stats for the selected year
+      const yearTotal = yearData.reduce((sum, e) => sum + e.amount, 0);
+      const avgMonthly = yearTotal / 12;
+      const highestEntry = yearData.reduce((max, e) => (e.amount > max.amount ? e : max), yearData[0]);
+      if (statTotal) statTotal.textContent = formatCurrency(yearTotal);
+      if (statAvg) statAvg.textContent = formatCurrency(avgMonthly);
+      if (statHigh) statHigh.textContent = formatCurrency(highestEntry ? highestEntry.amount : 0);
+      
+      // Group by month and tag
+      const monthlyData = {};
+      const allTags = new Set();
+      
+      yearData.forEach(entry => {
+        const month = new Date(entry.date).getMonth(); // 0-11
+        if (!monthlyData[month]) {
+          monthlyData[month] = {};
+        }
+        if (!monthlyData[month][entry.tag]) {
+          monthlyData[month][entry.tag] = 0;
+        }
+        monthlyData[month][entry.tag] += entry.amount;
+        allTags.add(entry.tag);
+      });
+      
+      const tagArray = Array.from(allTags);
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      
+      // Calculate max total for scaling
+      let maxMonthTotal = 0;
+      Object.values(monthlyData).forEach(monthTags => {
+        const total = Object.values(monthTags).reduce((sum, val) => sum + val, 0);
+        if (total > maxMonthTotal) maxMonthTotal = total;
+      });
+      
+      // Create Y-axis scale (5 divisions)
+      const divisions = 5;
+      const yAxisLabels = [];
+      for (let i = divisions; i >= 0; i--) {
+        const value = (maxMonthTotal / divisions) * i;
+        yAxisLabels.push(formatCurrency(value));
+      }
+      yAxis.innerHTML = yAxisLabels.map(label => `<div>${label}</div>`).join('');
+      
+      // Create stacked bars for each month (0-11)
+      container.innerHTML = monthNames.map((monthName, monthIndex) => {
+        const monthTags = monthlyData[monthIndex] || {};
+        const monthTotal = Object.values(monthTags).reduce((sum, val) => sum + val, 0);
+        
+        if (monthTotal === 0) {
+          return `
+            <div class="flex flex-col items-center min-w-[70px]">
+              <div class="h-64 w-12 bg-slate-100 rounded-t-lg flex items-center justify-center">
+                <span class="text-xs text-slate-300">—</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-2 font-medium">${monthName}</p>
+            </div>
+          `;
+        }
+        
+        // Build stacked segments
+        let cumulativeHeight = 0;
+        const segments = tagArray.map(tag => {
+          const amount = monthTags[tag] || 0;
+          if (amount === 0) return '';
+          
+          const heightPercent = maxMonthTotal > 0 ? (amount / maxMonthTotal) * 100 : 0;
+          const colors = tagColors[tag] || tagColors['Other'];
+          
+          const segment = `
+            <div class="w-full transition-all duration-300 hover:opacity-80 group/segment relative" 
+                 style="height: ${heightPercent}%; background-color: ${colors.bar};" 
+                 title="${tag}: ${formatCurrency(amount)}">
+              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover/segment:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                ${tag}: ${formatCurrency(amount)}
+              </div>
+            </div>
+          `;
+          
+          cumulativeHeight += heightPercent;
+          return segment;
+        }).join('');
+        
+        return `
+          <div class="flex flex-col items-center min-w-[70px] group">
+            <div class="relative h-64 w-12 bg-slate-100 rounded-t-lg overflow-hidden flex flex-col-reverse">
+              ${segments}
+              <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20 pointer-events-none">
+                Total: ${formatCurrency(monthTotal)}
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 mt-2 font-medium">${monthName}</p>
+          </div>
+        `;
+      }).join('');
+      
+      // Update legend
+      legend.innerHTML = tagArray.map(tag => {
+        const colors = tagColors[tag] || tagColors['Other'];
+        return `
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded" style="background-color: ${colors.bar};"></div>
+            <span class="text-xs text-slate-600">${tag}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateInsights(data) {
+      const container = document.getElementById('insights-container');
+      
+      if (data.length === 0) {
+        container.innerHTML = '<div class="p-3 bg-slate-50 rounded-lg"><p class="text-sm text-slate-500">Add income entries to see insights and trends.</p></div>';
+        return;
+      }
+      
+      const insights = [];
+      const tagTotals = {};
+      data.forEach(e => {
+        tagTotals[e.tag] = (tagTotals[e.tag] || 0) + e.amount;
+      });
+      
+      const topTag = Object.entries(tagTotals).sort((a, b) => b[1] - a[1])[0];
+      if (topTag) {
+        const percentage = ((topTag[1] / data.reduce((s, e) => s + e.amount, 0)) * 100).toFixed(0);
+        insights.push({
+          icon: '📊',
+          text: `<strong>${topTag[0]}</strong> is your top income source, contributing ${percentage}% of filtered income.`
+        });
+      }
+      
+      if (data.length >= 2) {
+        const sorted = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const recent = sorted[0];
+        const previous = sorted[1];
+        const change = ((recent.amount - previous.amount) / previous.amount * 100).toFixed(0);
+        const direction = change > 0 ? 'increased' : change < 0 ? 'decreased' : 'unchanged';
+        const emoji = change > 0 ? '📈' : change < 0 ? '📉' : '➡️';
+        insights.push({
+          icon: emoji,
+          text: `Latest payout ${direction} by <strong>${Math.abs(change)}%</strong> compared to the previous entry.`
+        });
+      }
+      
+      const tagCount = Object.keys(tagTotals).length;
+      if (tagCount > 1) {
+        insights.push({
+          icon: '🎯',
+          text: `You have <strong>${tagCount} active income streams</strong> in the current view.`
+        });
+      }
+      
+      const months = [...new Set(data.map(e => getMonthYear(e.date)))];
+      if (months.length > 0) {
+        const monthlyTotals = {};
+        data.forEach(e => {
+          const m = getMonthYear(e.date);
+          monthlyTotals[m] = (monthlyTotals[m] || 0) + e.amount;
+        });
+        const avgMonthly = Object.values(monthlyTotals).reduce((s, v) => s + v, 0) / Object.keys(monthlyTotals).length;
+        insights.push({
+          icon: '💰',
+          text: `Average monthly income: <strong>${formatCurrency(avgMonthly)}</strong>`
+        });
+      }
+      
+      container.innerHTML = insights.map(insight => `
+        <div class="p-3 bg-slate-50 rounded-lg flex items-start gap-3">
+          <span class="text-lg">${insight.icon}</span>
+          <p class="text-sm text-slate-600">${insight.text}</p>
+        </div>
+      `).join('');
+    }
+
+    function updateTable(data) {
+      const tbody = document.getElementById('entries-table');
+      
+      if (data.length === 0) {
+        tbody.innerHTML = `
+          <tr id="empty-state">
+            <td colspan="5" class="px-5 py-12 text-center text-slate-400 text-sm">
+              <div class="flex flex-col items-center">
+                <svg class="w-12 h-12 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p>No income entries yet</p>
+                <p class="text-xs mt-1">Click "Add Entry" to get started</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      const sorted = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      tbody.innerHTML = sorted.map(entry => {
+        const colors = tagColors[entry.tag] || tagColors['Other'];
+        return `
+          <tr class="hover:bg-slate-50 transition-colors" data-id="${entry.__backendId}">
+            <td class="px-5 py-4">
+              <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium" style="background-color: ${colors.bg}; color: ${colors.text};">
+                ${entry.tag}
+              </span>
+            </td>
+            <td class="px-5 py-4 font-semibold text-slate-900">${formatCurrency(entry.amount)}</td>
+            <td class="px-5 py-4 text-slate-600">${formatDate(entry.date)}</td>
+            <td class="px-5 py-4 text-slate-600 max-w-xs truncate">${entry.description || '—'}</td>
+            <td class="px-5 py-4 text-right">
+              <div class="flex items-center justify-end gap-2">
+                <button onclick="editEntry('${entry.__backendId}')" class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                </button>
+                <button onclick="showDeleteModal('${entry.__backendId}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function refreshUI() {
+      updateFilters();
+      const filtered = getFilteredData();
+      updateSummaryCards(filtered);
+      updateChart(filtered);
+      updateInsights(filtered);
+      updateTable(filtered);
+      updateMonthlyChart(filtered);
+    }
+
+    function showModal(entry = null) {
+      const modal = document.getElementById('modal');
+      const title = document.getElementById('modal-title');
+      const form = document.getElementById('entry-form');
+      
+      if (entry) {
+        title.textContent = 'Edit Income Entry';
+        document.getElementById('entry-id').value = entry.__backendId;
+        document.getElementById('entry-tag').value = entry.tag;
+        document.getElementById('entry-amount').value = entry.amount;
+        document.getElementById('entry-date').value = entry.date;
+        document.getElementById('entry-description').value = entry.description || '';
+      } else {
+        title.textContent = 'Add Income Entry';
+        form.reset();
+        document.getElementById('entry-id').value = '';
+        document.getElementById('entry-date').value = new Date().toISOString().split('T')[0];
+      }
+      
+      document.getElementById('modal-currency').textContent = config.currency_symbol || '$';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function hideModal() {
+      const modal = document.getElementById('modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function editEntry(id) {
+      const entry = allData.find(e => e.__backendId === id);
+      if (entry) showModal(entry);
+    }
+
+    function showDeleteModal(id) {
+      entryToDelete = allData.find(e => e.__backendId === id);
+      const modal = document.getElementById('delete-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function hideDeleteModal() {
+      const modal = document.getElementById('delete-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      entryToDelete = null;
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('entry-id').value;
+      const entryData = {
+        tag: document.getElementById('entry-tag').value,
+        amount: parseFloat(document.getElementById('entry-amount').value),
+        date: document.getElementById('entry-date').value,
+        description: document.getElementById('entry-description').value.trim()
+      };
+      
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Saving...';
+      
+      let result;
+      if (id) {
+        const existing = allData.find(e => e.__backendId === id);
+        result = await window.dataSdk.update({ ...existing, ...entryData });
+      } else {
+        if (allData.length >= 999) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Save Entry';
+          const insightsContainer = document.getElementById('insights-container');
+          insightsContainer.innerHTML = '<div class="p-3 bg-red-50 rounded-lg"><p class="text-sm text-red-600">Maximum limit of 999 entries reached. Please delete some entries first.</p></div>';
+          hideModal();
+          return;
+        }
+        entryData.id = Date.now().toString();
+        result = await window.dataSdk.create(entryData);
+      }
+      
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Entry';
+      
+      if (result.isOk) {
+        hideModal();
+      }
+    }
+
+    async function handleDelete() {
+      if (!entryToDelete) return;
+      
+      const btn = document.getElementById('confirm-delete-btn');
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+      
+      const result = await window.dataSdk.delete(entryToDelete);
+      
+      btn.disabled = false;
+      btn.textContent = 'Delete';
+      
+      if (result.isOk) {
+        hideDeleteModal();
+      }
+    }
+
+    function applyConfig() {
+      document.getElementById('dashboard-title').textContent = config.dashboard_title || defaultConfig.dashboard_title;
+      document.body.style.backgroundColor = config.background_color || defaultConfig.background_color;
+      
+      const surfaces = document.querySelectorAll('.bg-white');
+      surfaces.forEach(el => {
+        el.style.backgroundColor = config.surface_color || defaultConfig.surface_color;
+      });
+      
+      document.body.style.color = config.text_color || defaultConfig.text_color;
+      
+      const primaryBtns = document.querySelectorAll('.bg-emerald-600');
+      primaryBtns.forEach(btn => {
+        btn.style.backgroundColor = config.primary_action_color || defaultConfig.primary_action_color;
+      });
+      
+      refreshUI();
+    }
+
+    const dataHandler = {
+      onDataChanged(data) {
+        allData = data;
+        refreshUI();
+      }
+    };
+
+    let parsedImportData = [];
+
+    function parseDate(dateStr) {
+      // Handle formats like "May 8, 2024", "January 27, 2025", "25-Mar-24", "2024-03-25", "03/25/2024"
+      dateStr = dateStr.trim();
+      
+      // Try ISO format first (YYYY-MM-DD)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+      }
+      
+      // Try MM/DD/YYYY
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+        const [month, day, year] = dateStr.split('/');
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      
+      // Try "Month Day, Year" format (e.g., "May 8, 2024", "January 27, 2025")
+      const fullMonthMatch = dateStr.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+      if (fullMonthMatch) {
+        const [, monthStr, day, year] = fullMonthMatch;
+        const months = { 
+          january: 1, february: 2, march: 3, april: 4, may: 5, june: 6,
+          july: 7, august: 8, september: 9, october: 10, november: 11, december: 12,
+          jan: 1, feb: 2, mar: 3, apr: 4, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12
+        };
+        const month = months[monthStr.toLowerCase()];
+        if (month) {
+          return `${year}-${String(month).padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
+      }
+      
+      // Try DD-MMM-YY format (e.g., "25-Mar-24")
+      const match = dateStr.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/);
+      if (match) {
+        const [, day, monthStr, year] = match;
+        const months = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+        const month = months[monthStr.toLowerCase()];
+        const fullYear = year.length === 2 ? (parseInt(year) > 50 ? '19' + year : '20' + year) : year;
+        return `${fullYear}-${String(month).padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      
+      // Try parsing as general date
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0];
+      }
+      
+      return null;
+    }
+
+    function parseAmount(amountStr) {
+      if (amountStr == null) return NaN;
+      let s = String(amountStr).trim();
+      // Keep digits, separators, signs, and parentheses
+      s = s.replace(/[^0-9,\.\-()]/g, '');
+      let negative = false;
+      if (/^\(.*\)$/.test(s)) { negative = true; s = s.slice(1, -1); }
+      // If comma appears but no dot, treat comma as decimal separator
+      if (s.includes(',') && !s.includes('.')) {
+        s = s.replace(',', '.');
+      }
+      // Remove thousands separators
+      s = s.replace(/,/g, '');
+      const val = parseFloat(s);
+      return negative ? -val : val;
+    }
+
+    function parseImportData(text) {
+      const lines = text.trim().split('\n').filter(line => line.trim());
+      if (lines.length === 0) {
+        throw new Error('No data provided');
+      }
+      
+      // Skip first line (header)
+      const dataLines = lines.slice(1);
+      const entries = [];
+      const errors = [];
+      
+      for (let i = 0; i < dataLines.length; i++) {
+        const line = dataLines[i];
+        const parts = line.split('\t');
+        
+        if (parts.length < 3) {
+          errors.push(`Line ${i + 2}: Not enough columns (need at least Tag, Amount, Date)`);
+          continue;
+        }
+        
+        const tag = parts[0]?.trim();
+        const amountStr = parts[1]?.trim();
+        const dateStr = parts[2]?.trim();
+        const description = parts[3]?.trim() || '';
+        
+        if (!tag) {
+          errors.push(`Line ${i + 2}: Missing tag`);
+          continue;
+        }
+        
+        const amount = parseAmount(amountStr);
+        if (isNaN(amount) || amount < 0) {
+          errors.push(`Line ${i + 2}: Invalid amount "${amountStr}"`);
+          continue;
+        }
+        
+        const date = parseDate(dateStr);
+        if (!date) {
+          errors.push(`Line ${i + 2}: Invalid date format "${dateStr}"`);
+          continue;
+        }
+        
+        entries.push({ tag, amount, date, description, id: Date.now().toString() + '-' + i });
+      }
+      
+      if (errors.length > 0) {
+        throw new Error(errors.join('\n'));
+      }
+      
+      return entries;
+    }
+
+    async function syncFromGoogleTsv() {
+      const btn = document.getElementById('sync-btn');
+      const original = btn ? btn.textContent : '';
+      try {
+        if (btn) { btn.disabled = true; btn.textContent = 'Syncing...'; }
+        const resp = await fetch(GOOGLE_TSV_URL, { cache: 'no-store' });
+        if (!resp.ok) throw new Error(`Failed to fetch TSV (${resp.status})`);
+        const text = await resp.text();
+        let entries = [];
+        try { entries = parseImportData(text); }
+        catch (e) { throw new Error('TSV parse error: ' + e.message); }
+        if (entries.length > 999) entries = entries.slice(0, 999);
+        if (window.dataSdk && typeof window.dataSdk.clear === 'function') {
+          await window.dataSdk.clear();
+        }
+        // Create sequentially to keep it simple
+        for (const e of entries) {
+          await window.dataSdk.create(e);
+        }
+        showToast(`Synced ${entries.length} entries from Google Sheets.`,'success');
+      } catch (err) {
+        console.error(err);
+        const insightsContainer = document.getElementById('insights-container');
+        if (insightsContainer) {
+          insightsContainer.innerHTML = `<div class="p-3 bg-red-50 rounded-lg"><p class="text-sm text-red-600">${err.message}</p></div>`;
+        }
+        showToast(err.message,'error');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = original || 'Sync Google Sheets'; }
+      }
+    }
+
+    function buildTSV(data) {
+      const header = 'Tag\tAmount\tDate Posted\tDescription';
+      const rows = data.map(e => {
+        const tag = (e.tag ?? '').toString().replace(/\t|\r|\n/g, ' ').trim();
+        const amount = (Number(e.amount) || 0).toFixed(2);
+        const dateLabel = new Date(e.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        const desc = (e.description ?? '').toString().replace(/\t|\r|\n/g, ' ').trim();
+        return [tag, amount, dateLabel, desc].join('\t');
+      });
+      return [header, ...rows].join('\n');
+    }
+
+    function downloadTSV(content, filename) {
+      const blob = new Blob([content], { type: 'text/tab-separated-values;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function showToast(message, type = 'success') {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.position = 'fixed';
+        container.style.top = '16px';
+        container.style.right = '16px';
+        container.style.zIndex = '9999';
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.gap = '8px';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.role = 'status';
+      toast.ariaLive = 'polite';
+      toast.style.padding = '10px 12px';
+      toast.style.borderRadius = '10px';
+      toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
+      toast.style.color = type === 'error' ? '#991b1b' : '#065f46';
+      toast.style.background = type === 'error' ? '#fee2e2' : '#d1fae5';
+      toast.style.border = '1px solid ' + (type === 'error' ? '#fecaca' : '#a7f3d0');
+      toast.style.fontSize = '14px';
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.transition = 'opacity 200ms ease';
+        toast.style.opacity = '0';
+        setTimeout(() => container.removeChild(toast), 220);
+      }, 2500);
+    }
+
+    function showImportModal() {
+      const modal = document.getElementById('import-modal');
+      document.getElementById('import-data').value = '';
+      document.getElementById('import-preview').classList.add('hidden');
+      document.getElementById('import-error').classList.add('hidden');
+      document.getElementById('confirm-import-btn').disabled = true;
+      parsedImportData = [];
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function hideImportModal() {
+      const modal = document.getElementById('import-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function previewImportData() {
+      const text = document.getElementById('import-data').value;
+      const errorDiv = document.getElementById('import-error');
+      const previewDiv = document.getElementById('import-preview');
+      const previewList = document.getElementById('preview-list');
+      const confirmBtn = document.getElementById('confirm-import-btn');
+      
+      errorDiv.classList.add('hidden');
+      previewDiv.classList.add('hidden');
+      confirmBtn.disabled = true;
+      parsedImportData = [];
+      
+      if (!text.trim()) {
+        errorDiv.querySelector('p').textContent = 'Please paste your data above';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+      
+      try {
+        parsedImportData = parseImportData(text);
+        
+        if (parsedImportData.length === 0) {
+          errorDiv.querySelector('p').textContent = 'No valid entries found in the data';
+          errorDiv.classList.remove('hidden');
+          return;
+        }
+        
+        // Check if adding these would exceed the limit
+        if (allData.length + parsedImportData.length > 999) {
+          errorDiv.querySelector('p').textContent = `Cannot import: This would exceed the maximum limit of 999 entries. You currently have ${allData.length} entries and are trying to add ${parsedImportData.length} more.`;
+          errorDiv.classList.remove('hidden');
+          return;
+        }
+        
+        document.getElementById('preview-count').textContent = parsedImportData.length;
+        previewList.innerHTML = parsedImportData.map(entry => `
+          <div class="flex items-start gap-3 text-xs bg-white p-2 rounded border border-slate-200">
+            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded font-medium">${entry.tag}</span>
+            <span class="font-semibold text-slate-900">${formatCurrency(entry.amount)}</span>
+            <span class="text-slate-500">${formatDate(entry.date)}</span>
+            <span class="text-slate-600 flex-1 truncate">${entry.description || '—'}</span>
+          </div>
+        `).join('');
+        
+        previewDiv.classList.remove('hidden');
+        confirmBtn.disabled = false;
+        
+      } catch (error) {
+        errorDiv.querySelector('p').textContent = error.message;
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+    async function confirmImport() {
+      if (parsedImportData.length === 0) return;
+      
+      const confirmBtn = document.getElementById('confirm-import-btn');
+      const previewBtn = document.getElementById('preview-import-btn');
+      const cancelBtn = document.getElementById('cancel-import-btn');
+      
+      confirmBtn.disabled = true;
+      previewBtn.disabled = true;
+      cancelBtn.disabled = true;
+      confirmBtn.textContent = `Importing 0/${parsedImportData.length}...`;
+      
+      let successCount = 0;
+      let errorCount = 0;
+      const failedEntries = [];
+      
+      // Helper function to create entry with retries
+      async function createWithRetry(entry, maxRetries = 3) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          const result = await window.dataSdk.create({
+            tag: entry.tag,
+            amount: entry.amount,
+            date: entry.date,
+            description: entry.description,
+            id: entry.id
+          });
+          
+          if (result.isOk) {
+            return { success: true };
+          }
+          
+          // If not last attempt, wait before retrying (exponential backoff)
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, attempt * 200));
+          }
+        }
+        
+        return { success: false, entry };
+      }
+      
+      // Process in batches of 5 to avoid overwhelming the backend
+      const batchSize = 5;
+      for (let i = 0; i < parsedImportData.length; i += batchSize) {
+        const batch = parsedImportData.slice(i, i + batchSize);
+        const batchPromises = batch.map(entry => createWithRetry(entry));
+        
+        const results = await Promise.all(batchPromises);
+        
+        results.forEach(result => {
+          if (result.success) {
+            successCount++;
+          } else {
+            errorCount++;
+            failedEntries.push(result.entry);
+          }
+        });
+        
+        // Update progress counter
+        confirmBtn.textContent = `Importing ${successCount + errorCount}/${parsedImportData.length}...`;
+        
+        // Small delay between batches
+        if (i + batchSize < parsedImportData.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+      
+      confirmBtn.disabled = false;
+      previewBtn.disabled = false;
+      cancelBtn.disabled = false;
+      confirmBtn.textContent = 'Import All';
+      
+      if (errorCount === 0) {
+        hideImportModal();
+      } else {
+        const errorDiv = document.getElementById('import-error');
+        errorDiv.querySelector('p').textContent = `Imported ${successCount} entries successfully. ${errorCount} entries failed after 3 retry attempts. This may be due to backend rate limiting.`;
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+    document.getElementById('add-entry-btn').addEventListener('click', () => showModal());
+    document.getElementById('import-btn').addEventListener('click', showImportModal);
+    document.getElementById('cancel-btn').addEventListener('click', hideModal);
+    document.getElementById('entry-form').addEventListener('submit', handleSubmit);
+    document.getElementById('cancel-delete-btn').addEventListener('click', hideDeleteModal);
+    document.getElementById('confirm-delete-btn').addEventListener('click', handleDelete);
+    document.getElementById('filter-tag').addEventListener('change', refreshUI);
+    document.getElementById('filter-month').addEventListener('change', refreshUI);
+    document.getElementById('monthly-chart-year').addEventListener('change', () => {
+      const filtered = getFilteredData();
+      updateMonthlyChart(filtered);
+    });
+    document.getElementById('cancel-import-btn').addEventListener('click', hideImportModal);
+    document.getElementById('preview-import-btn').addEventListener('click', previewImportData);
+    document.getElementById('confirm-import-btn').addEventListener('click', confirmImport);
+    document.getElementById('export-btn').addEventListener('click', () => {
+      const data = getFilteredData();
+      const tsv = buildTSV(data);
+      const now = new Date();
+      const stamp = now.toISOString().replace(/[-:TZ]/g, '').slice(0, 12);
+      downloadTSV(tsv, `income-export-${stamp}.tsv`);
+    });
+    document.getElementById('sync-btn').addEventListener('click', syncFromGoogleTsv);
+    document.getElementById('clear-btn').addEventListener('click', async () => {
+      const proceed = window.confirm('Delete all income entries? This cannot be undone.');
+      if (!proceed) return;
+      if (window.dataSdk && typeof window.dataSdk.clear === 'function') {
+        await window.dataSdk.clear();
+      } else {
+        // Fallback: delete individually
+        const toDelete = [...allData];
+        for (const item of toDelete) {
+          try { await window.dataSdk.delete(item); } catch (_) {}
+        }
+      }
+    });
+
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target.id === 'modal') hideModal();
+    });
+    document.getElementById('delete-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'delete-modal') hideDeleteModal();
+    });
+    document.getElementById('import-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'import-modal') hideImportModal();
+    });
+
+    (async function init() {
+      await window.dataSdk.init(dataHandler);
+      
+      // Optional: Canva Element SDK features are disabled when not present
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (newConfig) => {
+            config = { ...defaultConfig, ...newConfig };
+            applyConfig();
+          },
+          mapToCapabilities: (cfg) => ({
+            recolorables: [
+              {
+                get: () => cfg.background_color || defaultConfig.background_color,
+                set: (v) => { cfg.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
+              },
+              {
+                get: () => cfg.surface_color || defaultConfig.surface_color,
+                set: (v) => { cfg.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }
+              },
+              {
+                get: () => cfg.text_color || defaultConfig.text_color,
+                set: (v) => { cfg.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+              },
+              {
+                get: () => cfg.primary_action_color || defaultConfig.primary_action_color,
+                set: (v) => { cfg.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); }
+              },
+              {
+                get: () => cfg.secondary_action_color || defaultConfig.secondary_action_color,
+                set: (v) => { cfg.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); }
+              }
+            ],
+            borderables: [],
+            fontEditable: {
+              get: () => cfg.font_family || 'DM Sans',
+              set: (v) => { cfg.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+            },
+            fontSizeable: {
+              get: () => cfg.font_size || 16,
+              set: (v) => { cfg.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+            }
+          }),
+          mapToEditPanelValues: (cfg) => new Map([
+            ['dashboard_title', cfg.dashboard_title || defaultConfig.dashboard_title],
+            ['currency_symbol', cfg.currency_symbol || defaultConfig.currency_symbol]
+          ])
+        });
+      }
+      
+      applyConfig();
+      // Auto-sync on first load if no local data
+      if (!allData || allData.length === 0) {
+        try { await syncFromGoogleTsv(); } catch (_) {}
+      }
+    })();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c2ff73430d71114',t:'MTc2OTI2MjI2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
