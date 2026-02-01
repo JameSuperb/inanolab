@@ -1495,7 +1495,7 @@
             <section class="section">
                 <h2>Service Request Form</h2>
                 <div id="promo-banner" class="promo-banner" role="note" aria-live="polite">
-                    <span>Holiday Promo: 10% off with code <strong>xmas</strong>. Enter it in the Voucher Code below.</span>
+                    <span>Holiday Promo: 10% off with code <strong>student</strong>. Enter it in the Voucher Code below.</span>
                     <button type="button" class="promo-dismiss" aria-label="Dismiss promotion">×</button>
                 </div>
                 <form id="service-form" novalidate>
@@ -1760,7 +1760,7 @@
         // Client-side state of uploaded files: {fileId, name, size, type}
         const uploadedFiles = [];
         // Voucher state for Request total
-        let appliedVoucher = null; // 'xmas' | null
+        let appliedVoucher = null; // 'student' | null
         const VOUCHER_RATE = 0.10;
         let lastBaseServicesTotal = null; // number|null
 
@@ -1858,7 +1858,7 @@
             // Apply voucher if present
             let discountAmount = 0;
             let finalTotal = baseTotal;
-            if (appliedVoucher === 'xmas') {
+            if (appliedVoucher === 'student') {
                 discountAmount = baseTotal * VOUCHER_RATE;
                 finalTotal = baseTotal - discountAmount;
                 if (summary && subEl && discEl && finalEl) {
@@ -2151,10 +2151,10 @@
                 googleIdEmail: googleIdEmail,
                 // Voucher + totals snapshot
                 voucherCode: appliedVoucher || '',
-                discountRate: appliedVoucher === 'xmas' ? VOUCHER_RATE : 0,
+                discountRate: appliedVoucher === 'student' ? VOUCHER_RATE : 0,
                 baseServicesTotal: lastBaseServicesTotal,
-                discountAmount: appliedVoucher === 'xmas' && lastBaseServicesTotal != null ? (lastBaseServicesTotal * VOUCHER_RATE) : 0,
-                finalServicesTotal: lastBaseServicesTotal != null ? (lastBaseServicesTotal - (appliedVoucher === 'xmas' ? lastBaseServicesTotal * VOUCHER_RATE : 0)) : null
+                discountAmount: appliedVoucher === 'student' && lastBaseServicesTotal != null ? (lastBaseServicesTotal * VOUCHER_RATE) : 0,
+                finalServicesTotal: lastBaseServicesTotal != null ? (lastBaseServicesTotal - (appliedVoucher === 'student' ? lastBaseServicesTotal * VOUCHER_RATE : 0)) : null
             };
         }
 
@@ -2877,8 +2877,8 @@
                     setVoucherStatus('Total not available yet. Select options first.', 'error');
                     return;
                 }
-                if (code === 'xmas') {
-                    appliedVoucher = 'xmas';
+                if (code === 'student') {
+                    appliedVoucher = 'student';
                     setVoucherStatus('10% discount applied.', 'success');
                     updateServicesCost();
                     // Hide promo banner after successful apply
@@ -2945,7 +2945,7 @@
             if (!banner) return;
             // ensure handlers are wired when we first land on Request page
             initPromoBanner();
-            if (appliedVoucher === 'xmas') {
+            if (appliedVoucher === 'student') {
                 banner.style.display = 'none';
             } else {
                 banner.style.display = '';
