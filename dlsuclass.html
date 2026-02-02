@@ -93,7 +93,7 @@
      </div><!-- Show Photos Toggle --> <label class="flex items-center gap-2 cursor-pointer"> <input type="checkbox" id="show-photos" checked class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500"> <span class="text-sm font-semibold text-slate-600">Show Photos</span> </label> <!-- Search -->
      <div class="flex-1 min-w-[200px]"><input type="text" id="search-box" placeholder="Search by Name, Nickname, ID, or Email..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
      </div><!-- Action Buttons -->
-    <div class="flex gap-2"><button id="import-btn" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors"> Load Classes </button> <button id="export-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors"> Export CSV </button> <button id="logout-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg transition-colors hidden"> Logout </button>
+    <div class="flex gap-2"><button id="import-btn" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-lg transition-colors"> Load Classes </button> <button id="export-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors"> Export CSV </button> <button id="recitation-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors"> Recitation </button> <button id="logout-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg transition-colors hidden"> Logout </button>
      </div>
     </div>
    </div><!-- Main Content - Groups Grid -->
@@ -180,6 +180,38 @@
         </div>
       </div>
      </div>
+     <!-- Recitation Modal -->
+    <div id="recitation-modal" class="fixed inset-0 modal-overlay z-50 hidden items-center justify-center p-4">
+     <div id="recitation-modal-content" class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <h2 class="text-xl font-bold text-slate-800">Recitation</h2>
+          <button id="recitation-close" class="text-slate-400 hover:text-slate-600 text-2xl">×</button>
+        </div>
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2 space-y-3">
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-semibold text-slate-600">Group:</label>
+                <select id="recitation-group-select" class="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"></select>
+                <label class="flex items-center gap-2 cursor-pointer select-none ml-2">
+                  <input type="checkbox" id="recitation-exclude-absent" checked class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" />
+                  <span class="text-xs font-semibold text-slate-600">Exclude Absent</span>
+                </label>
+              </div>
+              <div id="recitation-display" class="px-4 py-6 border border-slate-200 rounded-xl text-center text-2xl font-extrabold text-slate-800 bg-slate-50">Ready</div>
+              <div class="flex gap-3">
+                <button id="recitation-pick-btn" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors">Pick Random</button>
+                <button id="recitation-reset-btn" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-semibold">Reset</button>
+              </div>
+            </div>
+            <div class="md:col-span-1">
+              <div class="text-sm font-semibold text-slate-600 mb-2">Called Students</div>
+              <div id="recitation-called-list" class="space-y-2 max-h-64 overflow-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+     </div>
      <!-- Toast Container -->
    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
   </div>
@@ -237,6 +269,7 @@
       localStorage.setItem('attendanceBoard_groupAssignments', JSON.stringify(groupAssignments));
       localStorage.setItem('attendanceBoard_rowByStudentId', JSON.stringify(rowByStudentId));
       localStorage.setItem('attendanceBoard_dateColByISO', JSON.stringify(dateColByISO));
+      // Do not persist recitation called here to avoid noisy writes; dedicated saver used.
     }
 
     function saveAuthState() {
@@ -429,6 +462,174 @@
         if (a && a.num === groupNum) return a.title || (`Group ${a.num}`);
       }
       return '';
+    }
+
+    // Recitation helpers and modal logic (Phase 1)
+    let recitationCalledByKey = {};
+    let recitationAnimationInterval = null;
+
+    function loadRecitationData() {
+      try {
+        const saved = localStorage.getItem('attendanceBoard_recitationCalled');
+        if (saved) recitationCalledByKey = JSON.parse(saved) || {};
+      } catch {}
+    }
+
+    function saveRecitationData() {
+      try {
+        localStorage.setItem('attendanceBoard_recitationCalled', JSON.stringify(recitationCalledByKey));
+      } catch {}
+    }
+
+    function getStudentDisplayName(student) {
+      const lastName = (student['Last Name'] || '').trim();
+      const nickname = (student.Nickname || '').trim();
+      const full = (student.Name || '').trim();
+      return lastName && nickname ? `${lastName}, ${nickname}` : (lastName || nickname || full || '');
+    }
+
+    function openRecitationModal() {
+      if (!selectedClass || !selectedDate) {
+        showToast('Please select class and date first', 'warning');
+        return;
+      }
+      const modal = document.getElementById('recitation-modal');
+      const select = document.getElementById('recitation-group-select');
+      const excludeAbsent = document.getElementById('recitation-exclude-absent');
+      // Populate group titles
+      const options = [];
+      options.push(`<option value="all">All groups</option>`);
+      for (let i = 1; i <= 6; i++) {
+        const title = getGroupTitle(i);
+        options.push(`<option value="${i}">${i}. ${title || 'Group ' + i}</option>`);
+      }
+      select.innerHTML = options.join('');
+      select.value = 'all';
+      if (excludeAbsent) excludeAbsent.checked = true;
+      renderRecitationCalled();
+      document.getElementById('recitation-display').textContent = 'Ready';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      // Focus primary action
+      setTimeout(() => document.getElementById('recitation-pick-btn')?.focus(), 0);
+    }
+
+    function closeRecitationModal() {
+      const modal = document.getElementById('recitation-modal');
+      if (recitationAnimationInterval) {
+        clearInterval(recitationAnimationInterval);
+        recitationAnimationInterval = null;
+      }
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function getRecitationKey() {
+      return getAttendanceKey(selectedClass, selectedDate);
+    }
+
+    function getCalledList() {
+      const key = getRecitationKey();
+      if (!recitationCalledByKey[key]) recitationCalledByKey[key] = [];
+      return recitationCalledByKey[key];
+    }
+
+    function addCalled(studentId) {
+      const list = getCalledList();
+      if (!list.includes(studentId)) {
+        list.push(studentId);
+      }
+    }
+
+    function resetRecitationList() {
+      const key = getRecitationKey();
+      recitationCalledByKey[key] = [];
+      renderRecitationCalled();
+      const display = document.getElementById('recitation-display');
+      if (display) display.textContent = 'Ready';
+    }
+
+    function renderRecitationCalled() {
+      const container = document.getElementById('recitation-called-list');
+      const called = getCalledList();
+      const classStudents = roster.filter(s => s['Class and Section'] === selectedClass);
+      const byId = new Map(classStudents.map(s => [String(s.ID), s]));
+      container.innerHTML = '';
+      for (let i = called.length - 1; i >= 0; i--) {
+        const id = called[i];
+        const s = byId.get(String(id));
+        const name = s ? getStudentDisplayName(s) : String(id);
+        const number = i + 1; // maintain original call order numbering
+        // Append while iterating from newest -> oldest, so newest stays at top
+        container.insertAdjacentHTML('beforeend', `<div class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm"><span class="font-bold text-slate-500 mr-2">${number}.</span>${name}</div>`);
+      }
+    }
+
+    function getRecitationPool(groupNum) {
+      const called = new Set(getCalledList().map(String));
+      const excludeAbsent = !!document.getElementById('recitation-exclude-absent')?.checked;
+      let all = [];
+      if (groupNum === 'all' || groupNum === 'All' || groupNum === 'ALL') {
+        for (let i = 1; i <= 6; i++) {
+          all = all.concat(getGroupStudents(i));
+        }
+      } else {
+        all = getGroupStudents(Number(groupNum));
+      }
+      return all.filter(s => {
+        const idStr = String(s.ID);
+        if (called.has(idStr)) return false;
+        if (excludeAbsent) {
+          const st = getStudentAttendance(idStr);
+          if (st === 'Absent' || st === '-') return false;
+        }
+        return true;
+      });
+    }
+
+    function startRecitationAnimation() {
+      if (!selectedClass || !selectedDate) {
+        showToast('Please select class and date first', 'warning');
+        return;
+      }
+      const select = document.getElementById('recitation-group-select');
+      const groupVal = select?.value || 'all';
+      const groupNum = groupVal;
+      let pool = getRecitationPool(groupNum);
+      if (!pool || pool.length === 0) {
+        showToast('No available students in this group', 'warning');
+        document.getElementById('recitation-pick-btn').disabled = true;
+        return;
+      }
+      document.getElementById('recitation-pick-btn').disabled = false;
+      const display = document.getElementById('recitation-display');
+      let idx = 0;
+      if (recitationAnimationInterval) clearInterval(recitationAnimationInterval);
+      display.style.transform = 'scale(1.02)';
+      display.style.transition = 'transform 0.2s ease';
+      recitationAnimationInterval = setInterval(() => {
+        const pick = pool[idx % pool.length];
+        display.textContent = getStudentDisplayName(pick);
+        idx++;
+      }, 80);
+      setTimeout(() => {
+        if (recitationAnimationInterval) {
+          clearInterval(recitationAnimationInterval);
+          recitationAnimationInterval = null;
+        }
+        display.style.transform = '';
+        // Final pick
+        pool = getRecitationPool(groupNum);
+        if (!pool || pool.length === 0) {
+          showToast('No available students in this group', 'warning');
+          return;
+        }
+        const final = pool[Math.floor(Math.random() * pool.length)];
+        display.textContent = getStudentDisplayName(final);
+        addCalled(final.ID);
+        renderRecitationCalled();
+        saveRecitationData();
+      }, 3000);
     }
 
     // Show toast notification
@@ -1147,6 +1348,41 @@
       if (newExportBtn) {
         newExportBtn.addEventListener('click', (e) => { if (!ensureAdmin()) return; exportCSV(); });
       }
+
+      // Wire Recitation modal and actions
+      const recBtn = document.getElementById('recitation-btn');
+      const recClose = document.getElementById('recitation-close');
+      const recPick = document.getElementById('recitation-pick-btn');
+      const recReset = document.getElementById('recitation-reset-btn');
+      const recSelect = document.getElementById('recitation-group-select');
+      if (recBtn) recBtn.addEventListener('click', openRecitationModal);
+      if (recClose) recClose.addEventListener('click', closeRecitationModal);
+      if (recPick) recPick.addEventListener('click', startRecitationAnimation);
+      if (recReset) recReset.addEventListener('click', () => { resetRecitationList(); saveRecitationData(); });
+      if (recSelect) recSelect.addEventListener('change', () => {
+        document.getElementById('recitation-display').textContent = 'Ready';
+        document.getElementById('recitation-pick-btn').disabled = false;
+      });
+      const recExclude = document.getElementById('recitation-exclude-absent');
+      if (recExclude) recExclude.addEventListener('change', () => {
+        document.getElementById('recitation-display').textContent = 'Ready';
+      });
+
+      // Click-outside-to-close
+      const recModal = document.getElementById('recitation-modal');
+      const recContent = document.getElementById('recitation-modal-content');
+      if (recContent) recContent.addEventListener('click', (e) => e.stopPropagation());
+      if (recModal) recModal.addEventListener('click', (e) => {
+        if (e.target === recModal) closeRecitationModal();
+      });
+
+      // Close on ESC
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('recitation-modal');
+          if (modal && !modal.classList.contains('hidden')) closeRecitationModal();
+        }
+      });
       
       // Wire logout button and set initial visibility
       const logoutBtn = document.getElementById('logout-btn');
@@ -1233,6 +1469,7 @@
     }
 
     // Start app
+    loadRecitationData();
     init();
   </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9bb3488b32bc8d0f',t:'MTc2Nzk1NDg3OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
