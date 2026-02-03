@@ -1,0 +1,1858 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Radiation Detection Laboratory</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    .font-display { font-family: 'Orbitron', monospace; }
+    .font-mono { font-family: 'IBM Plex Mono', monospace; }
+    .font-body { font-family: 'Inter', sans-serif; }
+    
+    .led-display {
+      background: linear-gradient(180deg, #1a1a1a 0%, #0d0d0d 100%);
+      border: 3px solid #333;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(0,255,136,0.1);
+    }
+    
+    .led-text {
+      color: #00ff88;
+      text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88;
+      animation: led-flicker 0.1s infinite alternate;
+    }
+    
+    @keyframes led-flicker {
+      from { opacity: 0.95; }
+      to { opacity: 1; }
+    }
+    
+    .geiger-tube {
+      background: linear-gradient(90deg, #2a2a2a 0%, #3d3d3d 20%, #4a4a4a 50%, #3d3d3d 80%, #2a2a2a 100%);
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.1);
+    }
+    
+    .sample-holder {
+      background: linear-gradient(180deg, #e8e8e8 0%, #c0c0c0 100%);
+      border: 2px solid #999;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .sample-active {
+      animation: sample-glow 1s ease-in-out infinite;
+    }
+    
+    @keyframes sample-glow {
+      0%, 100% { box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 0 5px rgba(255,200,0,0.3); }
+      50% { box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 0 15px rgba(255,200,0,0.6); }
+    }
+    
+    .control-btn {
+      background: linear-gradient(180deg, #4a4a4a 0%, #333 100%);
+      border: 2px solid #555;
+      transition: all 0.15s ease;
+    }
+    
+    .control-btn:hover {
+      background: linear-gradient(180deg, #555 0%, #444 100%);
+      transform: translateY(-1px);
+    }
+    
+    .control-btn:active {
+      transform: translateY(1px);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .control-btn.start { border-color: #22c55e; }
+    .control-btn.stop { border-color: #ef4444; }
+    .control-btn.reset { border-color: #f59e0b; }
+    .control-btn.squeeze { border-color: #8b5cf6; }
+    
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #ffcc00;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: particle-fly 0.5s ease-out forwards;
+    }
+    
+    @keyframes particle-fly {
+      0% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0) translateY(-30px); }
+    }
+    
+    .click-indicator {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: #00ff88;
+      border-radius: 50%;
+      animation: click-pulse 0.2s ease-out forwards;
+    }
+    
+    @keyframes click-pulse {
+      0% { transform: scale(0.5); opacity: 1; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+    
+    .panel-card {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: 1px solid #dee2e6;
+    }
+    
+    .instrument-panel {
+      background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+      border: 4px solid #444;
+      border-radius: 12px;
+    }
+    
+    select, input[type="number"] {
+      background: #f3f4f6;
+      border: 2px solid #9ca3af;
+      color: #1f2937;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 500;
+    }
+    
+    select:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 8px rgba(99,102,241,0.3);
+      background: #ffffff;
+    }
+    
+    select option {
+      background: #ffffff;
+      color: #1f2937;
+      padding: 8px;
+    }
+    
+    input[type="number"] {
+      background: #1a1a1a;
+      color: #00ff88;
+    }
+    
+    .data-table {
+      background: #0d0d0d;
+      border: 2px solid #333;
+    }
+    
+    .data-row:nth-child(even) {
+      background: rgba(0,255,136,0.05);
+    }
+    
+    .notes-panel {
+      background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+      border: 2px solid #fbbf24;
+    }
+    
+    .tube-window {
+      background: linear-gradient(180deg, rgba(100,100,100,0.3) 0%, rgba(50,50,50,0.5) 100%);
+      border: 2px solid #555;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full font-body">
+  <div id="app-container" class="h-full overflow-auto" style="background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);">
+   <div class="min-h-full p-4 md:p-6"><!-- Header -->
+    <header class="text-center mb-6">
+     <h1 id="lab-title" class="font-display text-2xl md:text-3xl font-bold text-gray-800 tracking-wide">Virtual Radiation Detection Laboratory</h1>
+    </header>
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6"><!-- Left Side: Geiger Tube Illustration -->
+     <div class="panel-card rounded-xl p-5 shadow-lg">
+      <h2 class="font-display text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+       </svg> Detection Chamber</h2><!-- Geiger Tube Visualization -->
+      <div class="relative bg-gray-300 rounded-lg p-6 mb-6" style="min-height: 200px;">
+       <div id="particle-container" class="absolute inset-0 overflow-hidden rounded-lg pointer-events-none"></div><!-- Tube Body -->
+       <div class="geiger-tube mx-auto relative" style="width: 280px; height: 60px;">
+        <div class="absolute inset-0 flex items-center justify-center">
+         <div class="tube-window rounded" style="width: 200px; height: 40px;">
+          <div id="tube-interior" class="w-full h-full flex items-center justify-center"><span class="text-xs text-gray-400 font-mono">GM TUBE</span>
+          </div>
+         </div>
+        </div><!-- Anode wire -->
+        <div class="absolute top-1/2 left-4 right-4 h-px bg-yellow-600 transform -translate-y-1/2" style="box-shadow: 0 0 4px #fbbf24;"></div><!-- End caps -->
+        <div class="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-gray-700 to-gray-600 rounded-l-lg"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-gray-700 to-gray-600 rounded-r-lg"></div>
+       </div><!-- Connector cable -->
+       <div class="mx-auto w-1 h-8 bg-gray-600 rounded"></div><!-- Sample Holders -->
+       <div class="flex justify-center gap-8 mt-4">
+        <div class="text-center">
+         <div id="holder-a" class="sample-holder w-20 h-20 rounded-lg flex items-center justify-center cursor-pointer transition-all">
+          <div class="text-center">
+           <div class="text-xs font-bold text-gray-600">
+            SAMPLE
+           </div>
+           <div class="text-lg font-bold text-gray-800">
+            A
+           </div>
+           <div id="sample-a-indicator" class="w-3 h-3 rounded-full mx-auto mt-1 bg-gray-400"></div>
+          </div>
+         </div><select id="source-a" class="mt-2 text-xs rounded px-2 py-1 w-full"> <option value="empty">Empty</option> <option value="cs137">Cs-137 (2 µCi)</option> <option value="mn54">Mn-54 (5 mCi)</option> <option value="ba137m">Ba-137m</option> </select>
+        </div>
+        <div class="text-center">
+         <div id="holder-b" class="sample-holder w-20 h-20 rounded-lg flex items-center justify-center cursor-pointer transition-all">
+          <div class="text-center">
+           <div class="text-xs font-bold text-gray-600">
+            SAMPLE
+           </div>
+           <div class="text-lg font-bold text-gray-800">
+            B
+           </div>
+           <div id="sample-b-indicator" class="w-3 h-3 rounded-full mx-auto mt-1 bg-gray-400"></div>
+          </div>
+         </div><select id="source-b" class="mt-2 text-xs rounded px-2 py-1 w-full"> <option value="empty">Empty</option> <option value="cs137">Cs-137 (2 µCi)</option> <option value="mn54">Mn-54 (5 mCi)</option> <option value="ba137m">Ba-137m</option> </select>
+        </div>
+       </div>
+      </div><!-- Status Indicators -->
+      <div class="grid grid-cols-3 gap-3 text-center text-xs">
+       <div class="bg-gray-200 rounded-lg p-2">
+        <div class="font-semibold text-gray-600">
+         Status
+        </div>
+        <div id="status-text" class="font-mono text-green-600 font-bold">
+         READY
+        </div>
+       </div>
+       <div class="bg-gray-200 rounded-lg p-2">
+        <div class="font-semibold text-gray-600">
+         Ba-137m
+        </div>
+        <div id="ba-status" class="font-mono text-gray-500">
+         INACTIVE
+        </div>
+       </div>
+       <div class="bg-gray-200 rounded-lg p-2">
+        <div class="font-semibold text-gray-600">
+         Dead Time
+        </div>
+        <div class="font-mono text-blue-600">
+         100 µs
+        </div>
+       </div>
+      </div>
+     </div><!-- Right Side: Control Panel -->
+     <div class="instrument-panel p-5 shadow-xl">
+      <h2 id="instrument-label" class="font-display text-lg font-bold text-green-400 mb-4 flex items-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+       </svg> Geiger-Müller Counter</h2><!-- Main LED Display -->
+      <div class="led-display rounded-lg p-4 mb-4">
+       <div class="text-center">
+        <div class="text-xs text-gray-500 font-mono mb-1">
+         TOTAL COUNTS
+        </div>
+        <div id="count-display" class="led-text font-display text-4xl md:text-5xl font-bold tracking-wider">
+         000000
+        </div>
+       </div>
+      </div><!-- Secondary Displays -->
+      <div class="grid grid-cols-2 gap-3 mb-4">
+       <div class="led-display rounded-lg p-3 text-center">
+        <div class="text-xs text-gray-500 font-mono mb-1">
+         TIME (s)
+        </div>
+        <div id="time-display" class="led-text font-display text-2xl font-bold">
+         0.0
+        </div>
+       </div>
+       <div class="led-display rounded-lg p-3 text-center">
+        <div class="text-xs text-gray-500 font-mono mb-1">
+         CPS
+        </div>
+        <div id="cps-display" class="led-text font-display text-2xl font-bold">
+         0.00
+        </div>
+       </div>
+      </div><!-- Controls -->
+      <div class="space-y-4"><!-- Counting Time Input -->
+       <div><label class="text-xs text-gray-400 font-mono block mb-1">COUNTING TIME (seconds)</label> <input type="number" id="count-time" value="60" min="1" max="600" class="w-full rounded px-3 py-2 text-lg font-mono">
+       </div><!-- Control Buttons -->
+       <div class="grid grid-cols-2 gap-3"><button id="btn-start" class="control-btn start rounded-lg px-4 py-3 text-green-400 font-bold font-mono text-sm hover:text-green-300"> ▶ START </button> <button id="btn-stop" class="control-btn stop rounded-lg px-4 py-3 text-red-400 font-bold font-mono text-sm hover:text-red-300" disabled> ■ STOP </button> <button id="btn-reset" class="control-btn reset rounded-lg px-4 py-3 text-yellow-400 font-bold font-mono text-sm hover:text-yellow-300 col-span-2"> ↺ RESET </button>
+       </div>
+      </div><!-- Data Log -->
+      <div class="mt-4">
+       <div class="flex items-center justify-between mb-2">
+        <div class="text-xs text-gray-400 font-mono">
+         RECENT MEASUREMENTS
+        </div><button id="clear-measurements" class="text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 font-mono transition-colors"> CLEAR </button>
+       </div>
+       <div class="data-table rounded-lg overflow-hidden max-h-32 overflow-y-auto">
+        <table class="w-full text-xs font-mono">
+         <thead class="bg-gray-800 text-gray-400">
+          <tr>
+           <th class="px-2 py-1 text-left">#</th>
+           <th class="px-2 py-1 text-right">Counts</th>
+           <th class="px-2 py-1 text-right">Time</th>
+           <th class="px-2 py-1 text-right">CPS</th>
+           <th class="px-2 py-1 text-center">Sample A</th>
+           <th class="px-2 py-1 text-center">Sample B</th>
+           <th class="px-2 py-1 text-center">Ba Initial</th>
+           <th class="px-2 py-1 text-center">Ba Final</th>
+          </tr>
+         </thead>
+         <tbody id="data-log" class="text-green-400">
+          <tr class="data-row">
+           <td class="px-2 py-1 text-gray-500" colspan="8">No data yet</td>
+          </tr>
+         </tbody>
+        </table>
+       </div>
+      </div>
+     </div>
+    </div><!-- Graph and Export Section -->
+    <div class="max-w-7xl mx-auto mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6"><!-- Graph Panel -->
+     <div class="lg:col-span-2 panel-card rounded-xl p-5 shadow-lg">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="font-display text-lg font-bold text-gray-700 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg> Counts vs Time</h2><button id="clear-graph" class="text-xs px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition-colors"> Clear Graph </button>
+      </div>
+      <div class="bg-white rounded-lg p-4 border-2 border-gray-300 relative" style="height: 300px;">
+       <canvas id="counts-graph" class="w-full h-full"></canvas>
+      </div>
+      <div class="mt-2 space-y-1">
+       <div class="text-xs text-gray-600 text-center">
+        Real-time plot updates during counting • Shows cumulative counts over elapsed time
+       </div>
+       <div id="trendline-stats" class="text-xs font-mono text-center text-gray-700 bg-blue-50 rounded px-3 py-2 hidden"><span class="font-semibold">Linear Trendline:</span> <span id="equation-display"></span> • <span class="font-semibold">R²:</span> <span id="r-squared-display"></span>
+       </div>
+      </div>
+     </div><!-- Export Panel -->
+     <div class="panel-card rounded-xl p-5 shadow-lg">
+      <h2 class="font-display text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+       </svg> Data Export</h2>
+      <div class="space-y-4">
+       <div class="bg-white bg-opacity-50 rounded-lg p-4">
+        <div class="text-sm font-semibold text-gray-700 mb-2">
+         Export Options
+        </div>
+        <div class="space-y-2"><button id="export-runs-csv" class="w-full control-btn rounded-lg px-4 py-3 text-blue-600 font-bold font-mono text-sm hover:text-blue-500 flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+          </svg> Export Run Summary </button> <button id="export-current-csv" class="w-full control-btn rounded-lg px-4 py-3 text-green-600 font-bold font-mono text-sm hover:text-green-500 flex items-center justify-center gap-2" disabled>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+          </svg> Export Current Run </button>
+        </div>
+       </div>
+       <div class="bg-blue-50 rounded-lg p-4 text-sm text-blue-900">
+        <div class="font-semibold mb-1">
+         📊 What gets exported:
+        </div>
+        <ul class="list-disc list-inside space-y-1 text-xs">
+         <li><strong>Run Summary:</strong> All completed measurements with total counts, time, and CPS</li>
+         <li><strong>Current Run:</strong> Time-series data showing counts accumulated at each time point</li>
+        </ul>
+       </div>
+       <div id="export-status" class="hidden bg-green-100 border border-green-400 rounded-lg p-3 text-sm text-green-800">
+        ✓ Export successful!
+       </div>
+      </div>
+     </div>
+    </div><!-- Statistics and Histogram Section -->
+    <div class="max-w-7xl mx-auto mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6"><!-- Statistics Panel -->
+     <div class="panel-card rounded-xl p-5 shadow-lg">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="font-display text-lg font-bold text-gray-700 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg> Statistical Analysis</h2><button id="reset-stats" class="text-xs px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition-colors"> Reset Stats </button>
+      </div>
+      <div class="bg-white bg-opacity-50 rounded-lg p-4 mb-4">
+       <div class="text-sm font-semibold text-gray-700 mb-3">
+        Repeated Measurements Analysis
+       </div>
+       <div class="grid grid-cols-2 gap-3">
+        <div class="bg-white rounded-lg p-3 border border-gray-200">
+         <div class="text-xs text-gray-600 mb-1">
+          Sample Size (n)
+         </div>
+         <div id="stats-n" class="text-2xl font-bold font-mono text-blue-600">
+          0
+         </div>
+        </div>
+        <div class="bg-white rounded-lg p-3 border border-gray-200">
+         <div class="text-xs text-gray-600 mb-1">
+          Mean CPS (μ)
+         </div>
+         <div id="stats-mean" class="text-2xl font-bold font-mono text-green-600">
+          -
+         </div>
+        </div>
+        <div class="bg-white rounded-lg p-3 border border-gray-200">
+         <div class="text-xs text-gray-600 mb-1">
+          Std Dev (σ)
+         </div>
+         <div id="stats-stddev" class="text-2xl font-bold font-mono text-purple-600">
+          -
+         </div>
+        </div>
+        <div class="bg-white rounded-lg p-3 border border-gray-200">
+         <div class="text-xs text-gray-600 mb-1">
+          Relative Unc. (%)
+         </div>
+         <div id="stats-rel-unc" class="text-2xl font-bold font-mono text-orange-600">
+          -
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="bg-blue-50 rounded-lg p-4 text-sm">
+       <div class="font-semibold text-blue-900 mb-2">
+        📊 How to Use:
+       </div>
+       <ul class="list-disc list-inside space-y-1 text-blue-800 text-xs">
+        <li><strong>Run multiple measurements</strong> with the same setup (source + counting time)</li>
+        <li><strong>Mean CPS</strong> converges to the true count rate as n increases</li>
+        <li><strong>Standard deviation</strong> shows the spread of your measurements</li>
+        <li><strong>Relative uncertainty</strong> = σ/μ × 100% (decreases with more counts)</li>
+       </ul>
+      </div>
+      <div class="mt-4 bg-yellow-50 rounded-lg p-4 text-xs">
+       <div class="font-semibold text-yellow-900 mb-2">
+        💡 Key Observations:
+       </div>
+       <div class="space-y-1 text-yellow-800">
+        <div>
+         • <strong>Low counts:</strong> Larger relative uncertainty and spread
+        </div>
+        <div>
+         • <strong>High counts:</strong> Smaller relative uncertainty (√N law)
+        </div>
+        <div>
+         • <strong>Longer times:</strong> More counts → better precision
+        </div>
+       </div>
+      </div>
+     </div><!-- Histogram Panel -->
+     <div class="panel-card rounded-xl p-5 shadow-lg">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="font-display text-lg font-bold text-gray-700 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg> CPS Distribution Histogram</h2><button id="clear-histogram" class="text-xs px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition-colors"> Clear </button>
+      </div>
+      <div class="bg-white rounded-lg p-4 border-2 border-gray-300 relative" style="height: 280px;">
+       <canvas id="histogram-canvas" class="w-full h-full"></canvas>
+      </div>
+      <div class="mt-3 bg-white bg-opacity-50 rounded-lg p-3">
+       <div class="grid grid-cols-3 gap-2 text-center text-xs">
+        <div>
+         <div class="text-gray-600 font-semibold">
+          Min CPS
+         </div>
+         <div id="hist-min" class="font-mono text-gray-800 font-bold">
+          -
+         </div>
+        </div>
+        <div>
+         <div class="text-gray-600 font-semibold">
+          Max CPS
+         </div>
+         <div id="hist-max" class="font-mono text-gray-800 font-bold">
+          -
+         </div>
+        </div>
+        <div>
+         <div class="text-gray-600 font-semibold">
+          Range
+         </div>
+         <div id="hist-range" class="font-mono text-gray-800 font-bold">
+          -
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="mt-3 bg-purple-50 rounded-lg p-3 text-xs text-purple-900">
+       <div class="font-semibold mb-1">
+        📈 Poisson Distribution:
+       </div>
+       <div class="text-purple-800">
+        The histogram shows the spread of your CPS measurements. With more runs, you'll see the characteristic Poisson distribution shape. Low count measurements show wider spreads!
+       </div>
+      </div>
+     </div>
+    </div><!-- Isotope Half-Life Information Panel -->
+    <div class="max-w-7xl mx-auto mt-6">
+     <div class="panel-card rounded-xl p-5 shadow-lg">
+      <h2 class="font-display text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg> Radioactive Isotope Properties</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><!-- Cs-137 -->
+       <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border-2 border-blue-300">
+        <div class="flex items-center gap-2 mb-3">
+         <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+          Cs
+         </div>
+         <div>
+          <div class="font-bold text-gray-800">
+           Cesium-137
+          </div>
+          <div class="text-xs text-gray-600">
+           ¹³⁷Cs
+          </div>
+         </div>
+        </div>
+        <div class="space-y-2 text-sm">
+         <div class="bg-white bg-opacity-60 rounded px-3 py-2">
+          <div class="text-xs text-gray-600 font-semibold">
+           Half-Life
+          </div>
+          <div class="font-mono font-bold text-blue-700">
+           30.17 years
+          </div>
+         </div>
+         <div class="bg-white bg-opacity-60 rounded px-3 py-2">
+          <div class="text-xs text-gray-600 font-semibold">
+           Decay Mode
+          </div>
+          <div class="font-mono text-gray-800">
+           β⁻ (Beta minus)
+          </div>
+         </div>
+         <div class="bg-white bg-opacity-60 rounded px-3 py-2">
+          <div class="text-xs text-gray-600 font-semibold">
+           Max β⁻ Energy
+          </div>
+          <div class="font-mono text-gray-800">
+           1.176 MeV
+          </div>
+         </div>
+         <div class="text-xs text-gray-700 mt-2"><strong>→ Decays to:</strong> Ba-137m (metastable)<br><strong>γ from Ba-137m:</strong> 0.662 MeV
+         </div>
+        </div>
+       </div><!-- Mn-54 -->
+       <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border-2 border-green-300">
+        <div class="flex items-center gap-2 mb-3">
+         <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+          Mn
+         </div>
+         <div>
+          <div class="font-bold text-gray-800">
+           Manganese-54
+          </div>
+          <div class="text-xs text-gray-600">
+           ⁵⁴Mn
+          </div>
+         </div>
+        </div>
+        <div class="space-y-2 text-sm">
+         <div class="bg-white bg-opacity-60 rounded px-3 py-2">
+          <div class="text-xs text-gray-600 font-semibold">
+           Half-Life
+          </div>
+          <div class="font-mono font-bold text-green-700">
+           312.3 days
+          </div>
+         </div>
+         <div class="bg-white bg-opacity-60 rounded px-3 py-2">
+          <div class="text-xs text-gray-600 font-semibold">
+           Decay Mode
+          </div>
+          <div class="font-mono text-gray-800">
+           EC (Electron capture)
+          </div>
+         </div>
+         <div class="bg-white bg-opacity-60 rounded px-3 py-2">
+          <div class="text-xs text-gray-600 font-semibold">
+           Gamma Energy
+          </div>
+          <div class="font-mono text-gray-800">
+           0.835 MeV
+          </div>
+         </div>
+         <div class="text-xs text-gray-700 mt-2"><strong>→ Decays to:</strong> Cr-54 (stable)
+         </div>
+        </div>
+       </div><!-- Ba-137m -->
+       <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border-2 border-purple-300">
+        <div class="flex items-center gap-2 mb-3">
+         <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold">
+          Ba
+         </div>
+         <div>
+          <div class="font-bold text-gray-800">
+           Barium-137m
+          </div>
+          <div class="text-xs text-gray-600">
+           ¹³⁷ᵐBa (metastable)
+          </div>
+         </div>
+        </div>
+        <div class="space-y-2 text-sm">
+         <div class="bg-white bg-opacity-60 rounded px-3 py-2">
+          <div class="text-xs text-gray-600 font-semibold">
+           Half-Life
+          </div>
+          <div class="font-mono font-bold text-purple-700">
+           2.552 minutes
+          </div>
+         </div>
+         <div class="bg-white bg-opacity-60 rounded px-3 py-2">
+          <div class="text-xs text-gray-600 font-semibold">
+           Decay Mode
+          </div>
+          <div class="font-mono text-gray-800">
+           IT (Isomeric transition)
+          </div>
+         </div>
+         <div class="bg-white bg-opacity-60 rounded px-3 py-2">
+          <div class="text-xs text-gray-600 font-semibold">
+           Gamma Energy
+          </div>
+          <div class="font-mono text-gray-800">
+           0.662 MeV
+          </div>
+         </div>
+         <div class="text-xs text-gray-700 mt-2"><strong>→ Decays to:</strong> Ba-137 (stable)
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="mt-4 bg-yellow-50 rounded-lg p-4 border border-yellow-300">
+       <div class="flex items-start gap-2">
+        <svg class="w-5 h-5 text-yellow-700 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div class="text-sm text-yellow-900"><strong>Note:</strong> Ba-137m has a very short half-life, making it ideal for half-life experiments. When you place Ba-137m in Sample A or Sample B, it automatically activates at 100% and begins decaying. As time passes, the measured count rate decreases. The decay follows <span class="font-mono">N(t) = N₀(1/2)<sup>t/t₁/₂</sup></span>, meaning the count rate is reduced by half after each half-life.
+        </div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Cumulative CPS vs Time Graph -->
+    <div class="max-w-7xl mx-auto mt-6">
+     <div class="panel-card rounded-xl p-5 shadow-lg">
+      <div class="flex items-center justify-between mb-4">
+       <h2 class="font-display text-lg font-bold text-gray-700 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+        </svg> Measured CPS vs Cumulative Time</h2><button id="clear-cumulative-graph" class="text-xs px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition-colors"> Clear Graph </button>
+      </div>
+      <div class="bg-white rounded-lg p-4 border-2 border-gray-300 relative" style="height: 300px;">
+       <canvas id="cumulative-graph" class="w-full h-full"></canvas>
+      </div>
+      <div class="mt-2 text-xs text-gray-600 text-center">
+       Each point represents a completed measurement plotted at its cumulative elapsed time
+      </div>
+     </div>
+    </div><!-- Educational Notes Panel -->
+    <div class="max-w-7xl mx-auto mt-6">
+     <div class="notes-panel rounded-xl overflow-hidden"><button id="notes-toggle" class="w-full px-5 py-3 flex items-center justify-between text-left font-semibold text-amber-800 hover:bg-amber-100 transition-colors"> <span class="flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg> Educational Notes </span>
+       <svg id="notes-chevron" class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+       </svg></button>
+      <div id="notes-content" class="hidden px-5 pb-5">
+       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-amber-900">
+        <div class="bg-white bg-opacity-50 rounded-lg p-4">
+         <h3 class="font-bold mb-2 flex items-center gap-2"><span class="text-lg">📡</span> What a Geiger Counter Measures</h3>
+         <p>A Geiger-Müller counter detects ionizing radiation (alpha, beta, gamma). When radiation enters the tube, it ionizes gas molecules, creating an electrical pulse that registers as a "count."</p>
+        </div>
+        <div class="bg-white bg-opacity-50 rounded-lg p-4">
+         <h3 class="font-bold mb-2 flex items-center gap-2"><span class="text-lg">⚡</span> Counts Per Second (CPS)</h3>
+         <p>CPS is the count rate - the number of detected radiation events per second. Higher activity sources produce higher CPS. This is calculated as Total Counts ÷ Counting Time.</p>
+        </div>
+        <div class="bg-white bg-opacity-50 rounded-lg p-4">
+         <h3 class="font-bold mb-2 flex items-center gap-2"><span class="text-lg">🌍</span> Background Radiation</h3>
+         <p>Even with no source, you'll detect counts! This is background radiation from cosmic rays, radon gas, and natural radioactivity in materials around us. Typical: 0.1-0.5 CPS.</p>
+        </div>
+        <div class="bg-white bg-opacity-50 rounded-lg p-4">
+         <h3 class="font-bold mb-2 flex items-center gap-2"><span class="text-lg">⏱️</span> Detector Dead Time</h3>
+         <p>After each count, the detector needs ~100 µs to recover. During this "dead time," it can't detect new events. At high count rates, this causes underestimation of true activity.</p>
+        </div>
+        <div class="bg-white bg-opacity-50 rounded-lg p-4">
+         <h3 class="font-bold mb-2 flex items-center gap-2"><span class="text-lg">🎲</span> Random Nature of Decay</h3>
+         <p>Nuclear decay is fundamentally random - we can't predict when individual atoms decay. Counts follow Poisson statistics: if you expect N counts, the standard deviation is √N.</p>
+        </div>
+        <div class="bg-white bg-opacity-50 rounded-lg p-4">
+         <h3 class="font-bold mb-2 flex items-center gap-2"><span class="text-lg">☢   </span> Ba-137m Half-Life</h3>
+         <p>Barium-137m has a short half-life of ~2.6 minutes. After "squeezing" it from Cs-137, watch the count rate decrease exponentially. Use this to measure half-life!</p>
+        </div>
+       </div>
+       <div class="mt-4 bg-white bg-opacity-50 rounded-lg p-4">
+        <h3 class="font-bold mb-2 text-amber-800">🔬 Suggested Experiments</h3>
+        <ul class="list-disc list-inside space-y-1 text-amber-900">
+         <li><strong>Background measurement:</strong> Count for 60s with empty holders to establish background rate</li>
+         <li><strong>Poisson statistics:</strong> Repeat measurements multiple times and compare standard deviation to √N</li>
+         <li><strong>Half-life determination:</strong> Place Ba-137m in a holder and measure CPS every 30s to plot decay curve</li>
+         <li><strong>Dead time effect:</strong> Compare count rates with one vs. two high-activity sources</li>
+        </ul>
+       </div>
+      </div>
+     </div>
+    </div><!-- Footer -->
+    <footer class="text-center mt-6 text-xs text-gray-500">
+     <p>Virtual Laboratory for Physics Education • No real radiation exposure</p>
+     <p class="mt-1">Developer: Dr. James Salveo Olarve</p>
+    </footer>
+   </div>
+  </div>
+  <script>
+    // Default configuration
+    const defaultConfig = {
+      lab_title: 'Virtual Radiation Detection Laboratory',
+      instrument_label: 'Geiger-Müller Counter',
+      background_color: '#e2e8f0',
+      surface_color: '#f8f9fa',
+      text_color: '#1f2937',
+      primary_action_color: '#22c55e',
+      secondary_action_color: '#8b5cf6'
+    };
+
+    // Simulation state
+    let state = {
+      counting: false,
+      totalCounts: 0,
+      elapsedTime: 0,
+      countingInterval: null,
+      displayInterval: null,
+      ba137mActive: false,
+      ba137mStartTime: 0,
+      runNumber: 0,
+      dataLog: [],
+      currentRunData: [], // Time-series data for current run
+      chart: null,
+      statisticsData: [], // Array of CPS values for statistical analysis
+      histogram: null,
+      cumulativeTime: 0, // Total cumulative time across all runs
+      cumulativeChart: null // Chart for CPS vs cumulative time
+    };
+
+    // Source activity rates (counts per second at detector)
+    const sourceRates = {
+      empty: 0,
+      cs137: 150,    // 2 µCi
+      mn54: 800,     // 5 mCi
+      ba137m: 500    // Initial rate when fresh
+    };
+
+    // Dead time in seconds (100 µs)
+    const DEAD_TIME = 0.0001;
+    
+    // Ba-137m half-life in seconds (~2.6 minutes)
+    const BA137M_HALF_LIFE = 156;
+    
+    // Background radiation rate
+    const BACKGROUND_RATE = 0.3;
+
+    // DOM elements
+    const elements = {
+      countDisplay: document.getElementById('count-display'),
+      timeDisplay: document.getElementById('time-display'),
+      cpsDisplay: document.getElementById('cps-display'),
+      statusText: document.getElementById('status-text'),
+      baStatus: document.getElementById('ba-status'),
+      sourceA: document.getElementById('source-a'),
+      sourceB: document.getElementById('source-b'),
+      countTime: document.getElementById('count-time'),
+      btnStart: document.getElementById('btn-start'),
+      btnStop: document.getElementById('btn-stop'),
+      btnReset: document.getElementById('btn-reset'),
+      dataLog: document.getElementById('data-log'),
+      holderA: document.getElementById('holder-a'),
+      holderB: document.getElementById('holder-b'),
+      sampleAIndicator: document.getElementById('sample-a-indicator'),
+      sampleBIndicator: document.getElementById('sample-b-indicator'),
+      particleContainer: document.getElementById('particle-container'),
+      notesToggle: document.getElementById('notes-toggle'),
+      notesContent: document.getElementById('notes-content'),
+      notesChevron: document.getElementById('notes-chevron'),
+      labTitle: document.getElementById('lab-title'),
+      instrumentLabel: document.getElementById('instrument-label'),
+      appContainer: document.getElementById('app-container'),
+      graphCanvas: document.getElementById('counts-graph'),
+      clearGraph: document.getElementById('clear-graph'),
+      clearMeasurements: document.getElementById('clear-measurements'),
+      exportRunsCSV: document.getElementById('export-runs-csv'),
+      exportCurrentCSV: document.getElementById('export-current-csv'),
+      exportStatus: document.getElementById('export-status'),
+      trendlineStats: document.getElementById('trendline-stats'),
+      equationDisplay: document.getElementById('equation-display'),
+      rSquaredDisplay: document.getElementById('r-squared-display'),
+      statsN: document.getElementById('stats-n'),
+      statsMean: document.getElementById('stats-mean'),
+      statsStdDev: document.getElementById('stats-stddev'),
+      statsRelUnc: document.getElementById('stats-rel-unc'),
+      resetStats: document.getElementById('reset-stats'),
+      histogramCanvas: document.getElementById('histogram-canvas'),
+      clearHistogram: document.getElementById('clear-histogram'),
+      histMin: document.getElementById('hist-min'),
+      histMax: document.getElementById('hist-max'),
+      histRange: document.getElementById('hist-range'),
+      cumulativeGraphCanvas: document.getElementById('cumulative-graph'),
+      clearCumulativeGraph: document.getElementById('clear-cumulative-graph')
+    };
+
+    // Calculate linear regression for trendline
+    function calculateLinearRegression(xValues, yValues) {
+      const n = xValues.length;
+      if (n < 2) return null;
+      
+      // Calculate means
+      const meanX = xValues.reduce((a, b) => a + b, 0) / n;
+      const meanY = yValues.reduce((a, b) => a + b, 0) / n;
+      
+      // Calculate slope (m) and intercept (b) for y = mx + b
+      let numerator = 0;
+      let denominator = 0;
+      
+      for (let i = 0; i < n; i++) {
+        numerator += (xValues[i] - meanX) * (yValues[i] - meanY);
+        denominator += (xValues[i] - meanX) * (xValues[i] - meanX);
+      }
+      
+      const slope = numerator / denominator;
+      const intercept = meanY - slope * meanX;
+      
+      // Calculate R² (coefficient of determination)
+      let ssRes = 0; // Sum of squares of residuals
+      let ssTot = 0; // Total sum of squares
+      
+      for (let i = 0; i < n; i++) {
+        const yPredicted = slope * xValues[i] + intercept;
+        ssRes += (yValues[i] - yPredicted) * (yValues[i] - yPredicted);
+        ssTot += (yValues[i] - meanY) * (yValues[i] - meanY);
+      }
+      
+      const rSquared = 1 - (ssRes / ssTot);
+      
+      return { slope, intercept, rSquared };
+    }
+
+    // Update trendline statistics display
+    function updateTrendlineStats(xValues, yValues) {
+      if (xValues.length < 2) {
+        elements.trendlineStats.classList.add('hidden');
+        return;
+      }
+      
+      const regression = calculateLinearRegression(xValues, yValues);
+      if (!regression) {
+        elements.trendlineStats.classList.add('hidden');
+        return;
+      }
+      
+      const { slope, intercept, rSquared } = regression;
+      
+      // Format equation: y = mx + b
+      const slopeStr = slope.toFixed(2);
+      const interceptStr = Math.abs(intercept).toFixed(2);
+      const sign = intercept >= 0 ? '+' : '-';
+      
+      elements.equationDisplay.textContent = `y = ${slopeStr}x ${sign} ${interceptStr}`;
+      elements.rSquaredDisplay.textContent = rSquared.toFixed(4);
+      elements.trendlineStats.classList.remove('hidden');
+    }
+
+    // Calculate statistics for repeated measurements
+    function calculateStatistics(data) {
+      if (data.length === 0) {
+        return { n: 0, mean: 0, stdDev: 0, relUnc: 0 };
+      }
+      
+      const n = data.length;
+      const mean = data.reduce((sum, val) => sum + val, 0) / n;
+      
+      if (n < 2) {
+        return { n, mean, stdDev: 0, relUnc: 0 };
+      }
+      
+      const variance = data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (n - 1);
+      const stdDev = Math.sqrt(variance);
+      const relUnc = mean > 0 ? (stdDev / mean) * 100 : 0;
+      
+      return { n, mean, stdDev, relUnc };
+    }
+
+    // Update statistics display
+    function updateStatisticsDisplay() {
+      const stats = calculateStatistics(state.statisticsData);
+      
+      elements.statsN.textContent = stats.n.toString();
+      elements.statsMean.textContent = stats.n > 0 ? stats.mean.toFixed(3) : '-';
+      elements.statsStdDev.textContent = stats.n > 1 ? stats.stdDev.toFixed(3) : '-';
+      elements.statsRelUnc.textContent = stats.n > 1 ? stats.relUnc.toFixed(2) + '%' : '-';
+    }
+
+    // Reset statistics
+    function resetStatistics() {
+      state.statisticsData = [];
+      updateStatisticsDisplay();
+      if (state.histogram) {
+        state.histogram.clear();
+      }
+    }
+
+    // Poisson random number generator
+    function poissonRandom(lambda) {
+      if (lambda < 30) {
+        // Direct method for small lambda
+        const L = Math.exp(-lambda);
+        let k = 0;
+        let p = 1;
+        do {
+          k++;
+          p *= Math.random();
+        } while (p > L);
+        return k - 1;
+      } else {
+        // Normal approximation for large lambda
+        const u = Math.random();
+        const v = Math.random();
+        const normal = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+        return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * normal));
+      }
+    }
+
+    // Calculate Ba-137m activity percentage
+    function calculateBaActivity() {
+      if (!state.ba137mActive) return 0;
+      const elapsed = (Date.now() - state.ba137mStartTime) / 1000;
+      return Math.pow(0.5, elapsed / BA137M_HALF_LIFE) * 100;
+    }
+
+    // Calculate current count rate considering all factors
+    function getCurrentRate() {
+      let rate = BACKGROUND_RATE;
+      
+      const sourceAValue = elements.sourceA.value;
+      const sourceBValue = elements.sourceB.value;
+      
+      // Add source A contribution
+      if (sourceAValue === 'ba137m' && state.ba137mActive) {
+        const elapsed = (Date.now() - state.ba137mStartTime) / 1000;
+        const decayFactor = Math.pow(0.5, elapsed / BA137M_HALF_LIFE);
+        rate += sourceRates.ba137m * decayFactor;
+      } else if (sourceAValue !== 'empty' && sourceAValue !== 'ba137m') {
+        rate += sourceRates[sourceAValue];
+      }
+      
+      // Add source B contribution
+      if (sourceBValue === 'ba137m' && state.ba137mActive) {
+        const elapsed = (Date.now() - state.ba137mStartTime) / 1000;
+        const decayFactor = Math.pow(0.5, elapsed / BA137M_HALF_LIFE);
+        rate += sourceRates.ba137m * decayFactor;
+      } else if (sourceBValue !== 'empty' && sourceBValue !== 'ba137m') {
+        rate += sourceRates[sourceBValue];
+      }
+      
+      // Apply dead time correction (for high rates)
+      const measuredRate = rate / (1 + rate * DEAD_TIME);
+      
+      return measuredRate;
+    }
+
+    // Create particle effect
+    function createParticle() {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${30 + Math.random() * 40}%`;
+      elements.particleContainer.appendChild(particle);
+      setTimeout(() => particle.remove(), 500);
+    }
+
+    // Create click indicator on tube
+    function createClickIndicator() {
+      const indicator = document.createElement('div');
+      indicator.className = 'click-indicator';
+      indicator.style.left = `${40 + Math.random() * 20}%`;
+      indicator.style.top = `${20 + Math.random() * 20}%`;
+      elements.particleContainer.appendChild(indicator);
+      setTimeout(() => indicator.remove(), 200);
+    }
+
+    // Update display
+    function updateDisplay() {
+      elements.countDisplay.textContent = state.totalCounts.toString().padStart(6, '0');
+      elements.timeDisplay.textContent = state.elapsedTime.toFixed(1);
+      
+      const cps = state.elapsedTime > 0 ? state.totalCounts / state.elapsedTime : 0;
+      elements.cpsDisplay.textContent = cps.toFixed(2);
+    }
+
+    // Update sample indicators and Ba-137m activation
+    function updateIndicators() {
+      const sourceA = elements.sourceA.value;
+      const sourceB = elements.sourceB.value;
+      
+      // Check if Ba-137m is in either holder
+      const ba137mPresent = (sourceA === 'ba137m' || sourceB === 'ba137m');
+      
+      // Activate Ba-137m if it's placed in a holder and not already active
+      if (ba137mPresent && !state.ba137mActive) {
+        state.ba137mActive = true;
+        state.ba137mStartTime = Date.now();
+      }
+      
+      // Deactivate Ba-137m if it's removed from both holders
+      if (!ba137mPresent && state.ba137mActive) {
+        state.ba137mActive = false;
+      }
+      
+      // Update indicator colors
+      if (sourceA === 'empty') {
+        elements.sampleAIndicator.className = 'w-3 h-3 rounded-full mx-auto mt-1 bg-gray-400';
+        elements.holderA.classList.remove('sample-active');
+      } else if (sourceA === 'ba137m') {
+        if (state.ba137mActive) {
+          elements.sampleAIndicator.className = 'w-3 h-3 rounded-full mx-auto mt-1 bg-purple-500';
+          elements.holderA.classList.add('sample-active');
+        } else {
+          elements.sampleAIndicator.className = 'w-3 h-3 rounded-full mx-auto mt-1 bg-purple-300';
+          elements.holderA.classList.remove('sample-active');
+        }
+      } else {
+        elements.sampleAIndicator.className = 'w-3 h-3 rounded-full mx-auto mt-1 bg-yellow-500';
+        elements.holderA.classList.add('sample-active');
+      }
+      
+      if (sourceB === 'empty') {
+        elements.sampleBIndicator.className = 'w-3 h-3 rounded-full mx-auto mt-1 bg-gray-400';
+        elements.holderB.classList.remove('sample-active');
+      } else if (sourceB === 'ba137m') {
+        if (state.ba137mActive) {
+          elements.sampleBIndicator.className = 'w-3 h-3 rounded-full mx-auto mt-1 bg-purple-500';
+          elements.holderB.classList.add('sample-active');
+        } else {
+          elements.sampleBIndicator.className = 'w-3 h-3 rounded-full mx-auto mt-1 bg-purple-300';
+          elements.holderB.classList.remove('sample-active');
+        }
+      } else {
+        elements.sampleBIndicator.className = 'w-3 h-3 rounded-full mx-auto mt-1 bg-yellow-500';
+        elements.holderB.classList.add('sample-active');
+      }
+      
+      // Update Ba status
+      if (state.ba137mActive) {
+        const elapsed = (Date.now() - state.ba137mStartTime) / 1000;
+        const activity = Math.pow(0.5, elapsed / BA137M_HALF_LIFE) * 100;
+        elements.baStatus.textContent = `${activity.toFixed(0)}%`;
+        elements.baStatus.className = 'font-mono text-purple-400';
+      } else {
+        elements.baStatus.textContent = 'INACTIVE';
+        elements.baStatus.className = 'font-mono text-gray-500';
+      }
+    }
+
+    // Start counting
+    function startCounting() {
+      if (state.counting) return;
+      
+      const countTime = parseFloat(elements.countTime.value) || 60;
+      state.counting = true;
+      state.totalCounts = 0;
+      state.elapsedTime = 0;
+      state.currentRunData = [];
+      
+      // Record initial Ba-137m percentage
+      state.baInitialPercent = state.ba137mActive ? calculateBaActivity() : null;
+      
+      // Clear and prepare graph
+      if (state.chart) {
+        state.chart.data.time = [];
+        state.chart.data.counts = [];
+      }
+      
+      elements.btnStart.disabled = true;
+      elements.btnStop.disabled = false;
+      elements.exportCurrentCSV.disabled = true;
+      elements.statusText.textContent = 'COUNTING';
+      elements.statusText.className = 'font-mono text-yellow-500 font-bold';
+      
+      const startTime = Date.now();
+      const UPDATE_INTERVAL = 100; // ms
+      let lastDataPoint = 0;
+      
+      state.countingInterval = setInterval(() => {
+        const now = Date.now();
+        state.elapsedTime = (now - startTime) / 1000;
+        
+        // Generate counts based on Poisson statistics
+        const rate = getCurrentRate();
+        const expectedCounts = rate * (UPDATE_INTERVAL / 1000);
+        const newCounts = poissonRandom(expectedCounts);
+        
+        state.totalCounts += newCounts;
+        
+        // Record data point every 0.5 seconds
+        if (state.elapsedTime - lastDataPoint >= 0.5) {
+          // Calculate instantaneous CPS with statistical variation
+          const recentInterval = 0.5;
+          const expectedCountsInInterval = rate * recentInterval;
+          const actualCountsInInterval = poissonRandom(expectedCountsInInterval);
+          const instantaneousCPS = actualCountsInInterval / recentInterval;
+          
+          state.currentRunData.push({
+            time: state.elapsedTime,
+            counts: state.totalCounts,
+            cps: instantaneousCPS
+          });
+          
+          // Update graph
+          if (state.chart) {
+            state.chart.data.time.push(state.elapsedTime);
+            state.chart.data.counts.push(state.totalCounts);
+            state.chart.update();
+            updateTrendlineStats(state.chart.data.time, state.chart.data.counts);
+          }
+          
+          lastDataPoint = state.elapsedTime;
+        }
+        
+        // Visual effects for counts
+        if (newCounts > 0) {
+          createClickIndicator();
+          if (Math.random() < 0.3) createParticle();
+        }
+        
+        updateDisplay();
+        updateIndicators();
+        
+        // Check if counting time reached
+        if (state.elapsedTime >= countTime) {
+          stopCounting(true);
+        }
+      }, UPDATE_INTERVAL);
+    }
+
+    // Stop counting
+    function stopCounting(completed = false) {
+      if (!state.counting) return;
+      
+      clearInterval(state.countingInterval);
+      state.counting = false;
+      
+      elements.btnStart.disabled = false;
+      elements.btnStop.disabled = true;
+      elements.exportCurrentCSV.disabled = false;
+      elements.statusText.textContent = completed ? 'COMPLETE' : 'STOPPED';
+      elements.statusText.className = `font-mono ${completed ? 'text-green-500' : 'text-red-500'} font-bold`;
+      
+      // Log the run
+      if (state.totalCounts > 0) {
+        state.runNumber++;
+        const cps = state.elapsedTime > 0 ? state.totalCounts / state.elapsedTime : 0;
+        
+        // Update cumulative time
+        state.cumulativeTime += state.elapsedTime;
+        
+        // Record final Ba-137m percentage
+        const baFinalPercent = state.ba137mActive ? calculateBaActivity() : null;
+        
+        state.dataLog.unshift({
+          run: state.runNumber,
+          counts: state.totalCounts,
+          time: state.elapsedTime,
+          cps: cps,
+          cumulativeTime: state.cumulativeTime,
+          sourceA: elements.sourceA.options[elements.sourceA.selectedIndex].text,
+          sourceB: elements.sourceB.options[elements.sourceB.selectedIndex].text,
+          baActive: state.ba137mActive,
+          baInitial: state.baInitialPercent,
+          baFinal: baFinalPercent
+        });
+        
+        // Add to statistics data
+        state.statisticsData.push(cps);
+        updateStatisticsDisplay();
+        
+        // Update histogram
+        if (state.histogram) {
+          state.histogram.addData(cps);
+          state.histogram.update();
+        }
+        
+        // Update cumulative graph
+        if (state.cumulativeChart) {
+          state.cumulativeChart.addPoint(state.cumulativeTime, cps);
+          state.cumulativeChart.update();
+        }
+        
+        // Keep only last 10 runs
+        if (state.dataLog.length > 10) {
+          state.dataLog.pop();
+        }
+        
+        updateDataLog();
+      }
+    }
+
+    // Update data log table
+    function updateDataLog() {
+      if (state.dataLog.length === 0) {
+        elements.dataLog.innerHTML = '<tr class="data-row"><td class="px-2 py-1 text-gray-500" colspan="8">No data yet</td></tr>';
+        return;
+      }
+      
+      elements.dataLog.innerHTML = state.dataLog.map(entry => {
+        const sourceAShort = entry.sourceA.split(' ')[0] || '-';
+        const sourceBShort = entry.sourceB.split(' ')[0] || '-';
+        const baInitial = entry.baInitial !== null ? entry.baInitial.toFixed(1) + '%' : '-';
+        const baFinal = entry.baFinal !== null ? entry.baFinal.toFixed(1) + '%' : '-';
+        
+        return `
+        <tr class="data-row">
+          <td class="px-2 py-1">${entry.run}</td>
+          <td class="px-2 py-1 text-right">${entry.counts}</td>
+          <td class="px-2 py-1 text-right">${entry.time.toFixed(1)}s</td>
+          <td class="px-2 py-1 text-right">${entry.cps.toFixed(2)}</td>
+          <td class="px-2 py-1 text-center">${sourceAShort}</td>
+          <td class="px-2 py-1 text-center">${sourceBShort}</td>
+          <td class="px-2 py-1 text-center">${baInitial}</td>
+          <td class="px-2 py-1 text-center">${baFinal}</td>
+        </tr>
+      `;
+      }).join('');
+    }
+
+    // Reset counter
+    function resetCounter() {
+      if (state.counting) {
+        stopCounting(false);
+      }
+      
+      state.totalCounts = 0;
+      state.elapsedTime = 0;
+      
+      updateDisplay();
+      
+      elements.statusText.textContent = 'READY';
+      elements.statusText.className = 'font-mono text-green-600 font-bold';
+    }
+
+    // Toggle notes panel
+    function toggleNotes() {
+      const isHidden = elements.notesContent.classList.contains('hidden');
+      elements.notesContent.classList.toggle('hidden');
+      elements.notesChevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+    }
+
+    // Initialize graph
+    function initializeGraph() {
+      const ctx = elements.graphCanvas.getContext('2d');
+      state.chart = {
+        ctx: ctx,
+        data: { time: [], counts: [] },
+        update: function() {
+          const canvas = elements.graphCanvas;
+          const rect = canvas.getBoundingClientRect();
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+          
+          this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          if (this.data.time.length === 0) {
+            // Show placeholder text
+            this.ctx.fillStyle = '#9ca3af';
+            this.ctx.font = '14px Inter';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('Start counting to see live graph', canvas.width / 2, canvas.height / 2);
+            return;
+          }
+          
+          const padding = 50;
+          const graphWidth = canvas.width - 2 * padding;
+          const graphHeight = canvas.height - 2 * padding;
+          
+          const maxTime = Math.max(...this.data.time, 1);
+          const maxCounts = Math.max(...this.data.counts, 1);
+          
+          // Draw axes
+          this.ctx.strokeStyle = '#6b7280';
+          this.ctx.lineWidth = 2;
+          this.ctx.beginPath();
+          this.ctx.moveTo(padding, padding);
+          this.ctx.lineTo(padding, canvas.height - padding);
+          this.ctx.lineTo(canvas.width - padding, canvas.height - padding);
+          this.ctx.stroke();
+          
+          // Draw labels
+          this.ctx.fillStyle = '#374151';
+          this.ctx.font = '12px Inter';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText('Time (s)', canvas.width / 2, canvas.height - 10);
+          
+          this.ctx.save();
+          this.ctx.translate(15, canvas.height / 2);
+          this.ctx.rotate(-Math.PI / 2);
+          this.ctx.fillText('Total Counts', 0, 0);
+          this.ctx.restore();
+          
+          // Draw tick marks and values
+          this.ctx.fillStyle = '#6b7280';
+          this.ctx.font = '10px Inter';
+          
+          // Y-axis ticks
+          const yTicks = 5;
+          for (let i = 0; i <= yTicks; i++) {
+            const y = canvas.height - padding - (i / yTicks) * graphHeight;
+            const value = Math.round((i / yTicks) * maxCounts);
+            this.ctx.textAlign = 'right';
+            this.ctx.fillText(value.toString(), padding - 5, y + 3);
+            
+            // Grid line
+            this.ctx.strokeStyle = '#e5e7eb';
+            this.ctx.lineWidth = 1;
+            this.ctx.beginPath();
+            this.ctx.moveTo(padding, y);
+            this.ctx.lineTo(canvas.width - padding, y);
+            this.ctx.stroke();
+          }
+          
+          // X-axis ticks
+          const xTicks = 5;
+          for (let i = 0; i <= xTicks; i++) {
+            const x = padding + (i / xTicks) * graphWidth;
+            const value = ((i / xTicks) * maxTime).toFixed(1);
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(value, x, canvas.height - padding + 15);
+          }
+          
+          // Draw trendline (if enough data)
+          if (this.data.time.length > 1) {
+            const regression = calculateLinearRegression(this.data.time, this.data.counts);
+            if (regression) {
+              const { slope, intercept } = regression;
+              
+              // Draw trendline
+              this.ctx.strokeStyle = '#ef4444';
+              this.ctx.lineWidth = 2;
+              this.ctx.setLineDash([5, 5]);
+              this.ctx.beginPath();
+              
+              const y1 = slope * 0 + intercept;
+              const y2 = slope * maxTime + intercept;
+              
+              const x1 = padding;
+              const yCanvas1 = canvas.height - padding - (y1 / maxCounts) * graphHeight;
+              const x2 = canvas.width - padding;
+              const yCanvas2 = canvas.height - padding - (y2 / maxCounts) * graphHeight;
+              
+              this.ctx.moveTo(x1, yCanvas1);
+              this.ctx.lineTo(x2, yCanvas2);
+              this.ctx.stroke();
+              this.ctx.setLineDash([]);
+            }
+          }
+          
+          // Draw data line
+          if (this.data.time.length > 1) {
+            this.ctx.strokeStyle = '#10b981';
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            
+            for (let i = 0; i < this.data.time.length; i++) {
+              const x = padding + (this.data.time[i] / maxTime) * graphWidth;
+              const y = canvas.height - padding - (this.data.counts[i] / maxCounts) * graphHeight;
+              
+              if (i === 0) {
+                this.ctx.moveTo(x, y);
+              } else {
+                this.ctx.lineTo(x, y);
+              }
+            }
+            
+            this.ctx.stroke();
+            
+            // Draw points
+            this.ctx.fillStyle = '#10b981';
+            for (let i = 0; i < this.data.time.length; i++) {
+              const x = padding + (this.data.time[i] / maxTime) * graphWidth;
+              const y = canvas.height - padding - (this.data.counts[i] / maxCounts) * graphHeight;
+              
+              this.ctx.beginPath();
+              this.ctx.arc(x, y, 3, 0, 2 * Math.PI);
+              this.ctx.fill();
+            }
+          }
+        },
+        clear: function() {
+          this.data.time = [];
+          this.data.counts = [];
+          this.update();
+        }
+      };
+      
+      state.chart.update();
+      
+      // Redraw on window resize
+      window.addEventListener('resize', () => {
+        if (state.chart) state.chart.update();
+      });
+    }
+
+    // Initialize cumulative time graph
+    function initializeCumulativeGraph() {
+      const ctx = elements.cumulativeGraphCanvas.getContext('2d');
+      state.cumulativeChart = {
+        ctx: ctx,
+        data: { time: [], cps: [] },
+        addPoint: function(time, cps) {
+          this.data.time.push(time);
+          this.data.cps.push(cps);
+        },
+        update: function() {
+          const canvas = elements.cumulativeGraphCanvas;
+          const rect = canvas.getBoundingClientRect();
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+          
+          this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          if (this.data.time.length === 0) {
+            // Show placeholder text
+            this.ctx.fillStyle = '#9ca3af';
+            this.ctx.font = '14px Inter';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('Complete measurements to see cumulative plot', canvas.width / 2, canvas.height / 2);
+            return;
+          }
+          
+          const padding = 50;
+          const graphWidth = canvas.width - 2 * padding;
+          const graphHeight = canvas.height - 2 * padding;
+          
+          const maxTime = Math.max(...this.data.time, 1);
+          const maxCPS = Math.max(...this.data.cps, 1);
+          const minCPS = Math.min(...this.data.cps, 0);
+          const cpsRange = maxCPS - minCPS || 1;
+          
+          // Draw axes
+          this.ctx.strokeStyle = '#6b7280';
+          this.ctx.lineWidth = 2;
+          this.ctx.beginPath();
+          this.ctx.moveTo(padding, padding);
+          this.ctx.lineTo(padding, canvas.height - padding);
+          this.ctx.lineTo(canvas.width - padding, canvas.height - padding);
+          this.ctx.stroke();
+          
+          // Draw labels
+          this.ctx.fillStyle = '#374151';
+          this.ctx.font = '12px Inter';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText('Cumulative Time (s)', canvas.width / 2, canvas.height - 10);
+          
+          this.ctx.save();
+          this.ctx.translate(15, canvas.height / 2);
+          this.ctx.rotate(-Math.PI / 2);
+          this.ctx.fillText('CPS', 0, 0);
+          this.ctx.restore();
+          
+          // Draw tick marks and values
+          this.ctx.fillStyle = '#6b7280';
+          this.ctx.font = '10px Inter';
+          
+          // Y-axis ticks
+          const yTicks = 5;
+          for (let i = 0; i <= yTicks; i++) {
+            const y = canvas.height - padding - (i / yTicks) * graphHeight;
+            const value = (minCPS + (i / yTicks) * cpsRange).toFixed(1);
+            this.ctx.textAlign = 'right';
+            this.ctx.fillText(value, padding - 5, y + 3);
+            
+            // Grid line
+            this.ctx.strokeStyle = '#e5e7eb';
+            this.ctx.lineWidth = 1;
+            this.ctx.beginPath();
+            this.ctx.moveTo(padding, y);
+            this.ctx.lineTo(canvas.width - padding, y);
+            this.ctx.stroke();
+          }
+          
+          // X-axis ticks
+          const xTicks = 5;
+          for (let i = 0; i <= xTicks; i++) {
+            const x = padding + (i / xTicks) * graphWidth;
+            const value = ((i / xTicks) * maxTime).toFixed(1);
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(value, x, canvas.height - padding + 15);
+          }
+          
+          // Draw points
+          this.ctx.fillStyle = '#3b82f6';
+          this.ctx.strokeStyle = '#2563eb';
+          this.ctx.lineWidth = 2;
+          
+          for (let i = 0; i < this.data.time.length; i++) {
+            const x = padding + (this.data.time[i] / maxTime) * graphWidth;
+            const y = canvas.height - padding - ((this.data.cps[i] - minCPS) / cpsRange) * graphHeight;
+            
+            // Draw point
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, 5, 0, 2 * Math.PI);
+            this.ctx.fillStyle = '#3b82f6';
+            this.ctx.fill();
+            this.ctx.strokeStyle = '#1e40af';
+            this.ctx.stroke();
+            
+            // Draw connecting line if not first point
+            if (i > 0) {
+              const prevX = padding + (this.data.time[i-1] / maxTime) * graphWidth;
+              const prevY = canvas.height - padding - ((this.data.cps[i-1] - minCPS) / cpsRange) * graphHeight;
+              
+              this.ctx.strokeStyle = '#93c5fd';
+              this.ctx.lineWidth = 1;
+              this.ctx.setLineDash([2, 2]);
+              this.ctx.beginPath();
+              this.ctx.moveTo(prevX, prevY);
+              this.ctx.lineTo(x, y);
+              this.ctx.stroke();
+              this.ctx.setLineDash([]);
+            }
+          }
+        },
+        clear: function() {
+          this.data.time = [];
+          this.data.cps = [];
+          this.update();
+        }
+      };
+      
+      state.cumulativeChart.update();
+      
+      // Redraw on window resize
+      window.addEventListener('resize', () => {
+        if (state.cumulativeChart) state.cumulativeChart.update();
+      });
+    }
+
+    // Initialize histogram
+    function initializeHistogram() {
+      const ctx = elements.histogramCanvas.getContext('2d');
+      state.histogram = {
+        ctx: ctx,
+        data: [],
+        bins: [],
+        update: function() {
+          const canvas = elements.histogramCanvas;
+          const rect = canvas.getBoundingClientRect();
+          canvas.width = rect.width;
+          canvas.height = rect.height;
+          
+          this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          if (this.data.length === 0) {
+            // Show placeholder text
+            this.ctx.fillStyle = '#9ca3af';
+            this.ctx.font = '14px Inter';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('Complete measurements to see histogram', canvas.width / 2, canvas.height / 2);
+            return;
+          }
+          
+          // Calculate bins
+          const numBins = Math.min(Math.max(5, Math.ceil(Math.sqrt(this.data.length))), 15);
+          const minVal = Math.min(...this.data);
+          const maxVal = Math.max(...this.data);
+          const range = maxVal - minVal || 1;
+          const binWidth = range / numBins;
+          
+          // Update min/max/range display
+          elements.histMin.textContent = minVal.toFixed(2);
+          elements.histMax.textContent = maxVal.toFixed(2);
+          elements.histRange.textContent = range.toFixed(2);
+          
+          // Create bins
+          this.bins = Array(numBins).fill(0);
+          this.data.forEach(value => {
+            const binIndex = Math.min(Math.floor((value - minVal) / binWidth), numBins - 1);
+            this.bins[binIndex]++;
+          });
+          
+          const maxBinCount = Math.max(...this.bins);
+          
+          const padding = 40;
+          const graphWidth = canvas.width - 2 * padding;
+          const graphHeight = canvas.height - 2 * padding;
+          
+          // Draw axes
+          this.ctx.strokeStyle = '#6b7280';
+          this.ctx.lineWidth = 2;
+          this.ctx.beginPath();
+          this.ctx.moveTo(padding, padding);
+          this.ctx.lineTo(padding, canvas.height - padding);
+          this.ctx.lineTo(canvas.width - padding, canvas.height - padding);
+          this.ctx.stroke();
+          
+          // Draw labels
+          this.ctx.fillStyle = '#374151';
+          this.ctx.font = '12px Inter';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText('CPS', canvas.width / 2, canvas.height - 10);
+          
+          this.ctx.save();
+          this.ctx.translate(15, canvas.height / 2);
+          this.ctx.rotate(-Math.PI / 2);
+          this.ctx.fillText('Frequency', 0, 0);
+          this.ctx.restore();
+          
+          // Draw bars
+          const barWidth = graphWidth / numBins;
+          this.ctx.fillStyle = '#8b5cf6';
+          this.ctx.strokeStyle = '#7c3aed';
+          this.ctx.lineWidth = 1;
+          
+          for (let i = 0; i < numBins; i++) {
+            const barHeight = (this.bins[i] / maxBinCount) * graphHeight;
+            const x = padding + i * barWidth;
+            const y = canvas.height - padding - barHeight;
+            
+            this.ctx.fillRect(x + 2, y, barWidth - 4, barHeight);
+            this.ctx.strokeRect(x + 2, y, barWidth - 4, barHeight);
+          }
+          
+          // Draw y-axis ticks
+          this.ctx.fillStyle = '#6b7280';
+          this.ctx.font = '10px Inter';
+          this.ctx.textAlign = 'right';
+          
+          const yTicks = 5;
+          for (let i = 0; i <= yTicks; i++) {
+            const y = canvas.height - padding - (i / yTicks) * graphHeight;
+            const value = Math.round((i / yTicks) * maxBinCount);
+            this.ctx.fillText(value.toString(), padding - 5, y + 3);
+          }
+          
+          // Draw x-axis ticks
+          this.ctx.textAlign = 'center';
+          const xTicks = Math.min(5, numBins);
+          for (let i = 0; i <= xTicks; i++) {
+            const x = padding + (i / xTicks) * graphWidth;
+            const value = (minVal + (i / xTicks) * range).toFixed(1);
+            this.ctx.fillText(value, x, canvas.height - padding + 15);
+          }
+        },
+        addData: function(value) {
+          this.data.push(value);
+        },
+        clear: function() {
+          this.data = [];
+          this.bins = [];
+          elements.histMin.textContent = '-';
+          elements.histMax.textContent = '-';
+          elements.histRange.textContent = '-';
+          this.update();
+        }
+      };
+      
+      state.histogram.update();
+      
+      // Redraw on window resize
+      window.addEventListener('resize', () => {
+        if (state.histogram) state.histogram.update();
+      });
+    }
+
+    // Clear graph
+    function clearGraph() {
+      if (state.chart) {
+        state.chart.clear();
+      }
+      elements.trendlineStats.classList.add('hidden');
+    }
+
+    // Clear measurements log
+    function clearMeasurements() {
+      state.dataLog = [];
+      state.runNumber = 0;
+      state.cumulativeTime = 0;
+      updateDataLog();
+    }
+    
+    // Clear cumulative graph
+    function clearCumulativeGraph() {
+      state.cumulativeTime = 0;
+      if (state.cumulativeChart) {
+        state.cumulativeChart.clear();
+      }
+    }
+
+    // Export runs to CSV
+    function exportRunsCSV() {
+      if (state.dataLog.length === 0) {
+        showExportStatus('No data to export. Complete a measurement first.', false);
+        return;
+      }
+      
+      let csv = 'Run Number,Total Counts,Time (s),CPS,Source A,Source B,Ba-137m Active\n';
+      
+      state.dataLog.forEach(entry => {
+        const sourceA = entry.sourceA || 'Unknown';
+        const sourceB = entry.sourceB || 'Unknown';
+        const baActive = entry.baActive ? 'Yes' : 'No';
+        csv += `${entry.run},${entry.counts},${entry.time.toFixed(2)},${entry.cps.toFixed(3)},${sourceA},${sourceB},${baActive}\n`;
+      });
+      
+      downloadCSV(csv, 'radiation_runs_summary.csv');
+      showExportStatus('Run summary exported successfully!', true);
+    }
+
+    // Export current run time-series data
+    function exportCurrentRunCSV() {
+      if (state.currentRunData.length === 0) {
+        showExportStatus('No current run data. Start a measurement first.', false);
+        return;
+      }
+      
+      let csv = 'Time (s),Cumulative Counts,Instantaneous CPS\n';
+      
+      state.currentRunData.forEach(point => {
+        const instCPS = point.cps || 0;
+        csv += `${point.time.toFixed(2)},${point.counts},${instCPS.toFixed(3)}\n`;
+      });
+      
+      downloadCSV(csv, `radiation_run_${state.runNumber}_timeseries.csv`);
+      showExportStatus('Current run data exported successfully!', true);
+    }
+
+    // Helper to download CSV
+    function downloadCSV(csvContent, filename) {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Show export status message
+    function showExportStatus(message, success) {
+      elements.exportStatus.textContent = success ? '✓ ' + message : '⚠ ' + message;
+      elements.exportStatus.className = success 
+        ? 'bg-green-100 border border-green-400 rounded-lg p-3 text-sm text-green-800'
+        : 'bg-yellow-100 border border-yellow-400 rounded-lg p-3 text-sm text-yellow-800';
+      elements.exportStatus.classList.remove('hidden');
+      
+      setTimeout(() => {
+        elements.exportStatus.classList.add('hidden');
+      }, 3000);
+    }
+
+    // Apply config to UI
+    async function onConfigChange(config) {
+      const title = config.lab_title || defaultConfig.lab_title;
+      const instrument = config.instrument_label || defaultConfig.instrument_label;
+      const bgColor = config.background_color || defaultConfig.background_color;
+      const surfaceColor = config.surface_color || defaultConfig.surface_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const primaryColor = config.primary_action_color || defaultConfig.primary_action_color;
+      const secondaryColor = config.secondary_action_color || defaultConfig.secondary_action_color;
+      
+      elements.labTitle.textContent = title;
+      elements.instrumentLabel.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        ${instrument}
+      `;
+      
+      // Apply colors
+      elements.appContainer.style.background = `linear-gradient(135deg, ${bgColor} 0%, ${adjustColor(bgColor, -10)} 100%)`;
+      
+      document.querySelectorAll('.panel-card').forEach(el => {
+        el.style.background = `linear-gradient(135deg, ${surfaceColor} 0%, ${adjustColor(surfaceColor, -5)} 100%)`;
+      });
+      
+      elements.labTitle.style.color = textColor;
+      
+      // Update button colors
+      elements.btnStart.style.borderColor = primaryColor;
+      elements.btnStart.style.color = primaryColor;
+      elements.btnSqueeze.style.borderColor = secondaryColor;
+      elements.btnSqueeze.style.color = secondaryColor;
+    }
+
+    // Helper to adjust color brightness
+    function adjustColor(hex, percent) {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+      const G = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+      const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+      return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+    }
+
+    // Initialize SDK
+    function initSDK() {
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange,
+          mapToCapabilities: (config) => ({
+            recolorables: [
+              {
+                get: () => config.background_color || defaultConfig.background_color,
+                set: (value) => window.elementSdk.setConfig({ background_color: value })
+              },
+              {
+                get: () => config.surface_color || defaultConfig.surface_color,
+                set: (value) => window.elementSdk.setConfig({ surface_color: value })
+              },
+              {
+                get: () => config.text_color || defaultConfig.text_color,
+                set: (value) => window.elementSdk.setConfig({ text_color: value })
+              },
+              {
+                get: () => config.primary_action_color || defaultConfig.primary_action_color,
+                set: (value) => window.elementSdk.setConfig({ primary_action_color: value })
+              },
+              {
+                get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+                set: (value) => window.elementSdk.setConfig({ secondary_action_color: value })
+              }
+            ],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['lab_title', config.lab_title || defaultConfig.lab_title],
+            ['instrument_label', config.instrument_label || defaultConfig.instrument_label]
+          ])
+        });
+      }
+    }
+
+    // Event listeners
+    elements.btnStart.addEventListener('click', startCounting);
+    elements.btnStop.addEventListener('click', () => stopCounting(false));
+    elements.btnReset.addEventListener('click', resetCounter);
+    elements.notesToggle.addEventListener('click', toggleNotes);
+    elements.clearGraph.addEventListener('click', clearGraph);
+    elements.clearMeasurements.addEventListener('click', clearMeasurements);
+    elements.exportRunsCSV.addEventListener('click', exportRunsCSV);
+    elements.exportCurrentCSV.addEventListener('click', exportCurrentRunCSV);
+    elements.resetStats.addEventListener('click', resetStatistics);
+    elements.clearHistogram.addEventListener('click', () => {
+      if (state.histogram) {
+        state.histogram.clear();
+      }
+    });
+    elements.clearCumulativeGraph.addEventListener('click', clearCumulativeGraph);
+    
+    elements.sourceA.addEventListener('change', updateIndicators);
+    elements.sourceB.addEventListener('change', updateIndicators);
+
+    // Initialize
+    initSDK();
+    onConfigChange(defaultConfig);
+    updateDisplay();
+    updateIndicators();
+    initializeGraph();
+    initializeHistogram();
+    initializeCumulativeGraph();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c7ebeb5e2ebb487',t:'MTc3MDA4ODMyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
