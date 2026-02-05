@@ -794,6 +794,217 @@
             margin-bottom: 1rem;
         }
 
+        /* Extras - Tool Directory Card */
+        .extra-tool {
+            padding: 0;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .extra-tool:hover {
+            border-color: #3498db;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        .extra-preview {
+            display: block;
+            background: #f1f3f5;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .extra-preview img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+        }
+        .extra-body {
+            padding: 1.35rem 1.5rem 1.5rem;
+        }
+        .extra-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #2c3e50;
+        }
+        .extra-desc {
+            margin: 0.65rem 0 0;
+            color: #495057;
+            font-size: 0.98rem;
+            line-height: 1.7;
+        }
+        .extra-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.85rem;
+        }
+        .extra-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            background: #eef2ff;
+            border: 1px solid #bfdbfe;
+            color: #1e3a8a;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.01em;
+        }
+        .extra-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .btn-primary {
+            display: inline-block;
+            background: #3498db;
+            color: #fff;
+            padding: 0.65rem 1.05rem;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(52, 152, 219, 0.25);
+        }
+        .btn-primary:focus {
+            outline: 3px solid rgba(52, 152, 219, 0.35);
+            outline-offset: 2px;
+        }
+
+        /* Modal (Extras Learn More) */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            z-index: 2500; /* above lightbox (2000), below toasts (3000) */
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            width: min(960px, 94vw);
+            max-height: 85vh;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.10);
+        }
+        .modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid #e9ecef;
+            background: rgba(255, 255, 255, 0.98);
+        }
+        .modal-title {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #2c3e50;
+        }
+        .modal-subtitle {
+            margin: 0.25rem 0 0;
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        .modal-close {
+            appearance: none;
+            -webkit-appearance: none;
+            border: none;
+            background: #f1f3f5;
+            color: #2c3e50;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 800;
+            flex: 0 0 auto;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .modal-close:hover { background: #e9ecef; }
+        .modal-close:active { transform: scale(0.98); }
+        .modal-close:focus { outline: 3px solid rgba(52, 152, 219, 0.35); outline-offset: 2px; }
+
+        .modal-content {
+            padding: 1.1rem 1.2rem 1.2rem;
+            overflow: auto;
+            max-height: calc(85vh - 74px);
+        }
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1.35fr 1fr;
+            gap: 1rem;
+            align-items: start;
+        }
+        .modal-media {
+            background: #0b1220;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+        .modal-media video {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #0b1220;
+        }
+        .modal-caption {
+            margin: 0.6rem 0 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .modal-panel {
+            background: #fcfcfd;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 0.9rem 0.95rem;
+        }
+        .modal-panel h4 {
+            margin: 0.7rem 0 0.35rem;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        .modal-panel h4:first-child { margin-top: 0; }
+        .modal-panel p {
+            margin: 0.25rem 0 0;
+            color: #495057;
+            line-height: 1.65;
+            font-size: 0.95rem;
+        }
+        .modal-panel ul {
+            margin: 0.35rem 0 0;
+            padding-left: 1.1rem;
+            color: #495057;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        .modal-panel li { margin: 0.25rem 0; }
+        .modal-footer {
+            display: flex;
+            gap: 0.65rem;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        @media (max-width: 860px) {
+            .modal-grid { grid-template-columns: 1fr; }
+            .modal-content { padding: 1rem; }
+        }
+
         /* Form Section */
         .form-container {
             background: white;
@@ -1486,7 +1697,30 @@
         <!-- Extras Page -->
         <div id="extras-page" class="page">
             <section class="section">
-                <h2>Coming Soon!</h2>
+                <h2>Extras</h2>
+                <p class="section-subtitle">Useful applications and resources for researchers. Tools open as separate pages within this site.</p>
+
+                <div class="extras-grid" aria-label="Research tools">
+                    <article class="extra-service extra-tool">
+                        <a class="extra-preview" href="micromeasure.html" aria-label="Open MicroMeasure">
+                            <img src="Images/micromeasure.png" alt="MicroMeasure preview" loading="lazy">
+                        </a>
+                        <div class="extra-body">
+                            <h3 class="extra-title">MicroMeasure</h3>
+                            <p class="extra-desc">Looking for a fast and reliable way to measure features in your microscopy images without installing complex software? MicroMeasure is a browser-based scientific image analysis tool that allows researchers to perform calibrated length and area measurements, as well as automated particle and hole (pore) analysis, directly from their web browser. It combines essential image-analysis capabilities with an intuitive interface and transparent measurement methods, enabling reproducible, real-unit measurements suitable for research, teaching, and documentation. By reducing technical barriers and simplifying workflows, MicroMeasure offers a practical and accessible alternative for laboratories, educators, and students who need accurate quantitative image analysis anytime, anywhere.</p>
+                            <div class="extra-tags" aria-label="MicroMeasure tags">
+                                <span class="extra-tag">Browser-based</span>
+                                <span class="extra-tag">Microscopy</span>
+                                <span class="extra-tag">Image analysis</span>
+                                <span class="extra-tag">Measurements</span>
+                            </div>
+                            <div class="extra-actions">
+                                <a class="btn-primary" href="micromeasure.html">Open MicroMeasure</a>
+                                <button class="btn-subtle" type="button" data-open-modal="micromeasure" aria-haspopup="dialog">Learn more</button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
             </section>
         </div>
 
@@ -1709,6 +1943,91 @@
         <button id="lightbox-prev" class="lightbox-nav lightbox-prev" type="button" aria-label="Previous image">‹</button>
         <img id="lightbox-image" class="lightbox-img" alt="">
         <button id="lightbox-next" class="lightbox-nav lightbox-next" type="button" aria-label="Next image">›</button>
+    </div>
+
+    <!-- Extras: Learn More Modal (MicroMeasure) -->
+    <div id="modal-micromeasure" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-micromeasure-title" aria-hidden="true">
+        <div class="modal" role="document">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-micromeasure-title" class="modal-title">MicroMeasure — Quick Tutorial</h3>
+                    <p class="modal-subtitle">Watch the short walkthrough and review key features.</p>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-content">
+                <div class="modal-grid">
+                    <div>
+                        <div class="modal-media">
+                            <video controls preload="metadata" playsinline poster="Images/micromeasure.png">
+                                <source src="Videos/micromeasure.mp4" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        <p class="modal-caption">Tip: Use full screen for small screens.</p>
+                    </div>
+
+                    <div class="modal-panel">
+                        <h4>About</h4>
+                        <p>
+                            <strong>Version:</strong> 1.0<br>
+                            <strong>Website:</strong> <a href="https://www.inanolab.com/micromeasure.html" target="_blank" rel="noopener">https://www.inanolab.com/micromeasure.html</a><br>
+                            <strong>Developer / Programmer:</strong> Dr. James Salveo Olarve<br>
+                            <strong>Affiliation:</strong> i-Nano Research Facility, De La Salle University Manila
+                        </p>
+
+                        <h4>What MicroMeasure Is</h4>
+                        <p>MicroMeasure (implemented almost entirely in <strong>micromeasure.html</strong>) is a browser-based measurement + image-analysis tool aimed at microscopy images (e.g., SEM). It runs fully client-side (no install), drawing the image on one canvas and all annotations/analysis overlays on a second canvas.</p>
+
+                        <h4>Core Workflow Features</h4>
+                        <ul>
+                            <li><strong>Load image</strong>: via “Load Image” file picker or drag &amp; drop onto the viewer. When no image is loaded, tapping/clicking the viewer triggers the file picker (mobile-friendly).</li>
+                            <li><strong>Guided status badge</strong>: walks users through Load an image → Set the scale → Make a measurement, then hides once completed.</li>
+                            <li><strong>Help / Documentation modal</strong>: “Help” opens built-in documentation with quick start, tool explanations, shortcuts, and export guidance.</li>
+                        </ul>
+
+                        <h4>Navigation (Viewing the Image)</h4>
+                        <ul>
+                            <li><strong>Zoom</strong>: slider (50–300%), mouse wheel zoom, and mobile pinch behavior.</li>
+                            <li><strong>Pan</strong>: buttons (← ↑ ↓ →) + 🎯 reset pan; keyboard arrows; middle-mouse drag or Alt+drag; two-finger drag on touch.</li>
+                            <li><strong>Fit to View</strong>: automatically scales/centers the image; re-applies on resize/orientation changes.</li>
+                        </ul>
+
+                        <h4>Scale Calibration (Pixel → Real Units)</h4>
+                        <ul>
+                            <li>Click <strong>Set Scale</strong>, then click two points across a known scale bar.</li>
+                            <li>Enter known length and select unit (nm / μm / mm), then save.</li>
+                            <li>After calibration, all measurements show px + real units; min-area thresholds switch to real-unit mode.</li>
+                        </ul>
+
+                        <h4>Manual Measurement Tools</h4>
+                        <ul>
+                            <li><strong>Length</strong>: click two points to create L1, L2…; show/hide, edit, delete; “Clear All Lengths”.</li>
+                            <li><strong>Area</strong>: click multiple points to define polygon; close to finalize A1, A2…; edit vertices; “Clear All Areas”.</li>
+                        </ul>
+
+                        <h4>Automated Analysis Tools</h4>
+                        <ul>
+                            <li><strong>Particles</strong>: optional ROI, preprocessing, manual/auto thresholding (Otsu), polarity; orange boxes + summary stats + ECD histogram.</li>
+                            <li><strong>Holes</strong>: similar workflow tuned for voids; purple boxes + summary stats + ECD histogram.</li>
+                        </ul>
+
+                        <h4>Results &amp; Export</h4>
+                        <ul>
+                            <li><strong>Results tab</strong> consolidates Length/Area/Particle/Hole into one list.</li>
+                            <li><strong>Copy TSV</strong> for Excel/Sheets; <strong>Download CSV</strong> for full exports.</li>
+                            <li><strong>Save Image</strong> exports PNG with overlays (enabled when applicable).</li>
+                            <li><strong>Reset</strong> clears measurements/analysis/ROI and resets calibration (keeps the loaded image).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a class="btn-subtle" href="micromeasure.html">Open MicroMeasure</a>
+                    <button class="btn-primary" type="button" data-close-modal>Close</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -3235,6 +3554,86 @@
         }
 
         window.addEventListener('load', initPrepChecklist);
+
+        // Extras: modal open/close (Learn more)
+        (function initExtrasModals(){
+            const openButtons = Array.from(document.querySelectorAll('[data-open-modal]'));
+            if (!openButtons.length) return;
+
+            let activeOverlay = null;
+            let lastFocus = null;
+            let prevBodyOverflow = '';
+
+            function lockScroll(){
+                prevBodyOverflow = document.body.style.overflow || '';
+                document.body.style.overflow = 'hidden';
+            }
+            function unlockScroll(){
+                document.body.style.overflow = prevBodyOverflow;
+            }
+
+            function pauseModalVideo(overlay){
+                const v = overlay && overlay.querySelector('video');
+                if (v && !v.paused) { try { v.pause(); } catch(_) {} }
+            }
+
+            function openModal(id){
+                const overlay = document.getElementById('modal-' + id);
+                if (!overlay) return;
+                if (activeOverlay) closeModal(activeOverlay, true);
+
+                lastFocus = document.activeElement;
+                activeOverlay = overlay;
+                overlay.classList.add('show');
+                overlay.setAttribute('aria-hidden','false');
+                lockScroll();
+
+                // focus first actionable element
+                const focusTarget = overlay.querySelector('.modal-close, [data-close-modal], a, button');
+                if (focusTarget) focusTarget.focus();
+            }
+
+            function closeModal(overlay, internal){
+                if (!overlay) return;
+                overlay.classList.remove('show');
+                overlay.setAttribute('aria-hidden','true');
+                pauseModalVideo(overlay);
+                unlockScroll();
+                activeOverlay = null;
+                if (!internal && lastFocus && typeof lastFocus.focus === 'function') {
+                    lastFocus.focus();
+                }
+            }
+
+            openButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-open-modal');
+                    openModal(id);
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!activeOverlay) return;
+                const target = e.target;
+                if (target && target.matches && target.matches('[data-close-modal], .modal-close')) {
+                    e.preventDefault();
+                    closeModal(activeOverlay);
+                    return;
+                }
+                // click outside modal closes
+                if (target === activeOverlay) {
+                    closeModal(activeOverlay);
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (!activeOverlay) return;
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeModal(activeOverlay);
+                }
+            });
+        })();
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ae0874705b04cf',t:'MTc1OTg0Njc2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
