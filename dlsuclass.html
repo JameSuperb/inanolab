@@ -217,6 +217,7 @@
   </div>
   <script>
     const PHOTO_BASE_PATH = "./Images/Profile/";
+    const AT_RISK_ABSENCE_THRESHOLD = 2.5; // Policy 8.6 (simplified threshold)
     
     const defaultConfig = {
       app_title: "Class",
@@ -300,7 +301,7 @@
 
     // Cycle attendance status (includes '-')
     function cycleStatus(currentStatus) {
-      const statuses = ['-', 'Present', 'Absent', 'Late'];
+      const statuses = ['-', 'Present', 'Absent', 'Late', 'Excused'];
       const currentIndex = statuses.indexOf(currentStatus);
       const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % statuses.length;
       return statuses[nextIndex];
@@ -315,6 +316,7 @@
       if (/^p(?:resent)?$/.test(s)) return 'Present';
       if (/^a(?:bsent)?$/.test(s)) return 'Absent';
       if (/^l(?:ate)?$/.test(s)) return 'Late';
+      if (/^e(?:xcused)?$/.test(s) || /^excuse(?:d)?$/.test(s)) return 'Excused';
       return null; // unknown status
     }
 
@@ -581,7 +583,7 @@
         if (called.has(idStr)) return false;
         if (excludeAbsent) {
           const st = getStudentAttendance(idStr);
-          if (st === 'Absent' || st === '-') return false;
+          if (st === 'Absent' || st === 'Excused' || st === '-') return false;
         }
         return true;
       });
@@ -728,11 +730,37 @@
     }
 
     // Render status pill
+    // Total absences across all recorded dates for the selected class.
+    // Policy 8.5: Late = 0.5 absence
+    function getStudentAbsenceCount(studentId, classSection) {
+      if (!classSection) return 0;
+      const dates = getClassDateList(classSection);
+      let total = 0;
+
+      for (const iso of dates) {
+        const key = getAttendanceKey(classSection, iso);
+        const classAttendance = attendance[key] || {};
+        const st = classAttendance[String(studentId)] || '-';
+
+        if (st === 'Absent') total += 1;
+        else if (st === 'Late') total += 0.5;
+      }
+
+      return total;
+    }
+
+    function formatAbsenceCount(n) {
+      const x = Number(n) || 0;
+      if (Math.abs(x - Math.round(x)) < 1e-9) return String(Math.round(x));
+      return x.toFixed(1).replace(/\.0$/, '');
+    }
+
     function renderStatusPill(status) {
       const colors = {
         'Present': 'bg-emerald-500 text-white',
         'Absent': 'bg-rose-500 text-white',
         'Late': 'bg-amber-500 text-white',
+        'Excused': 'bg-sky-500 text-white',
         '-': 'bg-slate-400 text-white'
       };
       const cls = colors[status] || 'bg-slate-400 text-white';
@@ -750,17 +778,28 @@
       const displayName = lastName && nickname
         ? `${lastName}, ${nickname}`
         : (lastName || nickname || student.Name || '');
+
+      const absences = getStudentAbsenceCount(student.ID, selectedClass);
+      const isAtRisk = absences > AT_RISK_ABSENCE_THRESHOLD;
+      const riskCls = isAtRisk ? 'ring-2 ring-rose-400 border-rose-200' : '';
+
+      const absenceBadge = absences > 0
+        ? `<div class="pointer-events-none select-none absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full ${isAtRisk ? 'bg-rose-700' : 'bg-rose-600'} text-white text-[10px] leading-[18px] text-center font-extrabold border-2 border-white">${formatAbsenceCount(absences)}</div>`
+        : '';
       
       const avatarContent = `
-        <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm overflow-hidden" onclick="openStudentInfo('${student.ID}'); event.stopPropagation();">
-          ${showPhotos && photoUrl 
-            ? `<img src="${photoUrl}" alt="${student.Name}" class="w-full h-full object-cover" loading="lazy" decoding="async" onerror="handleAvatarError(this)">
-               <span class="hidden">${initials}</span>`
-            : `<span>${initials}</span>`}
+        <div class="relative">
+          <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm overflow-hidden" onclick="openStudentInfo('${student.ID}'); event.stopPropagation();">
+            ${showPhotos && photoUrl 
+              ? `<img src="${photoUrl}" alt="${student.Name}" class="w-full h-full object-cover" loading="lazy" decoding="async" onerror="handleAvatarError(this)">
+                 <span class="hidden">${initials}</span>`
+              : `<span>${initials}</span>`}
+          </div>
+          ${absenceBadge}
         </div>`;
 
       return `
-        <div class="student-tile bg-white rounded-xl p-3 shadow-sm border border-slate-200 ${isFiltered ? '' : 'opacity-30'} ${isBusy ? 'opacity-50 pointer-events-none' : ''}" 
+        <div class="student-tile bg-white rounded-xl p-3 shadow-sm border border-slate-200 ${riskCls} ${isFiltered ? '' : 'opacity-30'} ${isBusy ? 'opacity-50 pointer-events-none' : ''}" 
              data-student-id="${student.ID}" 
              onclick="handleTileClick('${student.ID}')">
           <div class="flex items-center gap-3">
@@ -1231,7 +1270,7 @@
                   statusRaw = row[rawHeader];
                 }
                 const status = normalizeStatus(statusRaw);
-                if (status && ['Present', 'Absent', 'Late', '-'].includes(status)) {
+                if (status && ['Present', 'Absent', 'Late', 'Excused', '-'].includes(status)) {
                   const aKey = getAttendanceKey(student['Class and Section'], iso);
                   if (!newAttendance[aKey]) newAttendance[aKey] = {};
                   newAttendance[aKey][student.ID] = status;
