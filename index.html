@@ -390,6 +390,13 @@
             margin-bottom: 1.5rem;
         }
 
+        .calc-help {
+            margin: 0.35rem 0 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+
         .calc-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1513,8 +1520,9 @@
                     <div class="calc-row">
                         <div class="calc-input">
                             <label for="samples">Number of Samples:</label>
-                            <input type="number" id="samples" min="1" max="100" value="1">
-                            <input type="range" id="samples-slider" min="1" max="100" step="1" value="1" aria-label="Samples slider">
+                            <input type="number" id="samples" min="1" max="100" value="1" aria-describedby="bulk-pricing-hint">
+                            <input type="range" id="samples-slider" min="1" max="100" step="1" value="1" aria-label="Samples slider" aria-describedby="bulk-pricing-hint">
+                            <p id="bulk-pricing-hint" class="calc-help">Bulk pricing: the average cost per sample decreases as sample count increases.</p>
                         </div>
                         <div class="calc-input">
                             <label for="analysis-type">Analysis Type:</label>
@@ -1975,6 +1983,14 @@
                             <strong>Developer / Programmer:</strong> Dr. James Salveo Olarve<br>
                             <strong>Affiliation:</strong> i-Nano Research Facility, De La Salle University Manila
                         </p>
+
+                        <h4>📚 Citation Recommendation</h4>
+                        <p>If you use MicroMeasure in academic work:</p>
+                        <p>
+                            Olarve, J. S. L. (2026). MicroMeasure: A web-based image analysis and measurement tool. i-Nano Research Facility, De La Salle University Manila. Retrieved from
+                            <a href="https://www.inanolab.com/micromeasure.html" target="_blank" rel="noopener">https://www.inanolab.com/micromeasure.html</a>
+                        </p>
+                        <p><em>(Updated citation will be provided once DOI is assigned.)</em></p>
 
                         <h4>What MicroMeasure Is</h4>
                         <p>MicroMeasure (implemented almost entirely in <strong>micromeasure.html</strong>) is a browser-based measurement + image-analysis tool aimed at microscopy images (e.g., SEM). It runs fully client-side (no install), drawing the image on one canvas and all annotations/analysis overlays on a second canvas.</p>
