@@ -1470,7 +1470,7 @@
                         We’d love your feedback! Was our service helpful, timely, and clear? Share your experience below. This embed loads Facebook’s Comments widget (third‑party) which may set cookies. Viewers are subject to Facebook’s <a href="https://www.facebook.com/policy.php" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
                     </p>
                     <div id="fb-root"></div>
-                    <div class="fb-comments" id="feedback-comments" data-href="https://phenom-dlsu.weebly.com/" data-width="" data-numposts="7"></div>
+                    <div class="fb-comments" id="feedback-comments" data-href="https://phenom-dlsu.weebly.com/" data-width="100%" data-numposts="7"></div>
                 </div>
             </section>
         </div>
@@ -2918,6 +2918,16 @@
                     siteFooter.style.display = 'none';
                 }
             }
+
+            // Re-parse Facebook social plugin when About is shown
+            if (pageId === 'about') {
+                try {
+                    if (window.FB && window.FB.XFBML && typeof window.FB.XFBML.parse === 'function') {
+                        const feedbackSection = document.getElementById('feedback-section');
+                        window.FB.XFBML.parse(feedbackSection || undefined);
+                    }
+                } catch (_) {}
+            }
         }
 
         // Navigation button click handlers
@@ -3506,14 +3516,27 @@
         // Lazy-load Facebook SDK only if feedback section exists (About page)
         window.addEventListener('load', function(){
             const feedback = document.getElementById('feedback-comments');
-            if (feedback && !window.FB) {
-                const sdk = document.createElement('script');
-                sdk.async = true;
-                sdk.defer = true;
-                sdk.crossOrigin = 'anonymous';
-                sdk.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v22.0';
-                document.body.appendChild(sdk);
+            if (!feedback) return;
+            if (window.FB && window.FB.XFBML && typeof window.FB.XFBML.parse === 'function') {
+                try { window.FB.XFBML.parse(document.getElementById('feedback-section') || undefined); } catch (_) {}
+                return;
             }
+            if (document.getElementById('facebook-jssdk')) return;
+
+            const sdk = document.createElement('script');
+            sdk.id = 'facebook-jssdk';
+            sdk.async = true;
+            sdk.defer = true;
+            sdk.crossOrigin = 'anonymous';
+            sdk.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v22.0';
+            sdk.onload = function(){
+                try {
+                    if (window.FB && window.FB.XFBML && typeof window.FB.XFBML.parse === 'function') {
+                        window.FB.XFBML.parse(document.getElementById('feedback-section') || undefined);
+                    }
+                } catch (_) {}
+            };
+            document.body.appendChild(sdk);
         });
         
         // Helper functions for form
