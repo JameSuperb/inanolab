@@ -1349,6 +1349,107 @@
         @media (max-width: 768px) {
             .sample-thumb { height: 160px; }
         }
+
+        /* Feedback (Google Apps Script) */
+        .feedback-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .feedback-item {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+        }
+        .feedback-item-body {
+            display: grid;
+            grid-template-columns: 44px 1fr;
+            gap: 0.75rem;
+            align-items: start;
+        }
+        .feedback-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #f1f3f5;
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            flex: 0 0 auto;
+        }
+        .feedback-avatar svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+        .feedback-item-content { min-width: 0; }
+        .feedback-item-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .feedback-item-name {
+            font-weight: 800;
+            color: #2c3e50;
+        }
+        .feedback-item-meta {
+            display: inline-flex;
+            gap: 0.6rem;
+            align-items: baseline;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .feedback-stars {
+            color: #e67e22;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+        }
+        .feedback-item-comment {
+            margin: 0.5rem 0 0;
+            color: #495057;
+            white-space: pre-wrap;
+        }
+        .feedback-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+        }
+        .feedback-page-btn {
+            appearance: none;
+            -webkit-appearance: none;
+            border: 1px solid #dee2e6;
+            background: #f1f3f5;
+            color: #2c3e50;
+            padding: 0.45rem 0.7rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            min-width: 40px;
+            text-align: center;
+        }
+        .feedback-page-btn:hover {
+            background: #e9ecef;
+            border-color: #cfd4da;
+        }
+        .feedback-page-btn:focus {
+            outline: 3px solid rgba(52, 152, 219, 0.35);
+            outline-offset: 2px;
+        }
+        .feedback-page-btn.active {
+            background: #3498db;
+            border-color: #3498db;
+            color: #ffffff;
+        }
     </style>
     <!-- Google Identity Services for Sign-In -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -1467,10 +1568,43 @@
                 <h4 class="team-heading" id="feedback-title" style="margin-top: 1.5rem;">💬 Feedback</h4>
                 <div class="extra-service" id="feedback-section" role="region" aria-labelledby="feedback-title">
                     <p style="margin-top:0; color:#6c757d; font-size:0.95rem;">
-                        We’d love your feedback! Was our service helpful, timely, and clear? Share your experience below. This embed loads Facebook’s Comments widget (third‑party) which may set cookies. Viewers are subject to Facebook’s <a href="https://www.facebook.com/policy.php" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                        We’d love your feedback! Was our service helpful, timely, and clear? Share your experience below.
                     </p>
-                    <div id="fb-root"></div>
-                    <div class="fb-comments" id="feedback-comments" data-href="https://phenom-dlsu.weebly.com/" data-width="100%" data-numposts="7"></div>
+
+                    <form id="feedback-form">
+                        <div class="form-grid" style="gap: 1rem;">
+                            <div class="form-group">
+                                <label for="feedback-name">Name *</label>
+                                <input id="feedback-name" type="text" maxlength="120" autocomplete="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="feedback-rating">Rating *</label>
+                                <select id="feedback-rating" required>
+                                    <option value="">Select…</option>
+                                    <option value="5">5 - Excellent</option>
+                                    <option value="4">4 - Good</option>
+                                    <option value="3">3 - Okay</option>
+                                    <option value="2">2 - Poor</option>
+                                    <option value="1">1 - Very Poor</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="feedback-comment">Comment *</label>
+                                <textarea id="feedback-comment" rows="3" maxlength="1000" required></textarea>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:0.65rem; flex-wrap:wrap; margin-top: 0.75rem;">
+                            <button class="btn-primary" type="submit">Submit Feedback</button>
+                            <button class="btn-clear" type="button" id="feedback-refresh">Refresh</button>
+                        </div>
+
+                        <div id="feedback-form-status" class="checklist-status" aria-live="polite"></div>
+                    </form>
+
+                    <h4 class="team-heading" style="margin-top: 1.25rem;">Recent feedback</h4>
+                    <div id="feedback-list" class="feedback-list" aria-live="polite"></div>
+                    <div id="feedback-pagination" class="feedback-pagination" aria-label="Feedback pages" hidden></div>
                 </div>
             </section>
         </div>
@@ -2092,6 +2226,10 @@
         // TODO: If you deployed a newer Web App for addRow, update this URL.
         const GAS_FORM_URL = 'https://script.google.com/macros/s/AKfycbwzIILv0oMo2_-cDr5gHc-Tu5jodaVaCmV4v3Dl0Y14-TTYKOH0i37jU_PrWj5M1vvn/exec';
         const FORM_API_KEY = 'BgWFBsc9NAQeyd7DBfkF3qdPR6EdeieB';
+
+        // Feedback endpoint (Google Apps Script Web App)
+        // Supports: ?func=list (GET) and func=add (POST: name, rating 1-5, comment)
+        const FEEDBACK_GAS_URL = 'https://script.google.com/macros/s/AKfycbxZMJyBGc56Uc0Rjmz2GXWxAubs8XZHiUS_fkaULzmf7r0oqJdFD7qCdwAjJBz4DaIP/exec';
         // Client-side state of uploaded files: {fileId, name, size, type}
         const uploadedFiles = [];
         // Voucher state for Request total
@@ -2631,6 +2769,218 @@
             return t;
         }
 
+        // Feedback (Google Apps Script)
+        function fbEsc(s) {
+            return String(s || '').replace(/[&<>"']/g, ch => (
+                ch === '&' ? '&amp;' :
+                ch === '<' ? '&lt;' :
+                ch === '>' ? '&gt;' :
+                ch === '"' ? '&quot;' : '&#39;'
+            ));
+        }
+        function fbClean(s, maxLen) {
+            let out = String(s ?? '').trim();
+            out = out.replace(/\s+/g, ' ');
+            out = out.replace(/[<>]/g, '');
+            if (maxLen && out.length > maxLen) out = out.slice(0, maxLen);
+            return out;
+        }
+        function fbStars(n) {
+            const v = Math.max(0, Math.min(5, Number(n) || 0));
+            return '★★★★★'.slice(0, v) + '☆☆☆☆☆'.slice(0, 5 - v);
+        }
+        function fbFmtDate(v) {
+            const raw = String(v || '').trim();
+            const d = new Date(raw);
+            if (!isNaN(d.getTime())) {
+                return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+            }
+            return raw;
+        }
+        async function fbJson(url, opts) {
+            const r = await fetch(url, opts);
+            const t = await r.text();
+            let j = null;
+            try { j = JSON.parse(t); } catch (_) {}
+            if (!r.ok) throw new Error((j && j.error) ? j.error : (t || 'Request failed'));
+            return j || { raw: t };
+        }
+
+        let feedbackAll = [];
+        let feedbackPage = 0;
+        const FEEDBACK_PAGE_SIZE = 4;
+
+        function feedbackAvatarSvg() {
+            return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 12c2.76 0 5-2.46 5-5.5S14.76 1 12 1 7 3.46 7 6.5 9.24 12 12 12Zm0 2c-4.42 0-8 2.69-8 6v2h16v-2c0-3.31-3.58-6-8-6Z"/></svg>';
+        }
+
+        function feedbackRenderPage() {
+            const list = document.getElementById('feedback-list');
+            const pager = document.getElementById('feedback-pagination');
+            if (!list) return;
+
+            const total = feedbackAll.length;
+            if (!total) {
+                list.innerHTML = '<div style="color:#6c757d; font-size:0.95rem;">No feedback yet.</div>';
+                if (pager) pager.hidden = true;
+                return;
+            }
+
+            const pages = Math.max(1, Math.ceil(total / FEEDBACK_PAGE_SIZE));
+            feedbackPage = Math.min(Math.max(feedbackPage, 0), pages - 1);
+
+            const start = feedbackPage * FEEDBACK_PAGE_SIZE;
+            const slice = feedbackAll.slice(start, start + FEEDBACK_PAGE_SIZE);
+            const avatar = feedbackAvatarSvg();
+
+            list.innerHTML = slice.map(x => {
+                const name = fbEsc((x && x.name) ? x.name : 'Anonymous');
+                const comment = fbEsc((x && x.comment) ? x.comment : '');
+                const stars = fbEsc(fbStars(x && x.rating));
+                const date = fbEsc(fbFmtDate(x && x.createdAt));
+                return `<div class="feedback-item">
+                    <div class="feedback-item-body">
+                        <div class="feedback-avatar">${avatar}</div>
+                        <div class="feedback-item-content">
+                            <div class="feedback-item-head">
+                                <div class="feedback-item-name">${name}</div>
+                                <div class="feedback-item-meta"><span class="feedback-stars">${stars}</span><span>${date}</span></div>
+                            </div>
+                            <p class="feedback-item-comment">${comment}</p>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            if (pager) {
+                pager.hidden = pages <= 1;
+                if (pages > 1) {
+                    pager.innerHTML = Array.from({ length: pages }, (_, i) => {
+                        const active = i === feedbackPage ? ' active' : '';
+                        const aria = i === feedbackPage ? ' aria-current="page"' : '';
+                        return `<button type="button" class="feedback-page-btn${active}" data-page="${i}"${aria} aria-label="Go to feedback page ${i + 1}">${i + 1}</button>`;
+                    }).join('');
+                } else {
+                    pager.innerHTML = '';
+                }
+            }
+        }
+
+        async function feedbackLoad() {
+            const list = document.getElementById('feedback-list');
+            if (!list) return;
+            const pager = document.getElementById('feedback-pagination');
+            if (!FEEDBACK_GAS_URL) {
+                list.innerHTML = '<div style="color:#6c757d; font-size:0.95rem;">Feedback API not configured.</div>';
+                if (pager) pager.hidden = true;
+                return;
+            }
+            list.innerHTML = '<div style="color:#6c757d; font-size:0.95rem;">Loading feedback…</div>';
+            if (pager) pager.hidden = true;
+
+            const res = await fbJson(`${FEEDBACK_GAS_URL}?func=list&_=${Date.now()}`, { method: 'GET' });
+            if (!res || res.ok !== true) throw new Error(res && res.error ? res.error : 'Failed to load feedback');
+
+            const data = Array.isArray(res.data) ? res.data : [];
+            if (!data.length) {
+                list.innerHTML = '<div style="color:#6c757d; font-size:0.95rem;">No feedback yet.</div>';
+                if (pager) pager.hidden = true;
+                return;
+            }
+
+            data.sort((a, b) => {
+                const da = Date.parse(a && a.createdAt ? a.createdAt : '');
+                const db = Date.parse(b && b.createdAt ? b.createdAt : '');
+                if (!isNaN(da) && !isNaN(db) && db !== da) return db - da;
+                const ra = Number((a && a.rating) || 0) || 0;
+                const rb = Number((b && b.rating) || 0) || 0;
+                if (rb !== ra) return rb - ra;
+                return (Number((b && b.id) || 0) || 0) - (Number((a && a.id) || 0) || 0);
+            });
+
+            feedbackAll = data;
+            feedbackPage = 0;
+            feedbackRenderPage();
+        }
+        function initFeedback() {
+            const form = document.getElementById('feedback-form');
+            if (!form) return;
+
+            const status = document.getElementById('feedback-form-status');
+            const refresh = document.getElementById('feedback-refresh');
+            const pager = document.getElementById('feedback-pagination');
+            const setStatus = (m, isErr) => {
+                if (!status) return;
+                status.textContent = m || '';
+                status.style.color = isErr ? '#721c24' : '#6c757d';
+            };
+
+            if (pager && !pager.dataset.bound) {
+                pager.addEventListener('click', (e) => {
+                    const btn = e.target && e.target.closest ? e.target.closest('button[data-page]') : null;
+                    if (!btn) return;
+                    const p = Number(btn.getAttribute('data-page'));
+                    if (!isNaN(p)) {
+                        feedbackPage = p;
+                        feedbackRenderPage();
+                    }
+                });
+                pager.dataset.bound = '1';
+            }
+
+            if (refresh) {
+                refresh.addEventListener('click', async () => {
+                    try {
+                        setStatus('Refreshing…', false);
+                        feedbackPage = 0;
+                        await feedbackLoad();
+                        setStatus('', false);
+                    } catch (e) {
+                        setStatus(e && e.message ? e.message : String(e), true);
+                    }
+                });
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const name = fbClean(document.getElementById('feedback-name')?.value, 120);
+                const rating = Number(document.getElementById('feedback-rating')?.value || 0);
+                const comment = fbClean(document.getElementById('feedback-comment')?.value, 1000);
+
+                if (!FEEDBACK_GAS_URL) { setStatus('Feedback API not configured.', true); return; }
+                if (!name) { setStatus('Please enter your name.', true); return; }
+                if (!(rating >= 1 && rating <= 5)) { setStatus('Please select a rating (1–5).', true); return; }
+                if (!comment) { setStatus('Please enter a comment.', true); return; }
+
+                setStatus('Submitting…', false);
+                const body = new URLSearchParams({
+                    func: 'add',
+                    name,
+                    rating: String(rating),
+                    comment,
+                    createdAt: new Date().toISOString()
+                });
+
+                try {
+                    const res = await fbJson(FEEDBACK_GAS_URL, { method: 'POST', body });
+                    if (!res || res.ok !== true) throw new Error(res && res.error ? res.error : 'Submission failed');
+                    showToast('✅ Feedback submitted.', 'success', 2800);
+                    form.reset();
+                    await feedbackLoad();
+                    setStatus('', false);
+                } catch (err) {
+                    const msg = (err && err.message) ? err.message : String(err);
+                    setStatus(msg, true);
+                    showToast(msg || 'Feedback submission failed.', 'error', 3200);
+                }
+            });
+
+            feedbackLoad().catch(e => setStatus(e && e.message ? e.message : String(e), true));
+        }
+
+        window.addEventListener('load', initFeedback);
+
         // Upload-specific transient messages below the upload control
         function renderUploadMessage(html, kind = 'info', ttlMs = 2000) {
             const box = document.getElementById('upload-messages');
@@ -2917,16 +3267,6 @@
                 } else {
                     siteFooter.style.display = 'none';
                 }
-            }
-
-            // Re-parse Facebook social plugin when About is shown
-            if (pageId === 'about') {
-                try {
-                    if (window.FB && window.FB.XFBML && typeof window.FB.XFBML.parse === 'function') {
-                        const feedbackSection = document.getElementById('feedback-section');
-                        window.FB.XFBML.parse(feedbackSection || undefined);
-                    }
-                } catch (_) {}
             }
         }
 
@@ -3512,32 +3852,6 @@
         }
 
         window.addEventListener('load', () => buildSamplesGallery(1, 50));
-
-        // Lazy-load Facebook SDK only if feedback section exists (About page)
-        window.addEventListener('load', function(){
-            const feedback = document.getElementById('feedback-comments');
-            if (!feedback) return;
-            if (window.FB && window.FB.XFBML && typeof window.FB.XFBML.parse === 'function') {
-                try { window.FB.XFBML.parse(document.getElementById('feedback-section') || undefined); } catch (_) {}
-                return;
-            }
-            if (document.getElementById('facebook-jssdk')) return;
-
-            const sdk = document.createElement('script');
-            sdk.id = 'facebook-jssdk';
-            sdk.async = true;
-            sdk.defer = true;
-            sdk.crossOrigin = 'anonymous';
-            sdk.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v22.0';
-            sdk.onload = function(){
-                try {
-                    if (window.FB && window.FB.XFBML && typeof window.FB.XFBML.parse === 'function') {
-                        window.FB.XFBML.parse(document.getElementById('feedback-section') || undefined);
-                    }
-                } catch (_) {}
-            };
-            document.body.appendChild(sdk);
-        });
         
         // Helper functions for form
         function toggleOtherPosition() {
