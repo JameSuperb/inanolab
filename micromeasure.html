@@ -318,6 +318,15 @@
       </svg>
       Home
      </a>
+     <button id="headerResetBtn" class="btn-danger px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2" title="Reset MicroMeasure">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 12a7.5 7.5 0 0 1 12.78-5.303"/>
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.5 12a7.5 7.5 0 0 1-12.78 5.303"/>
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.5 6.75V3.75h-3"/>
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 17.25v3h3"/>
+      </svg>
+      Reset
+     </button>
     <button id="helpBtn" class="btn-secondary px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2" title="Documentation">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg> Help </button> <button id="saveScreenshot" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2" disabled>
@@ -385,7 +394,11 @@
         <div class="flex gap-2"><button id="saveLengthEdit" class="btn-primary px-3 py-1.5 rounded-lg text-xs flex-1">Save Changes</button> <button id="cancelLengthEdit" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1">Cancel</button>
         </div>
        </div>
-      <div id="lengthMeasurements" class="scrollbar-thin mb-3"></div><button id="clearLengths" class="btn-danger px-3 py-1.5 rounded-lg text-xs w-full hidden">Clear All Lengths</button>
+        <div id="lengthMeasurements" class="scrollbar-thin mb-3"></div>
+        <div class="flex gap-2">
+         <button id="lengthStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Descriptive Statistics</button>
+         <button id="clearLengths" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Clear All Lengths</button>
+        </div>
       </div><!-- Area Tab -->
       <div id="areaTab" class="tab-content hidden">
        <p id="areaInstructions" class="text-xs text-slate-400 mb-3">Click points to create polygon.</p><button id="closePolygonBtn" class="hidden btn-primary px-4 py-2 rounded-lg text-sm w-full mb-3">Close Polygon (3+ points)</button>
@@ -395,7 +408,11 @@
         <div class="flex gap-2"><button id="saveAreaEdit" class="btn-primary px-3 py-1.5 rounded-lg text-xs flex-1">Save Changes</button> <button id="cancelAreaEdit" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1">Cancel</button>
         </div>
        </div>
-      <div id="areaMeasurements" class="scrollbar-thin mb-3"></div><button id="clearAreas" class="btn-danger px-3 py-1.5 rounded-lg text-xs w-full hidden">Clear All Areas</button>
+      <div id="areaMeasurements" class="scrollbar-thin mb-3"></div>
+      <div class="flex gap-2">
+       <button id="areaStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Descriptive Statistics</button>
+       <button id="clearAreas" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Clear All Areas</button>
+      </div>
       </div><!-- Particles Tab -->
       <div id="particlesTab" class="tab-content hidden">
        <div class="space-y-3"><!-- ROI Selection -->
@@ -452,6 +469,7 @@
           <canvas id="particleHistogram" class="histogram-canvas w-full h-24"></canvas>
          </div>
         </div>
+          <button id="particleStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Descriptive Statistics</button>
        </div>
       </div><!-- Holes Tab -->
       <div id="holesTab" class="tab-content hidden">
@@ -509,6 +527,7 @@
           <canvas id="holeHistogram" class="histogram-canvas w-full h-24"></canvas>
          </div>
         </div>
+        <button id="holeStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Descriptive Statistics</button>
        </div>
       </div><!-- Results Tab -->
       <div id="resultsTab" class="tab-content hidden">
@@ -763,6 +782,44 @@
     </div>
    </div>
   </div>
+  <!-- Descriptive Statistics Modal (publish-ready, light) -->
+  <div id="descriptiveStatsModal" class="processing-modal hidden" role="dialog" aria-modal="true" aria-label="Descriptive Statistics">
+   <div class="max-w-3xl w-[92vw] max-h-[90vh] overflow-hidden rounded-2xl bg-white text-slate-900 border border-slate-200 shadow-2xl">
+    <div class="px-6 py-4 border-b border-slate-200 flex items-start justify-between gap-4">
+     <div>
+      <h3 id="statsModalTitle" class="text-lg font-semibold">Descriptive Statistics</h3>
+      <p id="statsModalSubtitle" class="text-xs text-slate-500 mt-1"></p>
+     </div>
+     <button id="closeStatsModalBtn" class="text-slate-500 hover:text-slate-900 text-2xl leading-none" aria-label="Close">×</button>
+    </div>
+    <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(90vh - 140px)">
+     <div class="flex gap-2 flex-wrap mb-4">
+      <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="length">Length</button>
+      <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="area">Area</button>
+      <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="particles">Particles</button>
+      <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="holes">Holes</button>
+     </div>
+     <div id="statsModalContent" class="space-y-4"></div>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-200 flex gap-2">
+    <button id="copyStatsTSVBtn" class="btn-secondary px-4 py-2 rounded-lg text-sm flex-1 text-white">Copy TSV</button>
+    <button id="closeStatsModalBtnBottom" class="btn-primary px-4 py-2 rounded-lg text-sm flex-1 text-white">Close</button>
+    </div>
+   </div>
+  </div>
+  <!-- Reset Confirmation Modal -->
+  <div id="resetConfirmModal" class="processing-modal hidden" role="dialog" aria-modal="true" aria-label="Reset confirmation">
+   <div class="processing-content max-w-lg">
+    <h3 class="text-lg font-semibold text-center mb-2">Reset MicroMeasure?</h3>
+    <p class="text-sm text-slate-300 text-center mb-4">
+     This will clear the loaded image, scale calibration, ROI selection, and all measurements/results (Length, Area, Particles, Holes). This cannot be undone.
+    </p>
+    <div class="flex gap-2">
+     <button id="confirmResetYes" class="btn-danger px-4 py-2 rounded-lg text-sm flex-1">Yes</button>
+     <button id="confirmResetNo" class="btn-secondary px-4 py-2 rounded-lg text-sm flex-1">No</button>
+    </div>
+   </div>
+  </div>
   <script>
     // ========== STATE ==========
     const state = {
@@ -848,6 +905,7 @@
       quickStartStep2: document.getElementById('quickStartStep2'),
       quickStartStep3: document.getElementById('quickStartStep3'),
       appTitle: document.getElementById('appTitle'),
+      headerResetBtn: document.getElementById('headerResetBtn'),
       
       // Tabs
       tabBtns: document.querySelectorAll('.tab-btn'),
@@ -856,6 +914,7 @@
       // Length
       lengthMeasurements: document.getElementById('lengthMeasurements'),
       clearLengths: document.getElementById('clearLengths'),
+      lengthStatsBtn: document.getElementById('lengthStatsBtn'),
       editLengthModeControls: document.getElementById('editLengthModeControls'),
       editingLengthLabel: document.getElementById('editingLengthLabel'),
       saveLengthEdit: document.getElementById('saveLengthEdit'),
@@ -864,6 +923,7 @@
       // Area
       areaMeasurements: document.getElementById('areaMeasurements'),
       clearAreas: document.getElementById('clearAreas'),
+      areaStatsBtn: document.getElementById('areaStatsBtn'),
       areaInstructions: document.getElementById('areaInstructions'),
       closePolygonBtn: document.getElementById('closePolygonBtn'),
       editModeControls: document.getElementById('editModeControls'),
@@ -893,6 +953,7 @@
       particleMeanECD: document.getElementById('particleMeanECD'),
       particleStdDev: document.getElementById('particleStdDev'),
       particleHistogram: document.getElementById('particleHistogram'),
+      particleStatsBtn: document.getElementById('particleStatsBtn'),
       
       // ROI controls
       selectParticleROI: document.getElementById('selectParticleROI'),
@@ -917,6 +978,7 @@
       holeMeanECD: document.getElementById('holeMeanECD'),
       holeStdDev: document.getElementById('holeStdDev'),
       holeHistogram: document.getElementById('holeHistogram'),
+      holeStatsBtn: document.getElementById('holeStatsBtn'),
       
       // Results
       saveScreenshot: document.getElementById('saveScreenshot'),
@@ -930,7 +992,20 @@
       processingTitle: document.getElementById('processingTitle'),
       processingStep: document.getElementById('processingStep'),
       processingTime: document.getElementById('processingTime'),
-      progressBar: document.getElementById('progressBar')
+      progressBar: document.getElementById('progressBar'),
+
+      // Descriptive statistics modal
+      descriptiveStatsModal: document.getElementById('descriptiveStatsModal'),
+      statsModalTitle: document.getElementById('statsModalTitle'),
+      statsModalSubtitle: document.getElementById('statsModalSubtitle'),
+      statsModalContent: document.getElementById('statsModalContent'),
+      statsTypeBtns: document.querySelectorAll('.stats-type-btn'),
+      closeStatsModalBtn: document.getElementById('closeStatsModalBtn'),
+      closeStatsModalBtnBottom: document.getElementById('closeStatsModalBtnBottom'),
+      copyStatsTSVBtn: document.getElementById('copyStatsTSVBtn'),
+      resetConfirmModal: document.getElementById('resetConfirmModal'),
+      confirmResetYes: document.getElementById('confirmResetYes'),
+      confirmResetNo: document.getElementById('confirmResetNo')
     };
     
     const mainCtx = elements.mainCanvas.getContext('2d');
@@ -1495,6 +1570,7 @@
         </div>
       `).join('');
       elements.clearLengths.classList.toggle('hidden', state.lengths.length === 0);
+      updateStatsButtonsVisibility();
     }
     
     window.deleteLengthMeasurement = function(index) {
@@ -1603,6 +1679,7 @@
         </div>
       `).join('');
       elements.clearAreas.classList.toggle('hidden', state.areas.length === 0);
+      updateStatsButtonsVisibility();
     }
     
     window.deleteAreaMeasurement = function(index) {
@@ -2095,6 +2172,309 @@
         std: Math.sqrt(variance)
       };
     }
+
+    // ========== DESCRIPTIVE STATISTICS (PUBLISH MODAL) ==========
+    let currentStatsType = 'length';
+    let lastStatsTSV = '';
+    let statsCopyIdleText = null;
+    let statsCopyTimer = null;
+
+    function quantile(sortedValues, p) {
+      const n = sortedValues.length;
+      if (n === 0) return NaN;
+      if (n === 1) return sortedValues[0];
+      const idx = (n - 1) * p;
+      const lo = Math.floor(idx);
+      const hi = Math.ceil(idx);
+      const h = idx - lo;
+      return sortedValues[lo] + (sortedValues[hi] - sortedValues[lo]) * h;
+    }
+
+    function computeDescriptiveStats(values) {
+      const clean = values.filter(v => Number.isFinite(v));
+      const n = clean.length;
+      if (!n) return null;
+      const sorted = [...clean].sort((a, b) => a - b);
+      const sum = clean.reduce((acc, v) => acc + v, 0);
+      const mean = sum / n;
+      const median = (n % 2 === 1) ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+      const min = sorted[0];
+      const max = sorted[n - 1];
+      const q1 = quantile(sorted, 0.25);
+      const q3 = quantile(sorted, 0.75);
+      const iqr = q3 - q1;
+
+      let std = 0;
+      if (n > 1) {
+        const ss = clean.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0);
+        std = Math.sqrt(ss / (n - 1)); // sample std dev
+      }
+      const sem = std / Math.sqrt(n);
+      const cv = mean !== 0 ? (std / mean) * 100 : 0;
+
+      return { n, sum, mean, median, std, sem, min, max, q1, q3, iqr, cv };
+    }
+
+    function statsUnitLabel(kind) {
+      if (kind === 'length') return state.isCalibrated ? state.unit : 'px';
+      if (kind === 'area') return state.isCalibrated ? `${state.unit}²` : 'px²';
+      if (kind === 'ecd') return state.isCalibrated ? state.unit : 'px';
+      if (kind === 'componentArea') return state.isCalibrated ? `${state.unit}²` : 'px²';
+      return '';
+    }
+
+    function getStatsSectionsForType(type) {
+      if (type === 'length') {
+        return [{
+          label: 'Length',
+          unit: statsUnitLabel('length'),
+          values: state.lengths.map(l => state.isCalibrated ? l.realLength : l.pixelLength)
+        }];
+      }
+      if (type === 'area') {
+        return [{
+          label: 'Area',
+          unit: statsUnitLabel('area'),
+          values: state.areas.map(a => state.isCalibrated ? a.realArea : a.pixelArea)
+        }];
+      }
+      if (type === 'particles') {
+        return [
+          {
+            label: 'Particle Area',
+            unit: statsUnitLabel('componentArea'),
+            values: state.particles.map(p => state.isCalibrated ? p.areaReal : p.areaPx)
+          },
+          {
+            label: 'Particle ECD',
+            unit: statsUnitLabel('ecd'),
+            values: state.particles.map(p => state.isCalibrated ? p.ecdReal : p.ecdPx)
+          }
+        ];
+      }
+      if (type === 'holes') {
+        return [
+          {
+            label: 'Hole Area',
+            unit: statsUnitLabel('componentArea'),
+            values: state.holes.map(h => state.isCalibrated ? h.areaReal : h.areaPx)
+          },
+          {
+            label: 'Hole ECD',
+            unit: statsUnitLabel('ecd'),
+            values: state.holes.map(h => state.isCalibrated ? h.ecdReal : h.ecdPx)
+          }
+        ];
+      }
+      return [];
+    }
+
+    function renderStatsTable(stats, unit) {
+      const fmt = (x) => Number.isFinite(x) ? formatNumber(x) : '-';
+      const row = (label, value) => `
+        <tr class="border-b border-slate-200">
+          <th class="text-left font-medium py-2 pr-3 align-top text-slate-700 w-[55%]">${label}</th>
+          <td class="py-2 mono text-slate-900">${value}</td>
+        </tr>
+      `;
+
+      return `
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <tbody>
+              ${row('Count (n)', stats.n)}
+              ${row('Mean', `${fmt(stats.mean)} ${unit}`)}
+              ${row('Median', `${fmt(stats.median)} ${unit}`)}
+              ${row('Std Dev (sample)', `${fmt(stats.std)} ${unit}`)}
+              ${row('Std Error (SEM)', `${fmt(stats.sem)} ${unit}`)}
+              ${row('Min', `${fmt(stats.min)} ${unit}`)}
+              ${row('Q1 (25%)', `${fmt(stats.q1)} ${unit}`)}
+              ${row('Q3 (75%)', `${fmt(stats.q3)} ${unit}`)}
+              ${row('Max', `${fmt(stats.max)} ${unit}`)}
+              ${row('IQR', `${fmt(stats.iqr)} ${unit}`)}
+              ${row('Sum', `${fmt(stats.sum)} ${unit}`)}
+              ${row('CV (%)', `${fmt(stats.cv)} %`)}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function buildStatsTSV(type, sections) {
+      const lines = [];
+      lines.push(`Type\tMetric\tUnit\tn\tMean\tMedian\tStdDev(sample)\tSEM\tMin\tQ1\tQ3\tMax\tIQR\tSum\tCV(%)`);
+      sections.forEach(sec => {
+        const stats = computeDescriptiveStats(sec.values);
+        if (!stats) return;
+        const vals = [
+          type,
+          sec.label,
+          sec.unit,
+          stats.n,
+          stats.mean,
+          stats.median,
+          stats.std,
+          stats.sem,
+          stats.min,
+          stats.q1,
+          stats.q3,
+          stats.max,
+          stats.iqr,
+          stats.sum,
+          stats.cv
+        ];
+        lines.push(vals.join('\t'));
+      });
+      return lines.join('\n');
+    }
+
+    function setStatsType(type) {
+      currentStatsType = type;
+      if (elements.statsTypeBtns) {
+        elements.statsTypeBtns.forEach(btn => {
+          const active = btn.dataset.statsType === type;
+          btn.classList.toggle('bg-blue-600', active);
+          btn.classList.toggle('text-white', active);
+          btn.classList.toggle('border-blue-600', active);
+          btn.classList.toggle('bg-slate-50', !active);
+          btn.classList.toggle('text-slate-800', !active);
+          btn.classList.toggle('border-slate-200', !active);
+        });
+      }
+      renderStatsModal();
+    }
+
+    function renderStatsModal() {
+      const type = currentStatsType;
+      const titleMap = {
+        length: 'Length — Descriptive Statistics',
+        area: 'Area — Descriptive Statistics',
+        particles: 'Particles — Descriptive Statistics',
+        holes: 'Holes — Descriptive Statistics'
+      };
+      if (elements.statsModalTitle) elements.statsModalTitle.textContent = titleMap[type] || 'Descriptive Statistics';
+
+      const sections = getStatsSectionsForType(type);
+      const totalN = sections.length ? (sections[0].values.filter(v => Number.isFinite(v)).length) : 0;
+      const unitNote = state.isCalibrated ? `Real units (${state.unit})` : 'Pixels (set scale for real units)';
+      if (elements.statsModalSubtitle) {
+        elements.statsModalSubtitle.textContent = `Based on ${totalN} values. ${unitNote}. (Shown only when n ≥ 4)`;
+      }
+
+      // Button availability: only when at least one section has n>=4
+      const hasEnough = sections.some(sec => sec.values.filter(v => Number.isFinite(v)).length >= 4);
+      if (elements.copyStatsTSVBtn) elements.copyStatsTSVBtn.disabled = !hasEnough;
+
+      if (!elements.statsModalContent) return;
+
+      if (!hasEnough) {
+        elements.statsModalContent.innerHTML = `
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-sm font-medium text-slate-800">Not enough data yet</p>
+            <p class="text-xs text-slate-600 mt-1">Add at least 4 measurements/objects in this category to show descriptive statistics.</p>
+          </div>
+        `;
+        lastStatsTSV = '';
+        return;
+      }
+
+      elements.statsModalContent.innerHTML = sections.map(sec => {
+        const n = sec.values.filter(v => Number.isFinite(v)).length;
+        if (n < 4) {
+          return `
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div class="flex items-baseline justify-between gap-2">
+                <h4 class="text-sm font-semibold text-slate-900">${sec.label}</h4>
+                <span class="text-xs text-slate-500 mono">n=${n}</span>
+              </div>
+              <p class="text-xs text-slate-600 mt-1">Need at least 4 values for this metric.</p>
+            </div>
+          `;
+        }
+        const stats = computeDescriptiveStats(sec.values);
+        return `
+          <div class="rounded-xl border border-slate-200 bg-white p-4">
+            <div class="flex items-baseline justify-between gap-2 mb-3">
+              <h4 class="text-sm font-semibold text-slate-900">${sec.label}</h4>
+              <span class="text-xs text-slate-500 mono">n=${stats.n} • ${sec.unit}</span>
+            </div>
+            ${renderStatsTable(stats, sec.unit)}
+          </div>
+        `;
+      }).join('');
+
+      lastStatsTSV = buildStatsTSV(type, sections);
+    }
+
+    function openStatsModal(type) {
+      if (!elements.descriptiveStatsModal) return;
+      elements.descriptiveStatsModal.classList.remove('hidden');
+      setStatsType(type);
+    }
+
+    function closeStatsModal() {
+      if (!elements.descriptiveStatsModal) return;
+      elements.descriptiveStatsModal.classList.add('hidden');
+    }
+
+    function setStatsCopyFeedback(text) {
+      const btn = elements.copyStatsTSVBtn;
+      if (!btn) return;
+
+      if (statsCopyIdleText === null) statsCopyIdleText = btn.textContent;
+      btn.textContent = text;
+
+      // Keep the button from being spam-clicked; restore soon.
+      btn.disabled = true;
+      if (statsCopyTimer) clearTimeout(statsCopyTimer);
+      statsCopyTimer = setTimeout(() => {
+        btn.textContent = statsCopyIdleText;
+        // Restore correct disabled state (depends on current dataset)
+        renderStatsModal();
+      }, 1200);
+    }
+
+    function fallbackCopyText(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return ok;
+    }
+
+    async function copyStatsTSV() {
+      if (!lastStatsTSV) {
+        setStatsCopyFeedback('No data');
+        return;
+      }
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(lastStatsTSV);
+          setStatsCopyFeedback('Copied');
+          return;
+        }
+      } catch (e) {
+        // Fall back below
+      }
+
+      const ok = fallbackCopyText(lastStatsTSV);
+      setStatsCopyFeedback(ok ? 'Copied' : 'Copy failed');
+    }
+
+    function updateStatsButtonsVisibility() {
+      if (elements.lengthStatsBtn) elements.lengthStatsBtn.classList.toggle('hidden', state.lengths.length < 4);
+      if (elements.areaStatsBtn) elements.areaStatsBtn.classList.toggle('hidden', state.areas.length < 4);
+      if (elements.particleStatsBtn) elements.particleStatsBtn.classList.toggle('hidden', state.particles.length < 4);
+      if (elements.holeStatsBtn) elements.holeStatsBtn.classList.toggle('hidden', state.holes.length < 4);
+    }
     
     function drawHistogram(canvas, data, color) {
       const ctx = canvas.getContext('2d');
@@ -2365,6 +2745,7 @@
       
       elements.particleResults.classList.remove('hidden');
       drawHistogram(elements.particleHistogram, state.particles.map(p => p.ecdPx), '#f97316');
+      updateStatsButtonsVisibility();
     }
     
     async function analyzeHoles() {
@@ -2483,6 +2864,7 @@
       
       elements.holeResults.classList.remove('hidden');
       drawHistogram(elements.holeHistogram, state.holes.map(h => h.ecdPx), '#a855f7');
+      updateStatsButtonsVisibility();
     }
     
     function updateMeasurementDisplays() {
@@ -2670,6 +3052,62 @@
       updateGuidance();
       updateSaveButtonState();
     }
+
+    function resetToStart() {
+      // Clear all measurements/results/state using existing logic
+      resetProject();
+
+      // Return to the initial "no image" state
+      state.image = null;
+      state.imageData = null;
+      state.zoom = 100;
+      state.panX = 0;
+      state.panY = 0;
+      state.isPanning = false;
+
+      // Re-show onboarding
+      state.quickStartDismissed = false;
+
+      // UI reset
+      elements.zoomSlider.value = 100;
+      elements.zoomValue.textContent = '100%';
+      elements.imageDimensions.classList.add('hidden');
+      elements.fitToView.classList.add('hidden');
+      const panControls = document.getElementById('panControls');
+      if (panControls) panControls.classList.add('hidden');
+
+      elements.noImagePlaceholder.classList.remove('hidden');
+      elements.mainCanvas.classList.add('hidden');
+      elements.overlayCanvas.classList.add('hidden');
+
+      elements.setScaleBtn.disabled = true;
+      elements.analyzeParticles.disabled = true;
+      elements.analyzeHoles.disabled = true;
+      elements.selectParticleROI.disabled = true;
+      elements.selectHoleROI.disabled = true;
+
+      // Hide calibration input panel if open
+      elements.calibrationInputs.classList.add('hidden');
+      state.isSettingScale = false;
+      state.scalePoints = [];
+
+      // Clear canvases
+      mainCtx.clearRect(0, 0, elements.mainCanvas.width, elements.mainCanvas.height);
+      overlayCtx.clearRect(0, 0, elements.overlayCanvas.width, elements.overlayCanvas.height);
+
+      updateGuidance();
+      updateSaveButtonState();
+    }
+
+    function openResetConfirm() {
+      if (!elements.resetConfirmModal) return;
+      elements.resetConfirmModal.classList.remove('hidden');
+    }
+
+    function closeResetConfirm() {
+      if (!elements.resetConfirmModal) return;
+      elements.resetConfirmModal.classList.add('hidden');
+    }
     
     // ========== EVENT LISTENERS ==========
     elements.imageInput.addEventListener('change', (e) => {
@@ -2716,9 +3154,11 @@
     elements.cancelScale.addEventListener('click', cancelScale);
     elements.resetScaleBtn.addEventListener('click', resetScale);
     elements.clearLengths.addEventListener('click', clearAllLengths);
+    if (elements.lengthStatsBtn) elements.lengthStatsBtn.addEventListener('click', () => openStatsModal('length'));
     elements.saveLengthEdit.addEventListener('click', saveLengthEdit);
     elements.cancelLengthEdit.addEventListener('click', cancelLengthEdit);
     elements.clearAreas.addEventListener('click', clearAllAreas);
+    if (elements.areaStatsBtn) elements.areaStatsBtn.addEventListener('click', () => openStatsModal('area'));
     elements.closePolygonBtn.addEventListener('click', () => {
       if (state.areaPoints.length >= 3) {
         addAreaMeasurement(state.areaPoints);
@@ -2731,6 +3171,8 @@
     elements.cancelAreaEdit.addEventListener('click', cancelAreaEdit);
     elements.analyzeParticles.addEventListener('click', analyzeParticles);
     elements.analyzeHoles.addEventListener('click', analyzeHoles);
+    if (elements.particleStatsBtn) elements.particleStatsBtn.addEventListener('click', () => openStatsModal('particles'));
+    if (elements.holeStatsBtn) elements.holeStatsBtn.addEventListener('click', () => openStatsModal('holes'));
     elements.selectParticleROI.addEventListener('click', () => startROISelection('particles'));
     elements.clearParticleROI.addEventListener('click', () => clearROI('particles'));
     elements.selectHoleROI.addEventListener('click', () => startROISelection('holes'));
@@ -2739,6 +3181,19 @@
     elements.copyTable.addEventListener('click', copyTableTSV);
     elements.downloadCSV.addEventListener('click', exportCSV);
     elements.resetProject.addEventListener('click', resetProject);
+
+    // Header reset with confirmation
+    if (elements.headerResetBtn) elements.headerResetBtn.addEventListener('click', openResetConfirm);
+    if (elements.confirmResetNo) elements.confirmResetNo.addEventListener('click', closeResetConfirm);
+    if (elements.confirmResetYes) elements.confirmResetYes.addEventListener('click', () => {
+      closeResetConfirm();
+      resetToStart();
+    });
+    if (elements.resetConfirmModal) {
+      elements.resetConfirmModal.addEventListener('click', (e) => {
+        if (e.target === elements.resetConfirmModal) closeResetConfirm();
+      });
+    }
     
     // Documentation modal
     document.getElementById('helpBtn').addEventListener('click', () => {
@@ -2813,6 +3268,21 @@
       elements.holeThreshold.value = threshold;
       elements.holeThresholdValue.textContent = threshold;
     });
+
+    // Descriptive stats modal controls
+    if (elements.closeStatsModalBtn) elements.closeStatsModalBtn.addEventListener('click', closeStatsModal);
+    if (elements.closeStatsModalBtnBottom) elements.closeStatsModalBtnBottom.addEventListener('click', closeStatsModal);
+    if (elements.copyStatsTSVBtn) elements.copyStatsTSVBtn.addEventListener('click', copyStatsTSV);
+    if (elements.statsTypeBtns) {
+      elements.statsTypeBtns.forEach(btn => {
+        btn.addEventListener('click', () => setStatsType(btn.dataset.statsType));
+      });
+    }
+    if (elements.descriptiveStatsModal) {
+      elements.descriptiveStatsModal.addEventListener('click', (e) => {
+        if (e.target === elements.descriptiveStatsModal) closeStatsModal();
+      });
+    }
     
     elements.autoThresholdBtn.addEventListener('click', () => {
       if (!state.image) return;
