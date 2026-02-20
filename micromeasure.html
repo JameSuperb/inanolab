@@ -397,6 +397,7 @@
         <div id="lengthMeasurements" class="scrollbar-thin mb-3"></div>
         <div class="flex gap-2">
          <button id="lengthStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Descriptive Statistics</button>
+         <button id="lengthHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Histogram</button>
          <button id="clearLengths" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Clear All Lengths</button>
         </div>
       </div><!-- Area Tab -->
@@ -411,6 +412,7 @@
       <div id="areaMeasurements" class="scrollbar-thin mb-3"></div>
       <div class="flex gap-2">
        <button id="areaStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Descriptive Statistics</button>
+        <button id="areaHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Histogram</button>
        <button id="clearAreas" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Clear All Areas</button>
       </div>
       </div><!-- Particles Tab -->
@@ -469,7 +471,8 @@
           <canvas id="particleHistogram" class="histogram-canvas w-full h-24"></canvas>
          </div>
         </div>
-          <button id="particleStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Descriptive Statistics</button>
+           <button id="particleStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Descriptive Statistics</button>
+           <button id="particleHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Histogram</button>
        </div>
       </div><!-- Holes Tab -->
       <div id="holesTab" class="tab-content hidden">
@@ -528,6 +531,7 @@
          </div>
         </div>
         <button id="holeStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Descriptive Statistics</button>
+        <button id="holeHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Histogram</button>
        </div>
       </div><!-- Results Tab -->
       <div id="resultsTab" class="tab-content hidden">
@@ -807,6 +811,70 @@
     </div>
    </div>
   </div>
+  <!-- Histogram Modal (publish-ready, light) -->
+  <div id="histogramModal" class="processing-modal hidden" role="dialog" aria-modal="true" aria-label="Histogram">
+   <div class="max-w-4xl w-[94vw] max-h-[92vh] overflow-hidden rounded-2xl bg-white text-slate-900 border border-slate-200 shadow-2xl">
+    <div class="px-6 py-4 border-b border-slate-200 flex items-start justify-between gap-4">
+     <div>
+      <h3 id="histModalTitle" class="text-lg font-semibold">Histogram</h3>
+      <p id="histModalSubtitle" class="text-xs text-slate-500 mt-1"></p>
+     </div>
+     <button id="closeHistModalBtn" class="text-slate-500 hover:text-slate-900 text-2xl leading-none" aria-label="Close">×</button>
+    </div>
+    <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(92vh - 160px)">
+     <div class="flex gap-2 flex-wrap mb-4">
+      <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="length">Length</button>
+      <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="area">Area</button>
+      <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="particles">Particles</button>
+      <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="holes">Holes</button>
+     </div>
+     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start mb-4">
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+       <div class="flex items-center justify-between gap-3">
+        <label for="histBinsNumber" class="text-xs font-medium text-slate-700">Bins</label>
+        <input id="histBinsNumber" type="number" min="3" max="80" step="1" value="15" class="w-24 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs mono text-slate-900" />
+       </div>
+        <div class="flex items-center justify-between gap-3 mt-3">
+         <label for="histXTicksNumber" class="text-xs font-medium text-slate-700">X-axis divisions</label>
+         <input id="histXTicksNumber" type="number" min="2" max="12" step="1" value="6" class="w-24 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs mono text-slate-900" />
+        </div>
+        <div class="flex items-center justify-between gap-3 mt-3">
+         <label for="histYTicksNumber" class="text-xs font-medium text-slate-700">Y-axis divisions</label>
+         <input id="histYTicksNumber" type="number" min="2" max="12" step="1" value="6" class="w-24 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs mono text-slate-900" />
+        </div>
+       <div class="mt-3">
+        <label for="histMetricSelect" class="text-xs font-medium text-slate-700">Metric</label>
+        <select id="histMetricSelect" class="w-full mt-1 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs text-slate-900">
+         <option value="auto" selected>Auto</option>
+         <option value="area">Area</option>
+         <option value="ecd">ECD</option>
+        </select>
+        <p class="text-[11px] text-slate-500 mt-1">Metric applies to Particles/Holes (Length/Area ignore it).</p>
+       </div>
+      </div>
+      <div class="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-4">
+       <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+        <div class="text-xs text-slate-600">
+         <span class="font-medium">n:</span> <span id="histN" class="mono">-</span>
+         <span class="ml-3 font-medium">Range:</span> <span id="histRange" class="mono">-</span>
+        </div>
+        <button id="downloadHistSvgBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs text-white">Download SVG</button>
+       </div>
+       <div class="overflow-x-auto">
+        <svg id="histSvg" class="w-full" viewBox="0 0 900 520" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Histogram chart"></svg>
+       </div>
+       <div id="histEmptyNote" class="hidden mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <p class="text-xs text-slate-700 font-medium">Not enough data</p>
+        <p class="text-xs text-slate-600 mt-1">Add measurements/objects to generate a histogram.</p>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div class="px-6 py-4 border-t border-slate-200 flex gap-2">
+     <button id="closeHistModalBtnBottom" class="btn-primary px-4 py-2 rounded-lg text-sm flex-1 text-white">Close</button>
+    </div>
+   </div>
+  </div>
   <!-- Reset Confirmation Modal -->
   <div id="resetConfirmModal" class="processing-modal hidden" role="dialog" aria-modal="true" aria-label="Reset confirmation">
    <div class="processing-content max-w-lg">
@@ -915,6 +983,7 @@
       lengthMeasurements: document.getElementById('lengthMeasurements'),
       clearLengths: document.getElementById('clearLengths'),
       lengthStatsBtn: document.getElementById('lengthStatsBtn'),
+      lengthHistBtn: document.getElementById('lengthHistBtn'),
       editLengthModeControls: document.getElementById('editLengthModeControls'),
       editingLengthLabel: document.getElementById('editingLengthLabel'),
       saveLengthEdit: document.getElementById('saveLengthEdit'),
@@ -924,6 +993,7 @@
       areaMeasurements: document.getElementById('areaMeasurements'),
       clearAreas: document.getElementById('clearAreas'),
       areaStatsBtn: document.getElementById('areaStatsBtn'),
+      areaHistBtn: document.getElementById('areaHistBtn'),
       areaInstructions: document.getElementById('areaInstructions'),
       closePolygonBtn: document.getElementById('closePolygonBtn'),
       editModeControls: document.getElementById('editModeControls'),
@@ -954,6 +1024,7 @@
       particleStdDev: document.getElementById('particleStdDev'),
       particleHistogram: document.getElementById('particleHistogram'),
       particleStatsBtn: document.getElementById('particleStatsBtn'),
+      particleHistBtn: document.getElementById('particleHistBtn'),
       
       // ROI controls
       selectParticleROI: document.getElementById('selectParticleROI'),
@@ -979,6 +1050,7 @@
       holeStdDev: document.getElementById('holeStdDev'),
       holeHistogram: document.getElementById('holeHistogram'),
       holeStatsBtn: document.getElementById('holeStatsBtn'),
+      holeHistBtn: document.getElementById('holeHistBtn'),
       
       // Results
       saveScreenshot: document.getElementById('saveScreenshot'),
@@ -1003,6 +1075,23 @@
       closeStatsModalBtn: document.getElementById('closeStatsModalBtn'),
       closeStatsModalBtnBottom: document.getElementById('closeStatsModalBtnBottom'),
       copyStatsTSVBtn: document.getElementById('copyStatsTSVBtn'),
+
+      // Histogram modal
+      histogramModal: document.getElementById('histogramModal'),
+      histModalTitle: document.getElementById('histModalTitle'),
+      histModalSubtitle: document.getElementById('histModalSubtitle'),
+      histTypeBtns: document.querySelectorAll('.hist-type-btn'),
+      closeHistModalBtn: document.getElementById('closeHistModalBtn'),
+      closeHistModalBtnBottom: document.getElementById('closeHistModalBtnBottom'),
+      histBinsNumber: document.getElementById('histBinsNumber'),
+      histXTicksNumber: document.getElementById('histXTicksNumber'),
+      histYTicksNumber: document.getElementById('histYTicksNumber'),
+      histMetricSelect: document.getElementById('histMetricSelect'),
+      histSvg: document.getElementById('histSvg'),
+      histN: document.getElementById('histN'),
+      histRange: document.getElementById('histRange'),
+      histEmptyNote: document.getElementById('histEmptyNote'),
+      downloadHistSvgBtn: document.getElementById('downloadHistSvgBtn'),
       resetConfirmModal: document.getElementById('resetConfirmModal'),
       confirmResetYes: document.getElementById('confirmResetYes'),
       confirmResetNo: document.getElementById('confirmResetNo')
@@ -2469,11 +2558,299 @@
       setStatsCopyFeedback(ok ? 'Copied' : 'Copy failed');
     }
 
+    // ========== HISTOGRAM MODAL (publish-ready, light) ==========
+    let currentHistType = 'length';
+
+    function histogramUnitLabel(type, metric) {
+      if (type === 'length') return statsUnitLabel('length');
+      if (type === 'area') return statsUnitLabel('area');
+      if (type === 'particles' || type === 'holes') {
+        if (metric === 'area') return statsUnitLabel('componentArea');
+        return statsUnitLabel('ecd');
+      }
+      return '';
+    }
+
+    function getHistogramSeriesForType(type) {
+      const metricPref = elements.histMetricSelect ? elements.histMetricSelect.value : 'auto';
+      const metric = (type === 'particles' || type === 'holes')
+        ? (metricPref === 'auto' ? 'ecd' : metricPref)
+        : 'value';
+
+      let values = [];
+      let label = '';
+      let unit = '';
+
+      if (type === 'length') {
+        values = state.lengths.map(l => state.isCalibrated ? l.realLength : l.pixelLength);
+        unit = histogramUnitLabel('length');
+        label = `Length (${unit})`;
+      } else if (type === 'area') {
+        values = state.areas.map(a => state.isCalibrated ? a.realArea : a.pixelArea);
+        unit = histogramUnitLabel('area');
+        label = `Area (${unit})`;
+      } else if (type === 'particles') {
+        if (metric === 'area') {
+          values = state.particles.map(p => state.isCalibrated ? p.areaReal : p.areaPx);
+          unit = histogramUnitLabel('particles', 'area');
+          label = `Particle Area (${unit})`;
+        } else {
+          values = state.particles.map(p => state.isCalibrated ? p.ecdReal : p.ecdPx);
+          unit = histogramUnitLabel('particles', 'ecd');
+          label = `Particle ECD (${unit})`;
+        }
+      } else if (type === 'holes') {
+        if (metric === 'area') {
+          values = state.holes.map(h => state.isCalibrated ? h.areaReal : h.areaPx);
+          unit = histogramUnitLabel('holes', 'area');
+          label = `Hole Area (${unit})`;
+        } else {
+          values = state.holes.map(h => state.isCalibrated ? h.ecdReal : h.ecdPx);
+          unit = histogramUnitLabel('holes', 'ecd');
+          label = `Hole ECD (${unit})`;
+        }
+      }
+
+      const clean = values.filter(v => Number.isFinite(v));
+      return { values: clean, label, unit, metric };
+    }
+
+    function computeHistogram(values, binCount) {
+      if (!values.length) return { bins: [], min: NaN, max: NaN };
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const range = (max - min) || 1;
+      const k = Math.max(3, Math.min(80, Math.round(binCount)));
+      const step = range / k;
+
+      const bins = new Array(k).fill(0);
+      for (const v of values) {
+        const idx = Math.min(k - 1, Math.max(0, Math.floor((v - min) / step)));
+        bins[idx] += 1;
+      }
+      return { bins, min, max };
+    }
+
+    function escapeXml(s) {
+      return String(s)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&apos;');
+    }
+
+    function niceTicks(min, max, tickCount = 5) {
+      if (!Number.isFinite(min) || !Number.isFinite(max)) return [];
+      if (min === max) return [min];
+      const span = max - min;
+      const rawStep = span / Math.max(1, tickCount);
+      const mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      const norm = rawStep / mag;
+      const niceNorm = norm <= 1 ? 1 : (norm <= 2 ? 2 : (norm <= 5 ? 5 : 10));
+      const step = niceNorm * mag;
+      const start = Math.floor(min / step) * step;
+      const end = Math.ceil(max / step) * step;
+      const out = [];
+      for (let v = start; v <= end + step / 2; v += step) out.push(v);
+      return out;
+    }
+
+    function renderHistogramSvg() {
+      const svg = elements.histSvg;
+      if (!svg) return;
+
+      const binsInput = elements.histBinsNumber ? parseInt(elements.histBinsNumber.value || '15', 10) : 15;
+      const binCount = Number.isFinite(binsInput) ? binsInput : 15;
+
+      const xTicksInput = elements.histXTicksNumber ? parseInt(elements.histXTicksNumber.value || '6', 10) : 6;
+      const xTickCount = Number.isFinite(xTicksInput) ? xTicksInput : 6;
+
+      const yTicksInput = elements.histYTicksNumber ? parseInt(elements.histYTicksNumber.value || '6', 10) : 6;
+      const yTickCount = Number.isFinite(yTicksInput) ? yTicksInput : 6;
+
+      const { values, label } = getHistogramSeriesForType(currentHistType);
+      const n = values.length;
+
+      if (elements.histN) elements.histN.textContent = n ? String(n) : '0';
+
+      if (!n) {
+        svg.innerHTML = '';
+        if (elements.histRange) elements.histRange.textContent = '-';
+        if (elements.histEmptyNote) elements.histEmptyNote.classList.remove('hidden');
+        if (elements.downloadHistSvgBtn) elements.downloadHistSvgBtn.disabled = true;
+        return;
+      }
+
+      if (elements.histEmptyNote) elements.histEmptyNote.classList.add('hidden');
+      if (elements.downloadHistSvgBtn) elements.downloadHistSvgBtn.disabled = false;
+
+      const { bins, min, max } = computeHistogram(values, binCount);
+      if (elements.histRange) elements.histRange.textContent = `${formatNumber(min)} to ${formatNumber(max)}`;
+
+      const W = 900, H = 520;
+      const margin = { l: 76, r: 22, t: 52, b: 74 };
+      const iw = W - margin.l - margin.r;
+      const ih = H - margin.t - margin.b;
+      const x0 = margin.l;
+      const y0 = margin.t + ih;
+
+      const maxCount = Math.max(...bins, 1);
+      const barW = iw / bins.length;
+      const yScale = (c) => (margin.t + ih) - (c / maxCount) * ih;
+
+      const xTicks = niceTicks(min, max, Math.max(2, Math.min(12, xTickCount)));
+      const yTicks = niceTicks(0, maxCount, Math.max(2, Math.min(12, yTickCount)));
+
+      const gridY = yTicks.map(v => {
+        const y = yScale(v);
+        return `<line x1="${x0}" y1="${y}" x2="${x0 + iw}" y2="${y}" stroke="#e5e7eb" stroke-width="1" />`;
+      }).join('\n');
+
+      const gridX = xTicks.map(v => {
+        const t = (v - min) / ((max - min) || 1);
+        if (t <= 0 || t >= 1) return '';
+        const x = x0 + t * iw;
+        return `<line x1="${x}" y1="${margin.t}" x2="${x}" y2="${y0}" stroke="#e5e7eb" stroke-width="1" />`;
+      }).filter(Boolean).join('\n');
+
+      const bars = bins.map((c, i) => {
+        const x = x0 + i * barW;
+        const y = yScale(c);
+        const h = y0 - y;
+        return `<rect x="${x + 1}" y="${y}" width="${Math.max(0, barW - 2)}" height="${h}" style="fill: #3b82f6; fill: var(--accent-primary); fill-opacity: 0.85; stroke: #3b82f6; stroke: var(--accent-primary); stroke-opacity: 0.55;" />`;
+      }).join('\n');
+
+      const axis = `
+        <line x1="${x0}" y1="${y0}" x2="${x0 + iw}" y2="${y0}" stroke="#0f172a" stroke-width="1.5" />
+        <line x1="${x0}" y1="${margin.t}" x2="${x0}" y2="${y0}" stroke="#0f172a" stroke-width="1.5" />
+      `;
+
+      const yLabels = yTicks.map(v => {
+        const y = yScale(v);
+        return `
+          <line x1="${x0 - 6}" y1="${y}" x2="${x0}" y2="${y}" stroke="#0f172a" stroke-width="1.25" />
+          <text x="${x0 - 10}" y="${y}" text-anchor="end" dominant-baseline="middle" font-family="Inter, sans-serif" font-size="12" fill="#0f172a">${escapeXml(String(Math.round(v)))}</text>
+        `;
+      }).join('\n');
+
+      const xLabels = xTicks.map(v => {
+        const t = (v - min) / ((max - min) || 1);
+        const x = x0 + t * iw;
+        return `
+          <line x1="${x}" y1="${y0}" x2="${x}" y2="${y0 + 6}" stroke="#0f172a" stroke-width="1.25" />
+          <text x="${x}" y="${y0 + 22}" text-anchor="middle" dominant-baseline="hanging" font-family="Inter, sans-serif" font-size="12" fill="#0f172a">${escapeXml(formatNumber(v))}</text>
+        `;
+      }).join('\n');
+
+      const titleMap = {
+        length: 'Length Histogram',
+        area: 'Area Histogram',
+        particles: 'Particles Histogram',
+        holes: 'Holes Histogram'
+      };
+      const title = titleMap[currentHistType] || 'Histogram';
+
+      svg.innerHTML = `
+        <rect x="0" y="0" width="${W}" height="${H}" fill="#ffffff" />
+        <text x="${margin.l}" y="28" font-family="Inter, sans-serif" font-size="18" font-weight="600" fill="#0f172a">${escapeXml(title)}</text>
+        <text x="${margin.l}" y="48" font-family="Inter, sans-serif" font-size="12" fill="#64748b">${escapeXml(label)} • bins=${bins.length}</text>
+        ${gridY}
+        ${gridX}
+        ${axis}
+        ${bars}
+        ${yLabels}
+        ${xLabels}
+        <text x="${margin.l + iw / 2}" y="${H - 26}" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" fill="#0f172a">${escapeXml(label)}</text>
+        <text x="18" y="${margin.t + ih / 2}" text-anchor="middle" transform="rotate(-90 18 ${margin.t + ih / 2})" font-family="Inter, sans-serif" font-size="13" fill="#0f172a">Count</text>
+      `;
+    }
+
+    function setHistType(type) {
+      currentHistType = type;
+      if (elements.histTypeBtns) {
+        elements.histTypeBtns.forEach(btn => {
+          const active = btn.dataset.histType === type;
+          btn.classList.toggle('bg-blue-600', active);
+          btn.classList.toggle('text-white', active);
+          btn.classList.toggle('border-blue-600', active);
+          btn.classList.toggle('bg-slate-50', !active);
+          btn.classList.toggle('text-slate-800', !active);
+          btn.classList.toggle('border-slate-200', !active);
+        });
+      }
+      renderHistogramModal();
+    }
+
+    function renderHistogramModal() {
+      const titleMap = {
+        length: 'Length — Histogram',
+        area: 'Area — Histogram',
+        particles: 'Particles — Histogram',
+        holes: 'Holes — Histogram'
+      };
+      if (elements.histModalTitle) elements.histModalTitle.textContent = titleMap[currentHistType] || 'Histogram';
+
+      const unitNote = state.isCalibrated ? `Real units (${state.unit})` : 'Pixels (set scale for real units)';
+      if (elements.histModalSubtitle) {
+        elements.histModalSubtitle.textContent = `${unitNote}. Adjust bins to control resolution.`;
+      }
+
+      const showMetric = (currentHistType === 'particles' || currentHistType === 'holes');
+      if (elements.histMetricSelect) {
+        elements.histMetricSelect.disabled = !showMetric;
+        if (elements.histMetricSelect.parentElement) {
+          elements.histMetricSelect.parentElement.classList.toggle('opacity-60', !showMetric);
+        }
+      }
+
+      renderHistogramSvg();
+    }
+
+    function openHistogramModal(type) {
+      if (!elements.histogramModal) return;
+      elements.histogramModal.classList.remove('hidden');
+      setHistType(type);
+    }
+
+    function closeHistogramModal() {
+      if (!elements.histogramModal) return;
+      elements.histogramModal.classList.add('hidden');
+    }
+
+    function downloadCurrentHistogramSvg() {
+      const svg = elements.histSvg;
+      if (!svg || !svg.innerHTML.trim()) return;
+
+      const serializer = new XMLSerializer();
+      const svgText = serializer.serializeToString(svg);
+      const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `micromeasure_histogram_${currentHistType}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
     function updateStatsButtonsVisibility() {
-      if (elements.lengthStatsBtn) elements.lengthStatsBtn.classList.toggle('hidden', state.lengths.length < 4);
-      if (elements.areaStatsBtn) elements.areaStatsBtn.classList.toggle('hidden', state.areas.length < 4);
-      if (elements.particleStatsBtn) elements.particleStatsBtn.classList.toggle('hidden', state.particles.length < 4);
-      if (elements.holeStatsBtn) elements.holeStatsBtn.classList.toggle('hidden', state.holes.length < 4);
+      const showLen = state.lengths.length >= 4;
+      const showArea = state.areas.length >= 4;
+      const showParticles = state.particles.length >= 4;
+      const showHoles = state.holes.length >= 4;
+
+      if (elements.lengthStatsBtn) elements.lengthStatsBtn.classList.toggle('hidden', !showLen);
+      if (elements.lengthHistBtn) elements.lengthHistBtn.classList.toggle('hidden', !showLen);
+      if (elements.areaStatsBtn) elements.areaStatsBtn.classList.toggle('hidden', !showArea);
+      if (elements.areaHistBtn) elements.areaHistBtn.classList.toggle('hidden', !showArea);
+      if (elements.particleStatsBtn) elements.particleStatsBtn.classList.toggle('hidden', !showParticles);
+      if (elements.particleHistBtn) elements.particleHistBtn.classList.toggle('hidden', !showParticles);
+      if (elements.holeStatsBtn) elements.holeStatsBtn.classList.toggle('hidden', !showHoles);
+      if (elements.holeHistBtn) elements.holeHistBtn.classList.toggle('hidden', !showHoles);
+
+      if (elements.histogramModal && !elements.histogramModal.classList.contains('hidden')) {
+        renderHistogramModal();
+      }
     }
     
     function drawHistogram(canvas, data, color) {
@@ -3155,10 +3532,12 @@
     elements.resetScaleBtn.addEventListener('click', resetScale);
     elements.clearLengths.addEventListener('click', clearAllLengths);
     if (elements.lengthStatsBtn) elements.lengthStatsBtn.addEventListener('click', () => openStatsModal('length'));
+    if (elements.lengthHistBtn) elements.lengthHistBtn.addEventListener('click', () => openHistogramModal('length'));
     elements.saveLengthEdit.addEventListener('click', saveLengthEdit);
     elements.cancelLengthEdit.addEventListener('click', cancelLengthEdit);
     elements.clearAreas.addEventListener('click', clearAllAreas);
     if (elements.areaStatsBtn) elements.areaStatsBtn.addEventListener('click', () => openStatsModal('area'));
+    if (elements.areaHistBtn) elements.areaHistBtn.addEventListener('click', () => openHistogramModal('area'));
     elements.closePolygonBtn.addEventListener('click', () => {
       if (state.areaPoints.length >= 3) {
         addAreaMeasurement(state.areaPoints);
@@ -3173,6 +3552,8 @@
     elements.analyzeHoles.addEventListener('click', analyzeHoles);
     if (elements.particleStatsBtn) elements.particleStatsBtn.addEventListener('click', () => openStatsModal('particles'));
     if (elements.holeStatsBtn) elements.holeStatsBtn.addEventListener('click', () => openStatsModal('holes'));
+    if (elements.particleHistBtn) elements.particleHistBtn.addEventListener('click', () => openHistogramModal('particles'));
+    if (elements.holeHistBtn) elements.holeHistBtn.addEventListener('click', () => openHistogramModal('holes'));
     elements.selectParticleROI.addEventListener('click', () => startROISelection('particles'));
     elements.clearParticleROI.addEventListener('click', () => clearROI('particles'));
     elements.selectHoleROI.addEventListener('click', () => startROISelection('holes'));
@@ -3281,6 +3662,43 @@
     if (elements.descriptiveStatsModal) {
       elements.descriptiveStatsModal.addEventListener('click', (e) => {
         if (e.target === elements.descriptiveStatsModal) closeStatsModal();
+      });
+    }
+
+    // Histogram modal controls
+    if (elements.closeHistModalBtn) elements.closeHistModalBtn.addEventListener('click', closeHistogramModal);
+    if (elements.closeHistModalBtnBottom) elements.closeHistModalBtnBottom.addEventListener('click', closeHistogramModal);
+    if (elements.downloadHistSvgBtn) elements.downloadHistSvgBtn.addEventListener('click', downloadCurrentHistogramSvg);
+    if (elements.histBinsNumber) {
+      elements.histBinsNumber.addEventListener('input', () => {
+        const v = Math.max(3, Math.min(80, parseInt(elements.histBinsNumber.value || '15', 10)));
+        elements.histBinsNumber.value = String(v);
+        renderHistogramModal();
+      });
+    }
+    if (elements.histXTicksNumber) {
+      elements.histXTicksNumber.addEventListener('input', () => {
+        const v = Math.max(2, Math.min(12, parseInt(elements.histXTicksNumber.value || '6', 10)));
+        elements.histXTicksNumber.value = String(v);
+        renderHistogramModal();
+      });
+    }
+    if (elements.histYTicksNumber) {
+      elements.histYTicksNumber.addEventListener('input', () => {
+        const v = Math.max(2, Math.min(12, parseInt(elements.histYTicksNumber.value || '6', 10)));
+        elements.histYTicksNumber.value = String(v);
+        renderHistogramModal();
+      });
+    }
+    if (elements.histMetricSelect) elements.histMetricSelect.addEventListener('change', renderHistogramModal);
+    if (elements.histTypeBtns) {
+      elements.histTypeBtns.forEach(btn => {
+        btn.addEventListener('click', () => setHistType(btn.dataset.histType));
+      });
+    }
+    if (elements.histogramModal) {
+      elements.histogramModal.addEventListener('click', (e) => {
+        if (e.target === elements.histogramModal) closeHistogramModal();
       });
     }
     
