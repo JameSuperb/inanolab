@@ -622,7 +622,7 @@
      <section>
       <h3 class="text-xl font-bold text-blue-400 mb-3">Web-Based Image Analysis and Measurement Tool</h3>
       <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 space-y-2">
-       <p><strong>Version:</strong> 1.0</p>
+        <p><strong>Version:</strong> 1.1</p>
        <p><strong>Website:</strong> <a href="https://www.inanolab.com/micromeasure.html" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline">https://www.inanolab.com/micromeasure.html</a></p>
        <p><strong>Developer / Programmer:</strong> Dr. James Salveo Olarve</p>
        <p><strong>Affiliation:</strong> i-Nano Research Facility, De La Salle University Manila</p>
@@ -676,6 +676,18 @@
       <li>Click the <strong>×</strong> button to delete a measurement</li>
       </ul>
      </section><!-- Area Measurements -->
+      <section>
+       <h3 class="text-lg font-semibold text-white mb-2">📐 Angle Measurements</h3>
+       <p class="text-slate-300 mb-2">Measure the angle formed by two rays meeting at a vertex:</p>
+       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+        <li>Switch to the <strong>Angle</strong> tab</li>
+        <li>Click <strong>three</strong> points on the image</li>
+        <li>The <strong>second</strong> point is the <strong>vertex</strong> (middle point)</li>
+        <li>Each angle is labeled (Ang1, Ang2, etc.) and reported in <strong>degrees (deg)</strong></li>
+        <li>Use the <strong>Edit (✏️)</strong> button to adjust by dragging any of the three points, then <strong>Save Changes</strong> or <strong>Cancel</strong></li>
+        <li>Use the <strong>Eye (👁)</strong> button to show/hide, and <strong>×</strong> to delete</li>
+       </ul>
+      </section><!-- Area Measurements -->
      <section>
       <h3 class="text-lg font-semibold text-white mb-2">📊 Area Measurements</h3>
       <p class="text-slate-300 mb-2">Measure polygon areas by defining vertices:</p>
@@ -749,6 +761,18 @@
        <li>Each detected hole is outlined in purple on the image</li>
       </ul>
      </section><!-- Navigation & Controls -->
+      <section>
+       <h3 class="text-lg font-semibold text-white mb-2">📈 Descriptive Statistics &amp; Histogram</h3>
+       <p class="text-slate-300 mb-2">Summarize and visualize your measurements:</p>
+       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
+        <li><strong>Descriptive Statistics</strong> shows mean, median, standard deviation, quartiles, etc.</li>
+        <li><strong>Histogram</strong> shows the distribution of values (adjust bin count in the histogram window).</li>
+        <li>Buttons appear when there is enough data (shown when <strong>n ≥ 4</strong> for the selected feature).</li>
+        <li>For <strong>Length/Area/Particles/Holes</strong>, values are shown in pixels until scale is calibrated (then real units are shown).</li>
+        <li><strong>Angle</strong> is always in <strong>degrees</strong> and does not require calibration.</li>
+        <li>In the histogram window, <strong>Particles/Holes</strong> can be plotted by <strong>ECD</strong> or <strong>Area</strong> (metric selector).</li>
+       </ul>
+      </section><!-- Results & Export -->
     <section>
      <h3 class="text-lg font-semibold text-white mb-2">🧭 Navigation &amp; Controls</h3>
       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
@@ -765,6 +789,7 @@
        <li><strong>Save Image</strong> - Export image with all measurements overlaid (PNG)</li>
          <li><strong>Copy TSV</strong> - Copy the current tab’s data as tab-separated values (paste into spreadsheets)</li>
          <li><strong>Download TSV</strong> - Download the current tab’s data as a .tsv file</li>
+           <li><strong>Note:</strong> Export buttons appear only when the current tab has at least one measurement/object.</li>
          <li><strong>Reset</strong> - Use the reset control to clear measurements and restart</li>
       </ul>
      </section><!-- Tips & Tricks -->
