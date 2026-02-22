@@ -1,0 +1,1551 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SEM Roughness Visualizer (NxN)</title>
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+  <style>
+    :root{
+      /* Light / publication-friendly theme */
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --ink:#0b1220;
+      --muted:#4b5565;
+      --line:#d7dbe5;
+      --grid:#e8ebf2;
+      --accent:#1f6fff;
+      --accent-2:#0b5cff;
+      --danger:#d92d45;
+
+      --plot-bg:#ffffff;
+      --plot-axis:#111827;
+      --plot-grid:#e5e7eb;
+      --tab-bg:#f2f4f8;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--ink);
+    }
+    .wrap{ max-width:1500px; margin:0 auto; padding:16px; display:grid; gap:12px; }
+    .top{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; }
+    h1{ margin:0; font-size:16px; font-weight:900; letter-spacing:.2px; }
+    .pill{
+      display:inline-block; padding:3px 8px; border:1px solid var(--line);
+      border-radius:999px; font-size:11px; color:var(--muted); margin-left:8px; background:#fff;
+    }
+    .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      box-shadow: 0 2px 10px rgba(10,18,32,0.04);
+    }
+
+    /* New layout: Controls left, Views right */
+    .grid{
+      display:grid;
+      grid-template-columns: 420px 1fr;
+      gap:12px;
+      align-items:start;
+    }
+    @media (max-width: 1100px){
+      .grid{ grid-template-columns:1fr; }
+    }
+
+    label{ font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center; }
+    input[type="number"], select{
+      background:#fff;
+      border:1px solid var(--line);
+      color:var(--ink);
+      border-radius:10px;
+      padding:8px 10px;
+      outline:none;
+      width:150px;
+    }
+    input[type="range"]{ width:190px; }
+    input[type="file"]{ font-size:12px; }
+
+    button{
+      background:var(--accent);
+      border:none;
+      color:white;
+      padding:9px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+    }
+    button.secondary{
+      background:#ffffff;
+      border:1px solid var(--line);
+      color:var(--ink);
+    }
+    button.danger{ background:var(--danger); }
+    button.secondary:hover{ border-color:#c9cfdb; }
+
+    .hint{ font-size:12px; color:var(--muted); line-height:1.35; }
+    .small{ font-size:12px; color:var(--muted); }
+    .panelTitle{
+      font-weight:950;
+      margin-bottom:6px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .divider{ height:1px; background:var(--line); margin:10px 0; }
+
+    /* Publication-ready canvases: white background + crisp lines */
+    canvas{
+      width:100%;
+      height:auto;
+      background:var(--plot-bg);
+      border:1px solid var(--line);
+      border-radius:12px;
+      image-rendering:auto;
+    }
+    /* Heatmap stays pixelated to preserve grid structure */
+    #heat{ image-rendering: pixelated; }
+
+    #plotly3d{
+      width:100%;
+      height:520px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      overflow:hidden;
+      background:var(--plot-bg);
+    }
+
+    table{ width:100%; border-collapse:collapse; font-size:12px; }
+    td{ border-bottom:1px solid var(--line); padding:7px 6px; vertical-align:top; }
+    td:first-child{ color:var(--muted); width:56%; }
+    .status{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    .status strong{ color:var(--ink); }
+    .err{ color:var(--danger); font-weight:950; }
+
+    /* Tabs */
+    .tabs{
+      display:flex;
+      gap:8px;
+      padding:6px;
+      background:var(--tab-bg);
+      border:1px solid var(--line);
+      border-radius:12px;
+    }
+    .tabBtn{
+      flex:0 0 auto;
+      background:transparent;
+      border:1px solid transparent;
+      color:var(--ink);
+      padding:9px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:950;
+      font-size:12px;
+    }
+    .tabBtn.active{
+      background:#ffffff;
+      border-color:var(--line);
+      box-shadow: 0 1px 6px rgba(10,18,32,0.06);
+    }
+    .tabPanel{ display:none; margin-top:12px; }
+    .tabPanel.active{ display:block; }
+
+    /* Nested toggle buttons (Plotly vs Mesh) */
+    .toggleGroup{ display:flex; gap:8px; }
+    .toggleBtn{
+      background:#ffffff;
+      border:1px solid var(--line);
+      color:var(--ink);
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:950;
+      font-size:12px;
+    }
+    .toggleBtn.active{
+      background:var(--accent);
+      border-color:transparent;
+      color:white;
+    }
+
+    .exportRow{ display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; margin-top:8px; }
+
+    /* WebGL canvas sizing */
+    #webgl3d{ width:100%; height:auto; display:block; }
+
+    /* Minor spacing */
+    .stack{ display:grid; gap:10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>SEM Roughness Visualizer <span class="pill">CSV heightmap • NxN • µm</span></h1>
+      <div class="row">
+        <input id="file" type="file" accept=".csv,.txt" />
+        <button id="loadDemo" class="secondary">Load Demo</button>
+        <button id="clear" class="danger">Clear</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: Controls & Stats -->
+      <div class="card">
+        <div class="panelTitle">Controls & Stats</div>
+        <div class="hint">
+          Upload your NxN CSV → click <b>Render</b>. In 2D: click heatmap for <b>row profile</b>, <b>Shift+Click</b> for column profile.
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="stack">
+          <div class="row">
+            <label>Colormap
+              <select id="cmap">
+                <option value="turbo">Turbo (default)</option>
+                <option value="gray">Grayscale</option>
+                <option value="blueRed">Blue–Red</option>
+                <option value="heat">Heat</option>
+              </select>
+            </label>
+
+            <label>Downsample
+              <select id="ds">
+                <option value="1">1×</option>
+                <option value="2">2×</option>
+                <option value="4">4×</option>
+                <option value="8">8×</option>
+                <option value="16">16×</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="row">
+            <label>Range
+              <select id="rangeMode">
+                <option value="auto">Auto (min/max)</option>
+                <option value="clip">Auto (1–99% clip)</option>
+                <option value="manual">Manual</option>
+              </select>
+            </label>
+
+            <label>Min (µm)
+              <input id="minv" type="number" step="0.0000001" disabled />
+            </label>
+
+            <label>Max (µm)
+              <input id="maxv" type="number" step="0.0000001" disabled />
+            </label>
+          </div>
+
+          <div class="row">
+            <label><input id="demean" type="checkbox" checked /> Subtract mean plane (z − z̄)</label>
+          </div>
+
+          <div class="divider"></div>
+          <div class="panelTitle">3D Controls</div>
+
+          <div class="row">
+            <label>Z-scale ×
+              <input id="zscale" type="range" min="0.2" max="20" step="0.2" value="1" />
+              <span class="small" id="zscaleVal">1.0×</span>
+            </label>
+          </div>
+
+          <div id="webglControls" style="display:none;">
+            <div class="row">
+              <label><input id="wireframe" type="checkbox" /> Wireframe</label>
+              <label><input id="lighting" type="checkbox" checked /> Lighting</label>
+            </div>
+
+            <div class="divider"></div>
+            <div class="panelTitle">Light Direction</div>
+            <div class="row">
+              <label>Lx <input id="lx" type="range" min="-1" max="1" step="0.01" value="0.30" /></label>
+              <label>Ly <input id="ly" type="range" min="-1" max="1" step="0.01" value="0.50" /></label>
+              <label>Lz <input id="lz" type="range" min="-1" max="1" step="0.01" value="0.80" /></label>
+            </div>
+
+            <div class="divider"></div>
+            <div class="panelTitle">Phong Parameters</div>
+            <div class="row">
+              <label>Ambient <input id="amb" type="range" min="0" max="1" step="0.01" value="0.25" /></label>
+              <label>Diffuse <input id="dif" type="range" min="0" max="1" step="0.01" value="0.65" /></label>
+            </div>
+            <div class="row">
+              <label>Specular <input id="spec" type="range" min="0" max="1" step="0.01" value="0.35" /></label>
+              <label>Shininess <input id="shin" type="range" min="1" max="100" step="1" value="30" /></label>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row" style="justify-content:space-between;">
+            <button id="render">Render / Update</button>
+            <div class="small" id="warn"></div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="panelTitle">Status</div>
+          <div class="small" id="status">No data loaded.</div>
+
+          <div class="divider"></div>
+          <div class="panelTitle">Roughness metrics</div>
+          <table id="metrics"></table>
+          <div class="hint" style="margin-top:8px;">
+            Sa = mean(|z − z̄|), Sq = RMS(z − z̄), Sz = max − min (µm).
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Views with two tabs -->
+      <div class="card">
+        <div class="panelTitle">
+          <div>Views</div>
+          <div class="small" id="clickInfo"></div>
+        </div>
+
+        <div class="tabs" role="tablist" aria-label="View tabs">
+          <button id="tab2dBtn" class="tabBtn active" role="tab" aria-selected="true">2D View</button>
+          <button id="tab3dBtn" class="tabBtn" role="tab" aria-selected="false">3D View</button>
+        </div>
+
+        <!-- 2D TAB -->
+        <div id="tab2d" class="tabPanel active" role="tabpanel">
+          <div class="panelTitle">
+            <div>2D Heat Map</div>
+            <button id="exportHeat" class="secondary">Export Heatmap PNG</button>
+          </div>
+          <canvas id="heat" width="512" height="512"></canvas>
+
+          <div class="divider"></div>
+
+          <div class="panelTitle">
+            <div>Line Profile</div>
+            <div class="row">
+              <div class="small" id="profileInfo"></div>
+              <button id="exportProfile" class="secondary">Export Profile PNG</button>
+            </div>
+          </div>
+          <canvas id="profile" width="1000" height="300"></canvas>
+
+          <div class="divider"></div>
+
+          <div class="panelTitle">
+            <div>Histogram</div>
+            <div class="row">
+              <div class="small" id="histInfo"></div>
+              <button id="exportHist" class="secondary">Export Histogram PNG</button>
+            </div>
+          </div>
+          <canvas id="hist" width="1000" height="300"></canvas>
+        </div>
+
+        <!-- 3D TAB -->
+        <div id="tab3d" class="tabPanel" role="tabpanel">
+          <div class="panelTitle">
+            <div>3D View</div>
+            <div class="toggleGroup">
+              <button id="modePlotly" class="toggleBtn active" title="Plotly Surface">Plotly Surface</button>
+              <button id="modeWebGL" class="toggleBtn" title="True 3D Mesh + Lighting (WebGL)">True 3D Mesh</button>
+            </div>
+          </div>
+          <div class="hint">
+            Plotly and Mesh share the same colormap/range. For faster Mesh rendering, use downsampling.
+          </div>
+
+          <div style="margin-top:10px;">
+            <div id="plotlyWrap">
+              <div id="plotly3d"></div>
+              <div class="exportRow">
+                <button id="exportPlotly" class="secondary">Export 3D (Plotly) PNG</button>
+              </div>
+            </div>
+
+            <div id="webglWrap" style="display:none;">
+              <canvas id="webgl3d" width="1200" height="600"></canvas>
+              <div class="exportRow">
+                <button id="exportWebGL" class="secondary">Export 3D (Mesh) PNG</button>
+              </div>
+              <div class="hint" style="margin-top:6px;">
+                Drag to rotate • Wheel to zoom • Double-click to reset view.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /grid -->
+  </div><!-- /wrap -->
+
+<script>
+(() => {
+  // =========================
+  // State
+  // =========================
+  let Z = null;       // Float64Array flattened (original)
+  let N = 0;          // size NxN
+  let zMin = 0, zMax = 0, zMean = 0, zStd = 0;
+  let lastProfile = null;
+
+  // 3D mode: "plotly" | "webgl"
+  let mode3D = "plotly";
+
+  // WebGL state
+  let gl = null;
+  let webgl = null;
+  let prog = null;
+  let mesh = null;
+  let cam = { yaw: -0.8, pitch: 0.65, dist: 2.8, target:[0,0,0] };
+  let drag = { on:false, x:0, y:0 };
+  let needsRedraw = true;
+  let isWebGL2 = false;
+  let hasUint32ElementIndex = false;
+
+  // =========================
+  // DOM helpers
+  // =========================
+  const el = (id) => document.getElementById(id);
+
+  const heat = el("heat"), ctxH = heat.getContext("2d");
+  const prof = el("profile"), ctxP = prof.getContext("2d");
+  const hist = el("hist"), ctxHi = hist.getContext("2d");
+
+  const status = el("status"), clickInfo = el("clickInfo");
+  const profileInfo = el("profileInfo"), histInfo = el("histInfo");
+  const metricsTbl = el("metrics");
+  const warn = el("warn");
+
+  // Tabs
+  const tab2dBtn = el("tab2dBtn");
+  const tab3dBtn = el("tab3dBtn");
+  const tab2d = el("tab2d");
+  const tab3d = el("tab3d");
+
+  function setTab(which){
+    const is2d = which === "2d";
+    tab2dBtn.classList.toggle("active", is2d);
+    tab3dBtn.classList.toggle("active", !is2d);
+    tab2dBtn.setAttribute("aria-selected", is2d ? "true" : "false");
+    tab3dBtn.setAttribute("aria-selected", !is2d ? "true" : "false");
+    tab2d.classList.toggle("active", is2d);
+    tab3d.classList.toggle("active", !is2d);
+
+    // If switching to 3D Mesh view, make sure canvas is ready for proper sizing
+    if (!is2d && mode3D === "webgl" && Z){
+      needsRedraw = true;
+      drawWebGL();
+    }
+    // Plotly sometimes needs a resize when container was hidden
+    if (!is2d && mode3D === "plotly"){
+      try{ Plotly.Plots.resize("plotly3d"); } catch {}
+    }
+  }
+  tab2dBtn.addEventListener("click", () => setTab("2d"));
+  tab3dBtn.addEventListener("click", () => setTab("3d"));
+
+  // =========================
+  // CSV parsing
+  // =========================
+  function detectDelimiter(line){
+    const hasTab = line.includes("\t");
+    const hasComma = line.includes(",");
+    if (hasTab) return "\t";
+    if (hasComma) return ",";
+    return " "; // fallback (space)
+  }
+  function splitLine(line, delim){
+    if (delim === " ") return line.trim().split(/\s+/);
+    return line.trim().split(delim);
+  }
+  function parseGrid(text){
+    const lines = text.trim().split(/\r?\n/).filter(l => l.trim().length);
+    if (!lines.length) throw new Error("Empty file.");
+    const delim = detectDelimiter(lines[0]);
+    const first = splitLine(lines[0], delim);
+    const rows = lines.length;
+    const cols = first.length;
+    if (rows !== cols) throw new Error(`Grid must be square (NxN). Got ${rows}×${cols}.`);
+    const data = new Float64Array(rows * cols);
+
+    let k = 0;
+    for (let i=0;i<rows;i++){
+      const parts = splitLine(lines[i], delim);
+      if (parts.length !== cols) throw new Error(`Row ${i+1} has ${parts.length} cols; expected ${cols}.`);
+      for (let j=0;j<cols;j++){
+        const v = Number(parts[j]);
+        if (!Number.isFinite(v)) throw new Error(`Invalid number at row ${i+1}, col ${j+1}.`);
+        data[k++] = v;
+      }
+    }
+    return { data, n: rows, delim };
+  }
+
+  // =========================
+  // Stats
+  // =========================
+  function computeStats(arr){
+    let mn = Infinity, mx = -Infinity, sum = 0;
+    for (let i=0;i<arr.length;i++){
+      const v = arr[i];
+      if (v < mn) mn = v;
+      if (v > mx) mx = v;
+      sum += v;
+    }
+    const mean = sum / arr.length;
+    let s2 = 0;
+    for (let i=0;i<arr.length;i++){
+      const d = arr[i] - mean;
+      s2 += d*d;
+    }
+    const std = Math.sqrt(s2 / arr.length);
+    return { mn, mx, mean, std };
+  }
+  function quantileApprox(arr, q){
+    const n = arr.length;
+    const sampleN = Math.min(250000, n);
+    const step = Math.max(1, Math.floor(n / sampleN));
+    const samp = [];
+    for (let i=0;i<n;i+=step) samp.push(arr[i]);
+    samp.sort((a,b)=>a-b);
+    const idx = Math.max(0, Math.min(samp.length-1, Math.floor(q*(samp.length-1))));
+    return samp[idx];
+  }
+  function fmt(x){
+    if (!Number.isFinite(x)) return "—";
+    const ax = Math.abs(x);
+    if (ax !== 0 && (ax < 0.001 || ax >= 1000)) return x.toExponential(6);
+    return x.toFixed(6);
+  }
+
+  // =========================
+  // Colormaps
+  // =========================
+  function clamp01(x){ return x<0?0:(x>1?1:x); }
+  function cmapTurbo(t){
+    const x = clamp01(t);
+    const r = 34.61 + x*(1172.33 + x*(-10793.56 + x*(33300.12 + x*(-38394.49 + x*14825.05))));
+    const g = 23.31 + x*(557.33 + x*(1225.33 + x*(-3574.96 + x*(1429.70 + x*0.0))));
+    const b = 27.20 + x*(3211.10 + x*(-15327.97 + x*(27814.00 + x*(-22569.18 + x*6838.66))));
+    return [Math.max(0,Math.min(255,r)), Math.max(0,Math.min(255,g)), Math.max(0,Math.min(255,b))];
+  }
+  function cmapGray(t){ const v = Math.round(255*clamp01(t)); return [v,v,v]; }
+  function cmapHeat(t){
+    const x = clamp01(t);
+    const r = Math.round(255*clamp01(x*1.2));
+    const g = Math.round(255*clamp01((x-0.35)*1.3));
+    const b = Math.round(255*clamp01((x-0.75)*2.0));
+    return [r,g,b];
+  }
+  function cmapBlueRed(t){
+    const x = clamp01(t);
+    const r = Math.round(255*x);
+    const b = Math.round(255*(1-x));
+    const g = Math.round(255*(0.2 + 0.6*(1-Math.abs(x-0.5)*2)));
+    return [r,g,b];
+  }
+  function getCmap(){
+    const v = el("cmap").value;
+    if (v==="gray") return cmapGray;
+    if (v==="heat") return cmapHeat;
+    if (v==="blueRed") return cmapBlueRed;
+    return cmapTurbo;
+  }
+  function plotlyColorscale(name){
+    if (name==="gray") return "Greys";
+    if (name==="heat") return "Hot";
+    if (name==="blueRed") return "RdBu";
+    return "Turbo";
+  }
+
+  // =========================
+  // Data processing
+  // =========================
+  function getProcessedGrid(){
+    if (!Z) return null;
+    const ds = Number(el("ds").value);
+    const demean = el("demean").checked;
+
+    const W = Math.floor(N / ds);
+    const grid = new Float64Array(W * W);
+
+    let p = 0;
+    for (let y=0;y<W;y++){
+      const y0 = y*ds;
+      for (let x=0;x<W;x++){
+        const x0 = x*ds;
+        let sum = 0;
+        for (let yy=0;yy<ds;yy++){
+          const row = (y0+yy)*N + x0;
+          for (let xx=0;xx<ds;xx++){
+            sum += Z[row + xx];
+          }
+        }
+        let v = sum / (ds*ds);
+        if (demean) v -= zMean;
+        grid[p++] = v;
+      }
+    }
+
+    const mode = el("rangeMode").value;
+    let lo = (demean ? (zMin - zMean) : zMin);
+    let hi = (demean ? (zMax - zMean) : zMax);
+
+    if (mode === "clip"){
+      lo = quantileApprox(grid, 0.01);
+      hi = quantileApprox(grid, 0.99);
+    } else if (mode === "manual"){
+      const mn = Number(el("minv").value);
+      const mx = Number(el("maxv").value);
+      if (Number.isFinite(mn) && Number.isFinite(mx) && mx > mn){
+        lo = mn; hi = mx;
+      }
+    }
+
+    return { grid, W, ds, demean, lo, hi };
+  }
+
+  function updateRangeInputsForMode(){
+    const mode = el("rangeMode").value;
+    const manual = (mode === "manual");
+    el("minv").disabled = !manual;
+    el("maxv").disabled = !manual;
+
+    const proc = getProcessedGrid();
+    if (!proc) return;
+    if (!manual){
+      el("minv").value = proc.lo;
+      el("maxv").value = proc.hi;
+    }
+  }
+
+  // =========================
+  // Publication-ready 2D plot styling helpers
+  // =========================
+  function clearPlotCanvas(ctx, w, h){
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,w,h);
+  }
+
+  function drawPlotAxes(ctx, w, h, opts){
+    const padL = 58, padR = 18, padT = 34, padB = 50;
+    clearPlotCanvas(ctx, w, h);
+
+    const axis = "#111827";
+    const grid = "#e5e7eb";
+
+    // Grid
+    ctx.save();
+    ctx.strokeStyle = grid;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,3]);
+    const nx = 6, ny = 5;
+    for (let i=1;i<nx;i++){
+      const x = padL + (w - padL - padR) * (i/nx);
+      ctx.beginPath(); ctx.moveTo(x,padT); ctx.lineTo(x,h-padB); ctx.stroke();
+    }
+    for (let j=1;j<ny;j++){
+      const y = padT + (h - padT - padB) * (j/ny);
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(w-padR,y); ctx.stroke();
+    }
+    ctx.restore();
+
+    // Axes
+    ctx.strokeStyle = axis;
+    ctx.lineWidth = 1.6;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, h-padB);
+    ctx.lineTo(w-padR, h-padB);
+    ctx.stroke();
+
+    // Title + labels
+    ctx.fillStyle = axis;
+    ctx.font = "700 14px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+    ctx.textAlign = "left";
+    if (opts.title) ctx.fillText(opts.title, padL, 22);
+
+    ctx.font = "600 13px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+    ctx.textAlign = "center";
+    if (opts.xlabel) ctx.fillText(opts.xlabel, (padL + (w-padR))/2, h-14);
+
+    if (opts.ylabel){
+      ctx.save();
+      ctx.translate(18, (padT + (h-padB))/2);
+      ctx.rotate(-Math.PI/2);
+      ctx.textAlign = "center";
+      ctx.fillText(opts.ylabel, 0, 0);
+      ctx.restore();
+    }
+
+    return { padL, padR, padT, padB };
+  }
+
+  // =========================
+  // 2D Heatmap
+  // =========================
+  function renderHeatmap(proc){
+    const { grid, W, lo, hi } = proc;
+    heat.width = W; heat.height = W;
+
+    const cmap = getCmap();
+    const img = ctxH.createImageData(W, W);
+    const out = img.data;
+    const inv = 1 / (hi - lo || 1);
+
+    let p = 0;
+    for (let i=0;i<grid.length;i++){
+      const t = clamp01((grid[i] - lo) * inv);
+      const [r,g,b] = cmap(t);
+      out[p++] = r|0;
+      out[p++] = g|0;
+      out[p++] = b|0;
+      out[p++] = 255;
+    }
+    ctxH.putImageData(img, 0, 0);
+  }
+
+  // =========================
+  // Line profile
+  // =========================
+  function renderProfile(kind, idx){
+    if (!Z) return;
+
+    const w = prof.width, h = prof.height;
+    const demean = el("demean").checked;
+
+    const line = new Float64Array(N);
+    if (kind === "row"){
+      const off = idx*N;
+      for (let x=0;x<N;x++) line[x] = Z[off + x];
+    } else {
+      for (let y=0;y<N;y++) line[y] = Z[y*N + idx];
+    }
+    if (demean){
+      for (let i=0;i<line.length;i++) line[i] -= zMean;
+    }
+
+    let mn = Infinity, mx = -Infinity;
+    for (let i=0;i<N;i++){ const v=line[i]; if(v<mn) mn=v; if(v>mx) mx=v; }
+    if (mn === mx){ mn -= 1e-12; mx += 1e-12; }
+
+    const ax = drawPlotAxes(ctxP, w, h, {
+      title: `${kind.toUpperCase()} profile @ ${kind==="row" ? "y" : "x"} = ${idx}`,
+      xlabel: "Index",
+      ylabel: "Height (µm)"
+    });
+
+    const axis = "#111827";
+
+    ctxP.strokeStyle = axis;
+    ctxP.lineWidth = 2;
+    ctxP.beginPath();
+
+    const x0 = ax.padL, x1 = w - ax.padR;
+    const y0 = h - ax.padB, y1 = ax.padT;
+    for (let i=0;i<N;i++){
+      const x = x0 + (x1-x0) * (i/(N-1));
+      const y = y0 - (y0-y1) * ((line[i]-mn)/(mx-mn));
+      if (i===0) ctxP.moveTo(x,y); else ctxP.lineTo(x,y);
+    }
+    ctxP.stroke();
+
+    ctxP.fillStyle = axis;
+    ctxP.font = "600 12px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+    ctxP.textAlign = "left";
+    ctxP.fillText(`min: ${fmt(mn)} µm`, ax.padL, h-ax.padB+18);
+    ctxP.fillText(`max: ${fmt(mx)} µm`, ax.padL+190, h-ax.padB+18);
+    ctxP.fillText(`mode: ${demean ? "demeaned (z−z̄)" : "raw"}`, ax.padL+380, h-ax.padB+18);
+
+    profileInfo.textContent = `${kind} ${idx} • ${demean ? "demeaned" : "raw"}`;
+    lastProfile = { kind, idx };
+  }
+
+  // =========================
+  // Histogram
+  // =========================
+  function renderHistogram(proc){
+    const { grid } = proc;
+
+    const w = hist.width, h = hist.height;
+    const lo = quantileApprox(grid, 0.01);
+    const hi = quantileApprox(grid, 0.99);
+    const bins = 60;
+
+    const counts = new Uint32Array(bins);
+    const inv = bins / (hi - lo || 1);
+    for (let i=0;i<grid.length;i++){
+      const v = grid[i];
+      if (v<lo || v>hi) continue;
+      const b = Math.max(0, Math.min(bins-1, Math.floor((v - lo) * inv)));
+      counts[b]++;
+    }
+    let maxC = 1;
+    for (let i=0;i<bins;i++) if (counts[i]>maxC) maxC = counts[i];
+
+    const ax = drawPlotAxes(ctxHi, w, h, {
+      title: "Histogram (clipped 1–99%)",
+      xlabel: "Height (µm)",
+      ylabel: "Count"
+    });
+
+    const axis = "#111827";
+    const x0 = ax.padL, x1 = w - ax.padR;
+    const y0 = h - ax.padB, y1 = ax.padT;
+
+    const bw = (x1-x0) / bins;
+    for (let i=0;i<bins;i++){
+      const x = x0 + i*bw;
+      const barH = (y0-y1) * (counts[i] / maxC);
+      ctxHi.fillStyle = "#cfd6e4";
+      ctxHi.fillRect(x, y0 - barH, Math.max(1, bw-1), barH);
+      ctxHi.strokeStyle = axis;
+      ctxHi.lineWidth = 1;
+      ctxHi.strokeRect(x, y0 - barH, Math.max(1, bw-1), barH);
+    }
+
+    ctxHi.fillStyle = axis;
+    ctxHi.font = "600 12px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+    ctxHi.textAlign = "left";
+    ctxHi.fillText(`display range: [${fmt(lo)}, ${fmt(hi)}] µm`, ax.padL, h-ax.padB+18);
+
+    histInfo.textContent = `${proc.W}×${proc.W} shown`;
+  }
+
+  // =========================
+  // Metrics
+  // =========================
+  function updateMetrics(){
+    if (!Z) { metricsTbl.innerHTML = ""; return; }
+    let sumAbs = 0, sumSq = 0;
+    for (let i=0;i<Z.length;i++){
+      const d = Z[i] - zMean;
+      sumAbs += Math.abs(d);
+      sumSq += d*d;
+    }
+    const Sa = sumAbs / Z.length;
+    const Sq = Math.sqrt(sumSq / Z.length);
+    const Sz = zMax - zMin;
+
+    metricsTbl.innerHTML = `
+      <tr><td>Size</td><td>${N} × ${N} (${(Z.length).toLocaleString()} points)</td></tr>
+      <tr><td>Min (µm)</td><td>${fmt(zMin)}</td></tr>
+      <tr><td>Max (µm)</td><td>${fmt(zMax)}</td></tr>
+      <tr><td>Mean z̄ (µm)</td><td>${fmt(zMean)}</td></tr>
+      <tr><td>Std dev (µm)</td><td>${fmt(zStd)}</td></tr>
+      <tr><td>Sa = mean(|z − z̄|) (µm)</td><td>${fmt(Sa)}</td></tr>
+      <tr><td>Sq = RMS(z − z̄) (µm)</td><td>${fmt(Sq)}</td></tr>
+      <tr><td>Sz = max − min (µm)</td><td>${fmt(Sz)}</td></tr>
+    `;
+  }
+
+  // =========================
+  // Plotly 3D (publication ready)
+  // =========================
+  function renderPlotly(proc){
+    const { grid, W, lo, hi } = proc;
+    const zscale = Number(el("zscale").value);
+
+    const z = [];
+    for (let y=0;y<W;y++){
+      const row = [];
+      const off = y*W;
+      for (let x=0;x<W;x++){
+        row.push(grid[off + x] * zscale);
+      }
+      z.push(row);
+    }
+
+    const cm = plotlyColorscale(el("cmap").value);
+
+    const data = [{
+      type: "surface",
+      z,
+      colorscale: cm,
+      cmin: lo * zscale,
+      cmax: hi * zscale,
+      showscale: true,
+      lighting: { ambient:0.55, diffuse:0.65, specular:0.25, roughness:0.9, fresnel:0.1 },
+      lightposition: { x:1.2, y:1.4, z:1.8 }
+    }];
+
+    const axisCommon = {
+      showgrid: true,
+      gridcolor: "#e5e7eb",
+      zeroline: false,
+      showline: true,
+      linecolor: "#111827",
+      ticks: "outside",
+      tickcolor: "#111827",
+      tickfont: { color:"#111827", size:11 },
+      titlefont: { color:"#111827", size:12 },
+      color: "#111827"
+    };
+
+    const layout = {
+      margin:{l:0,r:0,b:0,t:0},
+      paper_bgcolor:"#ffffff",
+      plot_bgcolor:"#ffffff",
+      font: { color:"#111827", family:"system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" },
+      scene:{
+        xaxis:{ ...axisCommon, title:"x (index)" },
+        yaxis:{ ...axisCommon, title:"y (index)" },
+        zaxis:{ ...axisCommon, title:"height (µm)" },
+        bgcolor:"#ffffff",
+        aspectmode:"auto"
+      }
+    };
+
+    Plotly.react("plotly3d", data, layout, { displayModeBar:false, responsive:true });
+  }
+
+  // =========================
+  // WebGL true 3D mesh + lighting
+  // =========================
+  const Mat = {
+    ident: () => [1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1],
+    mul: (a,b) => {
+      const r = new Array(16).fill(0);
+      for (let i=0;i<4;i++){
+        for (let j=0;j<4;j++){
+          for (let k=0;k<4;k++) r[i*4+j] += a[i*4+k]*b[k*4+j];
+        }
+      }
+      return r;
+    },
+    persp: (fovy, aspect, near, far) => {
+      const f = 1/Math.tan(fovy/2);
+      const nf = 1/(near - far);
+      return [
+        f/aspect,0,0,0,
+        0,f,0,0,
+        0,0,(far+near)*nf,-1,
+        0,0,(2*far*near)*nf,0
+      ];
+    },
+    lookAt: (eye, center, up) => {
+      const ex=eye[0], ey=eye[1], ez=eye[2];
+      const cx=center[0], cy=center[1], cz=center[2];
+      let zx = ex-cx, zy = ey-cy, zz = ez-cz;
+      const zlen = Math.hypot(zx,zy,zz) || 1;
+      zx/=zlen; zy/=zlen; zz/=zlen;
+
+      let xx = up[1]*zz - up[2]*zy;
+      let xy = up[2]*zx - up[0]*zz;
+      let xz = up[0]*zy - up[1]*zx;
+      const xlen = Math.hypot(xx,xy,xz) || 1;
+      xx/=xlen; xy/=xlen; xz/=xlen;
+
+      let yx = zy*xz - zz*xy;
+      let yy = zz*xx - zx*xz;
+      let yz = zx*xy - zy*xx;
+
+      return [
+        xx,yx,zx,0,
+        xy,yy,zy,0,
+        xz,yz,zz,0,
+        -(xx*ex + xy*ey + xz*ez),
+        -(yx*ex + yy*ey + yz*ez),
+        -(zx*ex + zy*ey + zz*ez),
+        1
+      ];
+    }
+  };
+
+  function webglInit(){
+    webgl = el("webgl3d");
+    gl =
+      webgl.getContext("webgl2", { antialias:true, preserveDrawingBuffer:true }) ||
+      webgl.getContext("webgl", { antialias:true, preserveDrawingBuffer:true });
+    if (!gl){
+      warn.innerHTML = `<span class="err">WebGL not supported in this browser.</span>`;
+      return false;
+    }
+
+    isWebGL2 = (typeof WebGL2RenderingContext !== "undefined") && (gl instanceof WebGL2RenderingContext);
+    hasUint32ElementIndex = isWebGL2 ? true : !!gl.getExtension("OES_element_index_uint");
+
+    const vs = `
+      attribute vec3 aPos;
+      attribute vec3 aNor;
+      attribute vec3 aCol;
+
+      uniform mat4 uMVP;
+      uniform mat4 uModel;
+      uniform mat3 uNMat;
+
+      varying vec3 vPos;
+      varying vec3 vNor;
+      varying vec3 vCol;
+
+      void main(){
+        vec4 wp = uModel * vec4(aPos, 1.0);
+        vPos = wp.xyz;
+        vNor = normalize(uNMat * aNor);
+        vCol = aCol;
+        gl_Position = uMVP * vec4(aPos, 1.0);
+      }
+    `;
+
+    const fs = `
+      precision mediump float;
+      varying vec3 vPos;
+      varying vec3 vNor;
+      varying vec3 vCol;
+
+      uniform bool uLighting;
+      uniform vec3 uLightDir;
+      uniform vec3 uEye;
+      uniform float uAmb;
+      uniform float uDif;
+      uniform float uSpec;
+      uniform float uShin;
+
+      void main(){
+        vec3 base = vCol;
+        if(!uLighting){
+          gl_FragColor = vec4(base, 1.0);
+          return;
+        }
+        vec3 N = normalize(vNor);
+        vec3 L = normalize(-uLightDir);
+        float ndl = max(dot(N, L), 0.0);
+
+        vec3 V = normalize(uEye - vPos);
+        vec3 H = normalize(L + V);
+        float spec = pow(max(dot(N, H), 0.0), uShin);
+
+        float a = uAmb;
+        float d = uDif * ndl;
+        float s = uSpec * spec;
+
+        vec3 col = base * (a + d) + vec3(s);
+        col = clamp(col, 0.0, 1.0);
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    function compile(type, src){
+      const sh = gl.createShader(type);
+      gl.shaderSource(sh, src);
+      gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)){
+        throw new Error(gl.getShaderInfoLog(sh) || "Shader compile error");
+      }
+      return sh;
+    }
+
+    try{
+      const vsh = compile(gl.VERTEX_SHADER, vs);
+      const fsh = compile(gl.FRAGMENT_SHADER, fs);
+      prog = gl.createProgram();
+      gl.attachShader(prog, vsh);
+      gl.attachShader(prog, fsh);
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)){
+        throw new Error(gl.getProgramInfoLog(prog) || "Program link error");
+      }
+      gl.useProgram(prog);
+      gl.enable(gl.DEPTH_TEST);
+      gl.clearColor(1,1,1,1);
+    } catch(err){
+      warn.innerHTML = `<span class="err">WebGL init failed:</span> ${err.message}`;
+      console.error(err);
+      return false;
+    }
+
+    // Interaction
+    webgl.addEventListener("mousedown", (e) => { drag.on = true; drag.x = e.clientX; drag.y = e.clientY; });
+    window.addEventListener("mouseup", () => drag.on = false);
+    window.addEventListener("mousemove", (e) => {
+      if (!drag.on) return;
+      const dx = (e.clientX - drag.x) / 180;
+      const dy = (e.clientY - drag.y) / 180;
+      drag.x = e.clientX; drag.y = e.clientY;
+      cam.yaw += dx;
+      cam.pitch += dy;
+      cam.pitch = Math.max(-1.45, Math.min(1.45, cam.pitch));
+      needsRedraw = true;
+      drawWebGL();
+    });
+    webgl.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      cam.dist *= (e.deltaY > 0 ? 1.08 : 0.92);
+      cam.dist = Math.max(0.8, Math.min(12, cam.dist));
+      needsRedraw = true;
+      drawWebGL();
+    }, { passive:false });
+
+    webgl.addEventListener("dblclick", () => {
+      cam = { yaw:-0.8, pitch:0.65, dist:2.8, target:[0,0,0] };
+      needsRedraw = true;
+      drawWebGL();
+    });
+
+    return true;
+  }
+
+  function buildMesh(proc){
+    const { grid, W, lo, hi } = proc;
+    const zscale = Number(el("zscale").value);
+    const cmap = getCmap();
+    const inv = 1 / (hi - lo || 1);
+
+    const V = W*W;
+    const needsUint32 = V > 65535;
+    const IndexArray = needsUint32 ? Uint32Array : Uint16Array;
+    const pos = new Float32Array(V*3);
+    const nor = new Float32Array(V*3);
+    const col = new Float32Array(V*3);
+
+    const idx = (x,y) => y*W + x;
+
+    for (let y=0;y<W;y++){
+      const fy = (y/(W-1))*2 - 1;
+      for (let x=0;x<W;x++){
+        const fx = (x/(W-1))*2 - 1;
+        const k = idx(x,y);
+        const z = grid[k] * zscale;
+
+        pos[k*3+0] = fx;
+        pos[k*3+1] = fy;
+        pos[k*3+2] = z;
+
+        const t = clamp01((grid[k] - lo)*inv);
+        const [r,g,b] = cmap(t);
+        col[k*3+0] = (r/255);
+        col[k*3+1] = (g/255);
+        col[k*3+2] = (b/255);
+      }
+    }
+
+    // normals
+    for (let y=0;y<W;y++){
+      for (let x=0;x<W;x++){
+        const xm = Math.max(0, x-1), xp = Math.min(W-1, x+1);
+        const ym = Math.max(0, y-1), yp = Math.min(W-1, y+1);
+
+        const zL = pos[idx(xm,y)*3+2];
+        const zR = pos[idx(xp,y)*3+2];
+        const zD = pos[idx(x,ym)*3+2];
+        const zU = pos[idx(x,yp)*3+2];
+
+        const sx = 2/(W-1);
+        const sy = 2/(W-1);
+
+        const dzdx = (zR - zL) / (2*sx);
+        const dzdy = (zU - zD) / (2*sy);
+
+        let nx = -dzdx, ny = -dzdy, nz = 1.0;
+        const l = Math.hypot(nx,ny,nz) || 1;
+        nx/=l; ny/=l; nz/=l;
+
+        const k = idx(x,y);
+        nor[k*3+0] = nx;
+        nor[k*3+1] = ny;
+        nor[k*3+2] = nz;
+      }
+    }
+
+    // triangles
+    const tris = (W-1)*(W-1)*2;
+    const ind = new IndexArray(tris*3);
+    let p = 0;
+    for (let y=0;y<W-1;y++){
+      for (let x=0;x<W-1;x++){
+        const a = idx(x,y);
+        const b = idx(x+1,y);
+        const c = idx(x,y+1);
+        const d = idx(x+1,y+1);
+        ind[p++] = a; ind[p++] = c; ind[p++] = b;
+        ind[p++] = b; ind[p++] = c; ind[p++] = d;
+      }
+    }
+
+    // wireframe
+    const lines = [];
+    for (let y=0;y<W;y++) for (let x=0;x<W-1;x++) lines.push(idx(x,y), idx(x+1,y));
+    for (let x=0;x<W;x++) for (let y=0;y<W-1;y++) lines.push(idx(x,y), idx(x,y+1));
+    const lind = new IndexArray(lines);
+
+    return { W, pos, nor, col, ind, lind, indexType: needsUint32 ? "u32" : "u16" };
+  }
+
+  function uploadMeshToGPU(m){
+    if (!gl || !prog) return null;
+
+    const needsUint32 = (m.indexType === "u32");
+    if (needsUint32 && !hasUint32ElementIndex){
+      warn.innerHTML = `<span class="err">WebGL limitation:</span> this mesh needs 32-bit indices. Increase Downsample (so the shown grid is \u2264 255\u00d7255), or use a WebGL2-capable browser/device.`;
+      return null;
+    }
+
+    function bufData(target, data, usage=gl.STATIC_DRAW){
+      const b = gl.createBuffer();
+      gl.bindBuffer(target, b);
+      gl.bufferData(target, data, usage);
+      return b;
+    }
+
+    const bPos = bufData(gl.ARRAY_BUFFER, m.pos);
+    const bNor = bufData(gl.ARRAY_BUFFER, m.nor);
+    const bCol = bufData(gl.ARRAY_BUFFER, m.col);
+    const bInd = bufData(gl.ELEMENT_ARRAY_BUFFER, m.ind);
+    const bLin = bufData(gl.ELEMENT_ARRAY_BUFFER, m.lind);
+
+    const aPos = gl.getAttribLocation(prog, "aPos");
+    const aNor = gl.getAttribLocation(prog, "aNor");
+    const aCol = gl.getAttribLocation(prog, "aCol");
+
+    const glIndexEnum = needsUint32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
+
+    return { ...m, bPos, bNor, bCol, bInd, bLin, aPos, aNor, aCol, glIndexEnum };
+  }
+
+  function nmatFromModel(model){
+    const m = model;
+    const a00=m[0], a01=m[1], a02=m[2];
+    const a10=m[4], a11=m[5], a12=m[6];
+    const a20=m[8], a21=m[9], a22=m[10];
+
+    const b01 = a22*a11 - a12*a21;
+    const b11 = -a22*a10 + a12*a20;
+    const b21 = a21*a10 - a11*a20;
+
+    let det = a00*b01 + a01*b11 + a02*b21;
+    if (Math.abs(det) < 1e-12) det = 1e-12;
+    const invDet = 1.0 / det;
+
+    const r00 = b01 * invDet;
+    const r01 = (-a22*a01 + a02*a21) * invDet;
+    const r02 = (a12*a01 - a02*a11) * invDet;
+    const r10 = b11 * invDet;
+    const r11 = (a22*a00 - a02*a20) * invDet;
+    const r12 = (-a12*a00 + a02*a10) * invDet;
+    const r20 = b21 * invDet;
+    const r21 = (-a21*a00 + a01*a20) * invDet;
+    const r22 = (a11*a00 - a01*a10) * invDet;
+
+    return [
+      r00, r10, r20,
+      r01, r11, r21,
+      r02, r12, r22
+    ];
+  }
+
+  function drawWebGL(){
+    if (!gl || !prog || !mesh) return;
+    if (!needsRedraw) return;
+
+    gl.viewport(0,0,webgl.width,webgl.height);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.useProgram(prog);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.bPos);
+    gl.enableVertexAttribArray(mesh.aPos);
+    gl.vertexAttribPointer(mesh.aPos, 3, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.bNor);
+    gl.enableVertexAttribArray(mesh.aNor);
+    gl.vertexAttribPointer(mesh.aNor, 3, gl.FLOAT, false, 0, 0);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, mesh.bCol);
+    gl.enableVertexAttribArray(mesh.aCol);
+    gl.vertexAttribPointer(mesh.aCol, 3, gl.FLOAT, false, 0, 0);
+
+    const aspect = webgl.width / webgl.height;
+    const P = Mat.persp(55*Math.PI/180, aspect, 0.05, 50);
+
+    const cx = cam.target[0], cy = cam.target[1], cz = cam.target[2];
+    const ex = cx + cam.dist * Math.cos(cam.pitch) * Math.cos(cam.yaw);
+    const ey = cy + cam.dist * Math.cos(cam.pitch) * Math.sin(cam.yaw);
+    const ez = cz + cam.dist * Math.sin(cam.pitch);
+    const eye = [ex,ey,ez];
+
+    const V = Mat.lookAt(eye, cam.target, [0,0,1]);
+    const M = Mat.ident();
+    const MVP = Mat.mul(P, V);
+
+    const uMVP = gl.getUniformLocation(prog, "uMVP");
+    const uModel = gl.getUniformLocation(prog, "uModel");
+    const uNMat = gl.getUniformLocation(prog, "uNMat");
+    const uLighting = gl.getUniformLocation(prog, "uLighting");
+    const uLightDir = gl.getUniformLocation(prog, "uLightDir");
+    const uEye = gl.getUniformLocation(prog, "uEye");
+    const uAmb = gl.getUniformLocation(prog, "uAmb");
+    const uDif = gl.getUniformLocation(prog, "uDif");
+    const uSpec = gl.getUniformLocation(prog, "uSpec");
+    const uShin = gl.getUniformLocation(prog, "uShin");
+
+    gl.uniformMatrix4fv(uMVP, false, new Float32Array(MVP));
+    gl.uniformMatrix4fv(uModel, false, new Float32Array(M));
+    gl.uniformMatrix3fv(uNMat, false, new Float32Array(nmatFromModel(M)));
+
+    gl.uniform1i(uLighting, el("lighting").checked ? 1 : 0);
+
+    let lx = Number(el("lx").value), ly = Number(el("ly").value), lz = Number(el("lz").value);
+    const ll = Math.hypot(lx,ly,lz) || 1;
+    lx/=ll; ly/=ll; lz/=ll;
+    gl.uniform3f(uLightDir, lx, ly, lz);
+
+    gl.uniform3f(uEye, eye[0], eye[1], eye[2]);
+    gl.uniform1f(uAmb, Number(el("amb").value));
+    gl.uniform1f(uDif, Number(el("dif").value));
+    gl.uniform1f(uSpec, Number(el("spec").value));
+    gl.uniform1f(uShin, Number(el("shin").value));
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.bInd);
+    gl.drawElements(gl.TRIANGLES, mesh.ind.length, mesh.glIndexEnum, 0);
+
+    if (el("wireframe").checked){
+      gl.disable(gl.DEPTH_TEST);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.bLin);
+      gl.drawElements(gl.LINES, mesh.lind.length, mesh.glIndexEnum, 0);
+      gl.enable(gl.DEPTH_TEST);
+    }
+
+    needsRedraw = false;
+  }
+
+  // =========================
+  // Render pipeline
+  // =========================
+  function renderAll(){
+    warn.textContent = "";
+    if (!Z){
+      status.textContent = "No data loaded.";
+      return;
+    }
+
+    const proc = getProcessedGrid();
+    if (!proc) return;
+
+    if (el("rangeMode").value !== "manual"){
+      el("minv").value = proc.lo;
+      el("maxv").value = proc.hi;
+    }
+
+    renderHeatmap(proc);
+    renderHistogram(proc);
+    if (lastProfile) renderProfile(lastProfile.kind, lastProfile.idx);
+
+    const shown = proc.W;
+    const displayedPts = shown*shown;
+    status.innerHTML = `Loaded <strong>${N}×${N}</strong> • showing <strong>${shown}×${shown}</strong> (${displayedPts.toLocaleString()} pts) • range [${fmt(proc.lo)}, ${fmt(proc.hi)}] µm • ${proc.demean ? "demeaned" : "raw"}`;
+
+    renderPlotly(proc);
+
+    // Make plotly responsive if its tab is visible (or just after render)
+    try{ Plotly.Plots.resize("plotly3d"); } catch {}
+
+    if (mode3D === "webgl"){
+      if (!gl){
+        const ok = webglInit();
+        if (!ok) return;
+      }
+      if (proc.W > 256){
+        warn.innerHTML = `<span class="err">Tip:</span> For True 3D mesh, use Downsample ≥ 2× for speed.`;
+      } else warn.textContent = "";
+
+      const built = buildMesh(proc);
+      if (built.indexType === "u32" && !hasUint32ElementIndex){
+        warn.innerHTML = `<span class="err">WebGL limitation:</span> this mesh needs 32-bit indices. Increase Downsample (so the shown grid is ≤ 255×255), or use a WebGL2-capable browser/device.`;
+        return;
+      }
+
+      const uploaded = uploadMeshToGPU(built);
+      if (!uploaded) return;
+      mesh = uploaded;
+      needsRedraw = true;
+      drawWebGL();
+    }
+  }
+
+  // =========================
+  // Heatmap click -> profile
+  // =========================
+  heat.addEventListener("click", (e) => {
+    if (!Z) return;
+    const rect = heat.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / rect.width * heat.width);
+    const y = Math.floor((e.clientY - rect.top) / rect.height * heat.height);
+
+    const ds = Number(el("ds").value);
+    const xi = Math.max(0, Math.min(N-1, x*ds));
+    const yi = Math.max(0, Math.min(N-1, y*ds));
+
+    let z = Z[yi*N + xi];
+    if (el("demean").checked) z -= zMean;
+
+    clickInfo.textContent = `x=${xi}, y=${yi}, z=${fmt(z)} µm`;
+
+    // Ensure 2D tab is visible for immediate feedback
+    if (!tab2d.classList.contains("active")) setTab("2d");
+
+    if (e.shiftKey) renderProfile("col", xi);
+    else renderProfile("row", yi);
+  });
+
+  // =========================
+  // Buttons & controls
+  // =========================
+  el("file").addEventListener("change", async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    try{
+      const text = await f.text();
+      const parsed = parseGrid(text);
+      Z = parsed.data;
+      N = parsed.n;
+
+      const st = computeStats(Z);
+      zMin = st.mn; zMax = st.mx; zMean = st.mean; zStd = st.std;
+
+      updateMetrics();
+      lastProfile = null;
+      clickInfo.textContent = "";
+      profileInfo.textContent = "";
+      histInfo.textContent = "";
+
+      updateRangeInputsForMode();
+      status.textContent = `Loaded ${N}×${N}. Click Render.`;
+      // default to 2D after load
+      setTab("2d");
+    } catch(err){
+      status.innerHTML = `<span class="err">Failed:</span> ${err.message}`;
+      console.error(err);
+    }
+  });
+
+  el("loadDemo").addEventListener("click", () => {
+    const size = 512;
+    N = size;
+    Z = new Float64Array(size*size);
+    for (let y=0;y<size;y++){
+      for (let x=0;x<size;x++){
+        const r = Math.hypot(x-256, y-256)/256;
+        const v = 1.6e-4*Math.sin(10*r) + 6e-5*Math.sin(x/17) + 4e-5*Math.cos(y/23) + (Math.random()-0.5)*4e-5;
+        Z[y*size + x] = v;
+      }
+    }
+    const st = computeStats(Z);
+    zMin = st.mn; zMax = st.mx; zMean = st.mean; zStd = st.std;
+
+    updateMetrics();
+    lastProfile = null;
+    clickInfo.textContent = "";
+    profileInfo.textContent = "";
+    histInfo.textContent = "";
+    updateRangeInputsForMode();
+    status.textContent = `Loaded DEMO ${N}×${N}. Click Render.`;
+    setTab("2d");
+  });
+
+  el("clear").addEventListener("click", () => {
+    Z = null; N = 0;
+    status.textContent = "No data loaded.";
+    clickInfo.textContent = "";
+    profileInfo.textContent = "";
+    histInfo.textContent = "";
+    warn.textContent = "";
+    metricsTbl.innerHTML = "";
+    ctxH.clearRect(0,0,heat.width,heat.height);
+    ctxP.clearRect(0,0,prof.width,prof.height);
+    ctxHi.clearRect(0,0,hist.width,hist.height);
+    Plotly.purge("plotly3d");
+    mesh = null;
+    needsRedraw = true;
+    setTab("2d");
+  });
+
+  el("render").addEventListener("click", renderAll);
+
+  el("rangeMode").addEventListener("change", updateRangeInputsForMode);
+  el("demean").addEventListener("change", () => { updateRangeInputsForMode(); if (Z) renderAll(); });
+  el("ds").addEventListener("change", () => { if (Z) renderAll(); });
+  el("cmap").addEventListener("change", () => { if (Z) renderAll(); });
+  el("zscale").addEventListener("input", () => {
+    el("zscaleVal").textContent = `${Number(el("zscale").value).toFixed(1)}×`;
+    if (Z) renderAll();
+  });
+
+  // WebGL control listeners
+  ["wireframe","lighting","lx","ly","lz","amb","dif","spec","shin"].forEach(id => {
+    el(id).addEventListener("input", () => { needsRedraw = true; drawWebGL(); });
+    el(id).addEventListener("change", () => { needsRedraw = true; drawWebGL(); });
+  });
+
+  // Export helpers
+  function exportCanvasPNG(canvas, filename){
+    const a = document.createElement("a");
+    a.download = filename;
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+  }
+
+  // Exports
+  el("exportHeat").addEventListener("click", () => exportCanvasPNG(heat, "sem_heatmap.png"));
+  el("exportProfile").addEventListener("click", () => exportCanvasPNG(prof, "sem_line_profile.png"));
+  el("exportHist").addEventListener("click", () => exportCanvasPNG(hist, "sem_histogram.png"));
+
+  el("exportPlotly").addEventListener("click", async () => {
+    try{
+      await Plotly.downloadImage("plotly3d", { format:"png", filename:"sem_plotly_surface", height:900, width:1200, scale:2 });
+    } catch(err){
+      alert("Plotly export failed. Render the plot first.");
+    }
+  });
+
+  el("exportWebGL").addEventListener("click", () => {
+    if (!webgl) return;
+    exportCanvasPNG(webgl, "sem_true3d_mesh.png");
+  });
+
+  // 3D mode toggles (within 3D tab)
+  function set3DMode(m){
+    mode3D = m;
+    el("modePlotly").classList.toggle("active", m==="plotly");
+    el("modeWebGL").classList.toggle("active", m==="webgl");
+    el("plotlyWrap").style.display = (m==="plotly") ? "block" : "none";
+    el("webglWrap").style.display = (m==="webgl") ? "block" : "none";
+    el("webglControls").style.display = (m==="webgl") ? "block" : "none";
+
+    // Ensure 3D tab shown when switching 3D mode
+    if (!tab3d.classList.contains("active")) setTab("3d");
+
+    if (m==="webgl"){
+      if (!gl){
+        const ok = webglInit();
+        if (!ok) return;
+      }
+      if (Z){
+        renderAll();
+      } else {
+        needsRedraw = true;
+        drawWebGL();
+      }
+    } else {
+      // Plotly resize after becoming visible
+      try{ Plotly.Plots.resize("plotly3d"); } catch {}
+    }
+  }
+  el("modePlotly").addEventListener("click", () => set3DMode("plotly"));
+  el("modeWebGL").addEventListener("click", () => set3DMode("webgl"));
+
+  // Initialize zscale label
+  el("zscaleVal").textContent = `${Number(el("zscale").value).toFixed(1)}×`;
+
+  // Default tab
+  setTab("2d");
+})();
+</script>
+</body>
+</html>
