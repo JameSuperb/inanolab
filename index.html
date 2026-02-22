@@ -1849,7 +1849,7 @@
                         </a>
                         <div class="extra-body">
                             <h3 class="extra-title">MicroMeasure</h3>
-                            <p class="extra-desc">Looking for a fast and reliable way to measure features in your microscopy images without installing complex software? MicroMeasure is a browser-based scientific image analysis tool that allows researchers to perform calibrated length and area measurements, as well as automated particle and hole (pore) analysis, directly from their web browser. It combines essential image-analysis capabilities with an intuitive interface and transparent measurement methods, enabling reproducible, real-unit measurements suitable for research, teaching, and documentation. By reducing technical barriers and simplifying workflows, MicroMeasure offers a practical and accessible alternative for laboratories, educators, and students who need accurate quantitative image analysis anytime, anywhere.</p>
+                            <p class="extra-desc">Looking for a fast and reliable way to measure features in your microscopy images without installing complex software? MicroMeasure is a browser-based scientific image analysis tool that allows researchers to perform calibrated length, angle, and area measurements, as well as automated particle and hole (pore) analysis, directly from their web browser. It combines essential image-analysis capabilities with an intuitive interface and transparent measurement methods, enabling reproducible, real-unit measurements suitable for research, teaching, and documentation. By reducing technical barriers and simplifying workflows, MicroMeasure offers a practical and accessible alternative for laboratories, educators, and students who need accurate quantitative image analysis anytime, anywhere.</p>
                             <div class="extra-tags" aria-label="MicroMeasure tags">
                                 <span class="extra-tag">Browser-based</span>
                                 <span class="extra-tag">Microscopy</span>
@@ -2153,6 +2153,7 @@
                         <h4>Manual Measurement Tools</h4>
                         <ul>
                             <li><strong>Length</strong>: click two points to create L1, L2…; show/hide, edit, delete; “Clear All Lengths”.</li>
+                            <li><strong>Angle</strong>: click three points (2nd is vertex) to create Ang1, Ang2…; show/hide, edit, delete; “Clear All Angles”.</li>
                             <li><strong>Area</strong>: click multiple points to define polygon; close to finalize A1, A2…; edit vertices; “Clear All Areas”.</li>
                         </ul>
 
@@ -2164,10 +2165,10 @@
 
                         <h4>Results &amp; Export</h4>
                         <ul>
-                            <li><strong>Results tab</strong> consolidates Length/Area/Particle/Hole into one list.</li>
-                            <li><strong>Copy TSV</strong> for Excel/Sheets; <strong>Download CSV</strong> for full exports.</li>
+                            <li>Each measurement tab provides its own export controls.</li>
+                            <li><strong>Copy TSV</strong> and <strong>Download TSV</strong> export the current tab’s data for Excel/Sheets.</li>
                             <li><strong>Save Image</strong> exports PNG with overlays (enabled when applicable).</li>
-                            <li><strong>Reset</strong> clears measurements/analysis/ROI and resets calibration (keeps the loaded image).</li>
+                            <li><strong>Reset</strong> clears measurements/analysis/ROI and resets calibration.</li>
                         </ul>
                     </div>
                 </div>

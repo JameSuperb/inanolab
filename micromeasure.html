@@ -383,7 +383,7 @@
      </div>
     </div><!-- Right Panel - Tools -->
     <div class="lg:w-1/3 flex flex-col gap-3 min-h-0"><!-- Tool Tabs -->
-     <div class="tool-card p-2 flex gap-1 flex-wrap"><button class="tab-btn active px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="length">Length</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="area">Area</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="particles">Particles</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="holes">Holes</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="results">Results</button>
+     <div class="tool-card p-2 flex gap-1 flex-wrap"><button class="tab-btn active px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="length">Length</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="angle">Angle</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="area">Area</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="particles">Particles</button> <button class="tab-btn px-3 py-2 rounded-lg text-xs font-medium flex-1 min-w-[60px]" data-tab="holes">Holes</button>
      </div><!-- Tool Content -->
      <div class="tool-card flex-1 p-4 overflow-y-auto scrollbar-thin min-h-[200px]"><!-- Length Tab -->
       <div id="lengthTab" class="tab-content">
@@ -400,6 +400,29 @@
          <button id="lengthHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Histogram</button>
          <button id="clearLengths" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Clear All Lengths</button>
         </div>
+        <div id="lengthExportRow" class="flex gap-2 mt-2 hidden">
+         <button id="copyLengthTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1" disabled>Copy TSV</button>
+         <button id="downloadLengthTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1" disabled>Download TSV</button>
+        </div>
+      </div><!-- Angle Tab -->
+      <div id="angleTab" class="tab-content hidden">
+       <p class="text-xs text-slate-400 mb-3">Click three points on the image to measure an angle. The second point is the vertex (middle point).</p>
+       <div id="editAngleModeControls" class="hidden bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 mb-3">
+        <p class="text-xs text-yellow-300 mb-2 font-medium">✏️ Editing Angle <span id="editingAngleLabel"></span></p>
+        <p class="text-xs text-slate-400 mb-3">Drag any of the three points to adjust the angle.</p>
+        <div class="flex gap-2"><button id="saveAngleEdit" class="btn-primary px-3 py-1.5 rounded-lg text-xs flex-1">Save Changes</button> <button id="cancelAngleEdit" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1">Cancel</button>
+        </div>
+       </div>
+       <div id="angleMeasurements" class="scrollbar-thin mb-3"></div>
+       <div class="flex gap-2">
+        <button id="angleStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Descriptive Statistics</button>
+        <button id="angleHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Histogram</button>
+        <button id="clearAngles" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Clear All Angles</button>
+       </div>
+       <div id="angleExportRow" class="flex gap-2 mt-2 hidden">
+        <button id="copyAngleTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1" disabled>Copy TSV</button>
+        <button id="downloadAngleTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1" disabled>Download TSV</button>
+       </div>
       </div><!-- Area Tab -->
       <div id="areaTab" class="tab-content hidden">
        <p id="areaInstructions" class="text-xs text-slate-400 mb-3">Click points to create polygon.</p><button id="closePolygonBtn" class="hidden btn-primary px-4 py-2 rounded-lg text-sm w-full mb-3">Close Polygon (3+ points)</button>
@@ -414,6 +437,10 @@
        <button id="areaStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Descriptive Statistics</button>
         <button id="areaHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Histogram</button>
        <button id="clearAreas" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 hidden">Clear All Areas</button>
+      </div>
+      <div id="areaExportRow" class="flex gap-2 mt-2 hidden">
+       <button id="copyAreaTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1" disabled>Copy TSV</button>
+       <button id="downloadAreaTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1" disabled>Download TSV</button>
       </div>
       </div><!-- Particles Tab -->
       <div id="particlesTab" class="tab-content hidden">
@@ -471,8 +498,15 @@
           <canvas id="particleHistogram" class="histogram-canvas w-full h-24"></canvas>
          </div>
         </div>
-           <button id="particleStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Descriptive Statistics</button>
-           <button id="particleHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Histogram</button>
+        <div class="flex gap-2 flex-wrap">
+         <button id="particleStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[120px] hidden">Descriptive Statistics</button>
+         <button id="particleHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[90px] hidden">Histogram</button>
+         <button id="clearParticles" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[110px] hidden">Clear Particles</button>
+        </div>
+        <div id="particlesExportRow" class="flex gap-2 flex-wrap hidden">
+         <button id="copyParticlesTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[90px]" disabled>Copy TSV</button>
+         <button id="downloadParticlesTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[110px]" disabled>Download TSV</button>
+        </div>
        </div>
       </div><!-- Holes Tab -->
       <div id="holesTab" class="tab-content hidden">
@@ -530,25 +564,15 @@
           <canvas id="holeHistogram" class="histogram-canvas w-full h-24"></canvas>
          </div>
         </div>
-        <button id="holeStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Descriptive Statistics</button>
-        <button id="holeHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs w-full hidden">Histogram</button>
-       </div>
-      </div><!-- Results Tab -->
-      <div id="resultsTab" class="tab-content hidden">
-       <div class="flex gap-2 mb-3 flex-wrap"><button id="copyTable" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[80px]">Copy TSV</button> <button id="downloadCSV" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[100px]">Download CSV</button> <button id="resetProject" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[60px]">Reset</button>
-       </div>
-       <div class="overflow-x-auto">
-        <table id="resultsTable" class="particle-table">
-         <thead>
-          <tr>
-           <th>Type</th>
-           <th>ID</th>
-           <th>Value (px)</th>
-           <th>Value (real)</th>
-          </tr>
-         </thead>
-         <tbody id="resultsBody"></tbody>
-        </table>
+        <div class="flex gap-2 flex-wrap">
+         <button id="holeStatsBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[120px] hidden">Descriptive Statistics</button>
+         <button id="holeHistBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[90px] hidden">Histogram</button>
+         <button id="clearHoles" class="btn-danger px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[95px] hidden">Clear Holes</button>
+        </div>
+        <div id="holesExportRow" class="flex gap-2 flex-wrap hidden">
+         <button id="copyHolesTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[90px]" disabled>Copy TSV</button>
+         <button id="downloadHolesTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[110px]" disabled>Download TSV</button>
+        </div>
        </div>
       </div>
      </div>
@@ -606,7 +630,7 @@
      </section><!-- Overview -->
      <section>
       <h3 class="text-lg font-semibold text-white mb-2">📖 Overview</h3>
-      <p class="text-slate-300 mb-2">MicroMeasure is a browser-based image analysis application designed for quantitative measurements of scientific images, particularly microscopy images such as scanning electron microscopy (SEM) micrographs. The application provides intuitive tools for measuring length, area, particle size, and hole size, without requiring software installation.</p>
+      <p class="text-slate-300 mb-2">MicroMeasure is a browser-based image analysis application designed for quantitative measurements of scientific images, particularly microscopy images such as scanning electron microscopy (SEM) micrographs. The application provides intuitive tools for measuring length, angle, area, particle size, and hole size, without requiring software installation.</p>
       <p class="text-slate-300">MicroMeasure is inspired by widely used scientific image analysis platforms (e.g., ImageJ) but optimized for fast, web-based workflows and educational use.</p>
      </section><!-- Intended Users -->
      <section>
@@ -624,8 +648,8 @@
       <ol class="list-decimal list-inside space-y-2 text-slate-300">
        <li><strong>Load an image</strong> - Click "Load Image" or drag &amp; drop an image file</li>
        <li><strong>Set the scale</strong> - Click "Set Scale", draw a line of known length, then enter the real-world measurement</li>
-       <li><strong>Make measurements</strong> - Use the tabs to measure lengths, areas, particles, or holes</li>
-       <li><strong>Export results</strong> - Go to Results tab to copy, download, or save your data</li>
+      <li><strong>Make measurements</strong> - Use the tabs to measure lengths, angles, areas, particles, or holes</li>
+      <li><strong>Export results</strong> - Use the <strong>Copy TSV</strong> / <strong>Download TSV</strong> buttons at the bottom of each measurement tab</li>
       </ol>
      </section><!-- Scale Calibration -->
      <section>
@@ -736,12 +760,12 @@
      </section><!-- Results & Export -->
      <section>
       <h3 class="text-lg font-semibold text-white mb-2">📥 Results &amp; Export</h3>
-      <p class="text-slate-300 mb-2">Access all measurements in the Results tab:</p>
+        <p class="text-slate-300 mb-2">Export data from within each measurement tab:</p>
       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
        <li><strong>Save Image</strong> - Export image with all measurements overlaid (PNG)</li>
-       <li><strong>Copy TSV</strong> - Copy table data as tab-separated values (paste into spreadsheets)</li>
-       <li><strong>Download CSV</strong> - Export all measurements as a CSV file</li>
-       <li><strong>Reset</strong> - Clear all measurements and start fresh (keeps the image)</li>
+         <li><strong>Copy TSV</strong> - Copy the current tab’s data as tab-separated values (paste into spreadsheets)</li>
+         <li><strong>Download TSV</strong> - Download the current tab’s data as a .tsv file</li>
+         <li><strong>Reset</strong> - Use the reset control to clear measurements and restart</li>
       </ul>
      </section><!-- Tips & Tricks -->
      <section>
@@ -797,12 +821,13 @@
      <button id="closeStatsModalBtn" class="text-slate-500 hover:text-slate-900 text-2xl leading-none" aria-label="Close">×</button>
     </div>
     <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(90vh - 140px)">
-     <div class="flex gap-2 flex-wrap mb-4">
-      <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="length">Length</button>
-      <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="area">Area</button>
-      <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="particles">Particles</button>
-      <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="holes">Holes</button>
-     </div>
+    <div class="flex gap-2 flex-wrap mb-4">
+     <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="length">Length</button>
+     <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="angle">Angle</button>
+     <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="area">Area</button>
+     <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="particles">Particles</button>
+     <button class="stats-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-stats-type="holes">Holes</button>
+    </div>
      <div id="statsModalContent" class="space-y-4"></div>
     </div>
     <div class="px-6 py-4 border-t border-slate-200 flex gap-2">
@@ -822,12 +847,13 @@
      <button id="closeHistModalBtn" class="text-slate-500 hover:text-slate-900 text-2xl leading-none" aria-label="Close">×</button>
     </div>
     <div class="px-6 py-4 overflow-y-auto" style="max-height: calc(92vh - 160px)">
-     <div class="flex gap-2 flex-wrap mb-4">
-      <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="length">Length</button>
-      <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="area">Area</button>
-      <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="particles">Particles</button>
-      <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="holes">Holes</button>
-     </div>
+    <div class="flex gap-2 flex-wrap mb-4">
+     <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="length">Length</button>
+     <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="angle">Angle</button>
+     <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="area">Area</button>
+     <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="particles">Particles</button>
+     <button class="hist-type-btn px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 bg-slate-50 hover:bg-slate-100" data-hist-type="holes">Holes</button>
+    </div>
      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start mb-4">
       <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
        <div class="flex items-center justify-between gap-3">
@@ -880,7 +906,7 @@
    <div class="processing-content max-w-lg">
     <h3 class="text-lg font-semibold text-center mb-2">Reset MicroMeasure?</h3>
     <p class="text-sm text-slate-300 text-center mb-4">
-     This will clear the loaded image, scale calibration, ROI selection, and all measurements/results (Length, Area, Particles, Holes). This cannot be undone.
+    This will clear the loaded image, scale calibration, ROI selection, and all measurements/results (Length, Angle, Area, Particles, Holes). This cannot be undone.
     </p>
     <div class="flex gap-2">
      <button id="confirmResetYes" class="btn-danger px-4 py-2 rounded-lg text-sm flex-1">Yes</button>
@@ -919,6 +945,13 @@
       lengths: [],
       editingLengthIndex: null,
       draggedLengthPoint: null, // 'p1' or 'p2'
+
+      // Angle measurements
+      anglePoints: [],
+      angles: [], // { p1, p2, p3, angleDeg, visible? }
+      editingAngleIndex: null,
+      draggedAnglePointIndex: null, // 0|1|2
+      angleEditBackup: null,
       
       // Area measurements
       areaPoints: [],
@@ -984,16 +1017,35 @@
       clearLengths: document.getElementById('clearLengths'),
       lengthStatsBtn: document.getElementById('lengthStatsBtn'),
       lengthHistBtn: document.getElementById('lengthHistBtn'),
+      lengthExportRow: document.getElementById('lengthExportRow'),
+      copyLengthTSVBtn: document.getElementById('copyLengthTSVBtn'),
+      downloadLengthTSVBtn: document.getElementById('downloadLengthTSVBtn'),
       editLengthModeControls: document.getElementById('editLengthModeControls'),
       editingLengthLabel: document.getElementById('editingLengthLabel'),
       saveLengthEdit: document.getElementById('saveLengthEdit'),
       cancelLengthEdit: document.getElementById('cancelLengthEdit'),
+
+      // Angle
+      angleMeasurements: document.getElementById('angleMeasurements'),
+      clearAngles: document.getElementById('clearAngles'),
+      angleStatsBtn: document.getElementById('angleStatsBtn'),
+      angleHistBtn: document.getElementById('angleHistBtn'),
+      angleExportRow: document.getElementById('angleExportRow'),
+      copyAngleTSVBtn: document.getElementById('copyAngleTSVBtn'),
+      downloadAngleTSVBtn: document.getElementById('downloadAngleTSVBtn'),
+      editAngleModeControls: document.getElementById('editAngleModeControls'),
+      editingAngleLabel: document.getElementById('editingAngleLabel'),
+      saveAngleEdit: document.getElementById('saveAngleEdit'),
+      cancelAngleEdit: document.getElementById('cancelAngleEdit'),
       
       // Area
       areaMeasurements: document.getElementById('areaMeasurements'),
       clearAreas: document.getElementById('clearAreas'),
       areaStatsBtn: document.getElementById('areaStatsBtn'),
       areaHistBtn: document.getElementById('areaHistBtn'),
+      areaExportRow: document.getElementById('areaExportRow'),
+      copyAreaTSVBtn: document.getElementById('copyAreaTSVBtn'),
+      downloadAreaTSVBtn: document.getElementById('downloadAreaTSVBtn'),
       areaInstructions: document.getElementById('areaInstructions'),
       closePolygonBtn: document.getElementById('closePolygonBtn'),
       editModeControls: document.getElementById('editModeControls'),
@@ -1025,6 +1077,10 @@
       particleHistogram: document.getElementById('particleHistogram'),
       particleStatsBtn: document.getElementById('particleStatsBtn'),
       particleHistBtn: document.getElementById('particleHistBtn'),
+      clearParticles: document.getElementById('clearParticles'),
+      particlesExportRow: document.getElementById('particlesExportRow'),
+      copyParticlesTSVBtn: document.getElementById('copyParticlesTSVBtn'),
+      downloadParticlesTSVBtn: document.getElementById('downloadParticlesTSVBtn'),
       
       // ROI controls
       selectParticleROI: document.getElementById('selectParticleROI'),
@@ -1051,13 +1107,13 @@
       holeHistogram: document.getElementById('holeHistogram'),
       holeStatsBtn: document.getElementById('holeStatsBtn'),
       holeHistBtn: document.getElementById('holeHistBtn'),
+      clearHoles: document.getElementById('clearHoles'),
+      holesExportRow: document.getElementById('holesExportRow'),
+      copyHolesTSVBtn: document.getElementById('copyHolesTSVBtn'),
+      downloadHolesTSVBtn: document.getElementById('downloadHolesTSVBtn'),
       
-      // Results
+      // Save Image
       saveScreenshot: document.getElementById('saveScreenshot'),
-      copyTable: document.getElementById('copyTable'),
-      downloadCSV: document.getElementById('downloadCSV'),
-      resetProject: document.getElementById('resetProject'),
-      resultsBody: document.getElementById('resultsBody'),
       
       // Processing modal
       processingModal: document.getElementById('processingModal'),
@@ -1284,6 +1340,43 @@
       if (state.currentTool === 'length' && state.lengthPoints.length > 0) {
         drawPoint(state.lengthPoints[0], '#3b82f6');
       }
+
+      // Draw angle measurements
+      state.angles.forEach((ang, i) => {
+        if (ang.visible === false) return;
+
+        const isEditing = state.editingAngleIndex === i;
+        const color = isEditing ? '#fbbf24' : '#06b6d4';
+
+        // Rays from vertex (p2)
+        drawLine(ang.p2, ang.p1, color, 2);
+        drawLine(ang.p2, ang.p3, color, 2);
+
+        if (isEditing) {
+          [ang.p1, ang.p2, ang.p3].forEach(p => {
+            overlayCtx.fillStyle = '#fbbf24';
+            overlayCtx.beginPath();
+            overlayCtx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+            overlayCtx.fill();
+            overlayCtx.strokeStyle = '#fff';
+            overlayCtx.lineWidth = 2;
+            overlayCtx.stroke();
+          });
+        } else {
+          drawPoint(ang.p1, color);
+          drawPoint(ang.p2, color);
+          drawPoint(ang.p3, color);
+          drawMeasurementLabel({ x: ang.p2.x, y: ang.p2.y - 18 }, `Ang${i + 1}: ${formatNumber(ang.angleDeg)}°`, color);
+        }
+      });
+
+      // Draw current angle points (in-progress)
+      if (state.currentTool === 'angle' && state.anglePoints.length > 0) {
+        const color = '#06b6d4';
+        state.anglePoints.forEach(p => drawPoint(p, color));
+        if (state.anglePoints.length >= 2) drawLine(state.anglePoints[1], state.anglePoints[0], color, 2, true);
+        if (state.anglePoints.length === 3) drawLine(state.anglePoints[1], state.anglePoints[2], color, 2, true);
+      }
       
       // Draw area polygons
       state.areas.forEach((area, i) => {
@@ -1471,7 +1564,7 @@
     
     // ========== GUIDANCE SYSTEM ==========
     function hasAnyMeasurement() {
-      return state.lengths.length > 0 || state.areas.length > 0 || state.particles.length > 0 || state.holes.length > 0;
+      return state.lengths.length > 0 || state.angles.length > 0 || state.areas.length > 0 || state.particles.length > 0 || state.holes.length > 0;
     }
 
     function updateGuidance() {
@@ -1500,7 +1593,7 @@
     
     // Update the Save Image button state
     function updateSaveButtonState() {
-      const hasMeasurements = state.lengths.length > 0 || state.areas.length > 0 || state.particles.length > 0 || state.holes.length > 0;
+      const hasMeasurements = state.lengths.length > 0 || state.angles.length > 0 || state.areas.length > 0 || state.particles.length > 0 || state.holes.length > 0;
       const canSave = state.image && hasMeasurements;
       elements.saveScreenshot.disabled = !canSave;
     }
@@ -1620,7 +1713,6 @@
       updateAreaDisplay();
       if (state.particles.length) updateParticleResults();
       if (state.holes.length) updateHoleResults();
-      updateResultsTable();
       drawOverlay();
       updateGuidance();
     }
@@ -1635,7 +1727,6 @@
     function addLengthMeasurement(len) {
       state.lengths.push(len);
       updateLengthDisplay();
-      updateResultsTable();
       drawOverlay();
       updateGuidance();
       updateSaveButtonState();
@@ -1665,7 +1756,6 @@
     window.deleteLengthMeasurement = function(index) {
       state.lengths.splice(index, 1);
       updateLengthDisplay();
-      updateResultsTable();
       drawOverlay();
       updateSaveButtonState();
     };
@@ -1702,7 +1792,6 @@
         
         exitLengthEditMode();
         updateLengthDisplay();
-        updateResultsTable();
       }
     }
     
@@ -1721,7 +1810,131 @@
       state.lengths = [];
       state.lengthPoints = [];
       updateLengthDisplay();
-      updateResultsTable();
+      drawOverlay();
+      updateSaveButtonState();
+    }
+
+    // ========== ANGLE MEASUREMENT ==========
+    function computeAngleDeg(p1, p2, p3) {
+      const v1x = p1.x - p2.x;
+      const v1y = p1.y - p2.y;
+      const v2x = p3.x - p2.x;
+      const v2y = p3.y - p2.y;
+      const mag1 = Math.hypot(v1x, v1y);
+      const mag2 = Math.hypot(v2x, v2y);
+      if (mag1 === 0 || mag2 === 0) return 0;
+      const dot = v1x * v2x + v1y * v2y;
+      let cos = dot / (mag1 * mag2);
+      cos = Math.max(-1, Math.min(1, cos));
+      return Math.acos(cos) * (180 / Math.PI);
+    }
+
+    function addAngleMeasurement(p1, p2, p3) {
+      const angleDeg = computeAngleDeg(p1, p2, p3);
+      state.angles.push({ p1, p2, p3, angleDeg });
+      updateAngleDisplay();
+      drawOverlay();
+      updateGuidance();
+      updateSaveButtonState();
+    }
+
+    function updateAngleDisplay() {
+      if (!elements.angleMeasurements) return;
+
+      elements.angleMeasurements.innerHTML = state.angles.map((ang, i) => `
+        <div class="measurement-item">
+          <div>
+            <span class="font-medium">Ang${i + 1}:</span>
+            <span class="mono">${formatNumber(ang.angleDeg)}°</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleAngleVisibility(${i})" class="text-slate-400 hover:text-cyan-400 text-sm" title="${ang.visible !== false ? 'Hide' : 'Show'}">
+              ${ang.visible !== false ? '👁' : '🔍'}
+            </button>
+            <button onclick="editAngleMeasurement(${i})" class="text-slate-400 hover:text-yellow-400 text-sm" title="Edit">✏️</button>
+            <button onclick="deleteAngleMeasurement(${i})" class="text-red-400 hover:text-red-300 text-lg leading-none">&times;</button>
+          </div>
+        </div>
+      `).join('');
+
+      if (elements.clearAngles) elements.clearAngles.classList.toggle('hidden', state.angles.length === 0);
+      updateStatsButtonsVisibility();
+    }
+
+    window.deleteAngleMeasurement = function(index) {
+      state.angles.splice(index, 1);
+      updateAngleDisplay();
+      drawOverlay();
+      updateSaveButtonState();
+    };
+
+    window.toggleAngleVisibility = function(index) {
+      state.angles[index].visible = state.angles[index].visible === false ? true : false;
+      updateAngleDisplay();
+      drawOverlay();
+    };
+
+    window.editAngleMeasurement = function(index) {
+      state.editingAngleIndex = index;
+      state.draggedAnglePointIndex = null;
+      state.currentTool = 'angle';
+
+      const a = state.angles[index];
+      state.angleEditBackup = {
+        p1: { ...a.p1 },
+        p2: { ...a.p2 },
+        p3: { ...a.p3 },
+        angleDeg: a.angleDeg
+      };
+
+      // Switch to angle tab UI
+      elements.tabBtns.forEach(b => b.classList.remove('active'));
+      const angleBtn = document.querySelector('[data-tab="angle"]');
+      if (angleBtn) angleBtn.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+      const tab = document.getElementById('angleTab');
+      if (tab) tab.classList.remove('hidden');
+
+      if (elements.editAngleModeControls) elements.editAngleModeControls.classList.remove('hidden');
+      if (elements.editingAngleLabel) elements.editingAngleLabel.textContent = `Ang${index + 1}`;
+
+      drawOverlay();
+    };
+
+    function saveAngleEdit() {
+      if (state.editingAngleIndex === null) return;
+      const a = state.angles[state.editingAngleIndex];
+      a.angleDeg = computeAngleDeg(a.p1, a.p2, a.p3);
+      exitAngleEditMode();
+      updateAngleDisplay();
+    }
+
+    function cancelAngleEdit() {
+      if (state.editingAngleIndex === null) return;
+      if (state.angleEditBackup) {
+        const a = state.angles[state.editingAngleIndex];
+        a.p1 = { ...state.angleEditBackup.p1 };
+        a.p2 = { ...state.angleEditBackup.p2 };
+        a.p3 = { ...state.angleEditBackup.p3 };
+        a.angleDeg = state.angleEditBackup.angleDeg;
+      }
+      exitAngleEditMode();
+      updateAngleDisplay();
+    }
+
+    function exitAngleEditMode() {
+      state.editingAngleIndex = null;
+      state.draggedAnglePointIndex = null;
+      state.angleEditBackup = null;
+      if (elements.editAngleModeControls) elements.editAngleModeControls.classList.add('hidden');
+      drawOverlay();
+    }
+
+    function clearAllAngles() {
+      state.angles = [];
+      state.anglePoints = [];
+      exitAngleEditMode();
+      updateAngleDisplay();
       drawOverlay();
       updateSaveButtonState();
     }
@@ -1744,7 +1957,6 @@
       const realArea = state.isCalibrated ? pixelArea * Math.pow(state.unitsPerPixel, 2) : null;
       state.areas.push({ points: [...points], pixelArea, realArea });
       updateAreaDisplay();
-      updateResultsTable();
       drawOverlay();
       updateGuidance();
       updateSaveButtonState();
@@ -1774,7 +1986,6 @@
     window.deleteAreaMeasurement = function(index) {
       state.areas.splice(index, 1);
       updateAreaDisplay();
-      updateResultsTable();
       drawOverlay();
       updateSaveButtonState();
     };
@@ -1811,7 +2022,6 @@
         
         exitAreaEditMode();
         updateAreaDisplay();
-        updateResultsTable();
       }
     }
     
@@ -1831,7 +2041,6 @@
       state.areas = [];
       state.areaPoints = [];
       updateAreaDisplay();
-      updateResultsTable();
       drawOverlay();
       updateSaveButtonState();
     }
@@ -2306,6 +2515,7 @@
 
     function statsUnitLabel(kind) {
       if (kind === 'length') return state.isCalibrated ? state.unit : 'px';
+      if (kind === 'angle') return 'deg';
       if (kind === 'area') return state.isCalibrated ? `${state.unit}²` : 'px²';
       if (kind === 'ecd') return state.isCalibrated ? state.unit : 'px';
       if (kind === 'componentArea') return state.isCalibrated ? `${state.unit}²` : 'px²';
@@ -2318,6 +2528,13 @@
           label: 'Length',
           unit: statsUnitLabel('length'),
           values: state.lengths.map(l => state.isCalibrated ? l.realLength : l.pixelLength)
+        }];
+      }
+      if (type === 'angle') {
+        return [{
+          label: 'Angle',
+          unit: statsUnitLabel('angle'),
+          values: state.angles.map(a => a.angleDeg)
         }];
       }
       if (type === 'area') {
@@ -2437,6 +2654,7 @@
       const type = currentStatsType;
       const titleMap = {
         length: 'Length — Descriptive Statistics',
+        angle: 'Angle — Descriptive Statistics',
         area: 'Area — Descriptive Statistics',
         particles: 'Particles — Descriptive Statistics',
         holes: 'Holes — Descriptive Statistics'
@@ -2445,7 +2663,9 @@
 
       const sections = getStatsSectionsForType(type);
       const totalN = sections.length ? (sections[0].values.filter(v => Number.isFinite(v)).length) : 0;
-      const unitNote = state.isCalibrated ? `Real units (${state.unit})` : 'Pixels (set scale for real units)';
+      const unitNote = (type === 'angle')
+        ? 'Degrees (calibration not required)'
+        : (state.isCalibrated ? `Real units (${state.unit})` : 'Pixels (set scale for real units)');
       if (elements.statsModalSubtitle) {
         elements.statsModalSubtitle.textContent = `Based on ${totalN} values. ${unitNote}. (Shown only when n ≥ 4)`;
       }
@@ -2563,6 +2783,7 @@
 
     function histogramUnitLabel(type, metric) {
       if (type === 'length') return statsUnitLabel('length');
+      if (type === 'angle') return statsUnitLabel('angle');
       if (type === 'area') return statsUnitLabel('area');
       if (type === 'particles' || type === 'holes') {
         if (metric === 'area') return statsUnitLabel('componentArea');
@@ -2585,6 +2806,10 @@
         values = state.lengths.map(l => state.isCalibrated ? l.realLength : l.pixelLength);
         unit = histogramUnitLabel('length');
         label = `Length (${unit})`;
+      } else if (type === 'angle') {
+        values = state.angles.map(a => a.angleDeg);
+        unit = histogramUnitLabel('angle');
+        label = `Angle (${unit})`;
       } else if (type === 'area') {
         values = state.areas.map(a => state.isCalibrated ? a.realArea : a.pixelArea);
         unit = histogramUnitLabel('area');
@@ -2745,6 +2970,7 @@
 
       const titleMap = {
         length: 'Length Histogram',
+        angle: 'Angle Histogram',
         area: 'Area Histogram',
         particles: 'Particles Histogram',
         holes: 'Holes Histogram'
@@ -2785,13 +3011,16 @@
     function renderHistogramModal() {
       const titleMap = {
         length: 'Length — Histogram',
+        angle: 'Angle — Histogram',
         area: 'Area — Histogram',
         particles: 'Particles — Histogram',
         holes: 'Holes — Histogram'
       };
       if (elements.histModalTitle) elements.histModalTitle.textContent = titleMap[currentHistType] || 'Histogram';
 
-      const unitNote = state.isCalibrated ? `Real units (${state.unit})` : 'Pixels (set scale for real units)';
+      const unitNote = (currentHistType === 'angle')
+        ? 'Degrees (calibration not required)'
+        : (state.isCalibrated ? `Real units (${state.unit})` : 'Pixels (set scale for real units)');
       if (elements.histModalSubtitle) {
         elements.histModalSubtitle.textContent = `${unitNote}. Adjust bins to control resolution.`;
       }
@@ -2835,12 +3064,15 @@
 
     function updateStatsButtonsVisibility() {
       const showLen = state.lengths.length >= 4;
+      const showAngle = state.angles.length >= 4;
       const showArea = state.areas.length >= 4;
       const showParticles = state.particles.length >= 4;
       const showHoles = state.holes.length >= 4;
 
       if (elements.lengthStatsBtn) elements.lengthStatsBtn.classList.toggle('hidden', !showLen);
       if (elements.lengthHistBtn) elements.lengthHistBtn.classList.toggle('hidden', !showLen);
+      if (elements.angleStatsBtn) elements.angleStatsBtn.classList.toggle('hidden', !showAngle);
+      if (elements.angleHistBtn) elements.angleHistBtn.classList.toggle('hidden', !showAngle);
       if (elements.areaStatsBtn) elements.areaStatsBtn.classList.toggle('hidden', !showArea);
       if (elements.areaHistBtn) elements.areaHistBtn.classList.toggle('hidden', !showArea);
       if (elements.particleStatsBtn) elements.particleStatsBtn.classList.toggle('hidden', !showParticles);
@@ -2848,9 +3080,40 @@
       if (elements.holeStatsBtn) elements.holeStatsBtn.classList.toggle('hidden', !showHoles);
       if (elements.holeHistBtn) elements.holeHistBtn.classList.toggle('hidden', !showHoles);
 
+      // Per-feature actions (export + clear)
+      updateFeatureActionButtons();
+
       if (elements.histogramModal && !elements.histogramModal.classList.contains('hidden')) {
         renderHistogramModal();
       }
+    }
+
+    function updateFeatureActionButtons() {
+      const hasLen = state.lengths.length > 0;
+      const hasAngle = state.angles.length > 0;
+      const hasArea = state.areas.length > 0;
+      const hasParticles = state.particles.length > 0;
+      const hasHoles = state.holes.length > 0;
+
+      if (elements.lengthExportRow) elements.lengthExportRow.classList.toggle('hidden', !hasLen);
+      if (elements.angleExportRow) elements.angleExportRow.classList.toggle('hidden', !hasAngle);
+      if (elements.areaExportRow) elements.areaExportRow.classList.toggle('hidden', !hasArea);
+      if (elements.particlesExportRow) elements.particlesExportRow.classList.toggle('hidden', !hasParticles);
+      if (elements.holesExportRow) elements.holesExportRow.classList.toggle('hidden', !hasHoles);
+
+      if (elements.copyLengthTSVBtn) elements.copyLengthTSVBtn.disabled = !hasLen;
+      if (elements.downloadLengthTSVBtn) elements.downloadLengthTSVBtn.disabled = !hasLen;
+      if (elements.copyAngleTSVBtn) elements.copyAngleTSVBtn.disabled = !hasAngle;
+      if (elements.downloadAngleTSVBtn) elements.downloadAngleTSVBtn.disabled = !hasAngle;
+      if (elements.copyAreaTSVBtn) elements.copyAreaTSVBtn.disabled = !hasArea;
+      if (elements.downloadAreaTSVBtn) elements.downloadAreaTSVBtn.disabled = !hasArea;
+      if (elements.copyParticlesTSVBtn) elements.copyParticlesTSVBtn.disabled = !hasParticles;
+      if (elements.downloadParticlesTSVBtn) elements.downloadParticlesTSVBtn.disabled = !hasParticles;
+      if (elements.copyHolesTSVBtn) elements.copyHolesTSVBtn.disabled = !hasHoles;
+      if (elements.downloadHolesTSVBtn) elements.downloadHolesTSVBtn.disabled = !hasHoles;
+
+      if (elements.clearParticles) elements.clearParticles.classList.toggle('hidden', !hasParticles);
+      if (elements.clearHoles) elements.clearHoles.classList.toggle('hidden', !hasHoles);
     }
     
     function drawHistogram(canvas, data, color) {
@@ -3099,7 +3362,6 @@
       await sleep(10);
       
       updateParticleResults();
-      updateResultsTable();
       drawOverlay();
       updateGuidance();
       updateSaveButtonState();
@@ -3218,7 +3480,6 @@
       await sleep(10);
       
       updateHoleResults();
-      updateResultsTable();
       drawOverlay();
       updateGuidance();
       updateSaveButtonState();
@@ -3262,53 +3523,87 @@
       });
       
       updateLengthDisplay();
+      updateAngleDisplay();
       updateAreaDisplay();
       if (state.particles.length) updateParticleResults();
       if (state.holes.length) updateHoleResults();
-      updateResultsTable();
+      updateStatsButtonsVisibility();
     }
-    
-    // ========== RESULTS TABLE ==========
-    function updateResultsTable() {
-      let html = '';
-      
-      state.lengths.forEach((len, i) => {
-        html += `<tr>
-          <td>Length</td>
-          <td>L${i+1}</td>
-          <td class="mono">${len.pixelLength.toFixed(2)} px</td>
-          <td class="mono">${state.isCalibrated ? len.realLength.toFixed(2) + ' ' + state.unit : '-'}</td>
-        </tr>`;
-      });
-      
-      state.areas.forEach((area, i) => {
-        html += `<tr>
-          <td>Area</td>
-          <td>A${i+1}</td>
-          <td class="mono">${area.pixelArea.toFixed(2)} px²</td>
-          <td class="mono">${state.isCalibrated ? area.realArea.toFixed(2) + ' ' + state.unit + '²' : '-'}</td>
-        </tr>`;
-      });
-      
-      state.particles.forEach(p => {
-        html += `<tr>
-          <td>Particle</td>
-          <td>P${p.id}</td>
-          <td class="mono">${p.areaPx} px² / ECD: ${p.ecdPx.toFixed(1)} px</td>
-          <td class="mono">${state.isCalibrated ? p.areaReal.toFixed(2) + ' ' + state.unit + '² / ' + p.ecdReal.toFixed(2) + ' ' + state.unit : '-'}</td>
-        </tr>`;
-      });
-      
-      state.holes.forEach(h => {
-        html += `<tr>
-          <td>Hole</td>
-          <td>H${h.id}</td>
-          <td class="mono">${h.areaPx} px² / ECD: ${h.ecdPx.toFixed(1)} px</td>
-          <td class="mono">${state.isCalibrated ? h.areaReal.toFixed(2) + ' ' + state.unit + '² / ' + h.ecdReal.toFixed(2) + ' ' + state.unit : '-'}</td>
-        </tr>`;
-      });
-      
-      elements.resultsBody.innerHTML = html || '<tr><td colspan="4" class="text-center text-slate-500 py-4">No measurements yet</td></tr>';
+
+    // ========== PER-FEATURE TSV EXPORT ==========
+    function buildFeatureTSV(type) {
+      let tsv = 'Type\tID\tValue_px\tValue_real\tUnit\n';
+
+      if (type === 'length') {
+        state.lengths.forEach((len, i) => {
+          tsv += `Length\tL${i + 1}\t${len.pixelLength.toFixed(4)}\t${state.isCalibrated ? len.realLength.toFixed(4) : ''}\t${state.isCalibrated ? state.unit : 'px'}\n`;
+        });
+        return tsv;
+      }
+
+      if (type === 'angle') {
+        state.angles.forEach((ang, i) => {
+          const v = Number.isFinite(ang.angleDeg) ? ang.angleDeg : 0;
+          tsv += `Angle\tAng${i + 1}\t${v.toFixed(4)}\t${v.toFixed(4)}\tdeg\n`;
+        });
+        return tsv;
+      }
+
+      if (type === 'area') {
+        state.areas.forEach((area, i) => {
+          tsv += `Area\tA${i + 1}\t${area.pixelArea.toFixed(4)}\t${state.isCalibrated ? area.realArea.toFixed(4) : ''}\t${state.isCalibrated ? state.unit + '²' : 'px²'}\n`;
+        });
+        return tsv;
+      }
+
+      if (type === 'particles') {
+        state.particles.forEach((p) => {
+          tsv += `Particle_Area\tP${p.id}\t${p.areaPx}\t${state.isCalibrated ? p.areaReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit + '²' : 'px²'}\n`;
+          tsv += `Particle_ECD\tP${p.id}\t${p.ecdPx.toFixed(4)}\t${state.isCalibrated ? p.ecdReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit : 'px'}\n`;
+        });
+        return tsv;
+      }
+
+      if (type === 'holes') {
+        state.holes.forEach((h) => {
+          tsv += `Hole_Area\tH${h.id}\t${h.areaPx}\t${state.isCalibrated ? h.areaReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit + '²' : 'px²'}\n`;
+          tsv += `Hole_ECD\tH${h.id}\t${h.ecdPx.toFixed(4)}\t${state.isCalibrated ? h.ecdReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit : 'px'}\n`;
+        });
+        return tsv;
+      }
+
+      return tsv;
+    }
+
+    async function copyFeatureTSV(type) {
+      const tsv = buildFeatureTSV(type);
+      const hasRows = tsv.trim().split('\n').length > 1;
+      if (!hasRows) return;
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(tsv);
+          return;
+        }
+      } catch (e) {
+        // Fall back below
+      }
+
+      fallbackCopyText(tsv);
+    }
+
+    function downloadFeatureTSV(type) {
+      const tsv = buildFeatureTSV(type);
+      const hasRows = tsv.trim().split('\n').length > 1;
+      if (!hasRows) return;
+
+      const blob = new Blob([tsv], { type: 'text/tab-separated-values;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `micromeasure_${type}.tsv`;
+      a.click();
+      URL.revokeObjectURL(url);
     }
     
     function saveScreenshot() {
@@ -3336,59 +3631,23 @@
         URL.revokeObjectURL(url);
       }, 'image/png');
     }
-    
-    function exportCSV() {
-      let csv = 'Type,ID,Value_px,Value_real,Unit\n';
-      
-      state.lengths.forEach((len, i) => {
-        csv += `Length,L${i+1},${len.pixelLength.toFixed(4)},${state.isCalibrated ? len.realLength.toFixed(4) : ''},${state.unit}\n`;
-      });
-      
-      state.areas.forEach((area, i) => {
-        csv += `Area,A${i+1},${area.pixelArea.toFixed(4)},${state.isCalibrated ? area.realArea.toFixed(4) : ''},${state.unit}²\n`;
-      });
-      
-      state.particles.forEach(p => {
-        csv += `Particle_Area,P${p.id},${p.areaPx},${state.isCalibrated ? p.areaReal.toFixed(4) : ''},${state.unit}²\n`;
-        csv += `Particle_ECD,P${p.id},${p.ecdPx.toFixed(4)},${state.isCalibrated ? p.ecdReal.toFixed(4) : ''},${state.unit}\n`;
-      });
-      
-      state.holes.forEach(h => {
-        csv += `Hole_Area,H${h.id},${h.areaPx},${state.isCalibrated ? h.areaReal.toFixed(4) : ''},${state.unit}²\n`;
-        csv += `Hole_ECD,H${h.id},${h.ecdPx.toFixed(4)},${state.isCalibrated ? h.ecdReal.toFixed(4) : ''},${state.unit}\n`;
-      });
-      
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'micromeasure_results.csv';
-      a.click();
-      URL.revokeObjectURL(url);
+
+    function clearAllParticles() {
+      state.particles = [];
+      if (elements.particleResults) elements.particleResults.classList.add('hidden');
+      updateStatsButtonsVisibility();
+      drawOverlay();
+      updateGuidance();
+      updateSaveButtonState();
     }
-    
-    function copyTableTSV() {
-      let tsv = 'Type\tID\tValue_px\tValue_real\tUnit\n';
-      
-      state.lengths.forEach((len, i) => {
-        tsv += `Length\tL${i+1}\t${len.pixelLength.toFixed(4)}\t${state.isCalibrated ? len.realLength.toFixed(4) : ''}\t${state.unit}\n`;
-      });
-      
-      state.areas.forEach((area, i) => {
-        tsv += `Area\tA${i+1}\t${area.pixelArea.toFixed(4)}\t${state.isCalibrated ? area.realArea.toFixed(4) : ''}\t${state.unit}²\n`;
-      });
-      
-      state.particles.forEach(p => {
-        tsv += `Particle_Area\tP${p.id}\t${p.areaPx}\t${state.isCalibrated ? p.areaReal.toFixed(4) : ''}\t${state.unit}²\n`;
-        tsv += `Particle_ECD\tP${p.id}\t${p.ecdPx.toFixed(4)}\t${state.isCalibrated ? p.ecdReal.toFixed(4) : ''}\t${state.unit}\n`;
-      });
-      
-      state.holes.forEach(h => {
-        tsv += `Hole_Area\tH${h.id}\t${h.areaPx}\t${state.isCalibrated ? h.areaReal.toFixed(4) : ''}\t${state.unit}²\n`;
-        tsv += `Hole_ECD\tH${h.id}\t${h.ecdPx.toFixed(4)}\t${state.isCalibrated ? h.ecdReal.toFixed(4) : ''}\t${state.unit}\n`;
-      });
-      
-      navigator.clipboard.writeText(tsv);
+
+    function clearAllHoles() {
+      state.holes = [];
+      if (elements.holeResults) elements.holeResults.classList.add('hidden');
+      updateStatsButtonsVisibility();
+      drawOverlay();
+      updateGuidance();
+      updateSaveButtonState();
     }
     
     function resetProject() {
@@ -3396,6 +3655,11 @@
       state.calibrationLine = null;
       state.lengths = [];
       state.lengthPoints = [];
+      state.anglePoints = [];
+      state.angles = [];
+      state.editingAngleIndex = null;
+      state.draggedAnglePointIndex = null;
+      state.angleEditBackup = null;
       state.areas = [];
       state.areaPoints = [];
       state.particles = [];
@@ -3421,10 +3685,12 @@
       elements.selectHoleROI.textContent = '📐 Select ROI (Draw Rectangle)';
       elements.selectHoleROI.classList.add('btn-secondary');
       elements.selectHoleROI.classList.remove('btn-primary');
+
+      if (elements.editAngleModeControls) elements.editAngleModeControls.classList.add('hidden');
       
       updateLengthDisplay();
+      updateAngleDisplay();
       updateAreaDisplay();
-      updateResultsTable();
       drawOverlay();
       updateGuidance();
       updateSaveButtonState();
@@ -3533,6 +3799,11 @@
     elements.clearLengths.addEventListener('click', clearAllLengths);
     if (elements.lengthStatsBtn) elements.lengthStatsBtn.addEventListener('click', () => openStatsModal('length'));
     if (elements.lengthHistBtn) elements.lengthHistBtn.addEventListener('click', () => openHistogramModal('length'));
+    if (elements.clearAngles) elements.clearAngles.addEventListener('click', clearAllAngles);
+    if (elements.angleStatsBtn) elements.angleStatsBtn.addEventListener('click', () => openStatsModal('angle'));
+    if (elements.angleHistBtn) elements.angleHistBtn.addEventListener('click', () => openHistogramModal('angle'));
+    if (elements.saveAngleEdit) elements.saveAngleEdit.addEventListener('click', saveAngleEdit);
+    if (elements.cancelAngleEdit) elements.cancelAngleEdit.addEventListener('click', cancelAngleEdit);
     elements.saveLengthEdit.addEventListener('click', saveLengthEdit);
     elements.cancelLengthEdit.addEventListener('click', cancelLengthEdit);
     elements.clearAreas.addEventListener('click', clearAllAreas);
@@ -3559,9 +3830,21 @@
     elements.selectHoleROI.addEventListener('click', () => startROISelection('holes'));
     elements.clearHoleROI.addEventListener('click', () => clearROI('holes'));
     elements.saveScreenshot.addEventListener('click', saveScreenshot);
-    elements.copyTable.addEventListener('click', copyTableTSV);
-    elements.downloadCSV.addEventListener('click', exportCSV);
-    elements.resetProject.addEventListener('click', resetProject);
+
+    // Per-feature export buttons
+    if (elements.copyLengthTSVBtn) elements.copyLengthTSVBtn.addEventListener('click', () => copyFeatureTSV('length'));
+    if (elements.downloadLengthTSVBtn) elements.downloadLengthTSVBtn.addEventListener('click', () => downloadFeatureTSV('length'));
+    if (elements.copyAngleTSVBtn) elements.copyAngleTSVBtn.addEventListener('click', () => copyFeatureTSV('angle'));
+    if (elements.downloadAngleTSVBtn) elements.downloadAngleTSVBtn.addEventListener('click', () => downloadFeatureTSV('angle'));
+    if (elements.copyAreaTSVBtn) elements.copyAreaTSVBtn.addEventListener('click', () => copyFeatureTSV('area'));
+    if (elements.downloadAreaTSVBtn) elements.downloadAreaTSVBtn.addEventListener('click', () => downloadFeatureTSV('area'));
+    if (elements.copyParticlesTSVBtn) elements.copyParticlesTSVBtn.addEventListener('click', () => copyFeatureTSV('particles'));
+    if (elements.downloadParticlesTSVBtn) elements.downloadParticlesTSVBtn.addEventListener('click', () => downloadFeatureTSV('particles'));
+    if (elements.copyHolesTSVBtn) elements.copyHolesTSVBtn.addEventListener('click', () => copyFeatureTSV('holes'));
+    if (elements.downloadHolesTSVBtn) elements.downloadHolesTSVBtn.addEventListener('click', () => downloadFeatureTSV('holes'));
+
+    if (elements.clearParticles) elements.clearParticles.addEventListener('click', clearAllParticles);
+    if (elements.clearHoles) elements.clearHoles.addEventListener('click', clearAllHoles);
 
     // Header reset with confirmation
     if (elements.headerResetBtn) elements.headerResetBtn.addEventListener('click', openResetConfirm);
@@ -3751,6 +4034,12 @@
           elements.closePolygonBtn.classList.add('hidden');
           drawOverlay();
         }
+
+        // Clear in-progress angle when switching away from angle tool
+        if (tab !== 'angle' && state.anglePoints.length > 0) {
+          state.anglePoints = [];
+          drawOverlay();
+        }
         
         document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
         document.getElementById(tab + 'Tab').classList.remove('hidden');
@@ -3808,6 +4097,22 @@
           }
         }
       }
+
+      // Check if clicking on an angle handle in edit mode
+      if (state.editingAngleIndex !== null && e.button === 0) {
+        const coords = canvasCoords(e);
+        const ang = state.angles[state.editingAngleIndex];
+        const pts = [ang.p1, ang.p2, ang.p3];
+        for (let i = 0; i < pts.length; i++) {
+          const p = pts[i];
+          const dist = Math.sqrt(Math.pow(coords.x - p.x, 2) + Math.pow(coords.y - p.y, 2));
+          if (dist < 10) {
+            state.draggedAnglePointIndex = i;
+            elements.overlayCanvas.style.cursor = 'move';
+            return;
+          }
+        }
+      }
     });
     
     elements.overlayCanvas.addEventListener('mousemove', (e) => {
@@ -3848,24 +4153,37 @@
         area.points[state.draggedPointIndex] = coords;
         drawOverlay();
       }
+
+      // Handle angle point dragging in edit mode
+      if (state.draggedAnglePointIndex !== null && state.editingAngleIndex !== null) {
+        const coords = canvasCoords(e);
+        const ang = state.angles[state.editingAngleIndex];
+        if (state.draggedAnglePointIndex === 0) ang.p1 = coords;
+        if (state.draggedAnglePointIndex === 1) ang.p2 = coords;
+        if (state.draggedAnglePointIndex === 2) ang.p3 = coords;
+        ang.angleDeg = computeAngleDeg(ang.p1, ang.p2, ang.p3);
+        drawOverlay();
+      }
     });
     
     elements.overlayCanvas.addEventListener('mouseup', () => {
       state.isPanning = false;
       state.draggedPointIndex = null;
       state.draggedLengthPoint = null;
+      state.draggedAnglePointIndex = null;
       
       // Finish ROI drawing
       if (state.isDrawingROI && state.roiStart) {
         finishROISelection();
       }
       
-      const cursor = state.editingAreaIndex !== null || state.editingLengthIndex !== null ? 'pointer' : 'crosshair';
+      const cursor = (state.editingAreaIndex !== null || state.editingLengthIndex !== null || state.editingAngleIndex !== null) ? 'pointer' : 'crosshair';
       elements.overlayCanvas.style.cursor = cursor;
     });
     
     elements.overlayCanvas.addEventListener('mouseleave', () => {
       state.isPanning = false;
+      state.draggedAnglePointIndex = null;
     });
     
     elements.overlayCanvas.addEventListener('click', (e) => {
@@ -3893,6 +4211,21 @@
           const len = measureLength(state.lengthPoints[0], state.lengthPoints[1]);
           addLengthMeasurement(len);
           state.lengthPoints = [];
+        }
+        drawOverlay();
+      }
+
+      // Angle tool (3 clicks; 2nd click is vertex)
+      if (state.currentTool === 'angle') {
+        // In edit mode, don't add new points with regular click
+        if (state.editingAngleIndex !== null) {
+          return;
+        }
+
+        state.anglePoints.push(coords);
+        if (state.anglePoints.length === 3) {
+          addAngleMeasurement(state.anglePoints[0], state.anglePoints[1], state.anglePoints[2]);
+          state.anglePoints = [];
         }
         drawOverlay();
       }
@@ -3989,6 +4322,16 @@
               const len = measureLength(state.lengthPoints[0], state.lengthPoints[1]);
               addLengthMeasurement(len);
               state.lengthPoints = [];
+            }
+            drawOverlay();
+          }
+
+          if (state.currentTool === 'angle') {
+            if (state.editingAngleIndex !== null) return;
+            state.anglePoints.push(coords);
+            if (state.anglePoints.length === 3) {
+              addAngleMeasurement(state.anglePoints[0], state.anglePoints[1], state.anglePoints[2]);
+              state.anglePoints = [];
             }
             drawOverlay();
           }
@@ -4112,8 +4455,8 @@
       }
     });
     
-    // Initial results table
-    updateResultsTable();
+    // Initial button state
+    updateStatsButtonsVisibility();
     updateGuidance();
   </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c3ef893f29508d1',t:'MTc2OTQxOTYxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
