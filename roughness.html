@@ -3,39 +3,54 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SEM Roughness Visualizer (NxN)</title>
+  <title>Roughness Visualizer (NxN)</title>
   <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
-    :root{
-      /* Light / publication-friendly theme */
-      --bg:#f5f7fb;
-      --card:#ffffff;
-      --ink:#0b1220;
-      --muted:#4b5565;
-      --line:#d7dbe5;
-      --grid:#e8ebf2;
-      --accent:#1f6fff;
-      --accent-2:#0b5cff;
-      --danger:#d92d45;
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
 
+    :root{
+      /* MicroMeasure theme (dark UI) */
+      --bg-primary:#0f172a;
+      --bg-secondary:#1e293b;
+      --text-primary:#f1f5f9;
+      --accent-primary:#3b82f6;
+      --accent-secondary:#64748b;
+      --danger:#dc2626;
+
+      /* Keep existing variable names to minimize refactors */
+      --bg:var(--bg-primary);
+      --card:var(--bg-secondary);
+      --ink:var(--text-primary);
+      --muted:#94a3b8;
+      --line:rgba(255,255,255,0.10);      /* UI borders */
+      --grid:rgba(255,255,255,0.06);
+      --accent:var(--accent-primary);
+      --accent-2:#2563eb;                 /* hover */
+
+      /* Option A: publication-ready plots remain white */
       --plot-bg:#ffffff;
       --plot-axis:#111827;
       --plot-grid:#e5e7eb;
-      --tab-bg:#f2f4f8;
+      --plot-line:#d7dbe5;                /* plot borders on dark UI */
+
+      --tab-bg:rgba(0,0,0,0.18);
     }
     *{ box-sizing:border-box; }
     body{
       margin:0;
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:var(--bg);
       color:var(--ink);
     }
+    html{ color-scheme: dark; }
+    .mono{ font-family:'JetBrains Mono',monospace; }
     .wrap{ max-width:1500px; margin:0 auto; padding:16px; display:grid; gap:12px; }
     .top{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; }
     h1{ margin:0; font-size:16px; font-weight:900; letter-spacing:.2px; }
     .pill{
       display:inline-block; padding:3px 8px; border:1px solid var(--line);
-      border-radius:999px; font-size:11px; color:var(--muted); margin-left:8px; background:#fff;
+      border-radius:999px; font-size:11px; color:var(--muted); margin-left:8px; background:rgba(0,0,0,0.18);
     }
     .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
 
@@ -44,7 +59,7 @@
       border:1px solid var(--line);
       border-radius:14px;
       padding:12px;
-      box-shadow: 0 2px 10px rgba(10,18,32,0.04);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
     }
 
     /* New layout: Controls left, Views right */
@@ -60,18 +75,60 @@
 
     label{ font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center; }
     input[type="number"], select{
-      background:#fff;
-      border:1px solid var(--line);
+      background:rgba(0,0,0,0.18);
+      border:1px solid rgba(255,255,255,0.14);
       color:var(--ink);
       border-radius:10px;
       padding:8px 10px;
       outline:none;
       width:150px;
     }
+    /* Improve dropdown list readability on Windows (opened option list) */
+    select{ color-scheme: dark; }
+    select option, select optgroup{
+      background-color: #0f172a;
+      color: #f1f5f9;
+    }
+    input[type="number"]:focus, select:focus{
+      border-color: rgba(59,130,246,0.65);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
+    }
     input[type="range"]{ width:190px; }
-    input[type="file"]{ font-size:12px; }
+    input[type="file"]{ font-size:12px; color:var(--muted); }
+    input[type="file"]::file-selector-button{
+      background:var(--accent);
+      border:none;
+      color:white;
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:900;
+      margin-right:10px;
+      transition: all .2s ease;
+    }
+    input[type="file"]::file-selector-button:hover{ background:var(--accent-2); box-shadow: 0 4px 12px rgba(59,130,246,0.35); }
 
-    button{
+    .fileDrop{
+      padding:12px;
+      border-radius:14px;
+      border:1px dashed rgba(255,255,255,0.18);
+      background:rgba(255,255,255,0.03);
+      cursor:pointer;
+      user-select:none;
+    }
+    .fileDrop:focus{
+      outline:none;
+      border-color: rgba(59,130,246,0.65);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
+    }
+    .fileDrop.dragover{
+      border-color: rgba(59,130,246,0.65);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
+      background:rgba(59,130,246,0.08);
+    }
+    .fileDrop input[type="file"]{ width:100%; }
+
+    button, a.btn{
       background:var(--accent);
       border:none;
       color:white;
@@ -80,14 +137,23 @@
       cursor:pointer;
       font-weight:900;
       font-size:12px;
+      transition: all .2s ease;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
     }
-    button.secondary{
-      background:#ffffff;
-      border:1px solid var(--line);
-      color:var(--ink);
+    button:not(.secondary):not(.danger):not(.tabBtn):not(.toggleBtn):not(.helpBtn):not(.iconBtn):hover,
+    a.btn:not(.secondary):not(.danger):not(.tabBtn):not(.toggleBtn):not(.helpBtn):not(.iconBtn):hover{ background:var(--accent-2); transform:translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.35); }
+    button:disabled{ background:#475569; cursor:not-allowed; transform:none; box-shadow:none; }
+    button.secondary, a.btn.secondary{
+      background:var(--accent-secondary);
+      border:none;
+      color:white;
     }
-    button.danger{ background:var(--danger); }
-    button.secondary:hover{ border-color:#c9cfdb; }
+    button.danger, a.btn.danger{ background:var(--danger); }
+    button.secondary:hover, a.btn.secondary:hover{ background:#475569; box-shadow:none; transform:none; }
+    button.danger:hover, a.btn.danger:hover{ background:#b91c1c; transform:translateY(-1px); box-shadow: 0 4px 12px rgba(220,38,38,0.35); }
 
     .hint{ font-size:12px; color:var(--muted); line-height:1.35; }
     .small{ font-size:12px; color:var(--muted); }
@@ -106,7 +172,7 @@
       width:100%;
       height:auto;
       background:var(--plot-bg);
-      border:1px solid var(--line);
+      border:1px solid var(--plot-line);
       border-radius:12px;
       image-rendering:auto;
     }
@@ -116,7 +182,7 @@
     #plotly3d{
       width:100%;
       height:520px;
-      border:1px solid var(--line);
+      border:1px solid var(--plot-line);
       border-radius:12px;
       overflow:hidden;
       background:var(--plot-bg);
@@ -128,6 +194,22 @@
     .status{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
     .status strong{ color:var(--ink); }
     .err{ color:var(--danger); font-weight:950; }
+    .ok{ color:var(--accent); font-weight:950; }
+
+    /* Publication-ready metrics (light mode) */
+    .pubReport{
+      background:#ffffff;
+      color:#0b1220;
+      border:1px solid var(--plot-line);
+      border-radius:12px;
+      padding:10px;
+    }
+    .pubMeta{ font-size:12px; color:#334155; margin-bottom:8px; }
+    .pubTable{ width:100%; border-collapse:collapse; font-size:12.5px; }
+    .pubTable th, .pubTable td{ border:1px solid #d7dbe5; padding:7px 8px; vertical-align:top; }
+    .pubTable th{ background:#f1f5f9; text-align:left; font-weight:900; }
+    .pubTable td.sym{ color:#334155; white-space:nowrap; }
+    .pubTable td.num{ text-align:right; font-variant-numeric: tabular-nums; }
 
     /* Tabs */
     .tabs{
@@ -142,62 +224,167 @@
       flex:0 0 auto;
       background:transparent;
       border:1px solid transparent;
-      color:var(--ink);
+      color:var(--muted);
       padding:9px 12px;
       border-radius:10px;
       cursor:pointer;
       font-weight:950;
       font-size:12px;
+      transition: all .2s ease;
     }
     .tabBtn.active{
-      background:#ffffff;
-      border-color:var(--line);
-      box-shadow: 0 1px 6px rgba(10,18,32,0.06);
+      background:var(--accent);
+      border-color:transparent;
+      color:white;
+      box-shadow: 0 4px 12px rgba(59,130,246,0.30);
     }
+    .tabBtn:not(.active):hover{ background:rgba(0,0,0,0.18); color:var(--ink); border-color:rgba(255,255,255,0.10); }
     .tabPanel{ display:none; margin-top:12px; }
     .tabPanel.active{ display:block; }
 
     /* Nested toggle buttons (Plotly vs Mesh) */
     .toggleGroup{ display:flex; gap:8px; }
     .toggleBtn{
-      background:#ffffff;
-      border:1px solid var(--line);
+      background:rgba(0,0,0,0.18);
+      border:1px solid rgba(255,255,255,0.12);
       color:var(--ink);
       padding:8px 10px;
       border-radius:10px;
       cursor:pointer;
       font-weight:950;
       font-size:12px;
+      transition: all .2s ease;
     }
     .toggleBtn.active{
       background:var(--accent);
       border-color:transparent;
       color:white;
     }
+    .toggleBtn:not(.active):hover{ border-color:rgba(255,255,255,0.20); }
 
     .exportRow{ display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; margin-top:8px; }
+
+    /* Help button + modal */
+    .settingRow{ display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+    .settingRow .left{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .helpBtn{
+      width:28px;
+      height:28px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.06);
+      color:var(--text-primary);
+      font-weight:950;
+      cursor:pointer;
+      padding:0;
+      line-height:1;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+    }
+    .helpBtn:hover{ border-color:rgba(59,130,246,0.55); box-shadow:0 0 0 3px rgba(59,130,246,0.18); transform:none; }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.55);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+    }
+    .overlay[hidden]{ display:none !important; }
+    .modal{
+      width:min(720px, 100%);
+      background:var(--bg-secondary);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:16px;
+      box-shadow:0 24px 80px rgba(0,0,0,0.55);
+    }
+    .modalHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,0.10);
+      gap:10px;
+    }
+    .modalTitle{ font-weight:950; }
+    .modalBody{ padding:14px; color:var(--text-primary); line-height:1.45; }
+    .iconBtn{
+      width:32px;
+      height:32px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.06);
+      color:var(--text-primary);
+      cursor:pointer;
+      padding:0;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+    }
+    .iconBtn:hover{ border-color:rgba(255,255,255,0.22); transform:none; box-shadow:none; }
 
     /* WebGL canvas sizing */
     #webgl3d{ width:100%; height:auto; display:block; }
 
     /* Minor spacing */
     .stack{ display:grid; gap:10px; }
+
+    /* Range styling aligned with MicroMeasure */
+    input[type="range"]{
+      -webkit-appearance:none;
+      background:transparent;
+    }
+    input[type="range"]::-webkit-slider-track{
+      height:6px;
+      background:linear-gradient(to bottom, #1e293b, #334155, #1e293b);
+      border-radius:3px;
+      border:1px solid #64748b;
+      box-shadow:inset 0 1px 3px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.1);
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      width:18px;
+      height:18px;
+      background:linear-gradient(to bottom, #60a5fa, #3b82f6);
+      border-radius:50%;
+      cursor:pointer;
+      margin-top:-6px;
+      border:2px solid #1e293b;
+      box-shadow:0 2px 6px rgba(59,130,246,0.6), inset 0 1px 0 rgba(255,255,255,0.3);
+    }
+    input[type="range"]::-webkit-slider-thumb:hover{
+      background:linear-gradient(to bottom, #93c5fd, #60a5fa);
+      box-shadow:0 3px 8px rgba(59,130,246,0.8), inset 0 1px 0 rgba(255,255,255,0.4);
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
-      <h1>SEM Roughness Visualizer <span class="pill">CSV heightmap • NxN • µm</span></h1>
+      <h1>Roughness Visualizer <span class="pill">CSV heightmap • NxN • µm</span></h1>
       <div class="row">
-        <input id="file" type="file" accept=".csv,.txt" />
+        <a href="index.html" class="btn secondary" aria-label="Home">Home</a>
         <button id="loadDemo" class="secondary">Load Demo</button>
-        <button id="clear" class="danger">Clear</button>
+        <button id="reset" class="danger">Reset</button>
       </div>
     </div>
 
     <div class="grid">
       <!-- LEFT: Controls & Stats -->
       <div class="card">
+        <div id="fileDrop" class="fileDrop" tabindex="0" role="button" aria-label="Drag and drop a CSV file here or click to choose a file">
+          <div class="small" style="margin-bottom:8px;">Drag &amp; drop your CSV here, or click to choose.</div>
+          <input id="file" type="file" accept=".csv,.txt" />
+          <div class="small" id="fileFeedback" aria-live="polite" style="margin-top:6px;">No file loaded.</div>
+        </div>
+        <div class="divider"></div>
+
         <div class="panelTitle">Controls & Stats</div>
         <div class="hint">
           Upload your NxN CSV → click <b>Render</b>. In 2D: click heatmap for <b>row profile</b>, <b>Shift+Click</b> for column profile.
@@ -206,36 +393,49 @@
         <div class="divider"></div>
 
         <div class="stack">
-          <div class="row">
-            <label>Colormap
-              <select id="cmap">
-                <option value="turbo">Turbo (default)</option>
-                <option value="gray">Grayscale</option>
-                <option value="blueRed">Blue–Red</option>
-                <option value="heat">Heat</option>
-              </select>
-            </label>
+          <div class="settingRow">
+            <div class="left">
+              <label>Colormap
+                <select id="cmap">
+                  <option value="turbo">Turbo (default)</option>
+                  <option value="gray">Grayscale</option>
+                  <option value="blueRed">Blue–Red</option>
+                  <option value="heat">Heat</option>
+                </select>
+              </label>
+            </div>
+            <button class="helpBtn" type="button" data-help="colormap" aria-label="Help: Colormap">?</button>
+          </div>
 
-            <label>Downsample
-              <select id="ds">
-                <option value="1">1×</option>
-                <option value="2">2×</option>
-                <option value="4">4×</option>
-                <option value="8">8×</option>
-                <option value="16">16×</option>
-              </select>
-            </label>
+          <div class="settingRow">
+            <div class="left">
+              <label>Downsample
+                <select id="ds">
+                  <option value="1">1×</option>
+                  <option value="2">2×</option>
+                  <option value="4">4×</option>
+                  <option value="8">8×</option>
+                  <option value="16">16×</option>
+                </select>
+              </label>
+            </div>
+            <button class="helpBtn" type="button" data-help="downsample" aria-label="Help: Downsample">?</button>
+          </div>
+
+          <div class="settingRow">
+            <div class="left">
+              <label>Range
+                <select id="rangeMode">
+                  <option value="auto">Auto (min/max)</option>
+                  <option value="clip">Auto (1–99% clip)</option>
+                  <option value="manual">Manual</option>
+                </select>
+              </label>
+            </div>
+            <button class="helpBtn" type="button" data-help="range" aria-label="Help: Range">?</button>
           </div>
 
           <div class="row">
-            <label>Range
-              <select id="rangeMode">
-                <option value="auto">Auto (min/max)</option>
-                <option value="clip">Auto (1–99% clip)</option>
-                <option value="manual">Manual</option>
-              </select>
-            </label>
-
             <label>Min (µm)
               <input id="minv" type="number" step="0.0000001" disabled />
             </label>
@@ -245,44 +445,24 @@
             </label>
           </div>
 
-          <div class="row">
-            <label><input id="demean" type="checkbox" checked /> Subtract mean plane (z − z̄)</label>
+          <div class="settingRow">
+            <div class="left">
+              <label><input id="demean" type="checkbox" checked /> Subtract mean plane (z − z̄)</label>
+            </div>
+            <button class="helpBtn" type="button" data-help="meanPlane" aria-label="Help: Subtract mean plane">?</button>
           </div>
 
           <div class="divider"></div>
           <div class="panelTitle">3D Controls</div>
 
-          <div class="row">
-            <label>Z-scale ×
-              <input id="zscale" type="range" min="0.2" max="20" step="0.2" value="1" />
-              <span class="small" id="zscaleVal">1.0×</span>
-            </label>
-          </div>
-
-          <div id="webglControls" style="display:none;">
-            <div class="row">
-              <label><input id="wireframe" type="checkbox" /> Wireframe</label>
-              <label><input id="lighting" type="checkbox" checked /> Lighting</label>
+          <div class="settingRow">
+            <div class="left">
+              <label>Z-scale ×
+                <input id="zscale" type="range" min="0.2" max="20" step="0.2" value="1" />
+                <span class="small" id="zscaleVal">1.0×</span>
+              </label>
             </div>
-
-            <div class="divider"></div>
-            <div class="panelTitle">Light Direction</div>
-            <div class="row">
-              <label>Lx <input id="lx" type="range" min="-1" max="1" step="0.01" value="0.30" /></label>
-              <label>Ly <input id="ly" type="range" min="-1" max="1" step="0.01" value="0.50" /></label>
-              <label>Lz <input id="lz" type="range" min="-1" max="1" step="0.01" value="0.80" /></label>
-            </div>
-
-            <div class="divider"></div>
-            <div class="panelTitle">Phong Parameters</div>
-            <div class="row">
-              <label>Ambient <input id="amb" type="range" min="0" max="1" step="0.01" value="0.25" /></label>
-              <label>Diffuse <input id="dif" type="range" min="0" max="1" step="0.01" value="0.65" /></label>
-            </div>
-            <div class="row">
-              <label>Specular <input id="spec" type="range" min="0" max="1" step="0.01" value="0.35" /></label>
-              <label>Shininess <input id="shin" type="range" min="1" max="100" step="1" value="30" /></label>
-            </div>
+            <button class="helpBtn" type="button" data-help="zscale" aria-label="Help: Z-scale">?</button>
           </div>
 
           <div class="divider"></div>
@@ -297,8 +477,29 @@
           <div class="small" id="status">No data loaded.</div>
 
           <div class="divider"></div>
-          <div class="panelTitle">Roughness metrics</div>
-          <table id="metrics"></table>
+          <div class="panelTitle">
+            <span>Roughness metrics</span>
+            <button class="helpBtn" type="button" data-help="metrics" aria-label="Help: Roughness metrics">?</button>
+          </div>
+          <div class="pubReport" id="metricsReport">
+            <div class="pubMeta" id="metricsMeta">No data loaded.</div>
+            <table class="pubTable" aria-label="Roughness metrics">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>Symbol</th>
+                  <th class="num">Value</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody id="metricsBody"></tbody>
+            </table>
+            <div class="row" style="justify-content:flex-end; margin-top:10px;">
+              <button id="exportMetricsPng" class="secondary">Export Roughness Metrics PNG</button>
+              <button id="copyMetricsTsv" class="secondary">Copy TSV</button>
+            </div>
+            <div id="metricsActionsFeedback" class="pubMeta" aria-live="polite" style="margin-top:8px; margin-bottom:0;"></div>
+          </div>
           <div class="hint" style="margin-top:8px;">
             Sa = mean(|z − z̄|), Sq = RMS(z − z̄), Sz = max − min (µm).
           </div>
@@ -352,37 +553,32 @@
         <div id="tab3d" class="tabPanel" role="tabpanel">
           <div class="panelTitle">
             <div>3D View</div>
-            <div class="toggleGroup">
-              <button id="modePlotly" class="toggleBtn active" title="Plotly Surface">Plotly Surface</button>
-              <button id="modeWebGL" class="toggleBtn" title="True 3D Mesh + Lighting (WebGL)">True 3D Mesh</button>
-            </div>
           </div>
-          <div class="hint">
-            Plotly and Mesh share the same colormap/range. For faster Mesh rendering, use downsampling.
+          <div class="hint" style="display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+            <div>Plotly surface uses the same colormap/range as 2D.</div>
+            <button id="exportPlotly" class="secondary">Export 3D (Plotly) PNG</button>
           </div>
 
           <div style="margin-top:10px;">
             <div id="plotlyWrap">
               <div id="plotly3d"></div>
-              <div class="exportRow">
-                <button id="exportPlotly" class="secondary">Export 3D (Plotly) PNG</button>
-              </div>
-            </div>
-
-            <div id="webglWrap" style="display:none;">
-              <canvas id="webgl3d" width="1200" height="600"></canvas>
-              <div class="exportRow">
-                <button id="exportWebGL" class="secondary">Export 3D (Mesh) PNG</button>
-              </div>
-              <div class="hint" style="margin-top:6px;">
-                Drag to rotate • Wheel to zoom • Double-click to reset view.
-              </div>
             </div>
           </div>
         </div>
       </div>
     </div><!-- /grid -->
   </div><!-- /wrap -->
+
+  <!-- Help overlay (single, reusable) -->
+  <div id="helpOverlay" class="overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="modalHead">
+        <div id="helpTitle" class="modalTitle">Help</div>
+        <button id="helpClose" class="iconBtn" type="button" aria-label="Close help">✕</button>
+      </div>
+      <div id="helpBody" class="modalBody"></div>
+    </div>
+  </div>
 
 <script>
 (() => {
@@ -393,9 +589,8 @@
   let N = 0;          // size NxN
   let zMin = 0, zMax = 0, zMean = 0, zStd = 0;
   let lastProfile = null;
-
-  // 3D mode: "plotly" | "webgl"
-  let mode3D = "plotly";
+  let dataLabel = "—";
+  let metricsSa = null;
 
   // WebGL state
   let gl = null;
@@ -419,8 +614,13 @@
 
   const status = el("status"), clickInfo = el("clickInfo");
   const profileInfo = el("profileInfo"), histInfo = el("histInfo");
-  const metricsTbl = el("metrics");
+  const metricsMeta = el("metricsMeta");
+  const metricsBody = el("metricsBody");
+  const metricsReport = el("metricsReport");
+  const metricsActionsFeedback = el("metricsActionsFeedback");
   const warn = el("warn");
+  const fileFeedback = el("fileFeedback");
+  const renderBtn = el("render");
 
   // Tabs
   const tab2dBtn = el("tab2dBtn");
@@ -437,13 +637,8 @@
     tab2d.classList.toggle("active", is2d);
     tab3d.classList.toggle("active", !is2d);
 
-    // If switching to 3D Mesh view, make sure canvas is ready for proper sizing
-    if (!is2d && mode3D === "webgl" && Z){
-      needsRedraw = true;
-      drawWebGL();
-    }
     // Plotly sometimes needs a resize when container was hidden
-    if (!is2d && mode3D === "plotly"){
+    if (!is2d){
       try{ Plotly.Plots.resize("plotly3d"); } catch {}
     }
   }
@@ -824,27 +1019,55 @@
   // Metrics
   // =========================
   function updateMetrics(){
-    if (!Z) { metricsTbl.innerHTML = ""; return; }
-    let sumAbs = 0, sumSq = 0;
+    if (!Z || !metricsBody){
+      if (metricsBody) metricsBody.innerHTML = "";
+      if (metricsMeta) metricsMeta.textContent = "No data loaded.";
+      metricsSa = null;
+      return;
+    }
+    let sumAbs = 0, sumSq = 0, sumCube = 0, sum4 = 0;
     for (let i=0;i<Z.length;i++){
       const d = Z[i] - zMean;
       sumAbs += Math.abs(d);
       sumSq += d*d;
+      sumCube += d*d*d;
+      sum4 += d*d*d*d;
     }
     const Sa = sumAbs / Z.length;
     const Sq = Math.sqrt(sumSq / Z.length);
     const Sz = zMax - zMin;
+    const Ssk = (zStd > 0) ? ((sumCube / Z.length) / (zStd*zStd*zStd)) : NaN;
+    const Sku = (zStd > 0) ? ((sum4 / Z.length) / (zStd*zStd*zStd*zStd)) : NaN;
 
-    metricsTbl.innerHTML = `
-      <tr><td>Size</td><td>${N} × ${N} (${(Z.length).toLocaleString()} points)</td></tr>
-      <tr><td>Min (µm)</td><td>${fmt(zMin)}</td></tr>
-      <tr><td>Max (µm)</td><td>${fmt(zMax)}</td></tr>
-      <tr><td>Mean z̄ (µm)</td><td>${fmt(zMean)}</td></tr>
-      <tr><td>Std dev (µm)</td><td>${fmt(zStd)}</td></tr>
-      <tr><td>Sa = mean(|z − z̄|) (µm)</td><td>${fmt(Sa)}</td></tr>
-      <tr><td>Sq = RMS(z − z̄) (µm)</td><td>${fmt(Sq)}</td></tr>
-      <tr><td>Sz = max − min (µm)</td><td>${fmt(Sz)}</td></tr>
-    `;
+    // Cache Sa for the help modal
+    metricsSa = Sa;
+
+    if (metricsMeta){
+      const demeanLabel = el("demean")?.checked ? "On" : "Off";
+      const dsLabel = el("ds")?.value ? `${el("ds").value}×` : "—";
+      metricsMeta.textContent = `Source: ${dataLabel} • Grid: ${N}×${N} (${(Z.length).toLocaleString()} pts) • Downsample: ${dsLabel} • Demean (plots): ${demeanLabel}`;
+    }
+
+    const rows = [
+      { metric: "Minimum height", symbol: "z_min", value: fmt(zMin), unit: "µm" },
+      { metric: "Maximum height", symbol: "z_max", value: fmt(zMax), unit: "µm" },
+      { metric: "Mean height", symbol: "z̄", value: fmt(zMean), unit: "µm" },
+      { metric: "Standard deviation", symbol: "σ", value: fmt(zStd), unit: "µm" },
+      { metric: "Arithmetic mean roughness", symbol: "Sa", value: fmt(Sa), unit: "µm" },
+      { metric: "RMS roughness", symbol: "Sq", value: fmt(Sq), unit: "µm" },
+      { metric: "Peak-to-valley (max−min)", symbol: "Sz", value: fmt(Sz), unit: "µm" },
+      { metric: "Skewness", symbol: "Ssk", value: fmt(Ssk), unit: "—" },
+      { metric: "Kurtosis", symbol: "Sku", value: fmt(Sku), unit: "—" }
+    ];
+
+    metricsBody.innerHTML = rows.map(r =>
+      `<tr>
+        <td>${r.metric}</td>
+        <td class="sym">${r.symbol}</td>
+        <td class="num mono">${r.value}</td>
+        <td>${r.unit}</td>
+      </tr>`
+    ).join("");
   }
 
   // =========================
@@ -1242,8 +1465,10 @@
   }
 
   function drawWebGL(){
-    if (!gl || !prog || !mesh) return;
+    if (!webgl || !gl || !prog || !mesh) return;
     if (!needsRedraw) return;
+    // WebGL UI was removed (Plotly-only). Guard in case this is ever called.
+    if (!document.getElementById("lighting") || !document.getElementById("wireframe")) return;
 
     gl.viewport(0,0,webgl.width,webgl.height);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -1346,27 +1571,6 @@
     // Make plotly responsive if its tab is visible (or just after render)
     try{ Plotly.Plots.resize("plotly3d"); } catch {}
 
-    if (mode3D === "webgl"){
-      if (!gl){
-        const ok = webglInit();
-        if (!ok) return;
-      }
-      if (proc.W > 256){
-        warn.innerHTML = `<span class="err">Tip:</span> For True 3D mesh, use Downsample ≥ 2× for speed.`;
-      } else warn.textContent = "";
-
-      const built = buildMesh(proc);
-      if (built.indexType === "u32" && !hasUint32ElementIndex){
-        warn.innerHTML = `<span class="err">WebGL limitation:</span> this mesh needs 32-bit indices. Increase Downsample (so the shown grid is ≤ 255×255), or use a WebGL2-capable browser/device.`;
-        return;
-      }
-
-      const uploaded = uploadMeshToGPU(built);
-      if (!uploaded) return;
-      mesh = uploaded;
-      needsRedraw = true;
-      drawWebGL();
-    }
   }
 
   // =========================
@@ -1397,10 +1601,10 @@
   // =========================
   // Buttons & controls
   // =========================
-  el("file").addEventListener("change", async (e) => {
-    const f = e.target.files?.[0];
+  async function loadCsvFile(f){
     if (!f) return;
     try{
+      dataLabel = f.name;
       const text = await f.text();
       const parsed = parseGrid(text);
       Z = parsed.data;
@@ -1417,15 +1621,74 @@
 
       updateRangeInputsForMode();
       status.textContent = `Loaded ${N}×${N}. Click Render.`;
+
+      if (fileFeedback){
+        fileFeedback.classList.remove("err");
+        fileFeedback.classList.add("ok");
+        const delimLabel = (parsed.delim === "\t") ? "TAB" : (parsed.delim === ",") ? "comma" : "space";
+        fileFeedback.textContent = `Loaded: ${f.name} • ${N}×${N} • delimiter: ${delimLabel} • rendering…`;
+      }
+      if (renderBtn) renderBtn.disabled = false;
       // default to 2D after load
       setTab("2d");
+
+      // Auto-render after upload
+      renderAll();
+      if (fileFeedback){
+        const delimLabel = (parsed.delim === "\t") ? "TAB" : (parsed.delim === ",") ? "comma" : "space";
+        fileFeedback.textContent = `Loaded: ${f.name} • ${N}×${N} • delimiter: ${delimLabel} • rendered`;
+      }
     } catch(err){
       status.innerHTML = `<span class="err">Failed:</span> ${err.message}`;
       console.error(err);
+
+      if (fileFeedback){
+        fileFeedback.classList.remove("ok");
+        fileFeedback.classList.add("err");
+        fileFeedback.textContent = `Load failed: ${err.message}`;
+      }
+      if (renderBtn) renderBtn.disabled = true;
     }
+  }
+
+  const fileInput = el("file");
+  const fileDrop = el("fileDrop");
+
+  fileInput?.addEventListener("change", async (e) => {
+    const f = e.target.files?.[0];
+    await loadCsvFile(f);
   });
 
+  if (fileDrop && fileInput){
+    fileDrop.addEventListener("click", (e) => {
+      if (e.target === fileInput) return;
+      fileInput.click();
+    });
+    fileDrop.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+    const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
+    ["dragenter","dragover","dragleave","drop"].forEach(ev => fileDrop.addEventListener(ev, stop));
+    ["dragenter","dragover"].forEach(ev => fileDrop.addEventListener(ev, () => fileDrop.classList.add("dragover")));
+    ["dragleave","drop"].forEach(ev => fileDrop.addEventListener(ev, () => fileDrop.classList.remove("dragover")));
+    fileDrop.addEventListener("drop", async (e) => {
+      const f = e.dataTransfer?.files?.[0];
+      if (!f) return;
+      // Keep the input in sync when possible
+      try{
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        fileInput.files = dt.files;
+      } catch {}
+      await loadCsvFile(f);
+    });
+  }
+
   el("loadDemo").addEventListener("click", () => {
+    dataLabel = "DEMO";
     const size = 512;
     N = size;
     Z = new Float64Array(size*size);
@@ -1446,24 +1709,32 @@
     histInfo.textContent = "";
     updateRangeInputsForMode();
     status.textContent = `Loaded DEMO ${N}×${N}. Click Render.`;
+
+    if (fileFeedback){
+      fileFeedback.classList.remove("err");
+      fileFeedback.classList.add("ok");
+      fileFeedback.textContent = `Loaded: DEMO • ${N}×${N} • rendering…`;
+    }
+    if (renderBtn) renderBtn.disabled = false;
     setTab("2d");
+
+    // Auto-render demo
+    renderAll();
+    if (fileFeedback){
+      fileFeedback.textContent = `Loaded: DEMO • ${N}×${N} • rendered`;
+    }
   });
 
-  el("clear").addEventListener("click", () => {
-    Z = null; N = 0;
-    status.textContent = "No data loaded.";
-    clickInfo.textContent = "";
-    profileInfo.textContent = "";
-    histInfo.textContent = "";
-    warn.textContent = "";
-    metricsTbl.innerHTML = "";
-    ctxH.clearRect(0,0,heat.width,heat.height);
-    ctxP.clearRect(0,0,prof.width,prof.height);
-    ctxHi.clearRect(0,0,hist.width,hist.height);
-    Plotly.purge("plotly3d");
-    mesh = null;
-    needsRedraw = true;
-    setTab("2d");
+  el("reset").addEventListener("click", () => {
+    const msg =
+      "Reset will refresh the page and reset everything to defaults.\n\n" +
+      "This will clear:\n" +
+      "• the currently loaded CSV\n" +
+      "• all calculated plots/metrics\n" +
+      "• current settings (colormap, downsample, range, z-scale, etc.)\n\n" +
+      "Continue?";
+    if (!confirm(msg)) return;
+    window.location.reload();
   });
 
   el("render").addEventListener("click", renderAll);
@@ -1477,10 +1748,94 @@
     if (Z) renderAll();
   });
 
-  // WebGL control listeners
-  ["wireframe","lighting","lx","ly","lz","amb","dif","spec","shin"].forEach(id => {
-    el(id).addEventListener("input", () => { needsRedraw = true; drawWebGL(); });
-    el(id).addEventListener("change", () => { needsRedraw = true; drawWebGL(); });
+  // =========================
+  // Help modal
+  // =========================
+  const HELP = {
+    colormap: {
+      title: "Colormap",
+      body: `<p>Controls how height values map to colors in the 2D heatmap and 3D Plotly surface. This changes only the visualization, not the underlying data.</p>`
+    },
+    downsample: {
+      title: "Downsample",
+      body: `<p>Reduces the displayed grid size for faster rendering (especially in 3D). Higher downsample values render faster but show less detail.</p>`
+    },
+    range: {
+      title: "Range",
+      body: `<p>Sets the min/max used for color scaling.</p>
+             <ul>
+               <li><b>Auto (min/max)</b>: uses the displayed data min and max.</li>
+               <li><b>Auto (1–99% clip)</b>: uses the 1st–99th percentile to reduce outlier impact.</li>
+               <li><b>Manual</b>: you set Min and Max directly.</li>
+             </ul>`
+    },
+    meanPlane: {
+      title: "Subtract mean plane",
+      body: `<p>Removes background tilt so roughness is relative to a leveled reference. In practice, this subtracts a global trend so local peaks/valleys are easier to compare.</p>`
+    },
+    zscale: {
+      title: "Z-scale ×",
+      body: `<p>Multiplies heights for 3D visualization (vertical exaggeration). Useful when height variation is small compared to the x/y span. It does not change your CSV data.</p>`
+    },
+    metrics: {
+      title: "Roughness metrics",
+      body: () => {
+        const hasSa = Number.isFinite(metricsSa);
+        const summary = hasSa
+          ? `<p><b>Current Sa:</b> ${fmt(metricsSa)} µm</p>`
+          : `<p class="small"><b>Tip:</b> Load a CSV to compute Sa.</p>`;
+
+        return `<p>These quantities summarize the height field <b>z</b> (in µm) over the loaded grid.</p>
+                <ul>
+                  <li><b>z_min</b>, <b>z_max</b>: minimum and maximum measured heights.</li>
+                  <li><b>z̄</b>: mean height (average of all points).</li>
+                  <li><b>σ</b>: standard deviation of heights (spread around the mean).</li>
+                  <li><b>Sa</b>: arithmetic mean roughness (mean absolute deviation): Sa = mean(|z − z̄|).</li>
+                  <li><b>Sq</b>: RMS roughness: Sq = sqrt(mean((z − z̄)^2)).</li>
+                  <li><b>Sz</b>: peak-to-valley height: Sz = z_max − z_min.</li>
+                  <li><b>Ssk</b>: skewness (dimensionless): Ssk = mean((z − z̄)^3) / σ^3. Positive means more peaks; negative means more valleys.</li>
+                  <li><b>Sku</b>: kurtosis (dimensionless): Sku = mean((z − z̄)^4) / σ^4. Larger values indicate heavier tails/more outliers.</li>
+                </ul>
+                ${summary}`;
+      }
+    }
+  };
+
+  const helpOverlay = el("helpOverlay");
+  const helpTitle = el("helpTitle");
+  const helpBody = el("helpBody");
+  const helpClose = el("helpClose");
+
+  function openHelp(key){
+    const h = HELP[key];
+    if (!h || !helpOverlay) return;
+    if (helpTitle) helpTitle.textContent = h.title;
+    if (helpBody) helpBody.innerHTML = (typeof h.body === "function") ? h.body() : h.body;
+    helpOverlay.hidden = false;
+    try{ helpClose?.focus(); } catch {}
+  }
+  function closeHelp(){
+    if (!helpOverlay) return;
+    helpOverlay.hidden = true;
+    if (helpBody) helpBody.innerHTML = "";
+  }
+
+  // Always start with help closed (also fixes BFCache restores)
+  closeHelp();
+  window.addEventListener("pageshow", () => closeHelp());
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target?.closest?.(".helpBtn");
+    if (btn){
+      openHelp(btn.dataset.help);
+      return;
+    }
+    if (e.target === helpOverlay) closeHelp();
+    if (e.target === helpClose) closeHelp();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && helpOverlay && !helpOverlay.hidden) closeHelp();
   });
 
   // Export helpers
@@ -1504,44 +1859,75 @@
     }
   });
 
-  el("exportWebGL").addEventListener("click", () => {
-    if (!webgl) return;
-    exportCanvasPNG(webgl, "sem_true3d_mesh.png");
+  // Publication-ready exports
+  el("exportMetricsPng").addEventListener("click", async () => {
+    if (!metricsReport) return;
+    if (!Z){
+      alert("No data loaded. Load a CSV first.");
+      return;
+    }
+    if (typeof html2canvas !== "function"){
+      alert("PNG export unavailable (html2canvas not loaded).");
+      return;
+    }
+    try{
+      const canvas = await html2canvas(metricsReport, {
+        backgroundColor: "#ffffff",
+        scale: Math.max(2, window.devicePixelRatio || 1),
+        useCORS: true
+      });
+      exportCanvasPNG(canvas, "roughness_metrics.png");
+    } catch(err){
+      console.error(err);
+      alert("Export failed.");
+    }
   });
 
-  // 3D mode toggles (within 3D tab)
-  function set3DMode(m){
-    mode3D = m;
-    el("modePlotly").classList.toggle("active", m==="plotly");
-    el("modeWebGL").classList.toggle("active", m==="webgl");
-    el("plotlyWrap").style.display = (m==="plotly") ? "block" : "none";
-    el("webglWrap").style.display = (m==="webgl") ? "block" : "none";
-    el("webglControls").style.display = (m==="webgl") ? "block" : "none";
-
-    // Ensure 3D tab shown when switching 3D mode
-    if (!tab3d.classList.contains("active")) setTab("3d");
-
-    if (m==="webgl"){
-      if (!gl){
-        const ok = webglInit();
-        if (!ok) return;
-      }
-      if (Z){
-        renderAll();
-      } else {
-        needsRedraw = true;
-        drawWebGL();
-      }
-    } else {
-      // Plotly resize after becoming visible
-      try{ Plotly.Plots.resize("plotly3d"); } catch {}
+  el("copyMetricsTsv").addEventListener("click", async () => {
+    if (!Z || !metricsBody){
+      alert("No data loaded. Load a CSV first.");
+      return;
     }
-  }
-  el("modePlotly").addEventListener("click", () => set3DMode("plotly"));
-  el("modeWebGL").addEventListener("click", () => set3DMode("webgl"));
+    const rows = Array.from(metricsBody.querySelectorAll("tr")).map(tr =>
+      Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim())
+    );
+    const tsv = ["Metric\tSymbol\tValue\tUnit", ...rows.map(r => r.join("\t"))].join("\n");
+    const showFeedback = (html) => {
+      if (!metricsActionsFeedback) return;
+      metricsActionsFeedback.innerHTML = html;
+      window.clearTimeout(showFeedback._t);
+      showFeedback._t = window.setTimeout(() => {
+        if (metricsActionsFeedback) metricsActionsFeedback.textContent = "";
+      }, 2200);
+    };
+    try{
+      await navigator.clipboard.writeText(tsv);
+      showFeedback('<span class="ok">Copied TSV to clipboard.</span>');
+    } catch(err){
+      // Fallback for non-secure contexts / denied clipboard permission
+      try{
+        const ta = document.createElement("textarea");
+        ta.value = tsv;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        if (!ok) throw new Error("execCommand copy failed");
+        showFeedback('<span class="ok">Copied TSV to clipboard.</span>');
+      } catch{
+        console.error(err);
+        showFeedback('<span class="err">Copy failed. Your browser may block clipboard access.</span>');
+      }
+    }
+  });
 
   // Initialize zscale label
   el("zscaleVal").textContent = `${Number(el("zscale").value).toFixed(1)}×`;
+
+  // Disable Render until a dataset is loaded
+  if (renderBtn) renderBtn.disabled = true;
 
   // Default tab
   setTab("2d");
