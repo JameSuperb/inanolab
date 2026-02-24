@@ -485,6 +485,19 @@
         .promo-banner .promo-dismiss:hover { background: rgba(191, 219, 254, 0.35); }
         .promo-banner .promo-dismiss:focus { outline: 2px solid #bfdbfe; outline-offset: 2px; }
 
+        .promo-banner .promo-apply {
+            padding: 0.55rem 0.9rem;
+            border: none;
+            border-radius: 6px;
+            background: #3498db;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .promo-banner .promo-apply:hover { background: #2980b9; }
+        .promo-banner .promo-apply:focus { outline: 2px solid #bfdbfe; outline-offset: 2px; }
+
         /* Voucher + Summary (Request form) */
         .services-voucher {
             margin-top: 0.75rem;
@@ -1872,6 +1885,7 @@
                 <h2>Service Request Form</h2>
                 <div id="promo-banner" class="promo-banner" role="note" aria-live="polite">
                     <span>Holiday Promo: 10% off with code <strong>student</strong>. Enter it in the Voucher Code below.</span>
+                    <button type="button" class="promo-apply" aria-label="Apply voucher code student">Apply</button>
                     <button type="button" class="promo-dismiss" aria-label="Dismiss promotion">×</button>
                 </div>
                 <form id="service-form" novalidate>
@@ -3620,6 +3634,27 @@
             if (btn) {
                 btn.addEventListener('click', function(){
                     banner.style.display = 'none';
+                });
+            }
+
+            const applyBtn = banner.querySelector('.promo-apply');
+            if (applyBtn) {
+                applyBtn.addEventListener('click', function(){
+                    // Ensure voucher UI exists (it is lazily created)
+                    try { initVoucherUI(); } catch (_) {}
+
+                    const input = document.getElementById('voucher-input');
+                    if (input && !input.disabled) {
+                        input.value = 'student';
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                        input.focus();
+                    }
+
+                    // Auto-apply only when totals are ready; otherwise just fill the code
+                    if (typeof lastBaseServicesTotal === 'number' && lastBaseServicesTotal !== null) {
+                        const voucherApply = document.getElementById('voucher-apply');
+                        if (voucherApply) voucherApply.click();
+                    }
                 });
             }
             banner.dataset.bound = '1';
