@@ -1895,6 +1895,21 @@
                             <p class="form-section-help">Please provide your complete contact and institutional details. This information will be used for communication, documentation, and issuing official records.</p>
                             <div class="form-grid">
                                 <div class="form-group">
+                                    <label for="title">Title *</label>
+                                    <select id="title" name="title" required onchange="toggleOtherTitle()">
+                                        <option value="">Select title</option>
+                                        <option value="Mr.">Mr.</option>
+                                        <option value="Ms.">Ms.</option>
+                                        <option value="Mrs.">Mrs.</option>
+                                        <option value="Dr.">Dr.</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="other-title-group" style="display: none;">
+                                    <label for="other-title">Please specify your title *</label>
+                                    <input type="text" id="other-title" name="otherTitle" placeholder="e.g., Engr., Atty., Prof.">
+                                </div>
+                                <div class="form-group">
                                     <label for="full-name">Full Name *</label>
                                     <input type="text" id="full-name" name="fullName" required>
                                 </div>
@@ -2593,6 +2608,8 @@
                 return str.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, maxLen);
             };
             // Apply sanitization to free-text inputs
+            const titleVal = (document.getElementById('title')?.value || '');
+            const otherTitle = sanitizeText(getVal('other-title'), 40);
             const fullName = sanitizeText(getVal('full-name'), 120);
             const emailVal = sanitizeText(getVal('email'), 254);
             const mobileNumber = sanitizeText(getVal('mobile-number'), 32);
@@ -2611,6 +2628,8 @@
             const otherExpectation = sanitizeText(getVal('other-expectation'), 200);
             const edxElements = sanitizeText(getVal('edx-elements'), 600);
             return {
+                title: titleVal,
+                otherTitle,
                 fullName,
                 email: emailVal,
                 mobileNumber,
@@ -2646,8 +2665,9 @@
             };
         }
 
-        // Build a flat payload (sheet headers) for Apps Script addRow (urlencoded)
+        // Build a flat payload (sheet headers) for Apps Script addrow (urlencoded)
         function buildFormPayload(meta){
+            const titleResolved = meta.title === 'other' && meta.otherTitle ? meta.otherTitle : meta.title;
             // Position resolution
             const positionResolved = meta.position === 'other' && meta.otherPosition ? meta.otherPosition : meta.position;
             // Characterization label expected by the sheet
@@ -2668,13 +2688,14 @@
 
             return {
                 // Router function + API key
-                func: 'addRow',
+                func: 'addrow',
                 key: FORM_API_KEY,
 
                 // Exact sheet header keys
                 Timestamp: tsLocal,
                 GoogleID: meta.googleUserId || '',
                 GoogleEmail: meta.googleVerifiedEmail || '',
+                Title: titleResolved || '',
                 'Full Name': meta.fullName,
                 Email: meta.email,
                 Mobile: meta.mobileNumber,
@@ -3043,6 +3064,11 @@
             const form = document.getElementById('service-form');
             if (form) form.reset();
 
+            // Reset conditional fields visibility/requirements
+            try { if (typeof toggleOtherTitle === 'function') toggleOtherTitle(); } catch (_) {}
+            try { if (typeof toggleOtherPosition === 'function') toggleOtherPosition(); } catch (_) {}
+            try { if (typeof toggleOtherExpectation === 'function') toggleOtherExpectation(); } catch (_) {}
+
             // Clear uploaded files and UI
             uploadedFiles.length = 0;
             renderUploadedFiles();
@@ -3128,6 +3154,13 @@
             };
 
             // A. Requestee Information (top to bottom)
+            const titleEl = document.getElementById('title');
+            if (!titleEl || !titleEl.value) { if (DEBUG) console.warn('[DEBUG] title empty'); return focusAndMessage(titleEl, 'Please select your Title.'); }
+            if (titleEl.value === 'other') {
+                const otherTitleEl = document.getElementById('other-title');
+                if (!otherTitleEl || !otherTitleEl.value.trim()) { if (DEBUG) console.warn('[DEBUG] other-title empty'); return focusAndMessage(otherTitleEl, 'Please specify your Title.'); }
+            }
+
             const fullNameEl = document.getElementById('full-name');
             if (!fullNameEl.value.trim()) { if (DEBUG) console.warn('[DEBUG] full-name empty'); return focusAndMessage(fullNameEl, 'Please enter your Full Name.'); }
 
@@ -3429,13 +3462,14 @@
             };
 
             // Text inputs and textareas
-            ['full-name','mobile-number','school-name','school-address','research-objectives','sample-characteristics','other-position','other-expectation','edx-elements','sample-count'].forEach(id => {
+            ['other-title','full-name','mobile-number','school-name','school-address','research-objectives','sample-characteristics','other-position','other-expectation','edx-elements','sample-count'].forEach(id => {
                 bind(id, 'input', function(){ clearInlineError(this); });
             });
             // Selects and date
             bind('delivery-date', 'change', function(){ clearInlineError(this); });
             bind('turnaround', 'change', function(){ clearInlineError(this); });
             bind('position', 'change', function(){ clearInlineError(this); });
+            bind('title', 'change', function(){ clearInlineError(this); });
 
             // Radio groups
             document.querySelectorAll('input[name="characterization"]').forEach(r => {
@@ -3890,6 +3924,23 @@
         window.addEventListener('load', () => buildSamplesGallery(1, 50));
         
         // Helper functions for form
+        function toggleOtherTitle() {
+            const title = document.getElementById('title')?.value || '';
+            const otherGroup = document.getElementById('other-title-group');
+            const otherInput = document.getElementById('other-title');
+
+            if (!otherGroup || !otherInput) return;
+
+            if (title === 'other') {
+                otherGroup.style.display = 'block';
+                otherInput.required = true;
+            } else {
+                otherGroup.style.display = 'none';
+                otherInput.required = false;
+                otherInput.value = '';
+            }
+        }
+
         function toggleOtherPosition() {
             const position = document.getElementById('position').value;
             const otherGroup = document.getElementById('other-position-group');
