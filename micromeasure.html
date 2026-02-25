@@ -4210,17 +4210,21 @@
       state.isPanning = false;
       state.draggedAnglePointIndex = null;
     });
-    
-    elements.overlayCanvas.addEventListener('click', (e) => {
+
+    // On mobile browsers, a tap can produce BOTH a touch sequence and a delayed synthetic `click`.
+    // If we handle taps in `touchend` and also handle `click`, we can accidentally add points twice.
+    // This especially breaks scale calibration because `saveScale()` requires exactly 2 points.
+    let _lastTouchTapTs = 0;
+
+    function handleCanvasTap(coords) {
       if (!state.image) return;
-      
+
       // Don't allow other interactions while drawing ROI
       if (state.isDrawingROI) return;
-      
-      const coords = canvasCoords(e);
-      
-      // Setting scale mode
+
+      // Setting scale mode (exactly 2 points)
       if (state.isSettingScale) {
+        if (state.scalePoints.length >= 2) return;
         state.scalePoints.push(coords);
         if (state.scalePoints.length === 2) {
           elements.setScaleBtn.textContent = 'Set Scale';
@@ -4228,7 +4232,7 @@
         drawOverlay();
         return;
       }
-      
+
       // Length tool
       if (state.currentTool === 'length') {
         state.lengthPoints.push(coords);
@@ -4238,14 +4242,13 @@
           state.lengthPoints = [];
         }
         drawOverlay();
+        return;
       }
 
       // Angle tool (3 clicks; 2nd click is vertex)
       if (state.currentTool === 'angle') {
         // In edit mode, don't add new points with regular click
-        if (state.editingAngleIndex !== null) {
-          return;
-        }
+        if (state.editingAngleIndex !== null) return;
 
         state.anglePoints.push(coords);
         if (state.anglePoints.length === 3) {
@@ -4253,25 +4256,32 @@
           state.anglePoints = [];
         }
         drawOverlay();
+        return;
       }
-      
+
       // Area tool
       if (state.currentTool === 'area') {
         // In edit mode, don't add new points with regular click
-        if (state.editingAreaIndex !== null) {
-          return;
-        }
-        
+        if (state.editingAreaIndex !== null) return;
+
         state.areaPoints.push(coords);
-        
+
         // Show close button when 3+ points
         if (state.areaPoints.length >= 3) {
           elements.closePolygonBtn.classList.remove('hidden');
           elements.closePolygonBtn.textContent = `Close Polygon (${state.areaPoints.length} points)`;
         }
-        
+
         drawOverlay();
+        return;
       }
+    }
+    
+    elements.overlayCanvas.addEventListener('click', (e) => {
+      // Ignore synthetic clicks that arrive shortly after a touch tap.
+      if (_lastTouchTapTs && (Date.now() - _lastTouchTapTs) < 800) return;
+
+      handleCanvasTap(canvasCoords(e));
     });
     
     elements.overlayCanvas.addEventListener('dblclick', (e) => {
@@ -4305,12 +4315,18 @@
         updateCanvasTransform();
         e.preventDefault();
       }
-    });
+    }, { passive: false });
     
     elements.overlayCanvas.addEventListener('touchend', (e) => {
       state.isPanning = false;
       
       if (Date.now() - touchStartTime < 300 && e.changedTouches.length === 1) {
+        // Mark so we can ignore any delayed synthetic `click` the browser may dispatch.
+        _lastTouchTapTs = Date.now();
+
+        // Prevent default to avoid double-tap zoom / delayed click behaviors on some browsers.
+        if (e.cancelable) e.preventDefault();
+
         const touch = e.changedTouches[0];
         const now = Date.now();
         
@@ -4324,50 +4340,17 @@
         } else {
           lastTap = now;
           
-          // Simulate click
           const rect = elements.overlayCanvas.getBoundingClientRect();
           const scale = state.zoom / 100;
           const coords = {
             x: (touch.clientX - rect.left) / scale,
             y: (touch.clientY - rect.top) / scale
           };
-          
-          if (state.isSettingScale) {
-            state.scalePoints.push(coords);
-            if (state.scalePoints.length === 2) {
-              elements.setScaleBtn.textContent = 'Set Scale';
-            }
-            drawOverlay();
-            return;
-          }
-          
-          if (state.currentTool === 'length') {
-            state.lengthPoints.push(coords);
-            if (state.lengthPoints.length === 2) {
-              const len = measureLength(state.lengthPoints[0], state.lengthPoints[1]);
-              addLengthMeasurement(len);
-              state.lengthPoints = [];
-            }
-            drawOverlay();
-          }
 
-          if (state.currentTool === 'angle') {
-            if (state.editingAngleIndex !== null) return;
-            state.anglePoints.push(coords);
-            if (state.anglePoints.length === 3) {
-              addAngleMeasurement(state.anglePoints[0], state.anglePoints[1], state.anglePoints[2]);
-              state.anglePoints = [];
-            }
-            drawOverlay();
-          }
-          
-          if (state.currentTool === 'area') {
-            state.areaPoints.push(coords);
-            drawOverlay();
-          }
+          handleCanvasTap(coords);
         }
       }
-    });
+    }, { passive: false });
     
     // Set crosshair cursor when image loaded
     elements.overlayCanvas.style.cursor = 'crosshair';
