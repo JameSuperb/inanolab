@@ -952,7 +952,7 @@
       lastPanY: 0,
 
       // Guidance
-      quickStartDismissed: false,
+      quickStartDismissed: true,
       
       // Calibration
       isCalibrated: false,
@@ -1237,12 +1237,20 @@
           elements.analyzeHoles.disabled = false;
           elements.selectParticleROI.disabled = false;
           elements.selectHoleROI.disabled = false;
+
+          // If the user was mid-calibration and loads a new image, reset the
+          // calibration drawing state so auto-start can run reliably.
+          state.isSettingScale = false;
+          state.scalePoints = [];
           
           // Reset pan and defer initial fit-to-view for placement
           state.panX = 0;
           state.panY = 0;
           requestAnimationFrame(() => {
             fitToView();
+            // Auto-start scale setting as soon as an image is loaded
+            // so the user is guided into the calibration step immediately.
+            setScale();
             drawMainCanvas();
             drawOverlay();
             updateGuidance();
@@ -1377,6 +1385,9 @@
         drawLine(ang.p2, ang.p1, color, 2);
         drawLine(ang.p2, ang.p3, color, 2);
 
+        // Arc inside the angle (minor or reflex)
+        const arcInfo = drawAngleArc(ang.p1, ang.p2, ang.p3, !!ang.reflex, color);
+
         if (isEditing) {
           [ang.p1, ang.p2, ang.p3].forEach(p => {
             overlayCtx.fillStyle = '#fbbf24';
@@ -1391,7 +1402,18 @@
           drawPoint(ang.p1, color);
           drawPoint(ang.p2, color);
           drawPoint(ang.p3, color);
-          drawMeasurementLabel({ x: ang.p2.x, y: ang.p2.y - 18 }, `Ang${i + 1}: ${formatNumber(ang.angleDeg)}°`, color);
+
+          // Put label near the arc mid-angle (looks better than always above the vertex)
+          let labelPos = { x: ang.p2.x, y: ang.p2.y - 18 };
+          if (arcInfo && Number.isFinite(arcInfo.sweep)) {
+            const mid = arcInfo.start + arcInfo.sweep / 2;
+            const rr = (arcInfo.r || 24) + 16;
+            labelPos = {
+              x: ang.p2.x + rr * Math.cos(mid),
+              y: ang.p2.y + rr * Math.sin(mid)
+            };
+          }
+          drawMeasurementLabel(labelPos, `Ang${i + 1}: ${formatNumber(ang.angleDeg)}°`, color);
         }
       });
 
@@ -1566,6 +1588,56 @@
       overlayCtx.fillStyle = '#ffffff';
       overlayCtx.fillText(text, p.x, p.y);
     }
+
+    function drawAngleArc(p1, p2, p3, reflex, color) {
+      const v1x = p1.x - p2.x;
+      const v1y = p1.y - p2.y;
+      const v2x = p3.x - p2.x;
+      const v2y = p3.y - p2.y;
+      const mag1 = Math.hypot(v1x, v1y);
+      const mag2 = Math.hypot(v2x, v2y);
+      if (mag1 === 0 || mag2 === 0) return null;
+
+      const a1 = Math.atan2(v1y, v1x);
+      const a2 = Math.atan2(v2y, v2x);
+      const TWO_PI = Math.PI * 2;
+      const diff = (a2 - a1 + TWO_PI) % TWO_PI;
+
+      const minorIsA1toA2 = diff <= Math.PI;
+      const useA1toA2 = reflex ? !minorIsA1toA2 : minorIsA1toA2;
+
+      const start = useA1toA2 ? a1 : a2;
+      const end = useA1toA2 ? a2 : a1;
+      const sweep = (end - start + TWO_PI) % TWO_PI;
+
+      // Radius scales with ray lengths but is clamped for consistency
+      const r = Math.min(44, Math.max(16, Math.min(mag1, mag2) * 0.28));
+
+      overlayCtx.save();
+
+      // Subtle filled wedge to make the interior obvious
+      overlayCtx.globalAlpha = 0.10;
+      overlayCtx.fillStyle = color;
+      overlayCtx.beginPath();
+      overlayCtx.moveTo(p2.x, p2.y);
+      overlayCtx.arc(p2.x, p2.y, r, start, end, false);
+      overlayCtx.closePath();
+      overlayCtx.fill();
+
+      // Dashed arc stroke
+      overlayCtx.globalAlpha = 1;
+      overlayCtx.strokeStyle = color;
+      overlayCtx.lineWidth = 2;
+      overlayCtx.setLineDash([6, 4]);
+      overlayCtx.beginPath();
+      overlayCtx.arc(p2.x, p2.y, r, start, end, false);
+      overlayCtx.stroke();
+      overlayCtx.setLineDash([]);
+
+      overlayCtx.restore();
+
+      return { r, start, sweep };
+    }
     
     function midpoint(p1, p2) {
       return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
@@ -1625,6 +1697,7 @@
     
     // ========== CALIBRATION ==========
     function setScale() {
+      if (!state.image || state.isSettingScale) return;
       state.isSettingScale = true;
       state.scalePoints = [];
       elements.calibrationInputs.classList.remove('hidden');
@@ -1840,23 +1913,43 @@
     }
 
     // ========== ANGLE MEASUREMENT ==========
-    function computeAngleDeg(p1, p2, p3) {
+    function computeAngleMetrics(p1, p2, p3) {
       const v1x = p1.x - p2.x;
       const v1y = p1.y - p2.y;
       const v2x = p3.x - p2.x;
       const v2y = p3.y - p2.y;
       const mag1 = Math.hypot(v1x, v1y);
       const mag2 = Math.hypot(v2x, v2y);
-      if (mag1 === 0 || mag2 === 0) return 0;
+      if (mag1 === 0 || mag2 === 0) {
+        return { minorDeg: 0, majorDeg: 0 };
+      }
+
+      // Use atan2(cross, dot) so we can derive both minor + reflex angles reliably.
       const dot = v1x * v2x + v1y * v2y;
-      let cos = dot / (mag1 * mag2);
-      cos = Math.max(-1, Math.min(1, cos));
-      return Math.acos(cos) * (180 / Math.PI);
+      const cross = v1x * v2y - v1y * v2x;
+      let angleRad = Math.atan2(Math.abs(cross), dot); // [0, π]
+      if (!Number.isFinite(angleRad)) angleRad = 0;
+
+      const minorDeg = angleRad * (180 / Math.PI);
+      // Reflex is 360 - minor; suppress degenerate 360 when minor is 0.
+      const majorDeg = minorDeg < 1e-9 ? 0 : (360 - minorDeg);
+      return { minorDeg, majorDeg };
+    }
+
+    function computeAngleDeg(p1, p2, p3) {
+      // Backwards-compatible: returns minor angle (0..180)
+      return computeAngleMetrics(p1, p2, p3).minorDeg;
+    }
+
+    function computeSelectedAngleDeg(p1, p2, p3, reflex) {
+      const m = computeAngleMetrics(p1, p2, p3);
+      return reflex ? m.majorDeg : m.minorDeg;
     }
 
     function addAngleMeasurement(p1, p2, p3) {
-      const angleDeg = computeAngleDeg(p1, p2, p3);
-      state.angles.push({ p1, p2, p3, angleDeg });
+      const reflex = false;
+      const angleDeg = computeSelectedAngleDeg(p1, p2, p3, reflex);
+      state.angles.push({ p1, p2, p3, angleDeg, reflex });
       updateAngleDisplay();
       drawOverlay();
       updateGuidance();
@@ -1871,11 +1964,13 @@
           <div>
             <span class="font-medium">Ang${i + 1}:</span>
             <span class="mono">${formatNumber(ang.angleDeg)}°</span>
+            ${ang.reflex ? `<span class="text-xs text-slate-400 ml-2">(reflex)</span>` : ``}
           </div>
           <div class="flex items-center gap-2">
             <button onclick="toggleAngleVisibility(${i})" class="text-slate-400 hover:text-cyan-400 text-sm" title="${ang.visible !== false ? 'Hide' : 'Show'}">
               ${ang.visible !== false ? '👁' : '🔍'}
             </button>
+            <button onclick="toggleAngleReflex(${i})" class="text-slate-400 hover:text-blue-300 text-sm" title="Toggle minor/reflex angle">↻</button>
             <button onclick="editAngleMeasurement(${i})" class="text-slate-400 hover:text-yellow-400 text-sm" title="Edit">✏️</button>
             <button onclick="deleteAngleMeasurement(${i})" class="text-red-400 hover:text-red-300 text-lg leading-none">&times;</button>
           </div>
@@ -1899,6 +1994,15 @@
       drawOverlay();
     };
 
+    window.toggleAngleReflex = function(index) {
+      const ang = state.angles[index];
+      if (!ang) return;
+      ang.reflex = !ang.reflex;
+      ang.angleDeg = computeSelectedAngleDeg(ang.p1, ang.p2, ang.p3, !!ang.reflex);
+      updateAngleDisplay();
+      drawOverlay();
+    };
+
     window.editAngleMeasurement = function(index) {
       state.editingAngleIndex = index;
       state.draggedAnglePointIndex = null;
@@ -1909,7 +2013,8 @@
         p1: { ...a.p1 },
         p2: { ...a.p2 },
         p3: { ...a.p3 },
-        angleDeg: a.angleDeg
+        angleDeg: a.angleDeg,
+        reflex: !!a.reflex
       };
 
       // Switch to angle tab UI
@@ -1929,7 +2034,7 @@
     function saveAngleEdit() {
       if (state.editingAngleIndex === null) return;
       const a = state.angles[state.editingAngleIndex];
-      a.angleDeg = computeAngleDeg(a.p1, a.p2, a.p3);
+      a.angleDeg = computeSelectedAngleDeg(a.p1, a.p2, a.p3, !!a.reflex);
       exitAngleEditMode();
       updateAngleDisplay();
     }
@@ -1942,6 +2047,7 @@
         a.p2 = { ...state.angleEditBackup.p2 };
         a.p3 = { ...state.angleEditBackup.p3 };
         a.angleDeg = state.angleEditBackup.angleDeg;
+        a.reflex = !!state.angleEditBackup.reflex;
       }
       exitAngleEditMode();
       updateAngleDisplay();
@@ -3733,8 +3839,8 @@
       state.panY = 0;
       state.isPanning = false;
 
-      // Re-show onboarding
-      state.quickStartDismissed = false;
+      // Keep onboarding overlay disabled
+      state.quickStartDismissed = true;
 
       // UI reset
       elements.zoomSlider.value = 100;
@@ -4071,150 +4177,81 @@
       });
     });
     
-    // Canvas interactions
-    elements.overlayCanvas.addEventListener('mousedown', (e) => {
-      if (e.button === 1 || (e.button === 0 && e.altKey)) {
-        state.isPanning = true;
-        state.lastPanX = e.clientX;
-        state.lastPanY = e.clientY;
-        elements.overlayCanvas.style.cursor = 'grabbing';
-        return;
-      }
-      
-      // ROI drawing mode
-      if (state.isDrawingROI && e.button === 0) {
-        const coords = canvasCoords(e);
-        state.roiStart = coords;
-        return;
-      }
-      
-      // Check if clicking on a length endpoint in edit mode
-      if (state.editingLengthIndex !== null && e.button === 0) {
-        const coords = canvasCoords(e);
+    // Canvas interactions (Pointer Events)
+    // Unifies mouse + touch + pen, and makes edit-handle dragging work on phones.
+    const _activePointers = new Map(); // pointerId -> { x, y, startX, startY, startTs, pointerType }
+    let _panPointerType = null;
+    let _panPrimaryPointerId = null;
+    let _roiPointerId = null;
+    let _dragPointerId = null;
+
+    const _lastTap = {
+      mouse: { ts: 0, x: 0, y: 0 },
+      touch: { ts: 0, x: 0, y: 0 },
+      pen: { ts: 0, x: 0, y: 0 },
+      unknown: { ts: 0, x: 0, y: 0 }
+    };
+
+    function pointerCanvasCoords(e) {
+      const rect = elements.overlayCanvas.getBoundingClientRect();
+      const scale = state.zoom / 100;
+      return {
+        x: (e.clientX - rect.left) / scale,
+        y: (e.clientY - rect.top) / scale
+      };
+    }
+
+    function canvasHitRadius() {
+      // Aim for ~18 screen px hit radius regardless of zoom.
+      const scale = state.zoom / 100;
+      const r = 18 / (scale || 1);
+      return Math.max(6, Math.min(30, r));
+    }
+
+    function beginEditHandleDragAt(coords) {
+      const hit = canvasHitRadius();
+
+      if (state.editingLengthIndex !== null) {
         const len = state.lengths[state.editingLengthIndex];
-        
-        const dist1 = Math.sqrt(Math.pow(coords.x - len.p1.x, 2) + Math.pow(coords.y - len.p1.y, 2));
-        const dist2 = Math.sqrt(Math.pow(coords.x - len.p2.x, 2) + Math.pow(coords.y - len.p2.y, 2));
-        
-        if (dist1 < 10) {
+        const dist1 = Math.hypot(coords.x - len.p1.x, coords.y - len.p1.y);
+        const dist2 = Math.hypot(coords.x - len.p2.x, coords.y - len.p2.y);
+        if (dist1 <= hit) {
           state.draggedLengthPoint = 'p1';
-          elements.overlayCanvas.style.cursor = 'move';
-          return;
-        } else if (dist2 < 10) {
+          return true;
+        }
+        if (dist2 <= hit) {
           state.draggedLengthPoint = 'p2';
-          elements.overlayCanvas.style.cursor = 'move';
-          return;
+          return true;
         }
       }
-      
-      // Check if clicking on a point handle in edit mode
-      if (state.editingAreaIndex !== null && e.button === 0) {
-        const coords = canvasCoords(e);
+
+      if (state.editingAreaIndex !== null) {
         const area = state.areas[state.editingAreaIndex];
-        
         for (let i = 0; i < area.points.length; i++) {
           const p = area.points[i];
-          const dist = Math.sqrt(Math.pow(coords.x - p.x, 2) + Math.pow(coords.y - p.y, 2));
-          if (dist < 10) {
+          const dist = Math.hypot(coords.x - p.x, coords.y - p.y);
+          if (dist <= hit) {
             state.draggedPointIndex = i;
-            elements.overlayCanvas.style.cursor = 'move';
-            return;
+            return true;
           }
         }
       }
 
-      // Check if clicking on an angle handle in edit mode
-      if (state.editingAngleIndex !== null && e.button === 0) {
-        const coords = canvasCoords(e);
+      if (state.editingAngleIndex !== null) {
         const ang = state.angles[state.editingAngleIndex];
         const pts = [ang.p1, ang.p2, ang.p3];
         for (let i = 0; i < pts.length; i++) {
           const p = pts[i];
-          const dist = Math.sqrt(Math.pow(coords.x - p.x, 2) + Math.pow(coords.y - p.y, 2));
-          if (dist < 10) {
+          const dist = Math.hypot(coords.x - p.x, coords.y - p.y);
+          if (dist <= hit) {
             state.draggedAnglePointIndex = i;
-            elements.overlayCanvas.style.cursor = 'move';
-            return;
+            return true;
           }
         }
       }
-    });
-    
-    elements.overlayCanvas.addEventListener('mousemove', (e) => {
-      if (state.isPanning) {
-        state.panX += e.clientX - state.lastPanX;
-        state.panY += e.clientY - state.lastPanY;
-        state.lastPanX = e.clientX;
-        state.lastPanY = e.clientY;
-        updateCanvasTransform();
-        return;
-      }
-      
-      // ROI drawing mode
-      if (state.isDrawingROI && state.roiStart) {
-        const coords = canvasCoords(e);
-        const x = Math.min(state.roiStart.x, coords.x);
-        const y = Math.min(state.roiStart.y, coords.y);
-        const width = Math.abs(coords.x - state.roiStart.x);
-        const height = Math.abs(coords.y - state.roiStart.y);
-        
-        state.roi = { x, y, width, height };
-        drawOverlay();
-        return;
-      }
-      
-      // Handle length point dragging in edit mode
-      if (state.draggedLengthPoint !== null && state.editingLengthIndex !== null) {
-        const coords = canvasCoords(e);
-        const len = state.lengths[state.editingLengthIndex];
-        len[state.draggedLengthPoint] = coords;
-        drawOverlay();
-      }
-      
-      // Handle point dragging in edit mode
-      if (state.draggedPointIndex !== null && state.editingAreaIndex !== null) {
-        const coords = canvasCoords(e);
-        const area = state.areas[state.editingAreaIndex];
-        area.points[state.draggedPointIndex] = coords;
-        drawOverlay();
-      }
 
-      // Handle angle point dragging in edit mode
-      if (state.draggedAnglePointIndex !== null && state.editingAngleIndex !== null) {
-        const coords = canvasCoords(e);
-        const ang = state.angles[state.editingAngleIndex];
-        if (state.draggedAnglePointIndex === 0) ang.p1 = coords;
-        if (state.draggedAnglePointIndex === 1) ang.p2 = coords;
-        if (state.draggedAnglePointIndex === 2) ang.p3 = coords;
-        ang.angleDeg = computeAngleDeg(ang.p1, ang.p2, ang.p3);
-        drawOverlay();
-      }
-    });
-    
-    elements.overlayCanvas.addEventListener('mouseup', () => {
-      state.isPanning = false;
-      state.draggedPointIndex = null;
-      state.draggedLengthPoint = null;
-      state.draggedAnglePointIndex = null;
-      
-      // Finish ROI drawing
-      if (state.isDrawingROI && state.roiStart) {
-        finishROISelection();
-      }
-      
-      const cursor = (state.editingAreaIndex !== null || state.editingLengthIndex !== null || state.editingAngleIndex !== null) ? 'pointer' : 'crosshair';
-      elements.overlayCanvas.style.cursor = cursor;
-    });
-    
-    elements.overlayCanvas.addEventListener('mouseleave', () => {
-      state.isPanning = false;
-      state.draggedAnglePointIndex = null;
-    });
-
-    // On mobile browsers, a tap can produce BOTH a touch sequence and a delayed synthetic `click`.
-    // If we handle taps in `touchend` and also handle `click`, we can accidentally add points twice.
-    // This especially breaks scale calibration because `saveScale()` requires exactly 2 points.
-    let _lastTouchTapTs = 0;
+      return false;
+    }
 
     function handleCanvasTap(coords) {
       if (!state.image) return;
@@ -4277,83 +4314,310 @@
       }
     }
     
-    elements.overlayCanvas.addEventListener('click', (e) => {
-      // Ignore synthetic clicks that arrive shortly after a touch tap.
-      if (_lastTouchTapTs && (Date.now() - _lastTouchTapTs) < 800) return;
+    function isTap(pointer) {
+      const dt = Date.now() - pointer.startTs;
+      if (dt > 300) return false;
+      const dx = pointer.x - pointer.startX;
+      const dy = pointer.y - pointer.startY;
+      const dist = Math.hypot(dx, dy);
+      // Use a screen-space threshold (~8px)
+      return dist <= 8;
+    }
 
-      handleCanvasTap(canvasCoords(e));
-    });
-    
-    elements.overlayCanvas.addEventListener('dblclick', (e) => {
-      if (state.currentTool === 'area' && state.areaPoints.length >= 3) {
-        addAreaMeasurement(state.areaPoints);
-        state.areaPoints = [];
+    function isDoubleTapForType(pointerType, x, y) {
+      const t = _lastTap[pointerType] || _lastTap.unknown;
+      const now = Date.now();
+      const dt = now - t.ts;
+      const dist = Math.hypot(x - t.x, y - t.y);
+      return dt > 0 && dt < 300 && dist < 20;
+    }
+
+    function recordTap(pointerType, x, y) {
+      const slot = _lastTap[pointerType] || _lastTap.unknown;
+      slot.ts = Date.now();
+      slot.x = x;
+      slot.y = y;
+    }
+
+    function clearTap(pointerType) {
+      const slot = _lastTap[pointerType] || _lastTap.unknown;
+      slot.ts = 0;
+      slot.x = 0;
+      slot.y = 0;
+    }
+
+    function getPanMidpoint() {
+      let sumX = 0;
+      let sumY = 0;
+      let n = 0;
+      for (const p of _activePointers.values()) {
+        if (_panPointerType && p.pointerType !== _panPointerType) continue;
+        sumX += p.x;
+        sumY += p.y;
+        n++;
       }
-    });
-    
-    // Touch support for mobile
-    let touchStartTime = 0;
-    let lastTap = 0;
-    
-    elements.overlayCanvas.addEventListener('touchstart', (e) => {
-      touchStartTime = Date.now();
-      if (e.touches.length === 2) {
+      if (!n) return null;
+      return { x: sumX / n, y: sumY / n };
+    }
+
+    function endPointerInteraction(pointerId) {
+      if (_roiPointerId === pointerId) {
+        _roiPointerId = null;
+        // Finish ROI drawing
+        if (state.isDrawingROI && state.roiStart) {
+          finishROISelection();
+        }
+      }
+
+      if (_dragPointerId === pointerId) {
+        _dragPointerId = null;
+        state.draggedPointIndex = null;
+        state.draggedLengthPoint = null;
+        state.draggedAnglePointIndex = null;
+      }
+
+      if (_panPrimaryPointerId === pointerId) {
+        _panPrimaryPointerId = null;
+      }
+
+      // If we were touch/pen panning and fewer than 2 pointers remain, stop panning.
+      if (state.isPanning && (_panPointerType === 'touch' || _panPointerType === 'pen')) {
+        let remaining = 0;
+        for (const p of _activePointers.values()) {
+          if (p.pointerType === _panPointerType) remaining++;
+        }
+        if (remaining < 2) {
+          state.isPanning = false;
+          _panPointerType = null;
+        }
+      }
+
+      // If mouse panning and primary pointer released, stop.
+      if (state.isPanning && _panPointerType === 'mouse' && !_panPrimaryPointerId) {
+        state.isPanning = false;
+        _panPointerType = null;
+      }
+
+      const cursor = (state.editingAreaIndex !== null || state.editingLengthIndex !== null || state.editingAngleIndex !== null)
+        ? 'pointer'
+        : 'crosshair';
+      elements.overlayCanvas.style.cursor = cursor;
+    }
+
+    elements.overlayCanvas.addEventListener('pointerdown', (e) => {
+      if (!state.image) return;
+
+      // Track pointers for multi-touch panning.
+      _activePointers.set(e.pointerId, {
+        x: e.clientX,
+        y: e.clientY,
+        startX: e.clientX,
+        startY: e.clientY,
+        startTs: Date.now(),
+        pointerType: e.pointerType || 'unknown'
+      });
+
+      // Capture so we keep receiving move/up even if finger leaves canvas.
+      if (elements.overlayCanvas.setPointerCapture) {
+        elements.overlayCanvas.setPointerCapture(e.pointerId);
+      }
+
+      // Mouse pan: middle button OR Alt+Left
+      if ((e.pointerType === 'mouse') && (e.button === 1 || (e.button === 0 && e.altKey))) {
         state.isPanning = true;
-        state.lastPanX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-        state.lastPanY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-      }
-    });
-    
-    elements.overlayCanvas.addEventListener('touchmove', (e) => {
-      if (state.isPanning && e.touches.length === 2) {
-        const x = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-        const y = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-        state.panX += x - state.lastPanX;
-        state.panY += y - state.lastPanY;
-        state.lastPanX = x;
-        state.lastPanY = y;
-        updateCanvasTransform();
+        _panPointerType = 'mouse';
+        _panPrimaryPointerId = e.pointerId;
+        state.lastPanX = e.clientX;
+        state.lastPanY = e.clientY;
+        elements.overlayCanvas.style.cursor = 'grabbing';
         e.preventDefault();
+        return;
       }
-    }, { passive: false });
-    
-    elements.overlayCanvas.addEventListener('touchend', (e) => {
-      state.isPanning = false;
-      
-      if (Date.now() - touchStartTime < 300 && e.changedTouches.length === 1) {
-        // Mark so we can ignore any delayed synthetic `click` the browser may dispatch.
-        _lastTouchTapTs = Date.now();
 
-        // Prevent default to avoid double-tap zoom / delayed click behaviors on some browsers.
-        if (e.cancelable) e.preventDefault();
-
-        const touch = e.changedTouches[0];
-        const now = Date.now();
-        
-        // Detect double tap
-        if (now - lastTap < 300) {
-          if (state.currentTool === 'area' && state.areaPoints.length >= 3) {
-            addAreaMeasurement(state.areaPoints);
-            state.areaPoints = [];
+      // Touch/pen pan begins when 2 pointers are active.
+      if ((e.pointerType === 'touch' || e.pointerType === 'pen')) {
+        let count = 0;
+        for (const p of _activePointers.values()) {
+          if (p.pointerType === e.pointerType) count++;
+        }
+        if (count >= 2) {
+          state.isPanning = true;
+          _panPointerType = e.pointerType;
+          const mid = getPanMidpoint();
+          if (mid) {
+            state.lastPanX = mid.x;
+            state.lastPanY = mid.y;
           }
-          lastTap = 0;
-        } else {
-          lastTap = now;
-          
-          const rect = elements.overlayCanvas.getBoundingClientRect();
-          const scale = state.zoom / 100;
-          const coords = {
-            x: (touch.clientX - rect.left) / scale,
-            y: (touch.clientY - rect.top) / scale
-          };
+          elements.overlayCanvas.style.cursor = 'grabbing';
+          e.preventDefault();
+          return;
+        }
+      }
 
-          handleCanvasTap(coords);
+      // ROI drawing mode (single pointer)
+      if (state.isDrawingROI && (e.button === 0 || e.pointerType !== 'mouse')) {
+        const coords = pointerCanvasCoords(e);
+        state.roiStart = coords;
+        _roiPointerId = e.pointerId;
+        e.preventDefault();
+        return;
+      }
+
+      // Edit handle dragging (single pointer)
+      if ((e.button === 0 || e.pointerType !== 'mouse') && (state.editingLengthIndex !== null || state.editingAreaIndex !== null || state.editingAngleIndex !== null)) {
+        const coords = pointerCanvasCoords(e);
+        if (beginEditHandleDragAt(coords)) {
+          _dragPointerId = e.pointerId;
+          elements.overlayCanvas.style.cursor = 'move';
+          e.preventDefault();
+          return;
         }
       }
     }, { passive: false });
+
+    elements.overlayCanvas.addEventListener('pointermove', (e) => {
+      const p = _activePointers.get(e.pointerId);
+      if (p) {
+        p.x = e.clientX;
+        p.y = e.clientY;
+      }
+
+      // Panning
+      if (state.isPanning) {
+        if (_panPointerType === 'mouse') {
+          if (e.pointerId !== _panPrimaryPointerId) return;
+          state.panX += e.clientX - state.lastPanX;
+          state.panY += e.clientY - state.lastPanY;
+          state.lastPanX = e.clientX;
+          state.lastPanY = e.clientY;
+          updateCanvasTransform();
+          e.preventDefault();
+          return;
+        }
+
+        // Touch/pen panning uses midpoint
+        const mid = getPanMidpoint();
+        if (mid) {
+          state.panX += mid.x - state.lastPanX;
+          state.panY += mid.y - state.lastPanY;
+          state.lastPanX = mid.x;
+          state.lastPanY = mid.y;
+          updateCanvasTransform();
+          e.preventDefault();
+          return;
+        }
+      }
+
+      // ROI drawing
+      if (state.isDrawingROI && state.roiStart && _roiPointerId === e.pointerId) {
+        const coords = pointerCanvasCoords(e);
+        const x = Math.min(state.roiStart.x, coords.x);
+        const y = Math.min(state.roiStart.y, coords.y);
+        const width = Math.abs(coords.x - state.roiStart.x);
+        const height = Math.abs(coords.y - state.roiStart.y);
+        state.roi = { x, y, width, height };
+        drawOverlay();
+        e.preventDefault();
+        return;
+      }
+
+      // Drag length endpoint
+      if (_dragPointerId === e.pointerId && state.draggedLengthPoint !== null && state.editingLengthIndex !== null) {
+        const coords = pointerCanvasCoords(e);
+        const len = state.lengths[state.editingLengthIndex];
+        len[state.draggedLengthPoint] = coords;
+        drawOverlay();
+        e.preventDefault();
+        return;
+      }
+
+      // Drag area vertex
+      if (_dragPointerId === e.pointerId && state.draggedPointIndex !== null && state.editingAreaIndex !== null) {
+        const coords = pointerCanvasCoords(e);
+        const area = state.areas[state.editingAreaIndex];
+        area.points[state.draggedPointIndex] = coords;
+        drawOverlay();
+        e.preventDefault();
+        return;
+      }
+
+      // Drag angle handle
+      if (_dragPointerId === e.pointerId && state.draggedAnglePointIndex !== null && state.editingAngleIndex !== null) {
+        const coords = pointerCanvasCoords(e);
+        const ang = state.angles[state.editingAngleIndex];
+        if (state.draggedAnglePointIndex === 0) ang.p1 = coords;
+        if (state.draggedAnglePointIndex === 1) ang.p2 = coords;
+        if (state.draggedAnglePointIndex === 2) ang.p3 = coords;
+        ang.angleDeg = computeSelectedAngleDeg(ang.p1, ang.p2, ang.p3, !!ang.reflex);
+        drawOverlay();
+        e.preventDefault();
+        return;
+      }
+    }, { passive: false });
+
+    function handlePointerUpOrCancel(e) {
+      const p = _activePointers.get(e.pointerId);
+      if (!p) {
+        endPointerInteraction(e.pointerId);
+        return;
+      }
+
+      const pointerType = p.pointerType || 'unknown';
+      const wasDragging = (_dragPointerId === e.pointerId);
+      const wasROI = (_roiPointerId === e.pointerId);
+
+      // Update pointer end position
+      p.x = e.clientX;
+      p.y = e.clientY;
+
+      // Remove pointer now; this affects multi-touch panning end logic.
+      _activePointers.delete(e.pointerId);
+
+      // Consider tap ONLY if it wasn't a drag/ROI/pan
+      const tappable = !state.isPanning && !wasDragging && !wasROI;
+      if (tappable && isTap(p)) {
+        const nowX = e.clientX;
+        const nowY = e.clientY;
+        const doubleTap = isDoubleTapForType(pointerType, nowX, nowY);
+
+        if (pointerType === 'touch' || pointerType === 'pen') {
+          // Touch/pen: on double-tap, close polygon without adding another point.
+          if (doubleTap) {
+            if (state.currentTool === 'area' && state.areaPoints.length >= 3) {
+              addAreaMeasurement(state.areaPoints);
+              state.areaPoints = [];
+            }
+            clearTap(pointerType);
+          } else {
+            recordTap(pointerType, nowX, nowY);
+            handleCanvasTap(pointerCanvasCoords(e));
+          }
+        } else {
+          // Mouse: preserve old behavior (second click adds point; then we close if it was a double-click).
+          const coords = pointerCanvasCoords(e);
+          handleCanvasTap(coords);
+          if (doubleTap) {
+            if (state.currentTool === 'area' && state.areaPoints.length >= 3) {
+              addAreaMeasurement(state.areaPoints);
+              state.areaPoints = [];
+            }
+            clearTap(pointerType);
+          } else {
+            recordTap(pointerType, nowX, nowY);
+          }
+        }
+      }
+
+      endPointerInteraction(e.pointerId);
+    }
+
+    elements.overlayCanvas.addEventListener('pointerup', handlePointerUpOrCancel, { passive: false });
+    elements.overlayCanvas.addEventListener('pointercancel', handlePointerUpOrCancel, { passive: false });
     
     // Set crosshair cursor when image loaded
     elements.overlayCanvas.style.cursor = 'crosshair';
+    // Prevent browser scrolling/zoom gestures from stealing pointer events on mobile.
+    elements.overlayCanvas.style.touchAction = 'none';
     // Hint browser that these elements will transform frequently
     elements.mainCanvas.style.willChange = 'transform';
     elements.overlayCanvas.style.willChange = 'transform';
