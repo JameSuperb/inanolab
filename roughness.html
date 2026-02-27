@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Roughness Visualizer (NxN)</title>
+  <title>Roughness Visualizer</title>
   <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
@@ -142,7 +142,9 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap:8px;
     }
+    .btnIcon{ width:14px; height:14px; display:block; flex:0 0 auto; }
     button:not(.secondary):not(.danger):not(.tabBtn):not(.toggleBtn):not(.helpBtn):not(.iconBtn):hover,
     a.btn:not(.secondary):not(.danger):not(.tabBtn):not(.toggleBtn):not(.helpBtn):not(.iconBtn):hover{ background:var(--accent-2); transform:translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.35); }
     button:disabled{ background:#475569; cursor:not-allowed; transform:none; box-shadow:none; }
@@ -290,18 +292,22 @@
       inset:0;
       background:rgba(0,0,0,0.55);
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       justify-content:center;
       padding:18px;
       z-index:9999;
+      overflow:auto;
     }
     .overlay[hidden]{ display:none !important; }
     .modal{
       width:min(720px, 100%);
+      max-height: calc(100dvh - 36px);
       background:var(--bg-secondary);
       border:1px solid rgba(255,255,255,0.12);
       border-radius:16px;
       box-shadow:0 24px 80px rgba(0,0,0,0.55);
+      display:flex;
+      flex-direction:column;
     }
     .modalHead{
       display:flex;
@@ -310,9 +316,18 @@
       padding:12px 14px;
       border-bottom:1px solid rgba(255,255,255,0.10);
       gap:10px;
+      flex: 0 0 auto;
     }
     .modalTitle{ font-weight:950; }
-    .modalBody{ padding:14px; color:var(--text-primary); line-height:1.45; }
+    .modalBody{
+      padding:14px;
+      color:var(--text-primary);
+      line-height:1.45;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
     .iconBtn{
       width:32px;
       height:32px;
@@ -370,6 +385,12 @@
       <h1>Roughness Visualizer <span class="pill">CSV heightmap • NxN • µm</span></h1>
       <div class="row">
         <a href="index.html" class="btn secondary" aria-label="Home">Home</a>
+        <button id="topHelp" class="secondary" type="button" aria-label="Help" title="Documentation">
+          <svg class="btnIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Help
+        </button>
         <button id="loadDemo" class="secondary">Load Demo</button>
         <button id="reset" class="danger">Reset</button>
       </div>
@@ -387,7 +408,7 @@
 
         <div class="panelTitle">Controls & Stats</div>
         <div class="hint">
-          Upload your NxN CSV → click <b>Render</b>. In 2D: click heatmap for <b>row profile</b>, <b>Shift+Click</b> for column profile.
+          Upload your NxN CSV → updates render automatically. In 2D: click heatmap for <b>row profile</b>, <b>Shift+Click</b> for column profile.
         </div>
 
         <div class="divider"></div>
@@ -420,6 +441,21 @@
               </label>
             </div>
             <button class="helpBtn" type="button" data-help="downsample" aria-label="Help: Downsample">?</button>
+          </div>
+
+          <div class="settingRow">
+            <div class="left">
+              <div class="row" style="gap:12px; align-items:center;">
+                <label>X length (µm)
+                  <input id="xLenUm" type="number" min="0" step="0.1" value="0" style="width:120px;" />
+                </label>
+                <label>Y length (µm)
+                  <input id="yLenUm" type="number" min="0" step="0.1" value="0" style="width:120px;" />
+                </label>
+                <span class="small" id="xyScaleInfo">dx/dy: —</span>
+              </div>
+            </div>
+            <button class="helpBtn" type="button" data-help="xylen" aria-label="Help: X/Y length">?</button>
           </div>
 
           <div class="settingRow">
@@ -457,10 +493,23 @@
 
           <div class="settingRow">
             <div class="left">
-              <label>Z-scale ×
-                <input id="zscale" type="range" min="0.2" max="20" step="0.2" value="1" />
-                <span class="small" id="zscaleVal">1.0×</span>
-              </label>
+              <div class="row" style="gap:12px; align-items:center;">
+                <div style="min-width:260px;">
+                  <div class="small" style="margin-bottom:6px;">Z-axis × <span id="zscaleVal">1.0×</span></div>
+                  <div id="zMultGroup" class="toggleGroup" role="group" aria-label="Z-axis multiplier" style="flex-wrap:wrap;">
+                    <button type="button" class="toggleBtn" data-mult="0.5" aria-pressed="false">0.5×</button>
+                    <button type="button" class="toggleBtn" data-mult="0.8" aria-pressed="false">0.8×</button>
+                    <button type="button" class="toggleBtn active" data-mult="1.0" aria-pressed="true">1.0×</button>
+                    <button type="button" class="toggleBtn" data-mult="2.0" aria-pressed="false">2.0×</button>
+                    <button type="button" class="toggleBtn" data-mult="3.0" aria-pressed="false">3.0×</button>
+                    <button type="button" class="toggleBtn" data-mult="4.0" aria-pressed="false">4.0×</button>
+                    <button type="button" class="toggleBtn" data-mult="5.0" aria-pressed="false">5.0×</button>
+                  </div>
+                </div>
+                <label>Z-axis max (µm)
+                  <input id="zmaxNum" type="number" min="0" step="0.1" value="10" style="width:110px;" aria-label="Z-axis maximum (µm)" />
+                </label>
+              </div>
             </div>
             <button class="helpBtn" type="button" data-help="zscale" aria-label="Help: Z-scale">?</button>
           </div>
@@ -468,7 +517,6 @@
           <div class="divider"></div>
 
           <div class="row" style="justify-content:space-between;">
-            <button id="render">Render / Update</button>
             <div class="small" id="warn"></div>
           </div>
 
@@ -494,11 +542,11 @@
               </thead>
               <tbody id="metricsBody"></tbody>
             </table>
-            <div class="row" style="justify-content:flex-end; margin-top:10px;">
-              <button id="exportMetricsPng" class="secondary">Export Roughness Metrics PNG</button>
-              <button id="copyMetricsTsv" class="secondary">Copy TSV</button>
-            </div>
             <div id="metricsActionsFeedback" class="pubMeta" aria-live="polite" style="margin-top:8px; margin-bottom:0;"></div>
+          </div>
+          <div class="exportRow" aria-label="Roughness metric export actions">
+            <button id="exportMetricsPng" class="secondary">Export Roughness Metrics PNG</button>
+            <button id="copyMetricsTsv" class="secondary">Copy TSV</button>
           </div>
           <div class="hint" style="margin-top:8px;">
             Sa = mean(|z − z̄|), Sq = RMS(z − z̄), Sz = max − min (µm).
@@ -585,12 +633,20 @@
   // =========================
   // State
   // =========================
-  let Z = null;       // Float64Array flattened (original)
+  let Z = null;       // Float64Array flattened (stored in µm)
   let N = 0;          // size NxN
   let zMin = 0, zMax = 0, zMean = 0, zStd = 0;
   let lastProfile = null;
   let dataLabel = "—";
   let metricsSa = null;
+
+  // =========================
+  // Units
+  // =========================
+  // The UI and all reported metrics are in micrometers (µm).
+  // Incoming CSV height values are assumed to be in meters (m) and are converted to µm on load.
+  // If your CSV is already in µm, set this to 1.0.
+  const Z_INPUT_TO_UM = 1e6;
 
   // WebGL state
   let gl = null;
@@ -620,7 +676,34 @@
   const metricsActionsFeedback = el("metricsActionsFeedback");
   const warn = el("warn");
   const fileFeedback = el("fileFeedback");
-  const renderBtn = el("render");
+
+  // Lateral scale inputs (optional physical lengths)
+  const xLenUmEl = el("xLenUm");
+  const yLenUmEl = el("yLenUm");
+  const xyScaleInfoEl = el("xyScaleInfo");
+
+  function getLateralScale(){
+    const Lx = Number(xLenUmEl?.value);
+    const Ly = Number(yLenUmEl?.value);
+    const hasX = Number.isFinite(Lx) && Lx > 0 && N > 1;
+    const hasY = Number.isFinite(Ly) && Ly > 0 && N > 1;
+    const dx = hasX ? (Lx / (N - 1)) : NaN;
+    const dy = hasY ? (Ly / (N - 1)) : NaN;
+    return { hasX, hasY, Lx, Ly, dx, dy };
+  }
+
+  function updateLateralScaleInfo(){
+    if (!xyScaleInfoEl) return;
+    const s = getLateralScale();
+    if (!s.hasX && !s.hasY){
+      xyScaleInfoEl.textContent = "dx/dy: —";
+      return;
+    }
+    const parts = [];
+    if (s.hasX) parts.push(`dx=${fmt(s.dx)} µm`);
+    if (s.hasY) parts.push(`dy=${fmt(s.dy)} µm`);
+    xyScaleInfoEl.textContent = parts.join(", ");
+  }
 
   // Tabs
   const tab2dBtn = el("tab2dBtn");
@@ -676,7 +759,7 @@
       for (let j=0;j<cols;j++){
         const v = Number(parts[j]);
         if (!Number.isFinite(v)) throw new Error(`Invalid number at row ${i+1}, col ${j+1}.`);
-        data[k++] = v;
+        data[k++] = v * Z_INPUT_TO_UM;
       }
     }
     return { data, n: rows, delim };
@@ -917,6 +1000,15 @@
     const w = prof.width, h = prof.height;
     const demean = el("demean").checked;
 
+    const s = getLateralScale();
+    const isRow = kind === "row";
+    const hasDist = isRow ? s.hasX : s.hasY;
+    const distLen = isRow ? s.Lx : s.Ly;
+    const fixedUm = isRow
+      ? (s.hasY ? (idx * s.dy) : NaN)
+      : (s.hasX ? (idx * s.dx) : NaN);
+    const fixedLabel = Number.isFinite(fixedUm) ? ` (${fmt(fixedUm)} µm)` : "";
+
     const line = new Float64Array(N);
     if (kind === "row"){
       const off = idx*N;
@@ -933,8 +1025,8 @@
     if (mn === mx){ mn -= 1e-12; mx += 1e-12; }
 
     const ax = drawPlotAxes(ctxP, w, h, {
-      title: `${kind.toUpperCase()} profile @ ${kind==="row" ? "y" : "x"} = ${idx}`,
-      xlabel: "Index",
+      title: `${kind.toUpperCase()} profile @ ${isRow ? "y" : "x"} = ${idx}${fixedLabel}`,
+      xlabel: hasDist ? "Distance (µm)" : "Index",
       ylabel: "Height (µm)"
     });
 
@@ -959,6 +1051,10 @@
     ctxP.fillText(`min: ${fmt(mn)} µm`, ax.padL, h-ax.padB+18);
     ctxP.fillText(`max: ${fmt(mx)} µm`, ax.padL+190, h-ax.padB+18);
     ctxP.fillText(`mode: ${demean ? "demeaned (z−z̄)" : "raw"}`, ax.padL+380, h-ax.padB+18);
+
+    if (hasDist && Number.isFinite(distLen)){
+      ctxP.fillText(`length: ${fmt(distLen)} µm`, ax.padL+690, h-ax.padB+18);
+    }
 
     profileInfo.textContent = `${kind} ${idx} • ${demean ? "demeaned" : "raw"}`;
     lastProfile = { kind, idx };
@@ -1045,7 +1141,11 @@
     if (metricsMeta){
       const demeanLabel = el("demean")?.checked ? "On" : "Off";
       const dsLabel = el("ds")?.value ? `${el("ds").value}×` : "—";
-      metricsMeta.textContent = `Source: ${dataLabel} • Grid: ${N}×${N} (${(Z.length).toLocaleString()} pts) • Downsample: ${dsLabel} • Demean (plots): ${demeanLabel}`;
+      const s = getLateralScale();
+      const xyLabel = (s.hasX || s.hasY)
+        ? ` • X length: ${s.hasX ? fmt(s.Lx) : "—"} µm • Y length: ${s.hasY ? fmt(s.Ly) : "—"} µm`
+        : "";
+      metricsMeta.textContent = `Source: ${dataLabel} • Grid: ${N}×${N} (${(Z.length).toLocaleString()} pts) • Downsample: ${dsLabel} • Demean (plots): ${demeanLabel}${xyLabel}`;
     }
 
     const rows = [
@@ -1073,32 +1173,190 @@
   // =========================
   // Plotly 3D (publication ready)
   // =========================
+  const ZSCALE_OPTIONS = [
+    0.5, 0.8, 1.0,
+    2.0, 3.0, 4.0, 5.0
+  ];
+
+  let zAxisMultTouched = false;
+  let zAxisMaxTouched = false;
+  let zAxisSyncing = false;
+  let zAxisBaseMaxAbs = 1e-12; // current dataset amplitude (µm)
+  let desiredZMaxUm = null;    // effective displayed Zmax (µm)
+  let desiredZMult = 1.0;      // desired multiplier when using the buttons
+
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+  function nearestZScaleIndex(mult){
+    if (!Number.isFinite(mult) || mult <= 0) return ZSCALE_OPTIONS.indexOf(1.0);
+    let bestIdx = 0;
+    let bestErr = Infinity;
+    for (let i=0;i<ZSCALE_OPTIONS.length;i++){
+      const opt = ZSCALE_OPTIONS[i];
+      const err = Math.abs(opt - mult);
+      if (err < bestErr){ bestErr = err; bestIdx = i; }
+    }
+    return bestIdx;
+  }
+
+  function getZMultButtons(){
+    const g = el("zMultGroup");
+    if (!g) return [];
+    return Array.from(g.querySelectorAll("button[data-mult]"));
+  }
+
+  function formatMultLabel(mult){
+    if (!Number.isFinite(mult) || mult <= 0) return "—×";
+    // Keep presets looking clean; show up to 3 decimals for custom multipliers.
+    const nearInt = Math.abs(mult - Math.round(mult)) < 1e-12;
+    const v = nearInt ? Math.round(mult).toFixed(1) : mult.toFixed(3).replace(/0+$/,"" ).replace(/\.$/, "");
+    return `${v}×`;
+  }
+
+  function multNearlyEqual(a, b){
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+    const scale = Math.max(1, Math.abs(a), Math.abs(b));
+    return Math.abs(a - b) <= 1e-9 * scale;
+  }
+
+  function ensureCustomZMultButton(mult){
+    const g = el("zMultGroup");
+    if (!g) return;
+
+    // If the multiplier is basically one of our presets, remove any custom button.
+    const isPreset = ZSCALE_OPTIONS.some(m => multNearlyEqual(m, mult));
+    const existing = g.querySelector("#zMultCustom");
+    if (isPreset){
+      existing?.remove();
+      return;
+    }
+
+    const label = formatMultLabel(mult);
+    if (existing){
+      existing.dataset.mult = String(mult);
+      existing.textContent = label;
+      return;
+    }
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.id = "zMultCustom";
+    btn.className = "toggleBtn";
+    btn.dataset.mult = String(mult);
+    btn.textContent = label;
+    btn.setAttribute("aria-pressed", "false");
+    btn.title = "Custom multiplier (from typed Z-axis max)";
+
+    // Put custom button at the end so presets remain in a stable order.
+    g.appendChild(btn);
+  }
+
+  function setActiveZMultButton(mult){
+    const btns = getZMultButtons();
+    for (const b of btns){
+      const m = Number(b.dataset.mult);
+      const active = Number.isFinite(m) && multNearlyEqual(m, mult);
+      b.classList.toggle("active", active);
+      b.setAttribute("aria-pressed", active ? "true" : "false");
+    }
+  }
+
+  function applyDesiredZMaxToControls(){
+    const num = el("zmaxNum");
+    const label = el("zscaleVal");
+    if (!num) return;
+
+    if (!Number.isFinite(zAxisBaseMaxAbs) || zAxisBaseMaxAbs <= 0) zAxisBaseMaxAbs = 1e-12;
+
+    // Establish a desired effective Zmax if none yet.
+    if (!Number.isFinite(desiredZMaxUm) || desiredZMaxUm === null){
+      desiredZMult = 1.0;
+      desiredZMaxUm = zAxisBaseMaxAbs; // default to 1×
+    }
+
+    // Two modes:
+    // - Multiplier mode: user clicked a multiplier button -> Zmax follows amplitude * multiplier.
+    // - Absolute mode: user typed Zmax -> multiplier becomes whatever yields that exact Zmax.
+    let mult = 1.0;
+    let effectiveZMax = zAxisBaseMaxAbs;
+
+    if (zAxisMaxTouched){
+      effectiveZMax = Math.max(1e-12, desiredZMaxUm);
+      mult = effectiveZMax / zAxisBaseMaxAbs;
+      ensureCustomZMultButton(mult);
+    } else {
+      mult = Number.isFinite(desiredZMult) && desiredZMult > 0 ? desiredZMult : 1.0;
+      effectiveZMax = Math.max(1e-12, zAxisBaseMaxAbs * mult);
+      ensureCustomZMultButton(mult);
+    }
+
+    zAxisSyncing = true;
+    try{
+      setActiveZMultButton(mult);
+      num.value = String(effectiveZMax);
+      if (label) label.textContent = formatMultLabel(mult);
+    } finally {
+      zAxisSyncing = false;
+    }
+
+    // Update stored desired to the actual effective Zmax we can represent.
+    desiredZMaxUm = effectiveZMax;
+    desiredZMult = mult;
+  }
+
+  function syncZAxisControls(proc){
+    zAxisBaseMaxAbs = Math.max(1e-12, Math.max(Math.abs(proc.lo), Math.abs(proc.hi)) || 1e-12);
+
+    // If the user hasn't interacted, stay at 1× (i.e., zmax equals data amplitude).
+    if (!zAxisMultTouched && !zAxisMaxTouched){
+      desiredZMult = 1.0;
+      desiredZMaxUm = zAxisBaseMaxAbs;
+    } else if (zAxisMultTouched && !zAxisMaxTouched){
+      // Preserve the selected multiplier across changes in dataset amplitude.
+      desiredZMaxUm = Math.max(1e-12, zAxisBaseMaxAbs * desiredZMult);
+    }
+
+    applyDesiredZMaxToControls();
+  }
+
   function renderPlotly(proc){
-    const { grid, W, lo, hi } = proc;
-    const zscale = Number(el("zscale").value);
+    const { grid, W, lo, hi, demean } = proc;
+    const zMaxUm = Math.max(1e-12, Number(el("zmaxNum")?.value) || 1e-12);
+
+    const s = getLateralScale();
+    const hasXY = s.hasX && s.hasY;
+    const xVec = hasXY ? Array.from({ length: W }, (_, i) => (W <= 1 ? 0 : (i * (s.Lx / (W - 1))))) : null;
+    const yVec = hasXY ? Array.from({ length: W }, (_, i) => (W <= 1 ? 0 : (i * (s.Ly / (W - 1))))) : null;
 
     const z = [];
     for (let y=0;y<W;y++){
       const row = [];
       const off = y*W;
       for (let x=0;x<W;x++){
-        row.push(grid[off + x] * zscale);
+        row.push(grid[off + x]);
       }
       z.push(row);
     }
 
     const cm = plotlyColorscale(el("cmap").value);
 
-    const data = [{
+    const trace = {
       type: "surface",
       z,
       colorscale: cm,
-      cmin: lo * zscale,
-      cmax: hi * zscale,
+      cmin: lo,
+      cmax: hi,
       showscale: true,
       lighting: { ambient:0.55, diffuse:0.65, specular:0.25, roughness:0.9, fresnel:0.1 },
       lightposition: { x:1.2, y:1.4, z:1.8 }
-    }];
+    };
+
+    if (hasXY){
+      trace.x = xVec;
+      trace.y = yVec;
+    }
+
+    const data = [trace];
 
     const axisCommon = {
       showgrid: true,
@@ -1113,17 +1371,26 @@
       color: "#111827"
     };
 
+    const baseMaxAbs = Math.max(Math.abs(lo), Math.abs(hi)) || 1e-12;
+    const useSym = !!demean || (lo < 0 && hi > 0);
+    const zRange = useSym
+      ? [-zMaxUm, zMaxUm]
+      : [Math.min(lo, zMaxUm), Math.max(hi, zMaxUm)];
+
     const layout = {
       margin:{l:0,r:0,b:0,t:0},
       paper_bgcolor:"#ffffff",
       plot_bgcolor:"#ffffff",
       font: { color:"#111827", family:"system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" },
       scene:{
-        xaxis:{ ...axisCommon, title:"x (index)" },
-        yaxis:{ ...axisCommon, title:"y (index)" },
-        zaxis:{ ...axisCommon, title:"height (µm)" },
+        xaxis:{ ...axisCommon, title: hasXY ? "x (µm)" : "x (index)" },
+        yaxis:{ ...axisCommon, title: hasXY ? "y (µm)" : "y (index)" },
+        zaxis:{ ...axisCommon, title:"height (µm)", range: zRange },
         bgcolor:"#ffffff",
-        aspectmode:"auto"
+        aspectmode:"manual",
+        // Keep the 3D box proportions constant so increasing Z-axis max flattens the surface
+        // without physically compressing the Z axis.
+        aspectratio:{ x:1, y:1, z:1 }
       }
     };
 
@@ -1189,7 +1456,7 @@
       webgl.getContext("webgl2", { antialias:true, preserveDrawingBuffer:true }) ||
       webgl.getContext("webgl", { antialias:true, preserveDrawingBuffer:true });
     if (!gl){
-      warn.innerHTML = `<span class="err">WebGL not supported in this browser.</span>`;
+      warn.innerHTML = `<span class="err">WebGL not supported in zxthis browser.</span>`;
       return false;
     }
 
@@ -1318,7 +1585,9 @@
 
   function buildMesh(proc){
     const { grid, W, lo, hi } = proc;
-    const zscale = Number(el("zscale").value);
+    const zMaxUm = Math.max(1e-12, Number(el("zmaxNum")?.value) || 1e-12);
+    const baseMaxAbs = Math.max(Math.abs(lo), Math.abs(hi)) || 1e-12;
+    const zGeomScale = baseMaxAbs / zMaxUm;
     const cmap = getCmap();
     const inv = 1 / (hi - lo || 1);
 
@@ -1336,7 +1605,7 @@
       for (let x=0;x<W;x++){
         const fx = (x/(W-1))*2 - 1;
         const k = idx(x,y);
-        const z = grid[k] * zscale;
+        const z = grid[k] * zGeomScale;
 
         pos[k*3+0] = fx;
         pos[k*3+1] = fy;
@@ -1566,6 +1835,8 @@
     const displayedPts = shown*shown;
     status.innerHTML = `Loaded <strong>${N}×${N}</strong> • showing <strong>${shown}×${shown}</strong> (${displayedPts.toLocaleString()} pts) • range [${fmt(proc.lo)}, ${fmt(proc.hi)}] µm • ${proc.demean ? "demeaned" : "raw"}`;
 
+    syncZAxisControls(proc);
+
     renderPlotly(proc);
 
     // Make plotly responsive if its tab is visible (or just after render)
@@ -1589,7 +1860,10 @@
     let z = Z[yi*N + xi];
     if (el("demean").checked) z -= zMean;
 
-    clickInfo.textContent = `x=${xi}, y=${yi}, z=${fmt(z)} µm`;
+    const s = getLateralScale();
+    const xPart = s.hasX ? `x=${xi} (${fmt(xi * s.dx)} µm)` : `x=${xi}`;
+    const yPart = s.hasY ? `y=${yi} (${fmt(yi * s.dy)} µm)` : `y=${yi}`;
+    clickInfo.textContent = `${xPart}, ${yPart}, z=${fmt(z)} µm`;
 
     // Ensure 2D tab is visible for immediate feedback
     if (!tab2d.classList.contains("active")) setTab("2d");
@@ -1610,6 +1884,8 @@
       Z = parsed.data;
       N = parsed.n;
 
+      updateLateralScaleInfo();
+
       const st = computeStats(Z);
       zMin = st.mn; zMax = st.mx; zMean = st.mean; zStd = st.std;
 
@@ -1628,7 +1904,6 @@
         const delimLabel = (parsed.delim === "\t") ? "TAB" : (parsed.delim === ",") ? "comma" : "space";
         fileFeedback.textContent = `Loaded: ${f.name} • ${N}×${N} • delimiter: ${delimLabel} • rendering…`;
       }
-      if (renderBtn) renderBtn.disabled = false;
       // default to 2D after load
       setTab("2d");
 
@@ -1647,7 +1922,6 @@
         fileFeedback.classList.add("err");
         fileFeedback.textContent = `Load failed: ${err.message}`;
       }
-      if (renderBtn) renderBtn.disabled = true;
     }
   }
 
@@ -1692,11 +1966,12 @@
     const size = 512;
     N = size;
     Z = new Float64Array(size*size);
+    updateLateralScaleInfo();
     for (let y=0;y<size;y++){
       for (let x=0;x<size;x++){
         const r = Math.hypot(x-256, y-256)/256;
         const v = 1.6e-4*Math.sin(10*r) + 6e-5*Math.sin(x/17) + 4e-5*Math.cos(y/23) + (Math.random()-0.5)*4e-5;
-        Z[y*size + x] = v;
+        Z[y*size + x] = v * Z_INPUT_TO_UM;
       }
     }
     const st = computeStats(Z);
@@ -1715,7 +1990,6 @@
       fileFeedback.classList.add("ok");
       fileFeedback.textContent = `Loaded: DEMO • ${N}×${N} • rendering…`;
     }
-    if (renderBtn) renderBtn.disabled = false;
     setTab("2d");
 
     // Auto-render demo
@@ -1737,45 +2011,151 @@
     window.location.reload();
   });
 
-  el("render").addEventListener("click", renderAll);
-
-  el("rangeMode").addEventListener("change", updateRangeInputsForMode);
+  el("rangeMode").addEventListener("change", () => { updateRangeInputsForMode(); if (Z) renderAll(); });
   el("demean").addEventListener("change", () => { updateRangeInputsForMode(); if (Z) renderAll(); });
   el("ds").addEventListener("change", () => { if (Z) renderAll(); });
   el("cmap").addEventListener("change", () => { if (Z) renderAll(); });
-  el("zscale").addEventListener("input", () => {
-    el("zscaleVal").textContent = `${Number(el("zscale").value).toFixed(1)}×`;
+
+  // Manual min/max range should re-render when edited.
+  el("minv")?.addEventListener("change", () => { if (Z && el("rangeMode")?.value === "manual") renderAll(); });
+  el("maxv")?.addEventListener("change", () => { if (Z && el("rangeMode")?.value === "manual") renderAll(); });
+  el("zMultGroup")?.addEventListener("click", (e) => {
+    const btn = e.target?.closest?.("button[data-mult]");
+    if (!btn) return;
+    if (zAxisSyncing) return;
+
+    const mult = Number(btn.dataset.mult);
+    if (!Number.isFinite(mult) || mult <= 0) return;
+
+    zAxisMultTouched = true;
+    zAxisMaxTouched = false;
+    desiredZMult = mult;
+    desiredZMaxUm = Math.max(1e-12, zAxisBaseMaxAbs * mult);
+    applyDesiredZMaxToControls();
     if (Z) renderAll();
   });
+
+  el("zmaxNum").addEventListener("change", () => {
+    const num = el("zmaxNum");
+    if (!num) return;
+
+    let v = Number(num.value);
+    if (!Number.isFinite(v) || v <= 0){
+      v = 1e-12;
+    }
+    zAxisMaxTouched = true;
+    // Treat manual entry as an absolute Zmax; multiplier will snap/highlight accordingly.
+    desiredZMaxUm = Math.max(1e-12, v);
+    applyDesiredZMaxToControls();
+    if (Z) renderAll();
+  });
+
+  function onXYLenChange(){
+    updateLateralScaleInfo();
+    if (Z){
+      updateMetrics();
+      renderAll();
+    }
+  }
+  if (xLenUmEl) xLenUmEl.addEventListener("change", onXYLenChange);
+  if (yLenUmEl) yLenUmEl.addEventListener("change", onXYLenChange);
 
   // =========================
   // Help modal
   // =========================
   const HELP = {
+    overview: {
+      title: "Roughness Visualizer — Help",
+      body: () => {
+        const inputUnit = (Z_INPUT_TO_UM === 1e6) ? "meters (m)" : (Z_INPUT_TO_UM === 1.0) ? "micrometers (µm)" : "custom units";
+        const conv = (Z_INPUT_TO_UM === 1.0) ? "(no conversion)" : `multiplied by ${Z_INPUT_TO_UM.toLocaleString()} to convert to µm`;
+        return `
+          <p>This tool loads an <b>N×N</b> heightmap CSV and visualizes surface roughness in <b>2D</b> (heatmap, profiles, histogram) and <b>3D</b> (Plotly surface). All reported heights and metrics are in <b>µm</b>.</p>
+
+          <p><b>Quick start</b></p>
+          <ul>
+            <li><b>Load CSV</b>: drag & drop a file (NxN numbers), or click to choose.</li>
+            <li><b>Explore 2D</b>: click the heatmap for a row profile; <b>Shift+Click</b> for a column profile.</li>
+            <li><b>Adjust display</b>: change Colormap/Range/Downsample; plots update automatically.</li>
+            <li><b>3D scaling</b>: use the Z-axis × buttons or type Z-axis max (µm).</li>
+          </ul>
+
+          <p><b>CSV format & units</b></p>
+          <ul>
+            <li><b>Shape</b>: the file must be a square grid (same number of rows and columns).</li>
+            <li><b>Delimiters</b>: comma, TAB, or whitespace-separated values are accepted.</li>
+            <li><b>Units</b>: input values are assumed to be in <b>${inputUnit}</b> and are ${conv} at load time. If your file is already in µm, set <b>Z_INPUT_TO_UM = 1.0</b> in the code.</li>
+          </ul>
+
+          <p><b>Processing details</b></p>
+          <ul>
+            <li><b>Downsample</b>: displayed grid size is <b>floor(N / ds)</b>. Each displayed pixel is the <b>average</b> of a ds×ds block from the original grid.</li>
+            <li><b>Subtract mean (z − z̄)</b>: for visualization/plot ranges, subtracts the <b>global mean height</b> z̄ (it does not fit/remove a tilted plane).</li>
+            <li><b>Range</b>: Auto uses min/max; Clip uses an <b>approximate</b> 1st–99th percentile on the displayed grid; Manual uses your Min/Max values. This affects <b>color scaling</b> (2D/3D), not the underlying data.</li>
+            <li><b>Metrics</b>: the table values (z_min, Sa, Sq, …) are computed from the <b>full-resolution loaded grid</b> (after unit conversion). Downsample/Range/Demean do <b>not</b> change the metrics.</li>
+            <li><b>Histogram</b>: displayed as a <b>1–99% clipped</b> histogram (for readability), independent of the Range mode.</li>
+          </ul>
+
+          <p><b>3D Z-axis scaling</b></p>
+          <ul>
+            <li><b>Z-axis ×</b> scales the displayed Z range relative to the current data amplitude (based on the current Range + demean setting).</li>
+            <li><b>Z-axis max (µm)</b>: typing an exact value creates a <b>custom multiplier button</b> so the exact scale stays selectable.</li>
+            <li><b>Z range symmetry</b>: when demean is enabled (or the shown range crosses zero), the Plotly z-axis is displayed symmetrically (−Zmax … +Zmax).</li>
+            <li><b>Axis proportions</b>: the 3D box proportions stay fixed; increasing Zmax flattens the surface by changing the numeric range, not by shrinking the Z axis.</li>
+          </ul>
+
+          <p><b>Exports</b></p>
+          <ul>
+            <li>Each view has an <b>Export PNG</b> button. Metrics can be exported as a PNG table or copied as TSV.</li>
+          </ul>
+
+          <p class="small">Everything runs locally in your browser (no server processing). Performance depends on N and your device; use Downsample for large grids.</p>
+        `;
+      }
+    },
     colormap: {
       title: "Colormap",
       body: `<p>Controls how height values map to colors in the 2D heatmap and 3D Plotly surface. This changes only the visualization, not the underlying data.</p>`
     },
     downsample: {
       title: "Downsample",
-      body: `<p>Reduces the displayed grid size for faster rendering (especially in 3D). Higher downsample values render faster but show less detail.</p>`
+      body: `<p>Reduces the displayed grid size for faster rendering (especially in 3D).</p>
+             <ul>
+               <li>The shown grid is <b>floor(N / ds)</b> per side.</li>
+               <li>Each shown point is the <b>average</b> of a ds×ds block from the original grid.</li>
+             </ul>`
+    },
+    xylen: {
+      title: "X/Y length (µm)",
+      body: `<p>Sets the physical size of the dataset along the X and Y axes (in micrometers).</p>
+             <ul>
+               <li>If set, the heatmap click readout and 3D Plotly X/Y axes can be shown in <b>µm</b> instead of index.</li>
+               <li>This does <b>not</b> change your Z values; it only provides physical scaling for X/Y.</li>
+             </ul>`
     },
     range: {
       title: "Range",
       body: `<p>Sets the min/max used for color scaling.</p>
              <ul>
                <li><b>Auto (min/max)</b>: uses the displayed data min and max.</li>
-               <li><b>Auto (1–99% clip)</b>: uses the 1st–99th percentile to reduce outlier impact.</li>
+               <li><b>Auto (1–99% clip)</b>: uses an <b>approximate</b> 1st–99th percentile to reduce outlier impact.</li>
                <li><b>Manual</b>: you set Min and Max directly.</li>
              </ul>`
     },
     meanPlane: {
       title: "Subtract mean plane",
-      body: `<p>Removes background tilt so roughness is relative to a leveled reference. In practice, this subtracts a global trend so local peaks/valleys are easier to compare.</p>`
+      body: `<p>Subtracts the <b>global mean height</b> z̄ from the displayed data (z − z̄) so profiles/plots are centered.</p>
+             <p class="small">Note: this does <b>not</b> fit/remove a tilted plane; it only removes the overall mean.</p>`
     },
     zscale: {
-      title: "Z-scale ×",
-      body: `<p>Multiplies heights for 3D visualization (vertical exaggeration). Useful when height variation is small compared to the x/y span. It does not change your CSV data.</p>`
+      title: "Z-axis scale",
+      body: `<p>Controls the <b>displayed Z-axis range</b> for the 3D surface using two synced settings:</p>
+             <ul>
+               <li><b>Z-axis ×</b>: quick buttons (0.5×…5.0×) that scale the displayed Z range relative to the dataset amplitude.</li>
+               <li><b>Z-axis max (µm)</b>: the <b>actual maximum Z</b> that will be shown on the Plotly axis.</li>
+             </ul>
+             <p>When you type a Z-axis max that doesn’t match one of the preset buttons, a <b>custom multiplier button</b> will appear so the exact value stays selectable.</p>
+             <p>This does <b>not</b> change your CSV values; it changes only the 3D visualization scale.</p>`
     },
     metrics: {
       title: "Roughness metrics",
@@ -1785,17 +2165,47 @@
           ? `<p><b>Current Sa:</b> ${fmt(metricsSa)} µm</p>`
           : `<p class="small"><b>Tip:</b> Load a CSV to compute Sa.</p>`;
 
-        return `<p>These quantities summarize the height field <b>z</b> (in µm) over the loaded grid.</p>
+        return `<p>These quantities summarize the surface height field <b>z</b> (µm) over the loaded grid.</p>
+          <p class="small">Formulas use all points in the loaded dataset (full resolution): for points <b>z</b><sub>i</sub>, i = 1…N (where N is the number of grid points).</p>
                 <ul>
-                  <li><b>z_min</b>, <b>z_max</b>: minimum and maximum measured heights.</li>
-                  <li><b>z̄</b>: mean height (average of all points).</li>
-                  <li><b>σ</b>: standard deviation of heights (spread around the mean).</li>
-                  <li><b>Sa</b>: arithmetic mean roughness (mean absolute deviation): Sa = mean(|z − z̄|).</li>
-                  <li><b>Sq</b>: RMS roughness: Sq = sqrt(mean((z − z̄)^2)).</li>
-                  <li><b>Sz</b>: peak-to-valley height: Sz = z_max − z_min.</li>
-                  <li><b>Ssk</b>: skewness (dimensionless): Ssk = mean((z − z̄)^3) / σ^3. Positive means more peaks; negative means more valleys.</li>
-                  <li><b>Sku</b>: kurtosis (dimensionless): Sku = mean((z − z̄)^4) / σ^4. Larger values indicate heavier tails/more outliers.</li>
+                  <li>
+                    <b>Minimum height (z_min)</b> – The lowest surface point relative to the reference mean plane.
+                    <br/><span class="small">Formula: z_min = min(z<sub>i</sub>)</span>
+                  </li>
+                  <li>
+                    <b>Maximum height (z_max)</b> – The highest surface point relative to the reference mean plane.
+                    <br/><span class="small">Formula: z_max = max(z<sub>i</sub>)</span>
+                  </li>
+                  <li>
+                    <b>Mean height (z̄)</b> – The average surface height over the measured area.
+                    <br/><span class="small">Formula: z̄ = (1/N) · Σ z<sub>i</sub></span>
+                  </li>
+                  <li>
+                    <b>Standard deviation (σ)</b> – The spread of height values around the mean, indicating overall surface variability.
+                    <br/><span class="small">Formula: σ = √((1/N) · Σ (z<sub>i</sub> − z̄)<sup>2</sup>)</span>
+                  </li>
+                  <li>
+                    <b>Arithmetic mean roughness (Sa)</b> – The average of the absolute surface height deviations from the mean plane.
+                    <br/><span class="small">Formula: Sa = (1/N) · Σ |z<sub>i</sub> − z̄|</span>
+                  </li>
+                  <li>
+                    <b>RMS roughness (Sq)</b> – The root mean square of surface height deviations, giving more weight to large peaks and valleys.
+                    <br/><span class="small">Formula: Sq = √((1/N) · Σ (z<sub>i</sub> − z̄)<sup>2</sup>)</span>
+                  </li>
+                  <li>
+                    <b>Peak-to-valley (Sz)</b> – The total vertical distance between the highest peak and lowest valley (z_max − z_min).
+                    <br/><span class="small">Formula: Sz = z_max − z_min</span>
+                  </li>
+                  <li>
+                    <b>Skewness (Ssk)</b> – A measure of whether the surface has more dominant peaks (positive) or valleys (negative).
+                    <br/><span class="small">Formula: Ssk = ((1/N) · Σ (z<sub>i</sub> − z̄)<sup>3</sup>) / σ<sup>3</sup></span>
+                  </li>
+                  <li>
+                    <b>Kurtosis (Sku)</b> – A measure of how sharp or spiky the height distribution is compared to a normal distribution.
+                    <br/><span class="small">Formula: Sku = ((1/N) · Σ (z<sub>i</sub> − z̄)<sup>4</sup>) / σ<sup>4</sup></span>
+                  </li>
                 </ul>
+                <p class="small">Note: Ssk and Sku are dimensionless and can be sensitive to outliers.</p>
                 ${summary}`;
       }
     }
@@ -1833,6 +2243,9 @@
     if (e.target === helpOverlay) closeHelp();
     if (e.target === helpClose) closeHelp();
   });
+
+  // Top header Help button
+  el("topHelp")?.addEventListener("click", () => openHelp("overview"));
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && helpOverlay && !helpOverlay.hidden) closeHelp();
@@ -1923,11 +2336,13 @@
     }
   });
 
-  // Initialize zscale label
-  el("zscaleVal").textContent = `${Number(el("zscale").value).toFixed(1)}×`;
+  // Initialize Z-axis multiplier UI
+  setActiveZMultButton(1.0);
+  if (el("zscaleVal")) el("zscaleVal").textContent = "1.0×";
+  if (el("zmaxNum")) el("zmaxNum").value = String(Number(el("zmaxNum").value) || 10);
 
-  // Disable Render until a dataset is loaded
-  if (renderBtn) renderBtn.disabled = true;
+  // Initialize X/Y scale info
+  updateLateralScaleInfo();
 
   // Default tab
   setTab("2d");
