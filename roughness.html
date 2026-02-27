@@ -353,6 +353,7 @@
     /* Range styling aligned with MicroMeasure */
     input[type="range"]{
       -webkit-appearance:none;
+      appearance:none;
       background:transparent;
     }
     input[type="range"]::-webkit-slider-track{
@@ -621,7 +622,7 @@
   <div id="helpOverlay" class="overlay" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
       <div class="modalHead">
-        <div id="helpTitle" class="modalTitle">Help</div>
+        <div id="helpTitle" class="modalTitle">Roughness Visualizer Documentation</div>
         <button id="helpClose" class="iconBtn" type="button" aria-label="Close help">✕</button>
       </div>
       <div id="helpBody" class="modalBody"></div>
@@ -647,6 +648,10 @@
   // Incoming CSV height values are assumed to be in meters (m) and are converted to µm on load.
   // If your CSV is already in µm, set this to 1.0.
   const Z_INPUT_TO_UM = 1e6;
+
+  // App metadata (shown in Documentation)
+  const APP_VERSION = "1.0";
+  const APP_URL = "https://www.inanolab.com/roughness.html";
 
   // WebGL state
   let gl = null;
@@ -2065,7 +2070,7 @@
   // =========================
   const HELP = {
     overview: {
-      title: "Roughness Visualizer — Help",
+      title: "Roughness Visualizer Documentation",
       body: () => {
         const inputUnit = (Z_INPUT_TO_UM === 1e6) ? "meters (m)" : (Z_INPUT_TO_UM === 1.0) ? "micrometers (µm)" : "custom units";
         const conv = (Z_INPUT_TO_UM === 1.0) ? "(no conversion)" : `multiplied by ${Z_INPUT_TO_UM.toLocaleString()} to convert to µm`;
@@ -2108,6 +2113,20 @@
           <ul>
             <li>Each view has an <b>Export PNG</b> button. Metrics can be exported as a PNG table or copied as TSV.</li>
           </ul>
+
+          <p><b>Version</b></p>
+          <ul>
+            <li><b>Roughness Visualizer</b> v${APP_VERSION}</li>
+          </ul>
+
+          <p><b>Citation recommendation</b></p>
+          <p class="small">If you use this tool in a report, thesis, or publication, consider citing it as:</p>
+          <ul>
+            <li>Olarve, J. S. <i>Roughness Visualizer</i> (web application). i-Nano Research Facility, De La Salle University Manila. Available at: <a href="${APP_URL}" target="_blank" rel="noopener noreferrer">${APP_URL}</a>. Accessed: ${new Date().toISOString().slice(0,10)}.</li>
+          </ul>
+
+          <p><b>Disclaimer</b></p>
+          <p class="small">This tool is provided “as is” for educational and research use. Validate results against instrument/software standards and your experimental procedure. The developer and institution are not responsible for decisions made based on this tool’s output.</p>
 
           <p class="small">Everything runs locally in your browser (no server processing). Performance depends on N and your device; use Downsample for large grids.</p>
         `;
@@ -2219,8 +2238,13 @@
   function openHelp(key){
     const h = HELP[key];
     if (!h || !helpOverlay) return;
-    if (helpTitle) helpTitle.textContent = h.title;
-    if (helpBody) helpBody.innerHTML = (typeof h.body === "function") ? h.body() : h.body;
+    if (helpTitle) helpTitle.textContent = "Roughness Visualizer Documentation";
+    const bodyHtml = (typeof h.body === "function") ? h.body() : h.body;
+    if (helpBody){
+      helpBody.innerHTML = (key === "overview")
+        ? bodyHtml
+        : `<p><b>${h.title}</b></p>${bodyHtml}`;
+    }
     helpOverlay.hidden = false;
     try{ helpClose?.focus(); } catch {}
   }

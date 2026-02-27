@@ -982,6 +982,13 @@
             aspect-ratio: 16 / 9;
             background: #0b1220;
         }
+        .modal-media img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            background: #0b1220;
+        }
         .modal-caption {
             margin: 0.6rem 0 0;
             color: #6c757d;
@@ -1875,6 +1882,26 @@
                             </div>
                         </div>
                     </article>
+
+                    <article class="extra-service extra-tool">
+                        <a class="extra-preview" href="roughness.html" aria-label="Open Roughness Visualizer">
+                            <img src="Images/roughness.png" alt="Roughness Visualizer preview" loading="lazy">
+                        </a>
+                        <div class="extra-body">
+                            <h3 class="extra-title">Roughness Visualizer</h3>
+                            <p class="extra-desc">Roughness Visualizer is a browser-based tool for viewing and analyzing NxN surface heightmap CSV data. It renders a publication-ready 2D heatmap, line profiles, and histogram, plus an interactive 3D surface (Plotly), and computes common roughness statistics directly in your browser—no installation required.</p>
+                            <div class="extra-tags" aria-label="Roughness Visualizer tags">
+                                <span class="extra-tag">Browser-based</span>
+                                <span class="extra-tag">Surface roughness</span>
+                                <span class="extra-tag">Heightmap CSV</span>
+                                <span class="extra-tag">2D + 3D</span>
+                            </div>
+                            <div class="extra-actions">
+                                <a class="btn-primary" href="roughness.html">Open Roughness Visualizer</a>
+                                <button class="btn-subtle" type="button" data-open-modal="roughness" aria-haspopup="dialog">Learn more</button>
+                            </div>
+                        </div>
+                    </article>
                 </div>
             </section>
         </div>
@@ -2204,6 +2231,58 @@
 
                 <div class="modal-footer">
                     <a class="btn-subtle" href="micromeasure.html">Open MicroMeasure</a>
+                    <button class="btn-primary" type="button" data-close-modal>Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extras: Learn More Modal (Roughness Visualizer) -->
+    <div id="modal-roughness" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-roughness-title" aria-hidden="true">
+        <div class="modal" role="document">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-roughness-title" class="modal-title">Roughness Visualizer — Documentation</h3>
+                    <p class="modal-subtitle">Overview of inputs, outputs, and basic workflow.</p>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-content">
+                <div class="modal-grid">
+                    <div>
+                        <div class="modal-media">
+                            <img src="Images/roughness.png" alt="Roughness Visualizer preview" loading="lazy">
+                        </div>
+                        <p class="modal-caption">Tip: The in-app Help button contains full documentation.</p>
+                    </div>
+
+                    <div class="modal-panel">
+                        <h4>About</h4>
+                        <p>
+                            <strong>Website:</strong> <a href="https://www.inanolab.com/roughness.html" target="_blank" rel="noopener">https://www.inanolab.com/roughness.html</a><br>
+                            <strong>Developer / Programmer:</strong> Dr. James Salveo Olarve<br>
+                            <strong>Affiliation:</strong> i-Nano Research Facility, De La Salle University Manila
+                        </p>
+
+                        <h4>What It Does</h4>
+                        <ul>
+                            <li>Loads an <strong>N×N</strong> heightmap from CSV (surface data grid).</li>
+                            <li>Visualizes <strong>2D</strong> heatmap + profiles + histogram.</li>
+                            <li>Renders an interactive <strong>3D</strong> surface (Plotly).</li>
+                            <li>Computes common roughness statistics (e.g., Sa, Sq, Sz).</li>
+                        </ul>
+
+                        <h4>Quick Start</h4>
+                        <ul>
+                            <li>Click <strong>Load CSV</strong> (or drag &amp; drop) to import a square grid.</li>
+                            <li>Use <strong>Colormap</strong>, <strong>Range</strong>, and <strong>Downsample</strong> to adjust display/performance.</li>
+                            <li>Use <strong>Export PNG</strong> buttons to save figures and tables.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a class="btn-subtle" href="roughness.html">Open Roughness Visualizer</a>
                     <button class="btn-primary" type="button" data-close-modal>Close</button>
                 </div>
             </div>

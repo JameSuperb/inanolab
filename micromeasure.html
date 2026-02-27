@@ -20,6 +20,8 @@
       --text-primary: #f1f5f9;
       --accent-primary: #3b82f6;
       --accent-secondary: #64748b;
+      --muted: #94a3b8;
+      --line: rgba(255,255,255,0.10);
     }
     
     body {
@@ -77,6 +79,7 @@
     
     input[type="range"] {
       -webkit-appearance: none;
+      appearance: none;
       background: transparent;
     }
     input[type="range"]::-webkit-slider-track {
@@ -88,6 +91,7 @@
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
+      appearance: none;
       width: 18px;
       height: 18px;
       background: linear-gradient(to bottom, #60a5fa, #3b82f6);
@@ -185,6 +189,77 @@
       z-index: 1000;
       animation: fadeIn 0.2s ease;
     }
+
+    /* Documentation overlay + modal (match Roughness Visualizer) */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.55);
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:18px;
+      z-index:9999;
+      overflow:auto;
+    }
+    .overlay.hidden{ display:none !important; }
+    .modal{
+      width:min(720px, 100%);
+      max-height: calc(100dvh - 36px);
+      background:var(--bg-secondary);
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:16px;
+      box-shadow:0 24px 80px rgba(0,0,0,0.55);
+      display:flex;
+      flex-direction:column;
+    }
+    .modalHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,0.10);
+      gap:10px;
+      flex: 0 0 auto;
+    }
+    .modalTitle{ font-weight:950; }
+    .modalBody{
+      padding:14px;
+      color:var(--text-primary);
+      line-height:1.45;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    .iconBtn{
+      width:32px;
+      height:32px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.06);
+      color:var(--text-primary);
+      cursor:pointer;
+      padding:0;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+    }
+    .iconBtn:hover{ border-color:rgba(255,255,255,0.22); }
+
+    /* Neutralize Tailwind color blocks inside documentation so it matches Roughness docs */
+    .rvDoc{ color: var(--text-primary); }
+    .rvDoc .text-blue-400,
+    .rvDoc .text-blue-300,
+    .rvDoc .text-white,
+    .rvDoc .text-slate-300{ color: var(--text-primary) !important; }
+    .rvDoc .text-slate-400,
+    .rvDoc .text-slate-500,
+    .rvDoc .text-slate-600{ color: var(--muted) !important; }
+    .rvDoc a{ color: var(--accent-primary) !important; }
+    .rvDoc .bg-slate-900\/50{ background: transparent !important; }
+    .rvDoc .border-slate-700{ border-color: var(--line) !important; }
 
     .quickstart-modal {
       position: fixed;
@@ -613,12 +688,13 @@
     </div>
    </div>
   </div><!-- Documentation Modal -->
-  <div id="docModal" class="processing-modal hidden">
-   <div class="processing-content max-w-3xl max-h-[90vh] flex flex-col">
-    <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-700 flex-shrink-0">
-     <h2 class="text-xl font-bold text-blue-400">MicroMeasure Documentation</h2><button id="closeDocBtn" class="text-slate-400 hover:text-white text-2xl leading-none">×</button>
-    </div>
-    <div class="space-y-6 text-sm overflow-y-auto scrollbar-thin flex-1"><!-- Project Information -->
+  <div id="docModal" class="overlay hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="docTitle">
+      <div class="modalHead">
+        <div id="docTitle" class="modalTitle">MicroMeasure Documentation</div>
+        <button id="closeDocBtn" class="iconBtn" type="button" aria-label="Close documentation">✕</button>
+      </div>
+      <div class="modalBody rvDoc"><!-- Project Information -->
      <section>
       <h3 class="text-xl font-bold text-blue-400 mb-3">Web-Based Image Analysis and Measurement Tool</h3>
       <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 space-y-2">
@@ -629,12 +705,12 @@
       </div>
      </section><!-- Overview -->
      <section>
-      <h3 class="text-lg font-semibold text-white mb-2">📖 Overview</h3>
+        <h3 class="text-lg font-semibold text-white mb-2">Overview</h3>
       <p class="text-slate-300 mb-2">MicroMeasure is a browser-based image analysis application designed for quantitative measurements of scientific images, particularly microscopy images such as scanning electron microscopy (SEM) micrographs. The application provides intuitive tools for measuring length, angle, area, particle size, and hole size, without requiring software installation.</p>
       <p class="text-slate-300">MicroMeasure is inspired by widely used scientific image analysis platforms (e.g., ImageJ) but optimized for fast, web-based workflows and educational use.</p>
      </section><!-- Intended Users -->
      <section>
-      <h3 class="text-lg font-semibold text-white mb-2">👥 Intended Users</h3>
+        <h3 class="text-lg font-semibold text-white mb-2">Intended Users</h3>
       <p class="text-slate-300 mb-2">MicroMeasure is intended for:</p>
       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
        <li>Researchers and laboratory personnel</li>
@@ -644,7 +720,7 @@
       </ul>
      </section><!-- Quick Start -->
     <section>
-     <h3 class="text-lg font-semibold text-white mb-2">🚀 Quick Start</h3>
+      <h3 class="text-lg font-semibold text-white mb-2">Quick Start</h3>
       <ol class="list-decimal list-inside space-y-2 text-slate-300">
        <li><strong>Load an image</strong> - Click "Load Image" or drag &amp; drop an image file</li>
        <li><strong>Set the scale</strong> - Click "Set Scale", draw a line of known length, then enter the real-world measurement</li>
@@ -653,7 +729,7 @@
       </ol>
      </section><!-- Scale Calibration -->
      <section>
-      <h3 class="text-lg font-semibold text-white mb-2">📏 Scale Calibration</h3>
+        <h3 class="text-lg font-semibold text-white mb-2">Scale Calibration</h3>
       <p class="text-slate-300 mb-2">Before making real-world measurements, you must calibrate the scale:</p>
       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
        <li>Click the <strong>Set Scale</strong> button in the image controls</li>
@@ -665,7 +741,7 @@
       </ul>
      </section><!-- Length Measurements -->
      <section>
-      <h3 class="text-lg font-semibold text-white mb-2">📐 Length Measurements</h3>
+      <h3 class="text-lg font-semibold text-white mb-2">Length Measurements</h3>
       <p class="text-slate-300 mb-2">Measure distances between two points:</p>
       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
        <li>Switch to the <strong>Length</strong> tab</li>
@@ -677,7 +753,7 @@
       </ul>
      </section><!-- Area Measurements -->
       <section>
-       <h3 class="text-lg font-semibold text-white mb-2">📐 Angle Measurements</h3>
+        <h3 class="text-lg font-semibold text-white mb-2">Angle Measurements</h3>
        <p class="text-slate-300 mb-2">Measure the angle formed by two rays meeting at a vertex:</p>
        <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
         <li>Switch to the <strong>Angle</strong> tab</li>
@@ -689,7 +765,7 @@
        </ul>
       </section><!-- Area Measurements -->
      <section>
-      <h3 class="text-lg font-semibold text-white mb-2">📊 Area Measurements</h3>
+      <h3 class="text-lg font-semibold text-white mb-2">Area Measurements</h3>
       <p class="text-slate-300 mb-2">Measure polygon areas by defining vertices:</p>
       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
        <li>Switch to the <strong>Area</strong> tab</li>
@@ -702,7 +778,7 @@
       </ul>
      </section><!-- Particle Analysis -->
      <section>
-      <h3 class="text-lg font-semibold text-white mb-2">🔬 Particle Analysis</h3>
+      <h3 class="text-lg font-semibold text-white mb-2">Particle Analysis</h3>
       <p class="text-slate-300 mb-2">Automatically detect and measure particles:</p>
       <h4 class="font-semibold text-blue-300 mt-3 mb-1">Region of Interest (ROI)</h4>
       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
@@ -807,7 +883,7 @@
       </ul>
      </section><!-- Keyboard Shortcuts -->
      <section>
-      <h3 class="text-lg font-semibold text-white mb-2">⌨️ Keyboard Shortcuts</h3>
+      <h3 class="text-lg font-semibold text-white mb-2">Keyboard Shortcuts</h3>
       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
        <li><strong>Arrow Keys</strong> - Pan the image</li>
        <li><strong>Mouse Wheel</strong> - Zoom in/out</li>
@@ -815,7 +891,7 @@
       </ul>
      </section><!-- Citation Recommendation -->
      <section>
-      <h3 class="text-lg font-semibold text-white mb-2">📚 Citation Recommendation</h3>
+      <h3 class="text-lg font-semibold text-white mb-2">Citation Recommendation</h3>
       <p class="text-slate-300 mb-2">If you use MicroMeasure in academic work:</p>
       <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
        <p class="text-slate-300 text-sm font-mono leading-relaxed">Olarve, J. S. L. (2026). MicroMeasure: A web-based image analysis and measurement tool. i-Nano Research Facility, De La Salle University Manila. Retrieved from https://www.inanolab.com/micromeasure.html</p>
@@ -823,17 +899,15 @@
       </div>
      </section><!-- Disclaimer -->
      <section>
-      <h3 class="text-lg font-semibold text-white mb-2">⚠️ Disclaimer</h3>
+      <h3 class="text-lg font-semibold text-white mb-2">Disclaimer</h3>
       <div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700 space-y-2">
        <p class="text-slate-300 text-sm">MicroMeasure is provided for research and educational purposes only.</p>
        <p class="text-slate-300 text-sm">While every effort has been made to ensure accuracy, the developer makes no guarantees regarding absolute measurement correctness for all imaging conditions. Users are solely responsible for verifying calibration accuracy and validating results for their specific applications.</p>
        <p class="text-slate-300 text-sm">MicroMeasure does not replace certified metrology software or instrument calibration standards.</p>
       </div>
      </section>
+      </div>
     </div>
-    <div class="mt-6 pt-4 border-t border-slate-700"><button id="closeDocBtnBottom" class="btn-primary px-6 py-2 rounded-lg text-sm w-full">Close Documentation</button>
-    </div>
-   </div>
   </div>
   <!-- Descriptive Statistics Modal (publish-ready, light) -->
   <div id="descriptiveStatsModal" class="processing-modal hidden" role="dialog" aria-modal="true" aria-label="Descriptive Statistics">
@@ -3993,13 +4067,10 @@
     // Documentation modal
     document.getElementById('helpBtn').addEventListener('click', () => {
       document.getElementById('docModal').classList.remove('hidden');
+      try { document.getElementById('closeDocBtn')?.focus(); } catch {}
     });
     
     document.getElementById('closeDocBtn').addEventListener('click', () => {
-      document.getElementById('docModal').classList.add('hidden');
-    });
-    
-    document.getElementById('closeDocBtnBottom').addEventListener('click', () => {
       document.getElementById('docModal').classList.add('hidden');
     });
     
@@ -4008,6 +4079,13 @@
       if (e.target.id === 'docModal') {
         document.getElementById('docModal').classList.add('hidden');
       }
+    });
+
+    // Close documentation modal with Escape (match Roughness Visualizer)
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const docModal = document.getElementById('docModal');
+      if (docModal && !docModal.classList.contains('hidden')) docModal.classList.add('hidden');
     });
 
     // Quick Start overlay
