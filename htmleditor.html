@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML Editor</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    
+    .editor-container {
+      display: flex;
+      position: relative;
+    }
+    
+    .line-numbers {
+      font-family: 'JetBrains Mono', monospace;
+      background: #252538;
+      color: #64748b;
+      padding: 1rem 0.75rem;
+      text-align: right;
+      user-select: none;
+      font-size: 14px;
+      line-height: 1.6;
+      overflow: hidden;
+      border-right: 1px solid rgba(99, 102, 241, 0.1);
+      min-width: 50px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .line-numbers div {
+      height: 1.6em;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    
+    .editor-textarea {
+      font-family: 'JetBrains Mono', monospace;
+      tab-size: 2;
+      line-height: 1.6;
+      resize: none;
+      flex: 1;
+    }
+    
+    .editor-textarea:focus {
+      outline: none;
+    }
+    
+    .preview-frame {
+      border: none;
+      background: white;
+    }
+    
+    .toolbar-btn {
+      transition: all 0.15s ease;
+    }
+    
+    .toolbar-btn:hover {
+      transform: translateY(-1px);
+    }
+    
+    .toolbar-btn:active {
+      transform: translateY(0);
+    }
+    
+    .toolbar-btn.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .toolbar-btn.disabled:hover {
+      transform: none;
+    }
+
+    .secondary-toolbar {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 0.75rem 0;
+    }
+
+    .toolbar-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(99, 102, 241, 0.2);
+    }
+
+    .toolbar-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+
+    .secondary-toolbar {
+      max-height: 70px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      padding-right: 0.5rem;
+    }
+
+    .secondary-toolbar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .secondary-toolbar::-webkit-scrollbar-track {
+      background: rgba(99, 102, 241, 0.05);
+      border-radius: 3px;
+    }
+
+    .secondary-toolbar::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.3);
+      border-radius: 3px;
+    }
+
+    .secondary-toolbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.5);
+    }
+
+    .secondary-toolbar.collapsed {
+      max-height: 0;
+      opacity: 0;
+    }
+
+    .compact-toggle {
+      transition: transform 0.3s ease;
+    }
+
+    .compact-toggle.collapsed {
+      transform: rotate(180deg);
+    }
+    
+    .panel-header {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    
+    .sync-indicator {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .glow-border {
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1), 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .resizer {
+      height: 4px;
+      background: rgba(99, 102, 241, 0.2);
+      cursor: row-resize;
+      transition: background 0.2s ease;
+      flex-shrink: 0;
+    }
+    
+    .resizer:hover {
+      background: rgba(99, 102, 241, 0.5);
+    }
+    
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal {
+      background: #1e293b;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      color: #f1f5f9;
+    }
+    
+    .modal h2 {
+      margin-top: 0;
+      color: #6366f1;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 24px;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+    
+    .modal-close:hover {
+      background: rgba(99, 102, 241, 0.1);
+      color: #f1f5f9;
+    }
+    
+    .shortcuts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    
+    .shortcut-item {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: 6px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    
+    .shortcut-key {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(99, 102, 241, 0.3);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      color: #6366f1;
+      font-weight: 600;
+    }
+    
+    .shortcut-desc {
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: rgba(16, 185, 129, 0.9);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 999;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    .syntax-highlight {
+      color: #94a3b8;
+    }
+    
+    .syntax-tag {
+      color: #f472b6;
+    }
+    
+    .syntax-attr {
+      color: #fbbf24;
+    }
+    
+    .syntax-value {
+      color: #86efac;
+    }
+
+    #preview ol {
+      list-style-type: decimal;
+      margin-left: 1.5rem;
+    }
+
+    #preview ol li {
+      margin-bottom: 0.5rem;
+    }
+
+    #preview ul {
+      list-style-type: disc;
+      margin-left: 1.5rem;
+    }
+
+    #preview ul li {
+      margin-bottom: 0.5rem;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);">
+  <div id="app" class="h-full flex flex-col p-4 gap-4"><!-- Header -->
+   <header class="flex items-center justify-between px-4 py-3 rounded-xl" style="background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(99, 102, 241, 0.2);">
+    <div class="flex items-center gap-3">
+     <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+      </svg>
+     </div>
+     <h1 id="app-title" class="panel-header text-xl font-bold text-white">HTML Editor</h1>
+    </div><!-- Toolbar -->
+    <div class="flex items-center gap-2"><button onclick="undoAction()" class="toolbar-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white" title="Undo (Ctrl+Z)" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);"> ↶ Undo </button> <button onclick="redoAction()" class="toolbar-btn px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white" title="Redo (Ctrl+Y)" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);"> ↷ Redo </button>
+     <div class="w-px h-6 bg-slate-600 mx-2"></div><button onclick="toggleSecondaryToolbar()" class="toolbar-btn px-3 py-2 rounded-lg text-sm font-medium text-indigo-400 hover:text-indigo-300" title="Show or hide more options" id="toggle-btn" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">
+      <svg class="w-4 h-4 inline mr-1 transition-transform" id="toggle-icon" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg><span id="toggle-text">Hide Tools</span> </button> <button onclick="formatCode()" class="toolbar-btn px-3 py-2 rounded-lg text-sm font-medium text-emerald-400 hover:text-emerald-300" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);"> ✨ Format </button> <button onclick="searchReplace()" class="toolbar-btn px-3 py-2 rounded-lg text-sm font-medium text-violet-400 hover:text-violet-300" title="Search &amp; Replace (Ctrl+H)" style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3);"> 🔍 Find </button> <button onclick="toggleTheme()" class="toolbar-btn px-3 py-2 rounded-lg text-sm font-medium text-cyan-400 hover:text-cyan-300" style="background: rgba(34, 211, 238, 0.1); border: 1px solid rgba(34, 211, 238, 0.3);"> 🌓 Theme </button> <button onclick="showKeyboardShortcuts()" class="toolbar-btn px-3 py-2 rounded-lg text-sm font-medium text-blue-400 hover:text-blue-300" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);"> ⌨️ Help </button>
+     <div class="w-px h-6 bg-slate-600 mx-2"></div><button onclick="clearEditor()" class="toolbar-btn px-3 py-2 rounded-lg text-sm font-medium text-rose-400 hover:text-rose-300" style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.3);"> 🗑️ Clear </button> <button onclick="downloadCode()" class="toolbar-btn px-3 py-2 rounded-lg text-sm font-medium text-orange-400 hover:text-orange-300" style="background: rgba(234, 88, 12, 0.1); border: 1px solid rgba(234, 88, 12, 0.3);"> ⬇️ Download </button> <button onclick="copyCode()" class="toolbar-btn px-3 py-2 rounded-lg text-sm font-medium text-amber-400 hover:text-amber-300" style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3);"> 📋 Copy </button>
+    </div>
+   </header><!-- Secondary Toolbar -->
+   <div id="secondary-toolbar" class="px-4 secondary-toolbar" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(99, 102, 241, 0.1); border-top: none; border-radius: 0 0 12px 12px; margin: -12px 0 0 0;">
+    <!-- Common Elements -->
+    <div class="toolbar-group">
+     <span class="toolbar-label">Common</span> <button onclick="insertSnippet('div')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;div&gt;</button> <button onclick="insertSnippet('p')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;p&gt;</button> <button onclick="insertSnippet('h1')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;h1&gt;</button> <button onclick="insertSnippet('a')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;a&gt;</button> <button onclick="insertSnippet('img')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;img&gt;</button> <button onclick="insertSnippet('ul')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;ul&gt;</button> <button onclick="insertSnippet('br')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;br&gt;</button>
+    </div>
+    <div class="toolbar-divider"></div><!-- Text Formatting -->
+    <div class="toolbar-group">
+     <span class="toolbar-label">Text</span> <button onclick="insertSnippet('strong')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" title="Bold" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);"><strong>B</strong></button> <button onclick="insertSnippet('em')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white italic" title="Italic" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">I</button> <button onclick="insertSnippet('u')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white underline" title="Underline" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">U</button> <button onclick="insertSnippet('code')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" title="Code" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;&gt;</button>
+    </div>
+    <div class="toolbar-divider"></div><!-- Headings -->
+    <div class="toolbar-group">
+     <span class="toolbar-label">Headings</span> <button onclick="insertSnippet('h2')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">H2</button> <button onclick="insertSnippet('h3')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">H3</button> <button onclick="insertSnippet('h4')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">H4</button> <button onclick="insertSnippet('h5')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">H5</button> <button onclick="insertSnippet('h6')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">H6</button>
+    </div>
+    <div class="toolbar-divider"></div><!-- Common Elements -->
+    <div class="toolbar-group">
+     <span class="toolbar-label">Elements</span> <button onclick="insertSnippet('span')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;span&gt;</button> <button onclick="insertSnippet('section')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;section&gt;</button> <button onclick="insertSnippet('article')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;article&gt;</button> <button onclick="insertSnippet('header')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;header&gt;</button> <button onclick="insertSnippet('footer')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;footer&gt;</button> <button onclick="insertSnippet('nav')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;nav&gt;</button>
+    </div>
+    <div class="toolbar-divider"></div><!-- Lists & Semantic -->
+    <div class="toolbar-group">
+     <span class="toolbar-label">Lists</span> <button onclick="insertSnippet('ol')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;ol&gt;</button> <button onclick="insertSnippet('blockquote')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;blockquote&gt;</button> <button onclick="insertSnippet('table')" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">&lt;table&gt;</button>
+    </div>
+    <div class="toolbar-divider"></div><!-- Utilities -->
+    <div class="toolbar-group">
+     <span class="toolbar-label">Utilities</span> <button onclick="minifyCode()" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" title="Minify code" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">Minify</button> <button onclick="removeLineBreaks()" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" title="Remove extra breaks" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">Remove Breaks</button> <button onclick="validateHTML()" class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium text-slate-300 hover:text-white" title="Validate HTML" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3);">Validate</button>
+    </div>
+   </div><!-- Main Content -->
+   <main class="flex-1 flex gap-4 min-h-0"><!-- Editor Panel -->
+    <section class="flex-1 flex flex-col rounded-xl overflow-hidden glow-border" style="background: #1e1e2e;">
+     <div class="flex items-center justify-between px-4 py-3" style="background: rgba(30, 30, 46, 0.9); border-bottom: 1px solid rgba(99, 102, 241, 0.2);">
+      <div class="flex items-center gap-2">
+       <div class="flex gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span> <span class="w-3 h-3 rounded-full bg-amber-500"></span> <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+       </div><span class="panel-header text-sm font-semibold text-slate-300 ml-2">Code Editor</span>
+      </div>
+      <div class="flex items-center gap-2"><span class="sync-indicator w-2 h-2 rounded-full bg-emerald-400"></span> <span class="text-xs text-slate-400">Auto-sync</span>
+      </div>
+     </div>
+     <div class="flex-1 relative overflow-hidden editor-container">
+      <div class="line-numbers" id="line-numbers">
+       1
+      </div><textarea id="editor" class="editor-textarea p-4 text-sm text-slate-200" style="background: transparent; caret-color: #6366f1;" spellcheck="false" placeholder="Type your HTML here..."></textarea>
+     </div>
+    </section><!-- Preview Panel -->
+    <section class="flex-1 flex flex-col rounded-xl overflow-hidden glow-border" style="background: white;">
+     <div class="flex items-center justify-between px-4 py-3" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+      <div class="flex items-center gap-2">
+       <div class="flex gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500"></span> <span class="w-3 h-3 rounded-full bg-amber-500"></span> <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+       </div><span class="panel-header text-sm font-semibold text-slate-600 ml-2">Live Preview</span>
+      </div>
+      <div class="flex items-center gap-2"><span id="theme-mode" class="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded">Editable</span>
+      </div>
+     </div>
+     <div class="flex-1 overflow-auto">
+      <div id="preview" class="w-full h-full p-4" contenteditable="true" style="outline: none; min-height: 100%; display: block;"></div>
+     </div>
+    </section>
+   </main><!-- Status Bar -->
+   <footer class="flex items-center justify-between px-4 py-2 rounded-lg text-xs" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(99, 102, 241, 0.1);">
+    <div class="flex items-center gap-4"><span class="text-slate-400">Characters: <span id="char-count" class="text-indigo-400 font-medium">0</span></span> <span class="text-slate-400">Lines: <span id="line-count" class="text-indigo-400 font-medium">0</span></span>
+    </div>
+    <div class="flex items-center gap-2"><span class="text-emerald-400">●</span> <span class="text-slate-400">Bi-directional sync enabled</span>
+    </div>
+   </footer>
+  </div>
+  <script>
+    const defaultConfig = {
+      app_title: 'HTML Editor',
+      primary_color: '#6366f1',
+      secondary_color: '#1e293b',
+      text_color: '#f1f5f9',
+      accent_color: '#10b981',
+      font_family: 'Space Grotesk',
+      font_size: 16
+    };
+
+    let config = { ...defaultConfig };
+    let isUpdatingFromEditor = false;
+    let isUpdatingFromPreview = false;
+    let debounceTimer = null;
+    let undoStack = [];
+    let redoStack = [];
+    let currentTheme = 'dark';
+
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const charCount = document.getElementById('char-count');
+    const lineCount = document.getElementById('line-count');
+    const lineNumbers = document.getElementById('line-numbers');
+    const resizer = document.getElementById('resizer');
+    const app = document.getElementById('app');
+    const secondaryToolbar = document.getElementById('secondary-toolbar');
+
+    // Initial sample content
+    const sampleHTML = `<h1 style="color: #6366f1; font-family: sans-serif;">Welcome to HTML Editor</h1>
+<p style="color: #475569; font-size: 16px; line-height: 1.6;">
+  Start typing in the editor or edit this preview directly!
+</p>
+<ul style="color: #64748b;">
+  <li>✨ Real-time preview</li>
+  <li>🔄 Bi-directional sync</li>
+  <li>🎨 Quick tag insertion</li>
+</ul>
+<button style="background: #6366f1; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
+  Click Me!
+</button>`;
+
+    // Initialize editor with sample
+    editor.value = sampleHTML;
+    updatePreview();
+    updateStats();
+    loadFromStorage();
+
+    // Editor to Preview sync
+    editor.addEventListener('input', () => {
+      if (isUpdatingFromPreview) return;
+      isUpdatingFromEditor = true;
+      
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        updatePreview();
+        updateStats();
+        updateLineNumbers();
+        saveToStorage();
+        isUpdatingFromEditor = false;
+      }, 100);
+    });
+
+    // Preview to Editor sync
+    preview.addEventListener('input', () => {
+      if (isUpdatingFromEditor) return;
+      isUpdatingFromPreview = true;
+      
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        updateEditor();
+        updateStats();
+        saveToStorage();
+        isUpdatingFromPreview = false;
+      }, 100);
+    });
+
+    // Update line numbers on scroll
+    editor.addEventListener('scroll', () => {
+      lineNumbers.scrollTop = editor.scrollTop;
+    });
+
+    function updateLineNumbers() {
+      const lines = editor.value.split('\n').length;
+      let lineNumbersHTML = '';
+      for (let i = 1; i <= lines; i++) {
+        lineNumbersHTML += `<div>${i}</div>`;
+      }
+      lineNumbers.innerHTML = lineNumbersHTML;
+    }
+
+    function updatePreview() {
+      preview.innerHTML = editor.value;
+      updateLineNumbers();
+    }
+
+    function updateEditor() {
+      editor.value = preview.innerHTML;
+      updateLineNumbers();
+    }
+
+    function updateStats() {
+      const text = editor.value;
+      charCount.textContent = text.length;
+      lineCount.textContent = text.split('\n').length;
+    }
+
+    // Undo/Redo stack management
+    function pushToUndoStack() {
+      undoStack.push(editor.value);
+      if (undoStack.length > 50) undoStack.shift();
+      redoStack = [];
+      updateUndoRedoButtons();
+    }
+
+    function toggleSecondaryToolbar() {
+      const toggleBtn = document.getElementById('toggle-btn');
+      const toggleText = document.getElementById('toggle-text');
+      const toggleIcon = document.getElementById('toggle-icon');
+      secondaryToolbar.classList.toggle('collapsed');
+      
+      // Update text and icon
+      if (secondaryToolbar.classList.contains('collapsed')) {
+        toggleText.textContent = 'Show Tools';
+        toggleIcon.style.transform = 'rotate(180deg)';
+      } else {
+        toggleText.textContent = 'Hide Tools';
+        toggleIcon.style.transform = 'rotate(0deg)';
+      }
+      
+      localStorage.setItem('toolbarState', secondaryToolbar.classList.contains('collapsed') ? 'collapsed' : 'expanded');
+    }
+
+    // Restore toolbar state
+    function restoreToolbarState() {
+      const state = localStorage.getItem('toolbarState');
+      const toggleText = document.getElementById('toggle-text');
+      const toggleIcon = document.getElementById('toggle-icon');
+      if (state === 'collapsed') {
+        secondaryToolbar.classList.add('collapsed');
+        toggleText.textContent = 'Show Tools';
+        toggleIcon.style.transform = 'rotate(180deg)';
+      }
+    }
+
+    restoreToolbarState();
+
+    function undoAction() {
+      if (undoStack.length === 0) return;
+      redoStack.push(editor.value);
+      editor.value = undoStack.pop();
+      updatePreview();
+      updateStats();
+      updateUndoRedoButtons();
+      saveToStorage();
+    }
+
+    function redoAction() {
+      if (redoStack.length === 0) return;
+      undoStack.push(editor.value);
+      editor.value = redoStack.pop();
+      updatePreview();
+      updateStats();
+      updateUndoRedoButtons();
+      saveToStorage();
+    }
+
+    function updateUndoRedoButtons() {
+      const undoBtn = document.querySelector('button[onclick="undoAction()"]');
+      const redoBtn = document.querySelector('button[onclick="redoAction()"]');
+      if (undoBtn) undoBtn.classList.toggle('disabled', undoStack.length === 0);
+      if (redoBtn) redoBtn.classList.toggle('disabled', redoStack.length === 0);
+    }
+
+    // Snippet insertion with undo
+    function insertSnippet(tag) {
+      pushToUndoStack();
+      const snippets = {
+        'div': '<div></div>',
+        'p': '<p></p>',
+        'h1': '<h1></h1>',
+        'h2': '<h2></h2>',
+        'h3': '<h3></h3>',
+        'h4': '<h4></h4>',
+        'h5': '<h5></h5>',
+        'h6': '<h6></h6>',
+        'a': '<a href="#"></a>',
+        'img': '<img src="" alt="" />',
+        'ul': '<ul>\n  <li></li>\n  <li></li>\n</ul>',
+        'ol': '<ol>\n  <li></li>\n  <li></li>\n</ol>',
+        'br': '<br/>',
+        'span': '<span></span>',
+        'section': '<section></section>',
+        'article': '<article></article>',
+        'header': '<header></header>',
+        'footer': '<footer></footer>',
+        'nav': '<nav></nav>',
+        'strong': '<strong></strong>',
+        'em': '<em></em>',
+        'u': '<u></u>',
+        'code': '<code></code>',
+        'blockquote': '<blockquote></blockquote>',
+        'table': '<table>\n  <tr>\n    <th></th>\n    <th></th>\n  </tr>\n  <tr>\n    <td></td>\n    <td></td>\n  </tr>\n</table>'
+      };
+      
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const text = editor.value;
+      const snippet = snippets[tag] || `<${tag}></${tag}>`;
+      
+      editor.value = text.substring(0, start) + snippet + text.substring(end);
+      editor.focus();
+      
+      const cursorPos = start + snippet.indexOf('>') + 1;
+      editor.setSelectionRange(cursorPos, cursorPos);
+      
+      updatePreview();
+      updateStats();
+      saveToStorage();
+    }
+
+    // Format code
+    function formatCode() {
+      pushToUndoStack();
+      let html = editor.value;
+      let formatted = '';
+      let indent = 0;
+      
+      html = html.replace(/>\s*</g, '>\n<');
+      const lines = html.split('\n');
+      
+      lines.forEach(line => {
+        line = line.trim();
+        if (!line) return;
+        
+        if (line.match(/^<\/\w/)) indent--;
+        formatted += '  '.repeat(Math.max(0, indent)) + line + '\n';
+        if (line.match(/^<\w[^>]*[^\/]>.*$/) && !line.match(/<.*>.*<\/.*>/)) indent++;
+      });
+      
+      editor.value = formatted.trim();
+      updatePreview();
+      updateStats();
+      saveToStorage();
+      showToast('Code formatted!');
+    }
+
+    // Minify code
+    function minifyCode() {
+      pushToUndoStack();
+      let html = editor.value;
+      // Remove comments
+      html = html.replace(/<!--[\s\S]*?-->/g, '');
+      // Remove unnecessary whitespace
+      html = html.replace(/>\s+</g, '><');
+      html = html.replace(/\s+/g, ' ');
+      html = html.trim();
+      
+      editor.value = html;
+      updatePreview();
+      updateStats();
+      saveToStorage();
+      showToast('Code minified!');
+    }
+
+    // Remove line breaks
+    function removeLineBreaks() {
+      pushToUndoStack();
+      let html = editor.value;
+      html = html.replace(/\n/g, '');
+      editor.value = html;
+      updatePreview();
+      updateStats();
+      saveToStorage();
+      showToast('Line breaks removed!');
+    }
+
+    // Validate HTML
+    function validateHTML() {
+      const html = editor.value;
+      let issues = [];
+      
+      // Check for unclosed tags
+      const openTags = (html.match(/<([a-z][a-z0-9]*)[^>]*[^/]>/gi) || []).map(tag => 
+        tag.match(/<([a-z][a-z0-9]*)/i)[1].toLowerCase()
+      );
+      const closeTags = (html.match(/<\/([a-z][a-z0-9]*)>/gi) || []).map(tag =>
+        tag.match(/<\/([a-z][a-z0-9]*)/i)[1].toLowerCase()
+      );
+      
+      const selfClosing = ['img', 'br', 'hr', 'input', 'meta', 'link'];
+      const openTagCount = openTags.filter(t => !selfClosing.includes(t)).length;
+      const closeTagCount = closeTags.length;
+      
+      if (openTagCount > closeTagCount) {
+        issues.push(`⚠️ ${openTagCount - closeTagCount} unclosed tag(s) detected`);
+      } else if (closeTagCount > openTagCount) {
+        issues.push(`⚠️ ${closeTagCount - openTagCount} extra closing tag(s) detected`);
+      }
+      
+      // Check for improper nesting
+      if (!/<[^>]+>[^<]*<\/[^>]+>/.test(html) && html.includes('<')) {
+        if (!/^<[^>]+>/.test(html.trim())) {
+          issues.push('ℹ️ HTML should start with a tag');
+        }
+      }
+      
+      if (issues.length === 0) {
+        showModal('✅ HTML Validation', '<p style="color: #10b981;">Your HTML looks valid! No issues detected.</p>');
+      } else {
+        showModal('⚠️ HTML Validation Issues', '<ul style="color: #fbbf24; list-style: none; padding: 0;">' + 
+          issues.map(i => `<li style="padding: 0.5rem 0;">${i}</li>`).join('') + '</ul>');
+      }
+    }
+
+    function clearEditor() {
+      if (confirm('Are you sure you want to clear all code? This cannot be undone!')) {
+        undoStack = [];
+        redoStack = [];
+        editor.value = '';
+        updatePreview();
+        updateStats();
+        saveToStorage();
+        updateUndoRedoButtons();
+      }
+    }
+
+    function copyCode() {
+      navigator.clipboard.writeText(editor.value).then(() => {
+        showToast('Code copied to clipboard!');
+      });
+    }
+
+    function downloadCode() {
+      const element = document.createElement('a');
+      const file = new Blob([editor.value], {type: 'text/html'});
+      element.href = URL.createObjectURL(file);
+      element.download = 'index.html';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      showToast('HTML file downloaded!');
+    }
+
+    // Search & Replace
+    function searchReplace() {
+      const searchText = prompt('Search for:');
+      if (!searchText) return;
+      
+      const replaceText = prompt('Replace with:');
+      if (replaceText === null) return;
+      
+      pushToUndoStack();
+      const count = (editor.value.match(new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+      editor.value = editor.value.replace(new RegExp(searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replaceText);
+      updatePreview();
+      updateStats();
+      saveToStorage();
+      showToast(`Replaced ${count} occurrence${count !== 1 ? 's' : ''}!`);
+    }
+
+    // Theme toggle
+    function toggleTheme() {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      if (currentTheme === 'light') {
+        app.style.background = '#f5f5f5';
+        editor.parentElement.style.background = '#ffffff';
+        editor.style.color = '#1e1e2e';
+        lineNumbers.style.background = '#f0f0f0';
+        lineNumbers.style.color = '#666';
+      } else {
+        app.style.background = 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)';
+        editor.parentElement.style.background = '#1e1e2e';
+        editor.style.color = '#f1f5f9';
+        lineNumbers.style.background = '#252538';
+        lineNumbers.style.color = '#64748b';
+      }
+      
+      showToast(`Switched to ${currentTheme} mode!`);
+    }
+
+    // Show keyboard shortcuts
+    function showKeyboardShortcuts() {
+      const shortcuts = [
+        { key: 'Ctrl+Z', desc: 'Undo' },
+        { key: 'Ctrl+Y', desc: 'Redo' },
+        { key: 'Ctrl+H', desc: 'Find & Replace' },
+        { key: 'Tab', desc: 'Insert indent' },
+        { key: 'Ctrl+A', desc: 'Select all' },
+        { key: 'Ctrl+C', desc: 'Copy' },
+        { key: 'Ctrl+V', desc: 'Paste' }
+      ];
+      
+      let html = '<div class="shortcuts-grid">';
+      shortcuts.forEach(s => {
+        html += `<div class="shortcut-item"><span class="shortcut-key">${s.key}</span><span class="shortcut-desc">${s.desc}</span></div>`;
+      });
+      html += '</div>';
+      
+      showModal('⌨️ Keyboard Shortcuts', html);
+    }
+
+    // Modal system
+    function showModal(title, content) {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'modal-backdrop';
+      backdrop.onclick = (e) => {
+        if (e.target === backdrop) backdrop.remove();
+      };
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.innerHTML = `
+        <button class="modal-close" onclick="this.closest('.modal-backdrop').remove()">×</button>
+        <h2>${title}</h2>
+        <div>${content}</div>
+      `;
+      
+      backdrop.appendChild(modal);
+      document.body.appendChild(backdrop);
+    }
+
+    // Toast notifications
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // Tab key support
+    editor.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        pushToUndoStack();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + 2;
+        updatePreview();
+      }
+      
+      // Undo shortcut
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undoAction();
+      }
+      
+      // Redo shortcut
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        redoAction();
+      }
+      
+      // Find & Replace shortcut
+      if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+        e.preventDefault();
+        searchReplace();
+      }
+    });
+
+
+
+    // Storage
+    function saveToStorage() {
+      localStorage.setItem('htmlEditorCode', editor.value);
+    }
+
+    function loadFromStorage() {
+      const saved = localStorage.getItem('htmlEditorCode');
+      if (saved) {
+        editor.value = saved;
+        updatePreview();
+        updateStats();
+      }
+    }
+
+    // Element SDK initialization
+    async function onConfigChange(cfg) {
+      document.getElementById('app-title').textContent = cfg.app_title || defaultConfig.app_title;
+      
+      const fontFamily = cfg.font_family || defaultConfig.font_family;
+      document.body.style.fontFamily = `${fontFamily}, sans-serif`;
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities: (cfg) => ({
+          recolorables: [
+            {
+              get: () => cfg.primary_color || defaultConfig.primary_color,
+              set: (v) => { cfg.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); }
+            },
+            {
+              get: () => cfg.secondary_color || defaultConfig.secondary_color,
+              set: (v) => { cfg.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); }
+            },
+            {
+              get: () => cfg.text_color || defaultConfig.text_color,
+              set: (v) => { cfg.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+            },
+            {
+              get: () => cfg.accent_color || defaultConfig.accent_color,
+              set: (v) => { cfg.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); }
+            }
+          ],
+          borderables: [],
+          fontEditable: {
+            get: () => cfg.font_family || defaultConfig.font_family,
+            set: (v) => { cfg.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+          },
+          fontSizeable: {
+            get: () => cfg.font_size || defaultConfig.font_size,
+            set: (v) => { cfg.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+          }
+        }),
+        mapToEditPanelValues: (cfg) => new Map([
+          ['app_title', cfg.app_title || defaultConfig.app_title]
+        ])
+      });
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d6cf02562e48d05',t:'MTc3MjU4NTk2NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
