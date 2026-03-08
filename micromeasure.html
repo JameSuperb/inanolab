@@ -500,7 +500,12 @@
        </div>
       </div><!-- Area Tab -->
       <div id="areaTab" class="tab-content hidden">
-       <p id="areaInstructions" class="text-xs text-slate-400 mb-3">Click points to create polygon.</p><button id="closePolygonBtn" class="hidden btn-primary px-4 py-2 rounded-lg text-sm w-full mb-3">Close Polygon (3+ points)</button>
+        <div class="flex gap-2 mb-3">
+         <button id="areaModePolygonBtn" class="btn-primary px-3 py-1.5 rounded-lg text-xs flex-1" type="button">Polygon</button>
+         <button id="areaModeCircleBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1" type="button">Circle</button>
+        </div>
+        <p id="areaInstructions" class="text-xs text-slate-400 mb-3">Polygon: click points to create polygon.</p>
+        <button id="closePolygonBtn" class="hidden btn-primary px-4 py-2 rounded-lg text-sm w-full mb-3">Close Polygon (3+ points)</button>
        <div id="editModeControls" class="hidden bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 mb-3">
         <p class="text-xs text-yellow-300 mb-2 font-medium">✏️ Editing Area <span id="editingAreaLabel"></span></p>
         <p class="text-xs text-slate-400 mb-3">Drag points to adjust shape. Click edge to add point. Right-click point to delete.</p>
@@ -1053,7 +1058,10 @@
       angleEditBackup: null,
       
       // Area measurements
+      areaMode: 'polygon', // 'polygon' | 'circle'
       areaPoints: [],
+      isDrawingCircle: false,
+      circleDraft: null, // { center: {x,y}, radiusPx }
       areas: [],
       editingAreaIndex: null,
       draggedPointIndex: null,
@@ -1145,6 +1153,8 @@
       areaExportRow: document.getElementById('areaExportRow'),
       copyAreaTSVBtn: document.getElementById('copyAreaTSVBtn'),
       downloadAreaTSVBtn: document.getElementById('downloadAreaTSVBtn'),
+      areaModePolygonBtn: document.getElementById('areaModePolygonBtn'),
+      areaModeCircleBtn: document.getElementById('areaModeCircleBtn'),
       areaInstructions: document.getElementById('areaInstructions'),
       closePolygonBtn: document.getElementById('closePolygonBtn'),
       editModeControls: document.getElementById('editModeControls'),
@@ -1499,16 +1509,31 @@
         if (state.anglePoints.length === 3) drawLine(state.anglePoints[1], state.anglePoints[2], color, 2, true);
       }
       
-      // Draw area polygons
+      // Draw area measurements (polygons + circles)
       state.areas.forEach((area, i) => {
         if (area.visible === false) return;
-        
+
         const isEditing = state.editingAreaIndex === i;
+
+        if (area.type === 'circle') {
+          drawCircle(area.center, area.radiusPx, isEditing ? '#fbbf24' : '#22c55e');
+
+          if (!isEditing && area.center) {
+            const pixelText = `${formatNumber(area.pixelArea)} px²`;
+            const realText = state.isCalibrated ? `${formatNumber(area.realArea)} ${state.unit}²` : '';
+            const labelText = realText ? `A${i+1}: ${realText}` : `A${i+1}: ${pixelText}`;
+            drawMeasurementLabel(area.center, labelText, '#22c55e');
+          }
+
+          return;
+        }
+
+        // Polygon (default)
         drawPolygon(area.points, isEditing ? '#fbbf24' : '#22c55e');
-        
+
         // Draw edit handles for editing area
         if (isEditing) {
-          area.points.forEach((p, pi) => {
+          area.points.forEach((p) => {
             overlayCtx.fillStyle = '#fbbf24';
             overlayCtx.beginPath();
             overlayCtx.arc(p.x, p.y, 8, 0, Math.PI * 2);
@@ -1522,13 +1547,13 @@
           const pixelText = `${formatNumber(area.pixelArea)} px²`;
           const realText = state.isCalibrated ? `${formatNumber(area.realArea)} ${state.unit}²` : '';
           const labelText = realText ? `A${i+1}: ${realText}` : `A${i+1}: ${pixelText}`;
-          
+
           drawMeasurementLabel(centroid(area.points), labelText, '#22c55e');
         }
       });
-      
-      // Draw current area points
-      if (state.currentTool === 'area' && state.areaPoints.length > 0) {
+
+      // Draw current polygon area points (in-progress)
+      if (state.currentTool === 'area' && state.areaMode === 'polygon' && state.areaPoints.length > 0) {
         overlayCtx.strokeStyle = '#22c55e';
         overlayCtx.lineWidth = 2;
         overlayCtx.setLineDash([5, 5]);
@@ -1538,6 +1563,12 @@
         overlayCtx.stroke();
         overlayCtx.setLineDash([]);
         state.areaPoints.forEach(p => drawPoint(p, '#22c55e'));
+      }
+
+      // Draw in-progress circle (Area tool)
+      if (state.currentTool === 'area' && state.areaMode === 'circle' && state.circleDraft) {
+        drawCircle(state.circleDraft.center, state.circleDraft.radiusPx, '#22c55e', true);
+        if (state.circleDraft.center) drawPoint(state.circleDraft.center, '#22c55e');
       }
       
       // Draw particles
@@ -1597,6 +1628,23 @@
       overlayCtx.strokeStyle = '#fff';
       overlayCtx.lineWidth = 1;
       overlayCtx.stroke();
+    }
+
+    function drawCircle(center, radiusPx, color, dashed = false) {
+      if (!center) return;
+      if (!Number.isFinite(center.x) || !Number.isFinite(center.y)) return;
+      if (!Number.isFinite(radiusPx) || radiusPx <= 0) return;
+
+      overlayCtx.fillStyle = color + '40';
+      overlayCtx.strokeStyle = color;
+      overlayCtx.lineWidth = 2;
+      overlayCtx.setLineDash(dashed ? [8, 4] : []);
+      overlayCtx.beginPath();
+      overlayCtx.arc(center.x, center.y, radiusPx, 0, Math.PI * 2);
+      overlayCtx.closePath();
+      overlayCtx.fill();
+      overlayCtx.stroke();
+      overlayCtx.setLineDash([]);
     }
     
     function drawPolygon(points, color) {
@@ -2156,11 +2204,26 @@
       }
       return Math.abs(area / 2);
     }
+
+    function measureCircleArea(radiusPx) {
+      const r = Math.max(0, radiusPx || 0);
+      return Math.PI * r * r;
+    }
     
     function addAreaMeasurement(points) {
       const pixelArea = measurePolygonArea(points);
       const realArea = state.isCalibrated ? pixelArea * Math.pow(state.unitsPerPixel, 2) : null;
       state.areas.push({ points: [...points], pixelArea, realArea });
+      updateAreaDisplay();
+      drawOverlay();
+      updateGuidance();
+      updateSaveButtonState();
+    }
+
+    function addCircleAreaMeasurement(center, radiusPx) {
+      const pixelArea = measureCircleArea(radiusPx);
+      const realArea = state.isCalibrated ? pixelArea * Math.pow(state.unitsPerPixel, 2) : null;
+      state.areas.push({ type: 'circle', center: { ...center }, radiusPx, pixelArea, realArea });
       updateAreaDisplay();
       drawOverlay();
       updateGuidance();
@@ -2179,7 +2242,7 @@
             <button onclick="toggleAreaVisibility(${i})" class="text-slate-400 hover:text-green-400 text-sm" title="${area.visible !== false ? 'Hide' : 'Show'}">
               ${area.visible !== false ? '👁' : '🔍'}
             </button>
-            <button onclick="editAreaMeasurement(${i})" class="text-slate-400 hover:text-yellow-400 text-sm" title="Edit">✏️</button>
+            ${area.type === 'circle' ? '' : `<button onclick="editAreaMeasurement(${i})" class="text-slate-400 hover:text-yellow-400 text-sm" title="Edit">✏️</button>`}
             <button onclick="deleteAreaMeasurement(${i})" class="text-red-400 hover:text-red-300 text-lg leading-none">&times;</button>
           </div>
         </div>
@@ -2202,6 +2265,9 @@
     };
     
     window.editAreaMeasurement = function(index) {
+      const a = state.areas[index];
+      if (!a || a.type === 'circle') return;
+
       state.editingAreaIndex = index;
       state.currentTool = 'area';
       
@@ -2222,6 +2288,11 @@
     function saveAreaEdit() {
       if (state.editingAreaIndex !== null) {
         const area = state.areas[state.editingAreaIndex];
+        if (!area || !Array.isArray(area.points)) {
+          exitAreaEditMode();
+          updateAreaDisplay();
+          return;
+        }
         area.pixelArea = measurePolygonArea(area.points);
         area.realArea = state.isCalibrated ? area.pixelArea * Math.pow(state.unitsPerPixel, 2) : null;
         
@@ -2243,11 +2314,51 @@
     }
     
     function clearAllAreas() {
+      exitAreaEditMode();
       state.areas = [];
       state.areaPoints = [];
+      state.isDrawingCircle = false;
+      state.circleDraft = null;
+      elements.closePolygonBtn.classList.add('hidden');
       updateAreaDisplay();
       drawOverlay();
       updateSaveButtonState();
+    }
+
+    function setAreaMode(mode) {
+      if (state.editingAreaIndex !== null) return;
+      if (mode !== 'polygon' && mode !== 'circle') return;
+
+      state.areaMode = mode;
+      state.areaPoints = [];
+      state.isDrawingCircle = false;
+      state.circleDraft = null;
+
+      elements.closePolygonBtn.classList.add('hidden');
+
+      if (mode === 'polygon') {
+        if (elements.areaInstructions) elements.areaInstructions.textContent = 'Polygon: click points to create polygon.';
+        if (elements.areaModePolygonBtn) {
+          elements.areaModePolygonBtn.classList.add('btn-primary');
+          elements.areaModePolygonBtn.classList.remove('btn-secondary');
+        }
+        if (elements.areaModeCircleBtn) {
+          elements.areaModeCircleBtn.classList.add('btn-secondary');
+          elements.areaModeCircleBtn.classList.remove('btn-primary');
+        }
+      } else {
+        if (elements.areaInstructions) elements.areaInstructions.textContent = 'Circle: click and drag to draw a circle.';
+        if (elements.areaModePolygonBtn) {
+          elements.areaModePolygonBtn.classList.add('btn-secondary');
+          elements.areaModePolygonBtn.classList.remove('btn-primary');
+        }
+        if (elements.areaModeCircleBtn) {
+          elements.areaModeCircleBtn.classList.add('btn-primary');
+          elements.areaModeCircleBtn.classList.remove('btn-secondary');
+        }
+      }
+
+      drawOverlay();
     }
     
     // ========== PARTICLE/HOLE ANALYSIS ==========
@@ -3148,7 +3259,7 @@
         const x = x0 + i * barW;
         const y = yScale(c);
         const h = y0 - y;
-        return `<rect x="${x + 1}" y="${y}" width="${Math.max(0, barW - 2)}" height="${h}" style="fill: #3b82f6; fill: var(--accent-primary); fill-opacity: 0.85; stroke: #3b82f6; stroke: var(--accent-primary); stroke-opacity: 0.55;" />`;
+        return `<rect x="${x + 1}" y="${y}" width="${Math.max(0, barW - 2)}" height="${h}" style="fill: #000000; fill-opacity: 1; stroke: #000000; stroke-opacity: 1;" />`;
       }).join('\n');
 
       const axis = `
@@ -3865,8 +3976,13 @@
       state.editingAngleIndex = null;
       state.draggedAnglePointIndex = null;
       state.angleEditBackup = null;
+      state.areaMode = 'polygon';
       state.areas = [];
       state.areaPoints = [];
+      state.editingAreaIndex = null;
+      state.draggedPointIndex = null;
+      state.isDrawingCircle = false;
+      state.circleDraft = null;
       state.particles = [];
       state.holes = [];
       state.roi = null;
@@ -3892,6 +4008,22 @@
       elements.selectHoleROI.classList.remove('btn-primary');
 
       if (elements.editAngleModeControls) elements.editAngleModeControls.classList.add('hidden');
+
+      // Reset Area mode UI
+      if (elements.closePolygonBtn) elements.closePolygonBtn.classList.add('hidden');
+      if (elements.editModeControls) elements.editModeControls.classList.add('hidden');
+      if (elements.areaInstructions) {
+        elements.areaInstructions.classList.remove('hidden');
+        elements.areaInstructions.textContent = 'Polygon: click points to create polygon.';
+      }
+      if (elements.areaModePolygonBtn) {
+        elements.areaModePolygonBtn.classList.add('btn-primary');
+        elements.areaModePolygonBtn.classList.remove('btn-secondary');
+      }
+      if (elements.areaModeCircleBtn) {
+        elements.areaModeCircleBtn.classList.add('btn-secondary');
+        elements.areaModeCircleBtn.classList.remove('btn-primary');
+      }
       
       updateLengthDisplay();
       updateAngleDisplay();
@@ -4014,8 +4146,10 @@
     elements.clearAreas.addEventListener('click', clearAllAreas);
     if (elements.areaStatsBtn) elements.areaStatsBtn.addEventListener('click', () => openStatsModal('area'));
     if (elements.areaHistBtn) elements.areaHistBtn.addEventListener('click', () => openHistogramModal('area'));
+    if (elements.areaModePolygonBtn) elements.areaModePolygonBtn.addEventListener('click', () => setAreaMode('polygon'));
+    if (elements.areaModeCircleBtn) elements.areaModeCircleBtn.addEventListener('click', () => setAreaMode('circle'));
     elements.closePolygonBtn.addEventListener('click', () => {
-      if (state.areaPoints.length >= 3) {
+      if (state.areaMode === 'polygon' && state.areaPoints.length >= 3) {
         addAreaMeasurement(state.areaPoints);
         state.areaPoints = [];
         elements.closePolygonBtn.classList.add('hidden');
@@ -4238,10 +4372,23 @@
         state.currentTool = tab;
         
         // Clear in-progress area when switching away from area tool
-        if (tab !== 'area' && state.areaPoints.length > 0) {
-          state.areaPoints = [];
-          elements.closePolygonBtn.classList.add('hidden');
-          drawOverlay();
+        if (tab !== 'area') {
+          let needsRedraw = false;
+
+          if (state.areaPoints.length > 0) {
+            state.areaPoints = [];
+            elements.closePolygonBtn.classList.add('hidden');
+            needsRedraw = true;
+          }
+
+          if (state.isDrawingCircle || state.circleDraft) {
+            state.isDrawingCircle = false;
+            state.circleDraft = null;
+            _circlePointerId = null;
+            needsRedraw = true;
+          }
+
+          if (needsRedraw) drawOverlay();
         }
 
         // Clear in-progress angle when switching away from angle tool
@@ -4262,6 +4409,7 @@
     let _panPrimaryPointerId = null;
     let _roiPointerId = null;
     let _dragPointerId = null;
+    let _circlePointerId = null;
 
     const _lastTap = {
       mouse: { ts: 0, x: 0, y: 0 },
@@ -4379,6 +4527,9 @@
         // In edit mode, don't add new points with regular click
         if (state.editingAreaIndex !== null) return;
 
+        // Circle mode uses drag-to-draw; ignore tap-to-add behavior.
+        if (state.areaMode !== 'polygon') return;
+
         state.areaPoints.push(coords);
 
         // Show close button when 3+ points
@@ -4445,6 +4596,12 @@
         if (state.isDrawingROI && state.roiStart) {
           finishROISelection();
         }
+      }
+
+      if (_circlePointerId === pointerId) {
+        _circlePointerId = null;
+        state.isDrawingCircle = false;
+        state.circleDraft = null;
       }
 
       if (_dragPointerId === pointerId) {
@@ -4519,6 +4676,12 @@
           if (p.pointerType === e.pointerType) count++;
         }
         if (count >= 2) {
+          if (state.isDrawingCircle || state.circleDraft) {
+            state.isDrawingCircle = false;
+            state.circleDraft = null;
+            _circlePointerId = null;
+            drawOverlay();
+          }
           state.isPanning = true;
           _panPointerType = e.pointerType;
           const mid = getPanMidpoint();
@@ -4550,6 +4713,17 @@
           e.preventDefault();
           return;
         }
+      }
+
+      // Area: Circle drawing mode (single pointer drag)
+      if ((e.button === 0 || e.pointerType !== 'mouse') && state.currentTool === 'area' && state.areaMode === 'circle' && state.editingAreaIndex === null && _circlePointerId === null) {
+        const coords = pointerCanvasCoords(e);
+        state.isDrawingCircle = true;
+        state.circleDraft = { center: coords, radiusPx: 0 };
+        _circlePointerId = e.pointerId;
+        drawOverlay();
+        e.preventDefault();
+        return;
       }
     }, { passive: false });
 
@@ -4599,6 +4773,16 @@
         return;
       }
 
+      // Area: circle draft update
+      if (state.isDrawingCircle && _circlePointerId === e.pointerId && state.circleDraft) {
+        const coords = pointerCanvasCoords(e);
+        const c = state.circleDraft.center;
+        state.circleDraft.radiusPx = Math.hypot(coords.x - c.x, coords.y - c.y);
+        drawOverlay();
+        e.preventDefault();
+        return;
+      }
+
       // Drag length endpoint
       if (_dragPointerId === e.pointerId && state.draggedLengthPoint !== null && state.editingLengthIndex !== null) {
         const coords = pointerCanvasCoords(e);
@@ -4643,6 +4827,7 @@
       const pointerType = p.pointerType || 'unknown';
       const wasDragging = (_dragPointerId === e.pointerId);
       const wasROI = (_roiPointerId === e.pointerId);
+      const wasCircle = (_circlePointerId === e.pointerId);
 
       // Update pointer end position
       p.x = e.clientX;
@@ -4650,6 +4835,29 @@
 
       // Remove pointer now; this affects multi-touch panning end logic.
       _activePointers.delete(e.pointerId);
+
+      // Circle mode: finalize or cancel circle drawing on pointer up/cancel.
+      if (wasCircle && state.circleDraft) {
+        const endCoords = pointerCanvasCoords(e);
+        const center = state.circleDraft.center;
+        const radiusPx = Math.hypot(endCoords.x - center.x, endCoords.y - center.y);
+
+        state.isDrawingCircle = false;
+        state.circleDraft = null;
+        _circlePointerId = null;
+
+        // Only commit if we are still in circle mode and this is a normal pointer-up.
+        if (e.type === 'pointerup' && state.currentTool === 'area' && state.areaMode === 'circle' && radiusPx >= 2) {
+          addCircleAreaMeasurement(center, radiusPx);
+        } else {
+          drawOverlay();
+        }
+
+        clearTap(pointerType);
+        endPointerInteraction(e.pointerId);
+        e.preventDefault();
+        return;
+      }
 
       // Consider tap ONLY if it wasn't a drag/ROI/pan
       const tappable = !state.isPanning && !wasDragging && !wasROI;
@@ -4661,7 +4869,7 @@
         if (pointerType === 'touch' || pointerType === 'pen') {
           // Touch/pen: on double-tap, close polygon without adding another point.
           if (doubleTap) {
-            if (state.currentTool === 'area' && state.areaPoints.length >= 3) {
+            if (state.currentTool === 'area' && state.areaMode === 'polygon' && state.areaPoints.length >= 3) {
               addAreaMeasurement(state.areaPoints);
               state.areaPoints = [];
             }
@@ -4675,7 +4883,7 @@
           const coords = pointerCanvasCoords(e);
           handleCanvasTap(coords);
           if (doubleTap) {
-            if (state.currentTool === 'area' && state.areaPoints.length >= 3) {
+            if (state.currentTool === 'area' && state.areaMode === 'polygon' && state.areaPoints.length >= 3) {
               addAreaMeasurement(state.areaPoints);
               state.areaPoints = [];
             }
