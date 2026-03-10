@@ -370,7 +370,7 @@
             border-radius: 6px;
             padding: 25px;
             max-width: 400px;
-            z-index: 1000;
+            z-index: 1100;
             box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
             display: none;
         }
@@ -643,6 +643,201 @@
         .scrollable-list-item:last-child {
             border-bottom: none;
         }
+
+        /* ============= MONOCHROME THEME OVERRIDES ============= */
+        :root {
+            --mono-bg: #0f0f10;
+            --mono-surface: #151517;
+            --mono-surface-2: #1b1b1d;
+            --mono-text: #f2f2f2;
+            --mono-muted: #b9b9b9;
+            --mono-border: #2d2d2f;
+            --mono-border-strong: #3a3a3d;
+            --mono-canvas: #0c0c0d;
+        }
+
+        html, body {
+            background: var(--mono-bg);
+            color: var(--mono-text);
+        }
+
+        .main-container,
+        .content-area,
+        .display-grid,
+        .tab-bar {
+            background: var(--mono-bg);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--mono-bg) 0%, var(--mono-surface-2) 100%);
+            border-bottom: 2px solid var(--mono-border-strong);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+        }
+
+        .header h1 {
+            color: var(--mono-text);
+            text-shadow: none;
+        }
+
+        .sidebar {
+            background: var(--mono-surface);
+            border-right-color: var(--mono-border-strong);
+            box-shadow: inset -5px 0 15px rgba(0, 0, 0, 0.55);
+        }
+
+        .panel,
+        .info-panel,
+        .popup,
+        .spectral-modal {
+            background: var(--mono-surface);
+            border-color: var(--mono-border-strong);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+        }
+
+        .status-bar {
+            background: var(--mono-surface);
+            border-top-color: var(--mono-border-strong);
+            color: var(--mono-muted);
+            box-shadow: none;
+        }
+
+        .sidebar-section,
+        .calibration-info,
+        .measurement-display,
+        .slow-motion-display {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--mono-border);
+            color: var(--mono-muted);
+        }
+
+        .sidebar-title,
+        .panel-title,
+        .popup-title,
+        .status-label,
+        .spectral-modal-title,
+        .final-message,
+        .info-label {
+            color: var(--mono-text);
+            border-color: var(--mono-border);
+            text-shadow: none;
+        }
+
+        .control-label,
+        .slider-value,
+        .learning-objectives,
+        .popup-content,
+        .calibration-r2,
+        .scrollable-list {
+            color: var(--mono-muted);
+        }
+
+        .scrollable-list-item {
+            border-bottom-color: var(--mono-border);
+        }
+
+        canvas {
+            background: var(--mono-canvas);
+        }
+
+        input[type="range"] {
+            background: linear-gradient(to right, #2a2a2d, var(--mono-text));
+        }
+
+        input[type="range"]::-webkit-slider-thumb,
+        input[type="range"]::-moz-range-thumb {
+            background: var(--mono-text);
+            box-shadow: none;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--mono-surface-2), var(--mono-surface));
+            border-color: var(--mono-border-strong);
+            color: var(--mono-text);
+            box-shadow: none;
+        }
+
+        button:not(.start-button):not(.stop-button):hover {
+            background: var(--mono-text);
+            color: var(--mono-bg);
+            box-shadow: none;
+        }
+
+        .start-button,
+        .stop-button,
+        .start-button:hover,
+        .stop-button:hover {
+            color: #00ff88;
+        }
+
+        .tab-button.active {
+            background: var(--mono-text);
+            color: var(--mono-bg);
+            box-shadow: none;
+        }
+
+        .spectral-modal-buttons button {
+            background: linear-gradient(135deg, var(--mono-surface-2), var(--mono-surface));
+            border-color: var(--mono-border-strong);
+            color: var(--mono-text);
+            box-shadow: none;
+        }
+
+        .spectral-modal-buttons button:hover {
+            background: var(--mono-text);
+            color: var(--mono-bg);
+            box-shadow: none;
+        }
+
+        .calibration-table {
+            color: var(--mono-muted);
+        }
+
+        .calibration-table th,
+        .calibration-table td {
+            border-bottom-color: var(--mono-border);
+        }
+
+        .calibration-table th {
+            color: var(--mono-text);
+        }
+
+        .calibration-input,
+        select {
+            background: var(--mono-surface-2);
+            border-color: var(--mono-border);
+            color: var(--mono-text);
+        }
+
+        .calibration-formula {
+            color: var(--mono-text);
+            text-shadow: none;
+        }
+
+        .calibration-converter .converter-title {
+            color: var(--mono-text);
+        }
+
+        .calibration-converter .converter-label {
+            color: var(--mono-muted);
+        }
+
+        .final-screen {
+            background: linear-gradient(135deg, var(--mono-bg), var(--mono-surface-2));
+        }
+
+        .restart-button {
+            background: linear-gradient(135deg, var(--mono-surface-2), var(--mono-surface));
+            border-color: var(--mono-border-strong);
+            color: var(--mono-text);
+            box-shadow: none;
+        }
+
+        .restart-button:hover {
+            background: var(--mono-text);
+            color: var(--mono-bg);
+            box-shadow: none;
+            transform: scale(1.05);
+        }
     </style>
   <style>body { box-sizing: border-box; }</style>
   <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
@@ -661,7 +856,7 @@
         ⏱️ Acquisition
       </div>
       <div class="control-group"><label class="control-label">Status</label>
-     <div style="font-size: 13px; color: #00ff88; padding: 6px; background: rgba(0, 255, 136, 0.1); border-radius: 3px; text-align: center;" id="acqStatus">
+     <div style="font-size: 13px; color: #b9b9b9; padding: 6px; background: rgba(255, 255, 255, 0.05); border-radius: 3px; text-align: center;" id="acqStatus">
          READY
         </div>
       </div>
@@ -671,7 +866,7 @@
         </div>
       </div>
       <div class="control-group"><label class="control-label">Countdown</label>
-        <div style="font-size: 14px; font-weight: bold; color: #00ff00; padding: 8px; background: rgba(0, 255, 0, 0.1); border-radius: 3px; text-align: center; border: 1px solid #00ff00;" id="countdownDisplay">
+        <div style="font-size: 14px; font-weight: bold; color: #f2f2f2; padding: 8px; background: rgba(255, 255, 255, 0.05); border-radius: 3px; text-align: center; border: 1px solid #3a3a3d;" id="countdownDisplay">
          --:--
         </div>
             </div><button onclick="startAcquisition()" style="width: 100%; background: linear-gradient(135deg, #003d1a, #00ff00); border-color: #00ff00; box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);" class="start-button">▶ START</button> <button onclick="stopAcquisition()" style="width: 100%; background: linear-gradient(135deg, #3d0000, #ff0000); border-color: #ff3333; box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);" class="stop-button">⏹ STOP</button> <button onclick="clearSpectrum()" style="width: 100%; margin-top: 6px;">↺ RESET</button>
@@ -691,7 +886,7 @@
          <span id="resolutionValue">6</span>%
         </div>
       </div>
-    <div class="control-group"><label class="control-label">Source Energy (keV)</label> <select id="sourceSelect" onchange="changeSource()" style="width: 100%; padding: 6px; background: #003d00; border: 1px solid #00aa66; color: #00ff88; border-radius: 3px; font-family: 'Courier New', monospace;"> <option value="cs137">Cs-137 (661.64 keV)</option> <option value="na22">Na-22 (511.0034, 1274.5 keV)</option> <option value="co60">Co-60 (1173.237, 1332.501 keV)</option> <option value="mix_cs_na">Cs + Na</option> <option value="mix_cs_co">Cs + Co</option> <option value="mix_na_co">Na + Co</option> <option value="mix_cs_na_co">Cs + Na + Co</option> <option value="unknown1">Unknown1</option> <option value="unknown2">Unknown2</option> <option value="unknown3">Unknown3</option> <option value="unknown4">Unknown4</option> <option value="unknown5">Unknown5</option> </select>
+        <div class="control-group"><label class="control-label">Source Energy (keV)</label> <select id="sourceSelect" onchange="changeSource()" style="width: 100%; padding: 6px; background: #1b1b1d; border: 1px solid #3a3a3d; color: #f2f2f2; border-radius: 3px; font-family: 'Courier New', monospace;"> <option value="cs137">Cs-137 (661.64 keV)</option> <option value="na22">Na-22 (511.0034, 1274.5 keV)</option> <option value="co60">Co-60 (1173.237, 1332.501 keV)</option> <option value="mix_cs_na">Cs + Na</option> <option value="mix_cs_co">Cs + Co</option> <option value="mix_na_co">Na + Co</option> <option value="mix_cs_na_co">Cs + Na + Co</option> <option value="unknown1">Unknown1</option> <option value="unknown2">Unknown2</option> <option value="unknown3">Unknown3</option> <option value="unknown4">Unknown4</option> <option value="unknown5">Unknown5</option> </select>
       </div>
      </div>
     </div><!-- MAIN CONTENT AREA -->
@@ -1078,7 +1273,7 @@
             state.pulses = [];
             state.pulseCounter = 0;
             document.getElementById('acqStatus').textContent = 'RUNNING';
-            document.getElementById('acqStatus').style.color = '#ff6600';
+            document.getElementById('acqStatus').style.color = '#f2f2f2';
 
             const startTime = Date.now();
             const duration = state.acquisitionTime * 1000;
@@ -1127,7 +1322,7 @@
             clearTimeout(acquisitionTimer);
             clearInterval(countdownInterval);
             document.getElementById('acqStatus').textContent = 'STOPPED';
-            document.getElementById('acqStatus').style.color = '#00ff88';
+            document.getElementById('acqStatus').style.color = '#b9b9b9';
             document.getElementById('countdownDisplay').textContent = '--:--';
         }
 
@@ -1394,11 +1589,11 @@
             const height = oscilloscopeCanvas.height;
 
             // Clear
-            oscilloscopeCtx.fillStyle = '#000a15';
+            oscilloscopeCtx.fillStyle = '#0c0c0d';
             oscilloscopeCtx.fillRect(0, 0, width, height);
 
             // Grid
-            oscilloscopeCtx.strokeStyle = '#00330d';
+            oscilloscopeCtx.strokeStyle = '#222224';
             oscilloscopeCtx.lineWidth = 0.5;
             for (let i = 0; i < width; i += 40) {
                 oscilloscopeCtx.beginPath();
@@ -1416,10 +1611,10 @@
             // Draw recent pulses
             const recentPulses = state.pulses.slice(-100);
             if (recentPulses.length > 0) {
-                oscilloscopeCtx.strokeStyle = '#00ff88';
+                oscilloscopeCtx.strokeStyle = '#f2f2f2';
                 oscilloscopeCtx.lineWidth = 2;
-                oscilloscopeCtx.shadowColor = 'rgba(0, 255, 136, 0.8)';
-                oscilloscopeCtx.shadowBlur = 10;
+                oscilloscopeCtx.shadowColor = 'rgba(255, 255, 255, 0.18)';
+                oscilloscopeCtx.shadowBlur = 6;
 
                 const timeSpan = 5000; // 5 second window
                 const now = Date.now();
@@ -1441,7 +1636,7 @@
 
                     // Interaction type indicator
                     if (pulse.interaction === 'photoelectric') {
-                        oscilloscopeCtx.fillStyle = 'rgba(0, 255, 136, 0.5)';
+                        oscilloscopeCtx.fillStyle = 'rgba(242, 242, 242, 0.35)';
                         oscilloscopeCtx.fill();
                     }
                 }
@@ -1450,12 +1645,12 @@
             }
 
             // Title and legend
-            oscilloscopeCtx.fillStyle = '#00ff88';
+            oscilloscopeCtx.fillStyle = '#f2f2f2';
             oscilloscopeCtx.font = 'bold 13px "Courier New"';
             oscilloscopeCtx.fillText('Time →', 10, 20);
             oscilloscopeCtx.fillText('Amplitude →', 10, height - 10);
             oscilloscopeCtx.font = '12px "Courier New"';
-            oscilloscopeCtx.fillStyle = '#00dd77';
+            oscilloscopeCtx.fillStyle = '#b9b9b9';
             oscilloscopeCtx.fillText(`Pulses: ${state.pulseCounter}`, width - 120, 20);
         }
 
@@ -1468,11 +1663,11 @@
             const bottomMargin = 40;
 
             // Clear
-            histogramCtx.fillStyle = '#000a15';
+            histogramCtx.fillStyle = '#0c0c0d';
             histogramCtx.fillRect(0, 0, width, height);
 
             // Grid
-            histogramCtx.strokeStyle = '#00330d';
+            histogramCtx.strokeStyle = '#222224';
             histogramCtx.lineWidth = 0.5;
             for (let i = 0; i < width; i += 50) {
                 histogramCtx.beginPath();
@@ -1488,7 +1683,7 @@
             }
 
             if (state.totalCounts === 0) {
-                histogramCtx.fillStyle = '#00aa66';
+                histogramCtx.fillStyle = '#8f8f8f';
                 histogramCtx.font = '14px "Courier New"';
                 histogramCtx.fillText('Waiting for pulses...', 20, height / 2);
                 return;
@@ -1499,11 +1694,11 @@
 
             // Render histogram with smooth curve interpolation
             const barWidth = Math.max(1, width / maxChannels);
-            histogramCtx.fillStyle = '#00ff88';
-            histogramCtx.strokeStyle = '#00ff88';
+            histogramCtx.fillStyle = '#f2f2f2';
+            histogramCtx.strokeStyle = '#f2f2f2';
             histogramCtx.lineWidth = 1;
-            histogramCtx.shadowColor = 'rgba(0, 255, 136, 0.6)';
-            histogramCtx.shadowBlur = 6;
+            histogramCtx.shadowColor = 'rgba(255, 255, 255, 0.12)';
+            histogramCtx.shadowBlur = 4;
 
             // Draw histogram bars with slight gradient effect
             histogramCtx.beginPath();
@@ -1524,11 +1719,11 @@
             histogramCtx.lineTo(width, height - bottomMargin);
             histogramCtx.lineTo(0, height - bottomMargin);
             histogramCtx.closePath();
-            histogramCtx.fillStyle = 'rgba(0, 255, 136, 0.3)';
+            histogramCtx.fillStyle = 'rgba(242, 242, 242, 0.25)';
             histogramCtx.fill();
 
             // Draw bars for visual clarity
-            histogramCtx.fillStyle = '#00ff88';
+            histogramCtx.fillStyle = '#f2f2f2';
             for (let ch = 0; ch < maxChannels; ch++) {
                 if (state.histogram[ch]) {
                     const count = state.histogram[ch];
@@ -1551,7 +1746,7 @@
                 const countAtChannel = state.histogram[channel] || 0;
 
                 // Vertical dashed line
-                histogramCtx.strokeStyle = '#ffff00';
+                histogramCtx.strokeStyle = '#bdbdbd';
                 histogramCtx.lineWidth = 1;
                 histogramCtx.setLineDash([4, 4]);
                 histogramCtx.beginPath();
@@ -1567,25 +1762,25 @@
                 histogramCtx.setLineDash([]);
 
                 // Crosshair center dot
-                histogramCtx.fillStyle = '#ffff00';
+                histogramCtx.fillStyle = '#bdbdbd';
                 histogramCtx.beginPath();
                 histogramCtx.arc(x, y, 3, 0, Math.PI * 2);
                 histogramCtx.fill();
 
                 // Display text with channel and count
                 const displayText = `Ch: ${channel} | Cts: ${Math.round(countAtChannel)}`;
-                histogramCtx.fillStyle = '#ffff00';
+                histogramCtx.fillStyle = '#f2f2f2';
                 histogramCtx.font = 'bold 12px "Courier New"';
                 const textWidth = histogramCtx.measureText(displayText).width + 8;
                 histogramCtx.fillRect(x + 10, y - 28, textWidth, 24);
-                histogramCtx.fillStyle = '#000000';
+                histogramCtx.fillStyle = '#0f0f10';
                 histogramCtx.fillText(displayText, x + 14, y - 12);
             }
 
             histogramCtx.shadowBlur = 0;
 
             // Labels
-            histogramCtx.fillStyle = '#00ff88';
+            histogramCtx.fillStyle = '#f2f2f2';
             histogramCtx.font = 'bold 12px "Courier New"';
             histogramCtx.fillText('Channel →', 10, height - 12);
             histogramCtx.fillText('Counts →', 5, 20);
@@ -1602,7 +1797,7 @@
             stopAcquisition();
             document.getElementById('avgResolution').textContent = 'N/A';
             document.getElementById('acqStatus').textContent = 'READY';
-            document.getElementById('acqStatus').style.color = '#00ff88';
+            document.getElementById('acqStatus').style.color = '#b9b9b9';
         }
 
         // ============= CALIBRATION =============
@@ -1624,7 +1819,7 @@
                 updateChannelToEnergyConverter();
 
                 if (calibrationPlotCtx && calibrationPlotCanvas) {
-                    calibrationPlotCtx.fillStyle = '#000a15';
+                    calibrationPlotCtx.fillStyle = '#0c0c0d';
                     calibrationPlotCtx.fillRect(0, 0, calibrationPlotCanvas.width, calibrationPlotCanvas.height);
                 }
             };
@@ -1701,7 +1896,7 @@
             const width = calibrationPlotCanvas.width;
             const height = calibrationPlotCanvas.height;
 
-            calibrationPlotCtx.fillStyle = '#000a15';
+            calibrationPlotCtx.fillStyle = '#0c0c0d';
             calibrationPlotCtx.fillRect(0, 0, width, height);
 
             const { points, m, B, r2 } = calibration;
@@ -1739,7 +1934,7 @@
             const yToPx = (y) => padTop + (1 - (y - minY) / (maxY - minY)) * plotH;
 
             // Grid
-            calibrationPlotCtx.strokeStyle = '#00330d';
+            calibrationPlotCtx.strokeStyle = '#222224';
             calibrationPlotCtx.lineWidth = 0.5;
             const gridX = 10;
             const gridY = 8;
@@ -1759,7 +1954,7 @@
             }
 
             // Axes
-            calibrationPlotCtx.strokeStyle = '#00aa66';
+            calibrationPlotCtx.strokeStyle = '#8f8f8f';
             calibrationPlotCtx.lineWidth = 1;
             calibrationPlotCtx.beginPath();
             calibrationPlotCtx.moveTo(padLeft, padTop);
@@ -1772,7 +1967,7 @@
             const x2 = maxX;
             const y1 = m * x1 + B;
             const y2 = m * x2 + B;
-            calibrationPlotCtx.strokeStyle = '#ffff00';
+            calibrationPlotCtx.strokeStyle = '#f2f2f2';
             calibrationPlotCtx.lineWidth = 2;
             calibrationPlotCtx.setLineDash([]);
             calibrationPlotCtx.beginPath();
@@ -1781,7 +1976,7 @@
             calibrationPlotCtx.stroke();
 
             // Points
-            calibrationPlotCtx.fillStyle = '#00ff88';
+            calibrationPlotCtx.fillStyle = '#d0d0d0';
             for (const p of points) {
                 const px = xToPx(p.ch);
                 const py = yToPx(p.energy);
@@ -1791,11 +1986,11 @@
             }
 
             // Labels
-            calibrationPlotCtx.fillStyle = '#00ff88';
+            calibrationPlotCtx.fillStyle = '#f2f2f2';
             calibrationPlotCtx.font = 'bold 12px "Courier New"';
             calibrationPlotCtx.fillText('Energy (keV)', 10, 18);
             calibrationPlotCtx.fillText('Channel (Ch) →', padLeft + 10, height - 12);
-            calibrationPlotCtx.fillStyle = '#00dd77';
+            calibrationPlotCtx.fillStyle = '#b9b9b9';
             calibrationPlotCtx.font = '12px "Courier New"';
             calibrationPlotCtx.fillText(`R² = ${r2.toFixed(6)}`, width - 140, 18);
         }
