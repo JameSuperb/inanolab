@@ -1,0 +1,1834 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Realistic Gamma Spectroscopy Simulator</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: 'Courier New', monospace;
+            background: #0a0e27;
+            color: #00ff88;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            border-bottom: 2px solid #00ff88;
+            padding: 12px 20px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            text-shadow: 0 0 10px #00ff88;
+            letter-spacing: 2px;
+            flex: 1;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .spectral-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #0f1428, #1a1f3a);
+            border: 2px solid #00ff88;
+            border-radius: 6px;
+            padding: 25px;
+            z-index: 1000;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .spectral-modal.active {
+            display: flex;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .spectral-modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .spectral-modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            min-width: 300px;
+        }
+
+        .spectral-modal-buttons button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #003d00, #00aa66);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            cursor: pointer;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            box-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
+        }
+
+        .spectral-modal-buttons button:hover {
+            background: linear-gradient(135deg, #00aa66, #00ff88);
+            color: #0a0e27;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            gap: 2px;
+            background: #0a0e27;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #0f1428;
+            border-right: 2px solid #00ff88;
+            overflow-y: auto;
+            padding: 15px;
+            box-shadow: inset -5px 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+            border: 1px solid #00aa66;
+            border-radius: 4px;
+            padding: 12px;
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .oscilloscope-section {
+            height: 260px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #00aa66;
+            padding-bottom: 8px;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-label {
+            font-size: 13px;
+            color: #00dd77;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: linear-gradient(to right, #003d00, #00ff88);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #00ff88;
+            cursor: pointer;
+            box-shadow: 0 0 8px #00ff88;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #00ff88;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 8px #00ff88;
+        }
+
+        .slider-value {
+            font-size: 12px;
+            color: #00ff88;
+            text-align: right;
+            margin-top: 3px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #003d00, #00aa66);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            cursor: pointer;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            box-shadow: 0 0 5px rgba(0, 255, 136, 0.3);
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #00aa66, #00ff88);
+            color: #0a0e27;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button.inactive {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .learning-objectives {
+            font-size: 12px;
+            line-height: 1.6;
+            color: #00dd77;
+        }
+
+        .learning-objectives li {
+            margin-left: 15px;
+            margin-bottom: 6px;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0e27;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: 6px;
+            padding: 10px 10px 0 10px;
+            background: #0a0e27;
+            flex: 0 0 auto;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #00aa66, #00ff88);
+            color: #0a0e27;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.8);
+        }
+
+        .display-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            padding: 10px;
+            background: #0a0e27;
+            width: 100%;
+            min-height: 0;
+        }
+
+        .panel.tab-panel {
+            display: none;
+        }
+
+        .panel.tab-panel.active {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .panel.calibration-panel {
+            overflow: auto;
+        }
+
+        .panel {
+            background: #0f1428;
+            border: 2px solid #00ff88;
+            border-radius: 4px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2), inset 0 0 10px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00ff88;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #00aa66;
+        }
+
+        canvas {
+            flex: 1;
+            background: #000a15;
+            border-radius: 2px;
+            display: block;
+        }
+
+        .oscilloscope-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .histogram-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-panel {
+            background: #0f1428;
+            border: 2px solid #00ff88;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #00dd77;
+            max-height: 150px;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .info-label {
+            color: #00ff88;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #0f1428, #1a1f3a);
+            border: 2px solid #00ff88;
+            border-radius: 6px;
+            padding: 25px;
+            max-width: 400px;
+            z-index: 1000;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
+            display: none;
+        }
+
+        .popup.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -45%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .popup-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .popup-content {
+            font-size: 14px;
+            color: #00dd77;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .popup-buttons button {
+            flex: 1;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        .status-bar {
+            background: #0f1428;
+            border-top: 2px solid #00ff88;
+            padding: 8px 15px;
+            font-size: 13px;
+            color: #00dd77;
+            display: flex;
+            gap: 30px;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+        }
+
+        .status-item {
+            display: flex;
+            gap: 8px;
+        }
+
+        .status-label {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .calibration-info {
+            font-size: 12px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00aa66;
+            padding: 8px;
+            border-radius: 3px;
+            margin-top: 8px;
+            color: #00dd77;
+        }
+
+        .calibration-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            color: #00dd77;
+        }
+
+        .calibration-table th,
+        .calibration-table td {
+            padding: 6px 8px;
+            border-bottom: 1px dotted #00aa66;
+            vertical-align: middle;
+        }
+
+        .calibration-table th {
+            color: #00ff88;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: left;
+        }
+
+        .calibration-input {
+            width: 100%;
+            padding: 6px;
+            background: #003d00;
+            border: 1px solid #00aa66;
+            color: #00ff88;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .calibration-formula {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+            letter-spacing: 0.5px;
+        }
+
+        .calibration-r2 {
+            margin-top: 4px;
+            font-size: 13px;
+            color: #00dd77;
+        }
+
+        .calibration-converter {
+            padding: 12px;
+            font-size: 13px;
+        }
+
+        .calibration-converter .converter-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 8px;
+        }
+
+        .calibration-converter .converter-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .calibration-converter .converter-label {
+            flex: 0 0 auto;
+            color: #00dd77;
+            font-size: 13px;
+        }
+
+        .calibration-converter input.calibration-input {
+            font-size: 14px;
+            padding: 8px;
+        }
+
+        .calibration-converter .calibration-r2 {
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        canvas.calibration-plot {
+            flex: 0 0 240px;
+            height: 240px;
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 2px;
+        }
+
+        .measurement-display {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00aa66;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #00ff88;
+        }
+
+        .final-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0e27, #1a1f3a);
+            z-index: 2000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            display: none;
+        }
+
+        .final-screen.active {
+            display: flex;
+        }
+
+        .final-message {
+            font-size: 28px;
+            color: #00ff88;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px #00ff88;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .restart-button {
+            padding: 15px 40px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #003d00, #00aa66);
+            border: 2px solid #00ff88;
+            color: #00ff88;
+            cursor: pointer;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+
+        .restart-button:hover {
+            background: linear-gradient(135deg, #00aa66, #00ff88);
+            color: #0a0e27;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 1);
+            transform: scale(1.05);
+        }
+
+        .slow-motion-display {
+            font-size: 13px;
+            color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid #00aa66;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 8px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .scrollable-list {
+            max-height: 120px;
+            overflow-y: auto;
+            font-size: 12px;
+            color: #00dd77;
+        }
+
+        .scrollable-list-item {
+            padding: 4px 0;
+            border-bottom: 1px dotted #00aa66;
+        }
+
+        .scrollable-list-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="header">
+    <h1>⚛️ GAMMA SPECTROSCOPY SIMULATOR</h1>
+    <div class="header-buttons"><button onclick="openSpectralModal()" style="padding: 8px 16px;">📈 SPECTRAL FEATURES</button>
+    </div>
+  </div>
+     <div class="main-container"><!-- SIDEBAR -->
+      <div class="sidebar"><!-- Acquisition Controls -->
+     <div class="sidebar-section">
+      <div class="sidebar-title">
+        ⏱️ Acquisition
+      </div>
+      <div class="control-group"><label class="control-label">Status</label>
+     <div style="font-size: 13px; color: #00ff88; padding: 6px; background: rgba(0, 255, 136, 0.1); border-radius: 3px; text-align: center;" id="acqStatus">
+         READY
+        </div>
+      </div>
+      <div class="control-group"><label class="control-label">Time (sec)</label> <input type="range" id="acquisitionTime" min="5" max="60" value="20" step="1">
+        <div class="slider-value">
+         <span id="acqTimeValue">20</span> sec
+        </div>
+      </div>
+      <div class="control-group"><label class="control-label">Countdown</label>
+        <div style="font-size: 14px; font-weight: bold; color: #00ff00; padding: 8px; background: rgba(0, 255, 0, 0.1); border-radius: 3px; text-align: center; border: 1px solid #00ff00;" id="countdownDisplay">
+         --:--
+        </div>
+            </div><button onclick="startAcquisition()" style="width: 100%; background: linear-gradient(135deg, #003d1a, #00ff00); border-color: #00ff00; box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);" class="start-button">▶ START</button> <button onclick="stopAcquisition()" style="width: 100%; background: linear-gradient(135deg, #3d0000, #ff0000); border-color: #ff3333; box-shadow: 0 0 8px rgba(255, 0, 0, 0.5);" class="stop-button">⏹ STOP</button> <button onclick="clearSpectrum()" style="width: 100%; margin-top: 6px;">↺ RESET</button>
+     </div><!-- Detector Settings -->
+     <div class="sidebar-section oscilloscope-section">
+      <div class="sidebar-title">
+        📡 Oscilloscope (Pulse Detection)
+      </div>
+      <canvas id="oscilloscopeCanvas"></canvas>
+     </div><!-- Detector Settings -->
+     <div class="sidebar-section">
+      <div class="sidebar-title">
+        🔧 Detector Settings
+      </div>
+      <div class="control-group"><label class="control-label">Resolution (%)</label> <input type="range" id="resolution" min="4" max="12" value="6" step="0.5">
+        <div class="slider-value">
+         <span id="resolutionValue">6</span>%
+        </div>
+      </div>
+    <div class="control-group"><label class="control-label">Source Energy (keV)</label> <select id="sourceSelect" onchange="changeSource()" style="width: 100%; padding: 6px; background: #003d00; border: 1px solid #00aa66; color: #00ff88; border-radius: 3px; font-family: 'Courier New', monospace;"> <option value="cs137">Cs-137 (661.64 keV)</option> <option value="na22">Na-22 (511.0034, 1274.5 keV)</option> <option value="co60">Co-60 (1173.237, 1332.501 keV)</option> <option value="mix_cs_na">Cs + Na</option> <option value="mix_cs_co">Cs + Co</option> <option value="mix_na_co">Na + Co</option> <option value="mix_cs_na_co">Cs + Na + Co</option> <option value="unknown1">Unknown1</option> <option value="unknown2">Unknown2</option> <option value="unknown3">Unknown3</option> <option value="unknown4">Unknown4</option> <option value="unknown5">Unknown5</option> </select>
+      </div>
+     </div>
+    </div><!-- MAIN CONTENT AREA -->
+    <div class="content-area">
+     <div class="tab-bar">
+      <button id="tabBtnSpectrum" class="tab-button active" onclick="setMainTab('spectrum')">MCA Spectrum</button>
+      <button id="tabBtnCalibration" class="tab-button" onclick="setMainTab('calibration')">Calibration</button>
+     </div>
+     <div class="display-grid">
+      <div class="panel histogram-container tab-panel active" id="tabSpectrumPanel">
+        <div class="panel-title">
+         📊 MCA Spectrum (Energy Distribution)
+        </div>
+        <canvas id="histogramCanvas"></canvas>
+      </div>
+      <div class="panel calibration-panel tab-panel" id="tabCalibrationPanel">
+        <div class="panel-title">Calibration</div>
+
+        <div style="overflow-x: auto; flex: 0 0 auto;">
+         <table class="calibration-table">
+          <thead>
+            <tr>
+             <th>Peak</th>
+             <th>Channel (Ch)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+             <td>Cs-137 (661.64 keV)</td>
+             <td>
+              <input class="calibration-input" id="calChCs137" data-energy="661.64" type="number" min="0" step="1">
+             </td>
+            </tr>
+            <tr>
+             <td>Na-22 (511.0034 keV)</td>
+             <td>
+              <input class="calibration-input" id="calChNa511" data-energy="511.0034" type="number" min="0" step="1">
+             </td>
+            </tr>
+            <tr>
+             <td>Na-22 (1274.5 keV)</td>
+             <td>
+              <input class="calibration-input" id="calChNa1274" data-energy="1274.5" type="number" min="0" step="1">
+             </td>
+            </tr>
+            <tr>
+             <td>Co-60 (1173.237 keV)</td>
+             <td>
+              <input class="calibration-input" id="calChCo1173" data-energy="1173.237" type="number" min="0" step="1">
+             </td>
+            </tr>
+            <tr>
+             <td>Co-60 (1332.501 keV)</td>
+             <td>
+              <input class="calibration-input" id="calChCo1332" data-energy="1332.501" type="number" min="0" step="1">
+             </td>
+            </tr>
+          </tbody>
+         </table>
+        </div>
+
+        <button onclick="runCalibration()" style="flex: 0 0 auto; width: 100%; margin-top: 10px;">CALIBRATE</button>
+
+        <div class="calibration-info" style="flex: 0 0 auto;">
+                        <div id="calibrationOutput" class="calibration-formula">Energy = [ m x (Channel) ] + B</div>
+            <div id="calibrationR2" class="calibration-r2"></div>
+         <div style="margin-top: 6px;">
+                    Energy = energy (keV), Channel = channel (Ch), m = slope (keV/channel), B = y-intercept (keV)
+         </div>
+        </div>
+
+              <canvas id="calibrationPlotCanvas" class="calibration-plot"></canvas>
+
+                      <div class="calibration-info calibration-converter" style="flex: 0 0 auto; margin-top: 10px;">
+                       <div class="converter-title">Channel → Energy</div>
+                       <div class="converter-row">
+                    <div class="converter-label">Channel (Ch)</div>
+                    <input class="calibration-input" id="channelToEnergyInput" type="number" min="0" step="1" placeholder="Type channel">
+                       </div>
+                       <div id="channelToEnergyOutput" class="calibration-r2"></div>
+                  </div>
+      </div>
+     </div><!-- Status Bar -->
+     <div class="status-bar">
+      <div class="status-item"><span class="status-label">COUNTS:</span> <span id="totalCounts">0</span>
+      </div>
+      <div class="status-item"><span class="status-label">PEAKS:</span> <span id="peakCount">0</span>
+      </div>
+      <div class="status-item"><span class="status-label">AVG RESOLUTION:</span> <span id="avgResolution">N/A</span>
+      </div>
+      <div class="status-item"><span class="status-label">MODE:</span> <span id="currentMode">MANUAL</span>
+      </div>
+     </div>
+    </div>
+     </div><!-- Overlay and Popup -->
+  <div class="overlay" id="overlay" onclick="closePopup()"></div>
+  <div class="popup" id="popup">
+   <div class="popup-title" id="popupTitle">
+    Feature Info
+   </div>
+   <div class="popup-content" id="popupContent">
+    Content here
+   </div>
+   <div class="popup-buttons"><button onclick="closePopup()">CLOSE</button>
+   </div>
+  </div><!-- Spectral Features Modal -->
+  <div class="spectral-modal" id="spectralModal">
+   <div class="spectral-modal-title">
+    📈 Spectral Features
+   </div>
+   <div class="spectral-modal-buttons"><button onclick="showFeatureInfo('photopeak')">PHOTOPEAK</button> <button onclick="showFeatureInfo('compton')">COMPTON CONTINUUM</button> <button onclick="showFeatureInfo('edge')">COMPTON EDGE</button>
+   </div><button onclick="closeSpectralModal()" style="margin-top: 15px; align-self: center;">CLOSE</button>
+  </div><!-- Final Screen -->
+  <div class="final-screen" id="finalScreen">
+   <div class="final-message">
+    ⚛️ Gamma spectroscopy identifies radioactive isotopes by measuring the energy of emitted gamma rays. You have completed the simulation!
+   </div><button class="restart-button" onclick="restartSimulation()">🔄 RESTART SIMULATION</button>
+  </div>
+  <script>
+        // ============= STATE MANAGEMENT =============
+        let state = {
+            isRunning: false,
+            isPaused: false,
+            histogram: {},
+            pulses: [],
+            pulseCounter: 0,
+            acquisitionTime: 20,
+            resolution: 6,
+            currentSource: 'cs137',
+            totalCounts: 0,
+            selectedFeature: null,
+            calibration: null
+        };
+
+        // ============= PHYSICS PARAMETERS =============
+        const sourceParams = {
+            cs137: { energy: 661.64, label: 'Cs-137', color: '#00ff88' },
+            na22: { energy: [511.0034, 1274.5], label: 'Na-22', color: '#00ddff' },
+            co60: { energy: [1173.237, 1332.501], label: 'Co-60', color: '#ffaa00' },
+            mix_cs_na: { energy: [661.64, 511.0034, 1274.5], label: 'Cs + Na', color: '#ff00ff' },
+            mix_cs_co: { energy: [661.64, 1173.237, 1332.501], label: 'Cs + Co', color: '#ff00ff' },
+            mix_na_co: { energy: [511.0034, 1274.5, 1173.237, 1332.501], label: 'Na + Co', color: '#ff00ff' },
+            mix_cs_na_co: { energy: [661.64, 511.0034, 1274.5, 1173.237, 1332.501], label: 'Cs + Na + Co', color: '#ff00ff' },
+
+            // "Unknown" sources for student activity (photopeak energies are hidden in UI)
+            unknown1: { energy: 59.5, label: 'Unknown1', color: '#00ddff' },
+            unknown2: { energy: 122, label: 'Unknown2', color: '#00ff88' },
+            unknown3: { energy: 356, label: 'Unknown3', color: '#ffaa00' },
+            unknown4: { energy: 835, label: 'Unknown4', color: '#ff00ff' },
+            unknown5: { energy: 898, label: 'Unknown5', color: '#00aa66' }
+        };
+
+        const maxChannels = 1000;
+        const keVPerChannel = 2; // 2 keV per channel initially
+
+        // ============= CALIBRATION PERSISTENCE (localStorage) =============
+        const STORAGE_KEY_CALIBRATION_CHANNELS = 'inanolab_gammaspectroscopy_calibration_channels_v1';
+
+        // ============= CANVAS SETUP =============
+        const oscilloscopeCanvas = document.getElementById('oscilloscopeCanvas');
+        const histogramCanvas = document.getElementById('histogramCanvas');
+        const calibrationPlotCanvas = document.getElementById('calibrationPlotCanvas');
+        const channelToEnergyInput = document.getElementById('channelToEnergyInput');
+        const channelToEnergyOutput = document.getElementById('channelToEnergyOutput');
+        const oscilloscopeCtx = oscilloscopeCanvas.getContext('2d');
+        const histogramCtx = histogramCanvas.getContext('2d');
+        const calibrationPlotCtx = calibrationPlotCanvas ? calibrationPlotCanvas.getContext('2d') : null;
+
+        function channelToEnergy(channel) {
+            if (!state.calibration) return null;
+            const m = state.calibration.m;
+            const B = state.calibration.B;
+            if (!Number.isFinite(m) || !Number.isFinite(B) || !Number.isFinite(channel)) return null;
+            return m * channel + B;
+        }
+
+        function updateChannelToEnergyConverter() {
+            if (!channelToEnergyInput || !channelToEnergyOutput) return;
+
+            const hasCalibration = !!state.calibration && Number.isFinite(state.calibration.m) && Number.isFinite(state.calibration.B);
+            channelToEnergyInput.disabled = !hasCalibration;
+
+            if (!hasCalibration) {
+                channelToEnergyOutput.textContent = 'Calibrate first to convert channel to energy.';
+                return;
+            }
+
+            const raw = (channelToEnergyInput.value ?? '').toString().trim();
+            if (!raw) {
+                channelToEnergyOutput.textContent = 'Energy (keV): —';
+                return;
+            }
+
+            const ch = Number(raw);
+            const energy = channelToEnergy(ch);
+            if (energy === null) {
+                channelToEnergyOutput.textContent = 'Energy (keV): —';
+                return;
+            }
+
+            channelToEnergyOutput.textContent = `Energy (keV): ${energy.toFixed(3)}`;
+        }
+
+        function saveCalibrationChannelsToStorage() {
+            try {
+                if (!window.localStorage) return;
+                const inputs = document.querySelectorAll('.calibration-input[data-energy]');
+                const data = {};
+                for (const input of inputs) {
+                    data[input.id] = (input.value ?? '').toString().trim();
+                }
+                localStorage.setItem(STORAGE_KEY_CALIBRATION_CHANNELS, JSON.stringify(data));
+            } catch (_) {
+                // ignore storage errors (private mode, disabled storage, etc.)
+            }
+        }
+
+        function loadCalibrationChannelsFromStorage() {
+            try {
+                if (!window.localStorage) return false;
+                const raw = localStorage.getItem(STORAGE_KEY_CALIBRATION_CHANNELS);
+                if (!raw) return false;
+                const data = JSON.parse(raw);
+                if (!data || typeof data !== 'object') return false;
+
+                let loadedAny = false;
+                const inputs = document.querySelectorAll('.calibration-input[data-energy]');
+                for (const input of inputs) {
+                    const v = data[input.id];
+                    if (v !== undefined && v !== null && v !== '') {
+                        input.value = v;
+                        loadedAny = true;
+                    }
+                }
+                return loadedAny;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function calibrationInputsAreComplete() {
+            const inputs = document.querySelectorAll('.calibration-input[data-energy]');
+            if (!inputs || inputs.length === 0) return false;
+            for (const input of inputs) {
+                const raw = (input.value ?? '').toString().trim();
+                if (!raw) return false;
+                const ch = Number(raw);
+                const energy = Number(input.dataset.energy);
+                if (!Number.isFinite(ch) || !Number.isFinite(energy)) return false;
+            }
+            return true;
+        }
+
+        function restoreCalibrationFromStorage() {
+            const loaded = loadCalibrationChannelsFromStorage();
+            if (!loaded) return;
+
+            if (calibrationInputsAreComplete()) {
+                runCalibration();
+            } else {
+                updateChannelToEnergyConverter();
+            }
+        }
+
+        function resizeCanvases() {
+            const resizeCanvasToDisplaySize = (canvas) => {
+                if (!canvas) return;
+                const rect = canvas.getBoundingClientRect();
+                if (rect.width === 0 || rect.height === 0) return;
+                const width = Math.max(1, Math.floor(rect.width));
+                const height = Math.max(1, Math.floor(rect.height));
+                if (canvas.width !== width || canvas.height !== height) {
+                    canvas.width = width;
+                    canvas.height = height;
+                }
+            };
+
+            resizeCanvasToDisplaySize(oscilloscopeCanvas);
+            resizeCanvasToDisplaySize(histogramCanvas);
+            resizeCanvasToDisplaySize(calibrationPlotCanvas);
+
+            const calibrationPanel = document.getElementById('tabCalibrationPanel');
+            if (calibrationPanel && calibrationPanel.classList.contains('active') && state.calibration) {
+                drawCalibrationPlot(state.calibration);
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvases);
+        resizeCanvases();
+
+        if (channelToEnergyInput) {
+            channelToEnergyInput.addEventListener('input', updateChannelToEnergyConverter);
+        }
+        restoreCalibrationFromStorage();
+        updateChannelToEnergyConverter();
+
+        // ============= FEATURE EXPLANATIONS =============
+        const featureInfo = {
+            photopeak: {
+                title: 'PHOTOPEAK',
+                content: 'The photopeak represents the full energy deposition of a gamma photon through photoelectric absorption. The entire gamma-ray energy is transferred to an electron, which is then stopped in the detector. This creates a sharp peak at the source energy.'
+            },
+            compton: {
+                title: 'COMPTON CONTINUUM',
+                content: 'Compton scattering occurs when a gamma photon scatters off an electron, transferring only partial energy. The scattered photon may escape the detector, so the detector only measures the electron recoil energy. This creates a broad, continuous distribution of energies below the photopeak.'
+            },
+            edge: {
+                title: 'COMPTON EDGE',
+                content: 'The Compton edge is the sharp upper limit of the Compton continuum. It occurs when the gamma photon scatters directly backward (180°), transferring maximum energy to the electron. The Compton edge energy is calculated as: E_edge = E_γ × (2α / (1 + 2α)), where α = E_γ / 511 keV.'
+            }
+        };
+
+        function showFeatureInfo(feature) {
+            const info = featureInfo[feature];
+            document.getElementById('popupTitle').textContent = info.title;
+            document.getElementById('popupContent').textContent = info.content;
+            document.getElementById('popup').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+            state.selectedFeature = feature;
+        }
+
+        function closePopup() {
+            document.getElementById('popup').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        function openSpectralModal() {
+            document.getElementById('spectralModal').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function closeSpectralModal() {
+            document.getElementById('spectralModal').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        // ============= ACQUISITION TIME & RESOLUTION SLIDERS =============
+        document.getElementById('acquisitionTime').addEventListener('input', (e) => {
+            state.acquisitionTime = parseInt(e.target.value);
+            document.getElementById('acqTimeValue').textContent = state.acquisitionTime;
+        });
+
+        document.getElementById('resolution').addEventListener('input', (e) => {
+            state.resolution = parseFloat(e.target.value);
+            document.getElementById('resolutionValue').textContent = state.resolution.toFixed(1);
+        });
+
+        // ============= SOURCE SELECTION =============
+        function changeSource() {
+            state.currentSource = document.getElementById('sourceSelect').value;
+            clearSpectrum();
+        }
+
+        // ============= MAIN WINDOW TABS =============
+        function setMainTab(tabName) {
+            const spectrumBtn = document.getElementById('tabBtnSpectrum');
+            const calibrationBtn = document.getElementById('tabBtnCalibration');
+            const spectrumPanel = document.getElementById('tabSpectrumPanel');
+            const calibrationPanel = document.getElementById('tabCalibrationPanel');
+            if (!spectrumBtn || !calibrationBtn || !spectrumPanel || !calibrationPanel) return;
+
+            const isSpectrum = tabName === 'spectrum';
+
+            spectrumBtn.classList.toggle('active', isSpectrum);
+            calibrationBtn.classList.toggle('active', !isSpectrum);
+            spectrumPanel.classList.toggle('active', isSpectrum);
+            calibrationPanel.classList.toggle('active', !isSpectrum);
+
+            // Canvas sizing depends on visibility; resize after layout updates.
+            requestAnimationFrame(() => {
+                resizeCanvases();
+            });
+        }
+
+        // ============= ACQUISITION CONTROL =============
+        let acquisitionTimer = null;
+        let countdownInterval = null;
+
+        function startAcquisition() {
+            if (state.isRunning) return;
+            state.isRunning = true;
+            state.histogram = {};
+            state.totalCounts = 0;
+            state.pulses = [];
+            state.pulseCounter = 0;
+            document.getElementById('acqStatus').textContent = 'RUNNING';
+            document.getElementById('acqStatus').style.color = '#ff6600';
+
+            const startTime = Date.now();
+            const duration = state.acquisitionTime * 1000;
+
+            // Start countdown
+            updateCountdown(state.acquisitionTime);
+            countdownInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.ceil((duration - elapsed) / 1000);
+                updateCountdown(Math.max(0, remaining));
+            }, 100);
+
+            const acquisitionLoop = () => {
+                if (!state.isRunning) return;
+
+                const elapsed = Date.now() - startTime;
+                const progress = elapsed / duration;
+
+                // Generate pulses
+                const pulseRate = 100; // pulses per second
+                const pulsesPerFrame = (pulseRate * state.acquisitionTime) / 60;
+
+                for (let i = 0; i < pulsesPerFrame; i++) {
+                    generatePulse();
+                }
+
+                if (elapsed < duration) {
+                    acquisitionTimer = setTimeout(acquisitionLoop, 1000 / 60); // 60 FPS
+                } else {
+                    stopAcquisition();
+                }
+            };
+
+            acquisitionLoop();
+        }
+
+        function updateCountdown(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+            document.getElementById('countdownDisplay').textContent = timeStr;
+        }
+
+        function stopAcquisition() {
+            state.isRunning = false;
+            clearTimeout(acquisitionTimer);
+            clearInterval(countdownInterval);
+            document.getElementById('acqStatus').textContent = 'STOPPED';
+            document.getElementById('acqStatus').style.color = '#00ff88';
+            document.getElementById('countdownDisplay').textContent = '--:--';
+        }
+
+        // ============= REALISTIC SPECTRUM GENERATION =============
+        // Compton edge calculator (relativistic formula)
+        function calculateComptonEdge(gammaEnergy) {
+            const electronRestEnergy = 511; // keV
+            const alpha = gammaEnergy / electronRestEnergy;
+            return gammaEnergy * (1 - 1 / (1 + 2 * alpha));
+        }
+
+        // Gaussian photopeak (photoelectric absorption)
+        function gaussianPhotopeak(energy, peakEnergy, fwhmKeV) {
+            const sigma = fwhmKeV / 2.355; // Convert FWHM to standard deviation
+            const amplitude = 1 / (sigma * Math.sqrt(2 * Math.PI));
+            return amplitude * Math.exp(-Math.pow(energy - peakEnergy, 2) / (2 * sigma * sigma));
+        }
+
+        // Compton continuum model: exponential decay with edge cutoff
+        // C(E) = k * (E / E_CE) * exp(-E / E_s)
+        function comptonContinuum(energy, gammaEnergy, continuumScale) {
+            const comptonEdge = calculateComptonEdge(gammaEnergy);
+            if (energy > comptonEdge) return 0;
+            
+            // Exponential decay model with proper normalization
+            const decayConstant = comptonEdge * 0.6; // decay constant controlling slope
+            const normalized = energy / comptonEdge;
+            return continuumScale * normalized * Math.exp(-energy / decayConstant);
+        }
+
+        // Background noise model: B(E) = b0 + b1*E
+        // Represents environmental radiation and electronic noise
+        function backgroundNoise(energy, b0, b1) {
+            return b0 + b1 * energy;
+        }
+
+        // Poisson random number generator (using inverse transform)
+        function randomPoisson(lambda) {
+            if (lambda < 30) {
+                // Knuth algorithm for small lambda
+                let L = Math.exp(-lambda);
+                let k = 0;
+                let p = 1;
+                do {
+                    k++;
+                    p *= Math.random();
+                } while (p > L);
+                return k - 1;
+            } else {
+                // Normal approximation for large lambda
+                return Math.round(gaussianRandom() * Math.sqrt(lambda) + lambda);
+            }
+        }
+
+        // Generate realistic spectrum counts per channel using physics model
+        // S(E) = G(E) + C(E) + B(E)
+        function generateRealisticSpectrum() {
+            const sources = Array.isArray(sourceParams[state.currentSource].energy)
+                ? sourceParams[state.currentSource].energy
+                : [sourceParams[state.currentSource].energy];
+
+            // Clear previous data
+            state.histogram = {};
+            state.totalCounts = 0;
+
+            // Physics parameters
+            const minSourceEnergy = Math.min(...sources);
+            const fwhmKeV = (state.resolution / 100) * minSourceEnergy / 2.355;
+            
+            // Spectral component scaling
+            const peakIntensity = 1000; // Photoelectric peak amplitude
+            const continuumScale = peakIntensity * 0.6; // Compton continuum relative to peak
+            
+            // Background noise parameters: B(E) = b0 + b1*E
+            const b0 = peakIntensity * 0.01; // baseline background
+            const b1 = peakIntensity * 0.0001; // linear energy dependence
+
+            // Generate spectrum for each source energy
+            sources.forEach(sourceEnergy => {
+                const comptonEdge = calculateComptonEdge(sourceEnergy);
+                const peakChannel = Math.round(sourceEnergy / keVPerChannel);
+                const sigma = fwhmKeV / 2.355; // Detector resolution broadening
+
+                // Determine number of events for this source
+                const eventCount = sourceEnergy === sources[0] ? 5000 : 3000;
+
+                for (let i = 0; i < eventCount; i++) {
+                    let energyDeposit;
+                    let interactionType;
+
+                    // Branching ratio: 70% photoelectric, 30% Compton scattering
+                    if (Math.random() < 0.7) {
+                        // Photoelectric: full energy absorption
+                        energyDeposit = sourceEnergy;
+                        interactionType = 'photoelectric';
+                    } else {
+                        // Compton scattering: random energy up to Compton edge
+                        // Distribution is weighted toward lower energies
+                        const u = Math.random();
+                        energyDeposit = comptonEdge * Math.sqrt(u); // Realistic Compton distribution
+                        interactionType = 'compton';
+                    }
+
+                    // Detector resolution broadening: apply Gaussian resolution
+                    // E_measured = gaussian(E_true, sigma)
+                    const measuredEnergy = energyDeposit + gaussianRandom() * sigma;
+                    
+                    // Energy must be positive
+                    const finalEnergy = Math.max(0.1, measuredEnergy);
+
+                    // Convert energy to channel with proper calibration
+                    let channel = Math.round(finalEnergy / keVPerChannel);
+                    channel = Math.min(Math.max(0, channel), maxChannels - 1);
+
+                    // Add to histogram
+                    if (!state.histogram[channel]) {
+                        state.histogram[channel] = 0;
+                    }
+                    state.histogram[channel]++;
+                    state.totalCounts++;
+                }
+            });
+
+            // Apply Poisson counting statistics to each channel
+            // σ = √N for N counts in each channel
+            Object.keys(state.histogram).forEach(ch => {
+                const counts = state.histogram[ch];
+                // Apply Poisson fluctuation: realistic counting statistics
+                const poissonCounts = randomPoisson(counts);
+                state.histogram[ch] = Math.max(0, poissonCounts);
+            });
+
+            // Add background noise counts across full spectrum
+            // B(E) = b0 + b1*E distributed across all channels
+            for (let ch = 0; ch < maxChannels; ch++) {
+                const energy = ch * keVPerChannel;
+                const bgCounts = randomPoisson(backgroundNoise(energy, b0, b1));
+                if (!state.histogram[ch]) {
+                    state.histogram[ch] = 0;
+                }
+                state.histogram[ch] += bgCounts;
+                state.totalCounts += bgCounts;
+            }
+        }
+
+        // ============= PULSE GENERATION (interactive mode) =============
+        // Implements S(E) = G(E) + C(E) + B(E) physics model for each pulse
+        function comptonCascadeDepositedEnergy(gammaEnergy) {
+            // Minimal multi-scatter model:
+            // - Photon can Compton-scatter multiple times before escaping the detector.
+            // - Summed deposited energy can exceed the *single-scatter* Compton edge,
+            //   filling the (otherwise empty) region between Compton edge and photopeak.
+            const maxScatters = 25;
+            const baseEscapeProbability = 0.75;
+
+            let remainingEnergy = gammaEnergy;
+            let depositedEnergy = 0;
+            let scatterCount = 0;
+
+            for (let i = 0; i < maxScatters; i++) {
+                const edge = calculateComptonEdge(remainingEnergy);
+                if (!(edge > 0)) break;
+
+                // Weighted toward lower energy transfers (simple approximation)
+                const u = Math.random();
+                let dE = edge * Math.sqrt(u);
+                dE = Math.min(dE, remainingEnergy);
+
+                depositedEnergy += dE;
+                remainingEnergy -= dE;
+                scatterCount++;
+
+                if (remainingEnergy <= 0.1) break;
+
+                // Lower-energy photons are less likely to escape before another interaction.
+                const energyFactor = Math.max(0, Math.min(1, remainingEnergy / gammaEnergy));
+                const escapeProbability = baseEscapeProbability * (0.35 + 0.65 * energyFactor);
+                if (Math.random() < escapeProbability) break;
+            }
+
+            return { depositedEnergy, scatterCount };
+        }
+
+        function generatePulse() {
+            const sources = Array.isArray(sourceParams[state.currentSource].energy)
+                ? sourceParams[state.currentSource].energy
+                : [sourceParams[state.currentSource].energy];
+            
+            const selectedEnergy = sources[Math.floor(Math.random() * sources.length)];
+            const fwhmKeV = (state.resolution / 100) * selectedEnergy / 2.355;
+            const sigma = fwhmKeV / 2.355; // Detector resolution broadening parameter
+
+            // Interaction branching ratio: 70% photoelectric, 30% Compton
+            const isPhotoelectric = Math.random() < 0.7;
+
+            let depositedEnergy;
+            let interactionType;
+            let scatterCount = 0;
+
+            if (isPhotoelectric) {
+                // Photoelectric: G(E) - full energy absorption
+                // E_measured = E_gamma + gaussian(0, sigma)
+                depositedEnergy = selectedEnergy + gaussianRandom() * sigma;
+                interactionType = 'photoelectric';
+            } else {
+                // Compton: C(E) - partial energy transfer
+                // Allow multiple Compton scatters before escape so deposited energy can
+                // extend above the single-scatter Compton edge (more realistic spectra).
+                const cascade = comptonCascadeDepositedEnergy(selectedEnergy);
+                depositedEnergy = cascade.depositedEnergy + gaussianRandom() * sigma;
+                scatterCount = cascade.scatterCount;
+                interactionType = 'compton';
+            }
+
+            // Ensure positive energy
+            depositedEnergy = Math.max(0.1, depositedEnergy);
+
+            // Convert energy to channel with calibration
+            let channel = Math.round(depositedEnergy / keVPerChannel);
+            channel = Math.min(Math.max(0, channel), maxChannels - 1);
+
+            // Store pulse with full information
+            const pulse = {
+                energy: depositedEnergy,
+                channel: channel,
+                interaction: interactionType,
+                depositedEnergy: depositedEnergy,
+                sourceEnergy: selectedEnergy,
+                scatterCount: scatterCount,
+                timestamp: Date.now()
+            };
+
+            state.pulses.push(pulse);
+            state.pulseCounter++;
+
+            // Keep a bounded pulse history for oscilloscope rendering (prevents memory growth)
+            // UI still shows the total pulse count via state.pulseCounter.
+            const maxPulseBuffer = 1000;
+            const keepPulseBuffer = 300;
+            if (state.pulses.length > maxPulseBuffer) {
+                state.pulses.splice(0, state.pulses.length - keepPulseBuffer);
+            }
+
+            // Update histogram with Poisson statistical weight
+            if (!state.histogram[channel]) {
+                state.histogram[channel] = 0;
+            }
+            state.histogram[channel]++;
+            state.totalCounts++;
+
+            // Status UI is updated once per animation frame (see updateDisplay())
+        }
+
+        function gaussianRandom() {
+            let u1 = 0, u2 = 0;
+            while (u1 === 0) u1 = Math.random();
+            while (u2 === 0) u2 = Math.random();
+            return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        }
+
+        // ============= OSCILLOSCOPE RENDERING =============
+        function drawOscilloscope() {
+            const width = oscilloscopeCanvas.width;
+            const height = oscilloscopeCanvas.height;
+
+            // Clear
+            oscilloscopeCtx.fillStyle = '#000a15';
+            oscilloscopeCtx.fillRect(0, 0, width, height);
+
+            // Grid
+            oscilloscopeCtx.strokeStyle = '#00330d';
+            oscilloscopeCtx.lineWidth = 0.5;
+            for (let i = 0; i < width; i += 40) {
+                oscilloscopeCtx.beginPath();
+                oscilloscopeCtx.moveTo(i, 0);
+                oscilloscopeCtx.lineTo(i, height);
+                oscilloscopeCtx.stroke();
+            }
+            for (let i = 0; i < height; i += 40) {
+                oscilloscopeCtx.beginPath();
+                oscilloscopeCtx.moveTo(0, i);
+                oscilloscopeCtx.lineTo(width, i);
+                oscilloscopeCtx.stroke();
+            }
+
+            // Draw recent pulses
+            const recentPulses = state.pulses.slice(-100);
+            if (recentPulses.length > 0) {
+                oscilloscopeCtx.strokeStyle = '#00ff88';
+                oscilloscopeCtx.lineWidth = 2;
+                oscilloscopeCtx.shadowColor = 'rgba(0, 255, 136, 0.8)';
+                oscilloscopeCtx.shadowBlur = 10;
+
+                const timeSpan = 5000; // 5 second window
+                const now = Date.now();
+
+                for (const pulse of recentPulses) {
+                    const timeOffset = (now - pulse.timestamp) / timeSpan;
+                    const x = width * (1 - timeOffset);
+                    if (x < 0) continue;
+
+                    const maxEnergy = Array.isArray(sourceParams[state.currentSource].energy)
+                        ? Math.max(...sourceParams[state.currentSource].energy)
+                        : sourceParams[state.currentSource].energy;
+                    const y = height - (pulse.energy / (maxEnergy * 1.2)) * (height * 0.8) - height * 0.1;
+
+                    // Draw pulse
+                    oscilloscopeCtx.beginPath();
+                    oscilloscopeCtx.arc(x, y, 3, 0, Math.PI * 2);
+                    oscilloscopeCtx.stroke();
+
+                    // Interaction type indicator
+                    if (pulse.interaction === 'photoelectric') {
+                        oscilloscopeCtx.fillStyle = 'rgba(0, 255, 136, 0.5)';
+                        oscilloscopeCtx.fill();
+                    }
+                }
+
+                oscilloscopeCtx.shadowBlur = 0;
+            }
+
+            // Title and legend
+            oscilloscopeCtx.fillStyle = '#00ff88';
+            oscilloscopeCtx.font = 'bold 13px "Courier New"';
+            oscilloscopeCtx.fillText('Time →', 10, 20);
+            oscilloscopeCtx.fillText('Amplitude →', 10, height - 10);
+            oscilloscopeCtx.font = '12px "Courier New"';
+            oscilloscopeCtx.fillStyle = '#00dd77';
+            oscilloscopeCtx.fillText(`Pulses: ${state.pulseCounter}`, width - 120, 20);
+        }
+
+        // ============= HISTOGRAM RENDERING =============
+        let histogramMouseData = { x: null, y: null, isHovering: false };
+
+        function drawHistogram() {
+            const width = histogramCanvas.width;
+            const height = histogramCanvas.height;
+            const bottomMargin = 40;
+
+            // Clear
+            histogramCtx.fillStyle = '#000a15';
+            histogramCtx.fillRect(0, 0, width, height);
+
+            // Grid
+            histogramCtx.strokeStyle = '#00330d';
+            histogramCtx.lineWidth = 0.5;
+            for (let i = 0; i < width; i += 50) {
+                histogramCtx.beginPath();
+                histogramCtx.moveTo(i, 0);
+                histogramCtx.lineTo(i, height);
+                histogramCtx.stroke();
+            }
+            for (let i = 0; i < height; i += 40) {
+                histogramCtx.beginPath();
+                histogramCtx.moveTo(0, i);
+                histogramCtx.lineTo(width, i);
+                histogramCtx.stroke();
+            }
+
+            if (state.totalCounts === 0) {
+                histogramCtx.fillStyle = '#00aa66';
+                histogramCtx.font = '14px "Courier New"';
+                histogramCtx.fillText('Waiting for pulses...', 20, height / 2);
+                return;
+            }
+
+            // Find max count for scaling
+            let maxCount = Math.max(...Object.values(state.histogram), 1);
+
+            // Render histogram with smooth curve interpolation
+            const barWidth = Math.max(1, width / maxChannels);
+            histogramCtx.fillStyle = '#00ff88';
+            histogramCtx.strokeStyle = '#00ff88';
+            histogramCtx.lineWidth = 1;
+            histogramCtx.shadowColor = 'rgba(0, 255, 136, 0.6)';
+            histogramCtx.shadowBlur = 6;
+
+            // Draw histogram bars with slight gradient effect
+            histogramCtx.beginPath();
+            let firstBar = true;
+            for (let ch = 0; ch < maxChannels; ch++) {
+                const count = state.histogram[ch] || 0;
+                const barHeight = (count / maxCount) * (height * 0.85);
+                const x = (ch / maxChannels) * width;
+                const y = height - barHeight - bottomMargin;
+
+                if (firstBar) {
+                    histogramCtx.moveTo(x, y);
+                    firstBar = false;
+                } else {
+                    histogramCtx.lineTo(x, y);
+                }
+            }
+            histogramCtx.lineTo(width, height - bottomMargin);
+            histogramCtx.lineTo(0, height - bottomMargin);
+            histogramCtx.closePath();
+            histogramCtx.fillStyle = 'rgba(0, 255, 136, 0.3)';
+            histogramCtx.fill();
+
+            // Draw bars for visual clarity
+            histogramCtx.fillStyle = '#00ff88';
+            for (let ch = 0; ch < maxChannels; ch++) {
+                if (state.histogram[ch]) {
+                    const count = state.histogram[ch];
+                    const barHeight = (count / maxCount) * (height * 0.85);
+                    const x = (ch / maxChannels) * width;
+                    const y = height - barHeight - bottomMargin;
+
+                    histogramCtx.fillRect(x, y, barWidth, barHeight);
+                }
+            }
+
+
+            // Draw crosshair on hover
+            if (histogramMouseData.isHovering && histogramMouseData.x !== null && histogramMouseData.y !== null) {
+                const x = histogramMouseData.x;
+                const y = histogramMouseData.y;
+
+                // Calculate channel and count from mouse position
+                const channel = Math.round((x / width) * maxChannels);
+                const countAtChannel = state.histogram[channel] || 0;
+
+                // Vertical dashed line
+                histogramCtx.strokeStyle = '#ffff00';
+                histogramCtx.lineWidth = 1;
+                histogramCtx.setLineDash([4, 4]);
+                histogramCtx.beginPath();
+                histogramCtx.moveTo(x, 0);
+                histogramCtx.lineTo(x, height);
+                histogramCtx.stroke();
+
+                // Horizontal dashed line
+                histogramCtx.beginPath();
+                histogramCtx.moveTo(0, y);
+                histogramCtx.lineTo(width, y);
+                histogramCtx.stroke();
+                histogramCtx.setLineDash([]);
+
+                // Crosshair center dot
+                histogramCtx.fillStyle = '#ffff00';
+                histogramCtx.beginPath();
+                histogramCtx.arc(x, y, 3, 0, Math.PI * 2);
+                histogramCtx.fill();
+
+                // Display text with channel and count
+                const displayText = `Ch: ${channel} | Cts: ${Math.round(countAtChannel)}`;
+                histogramCtx.fillStyle = '#ffff00';
+                histogramCtx.font = 'bold 12px "Courier New"';
+                const textWidth = histogramCtx.measureText(displayText).width + 8;
+                histogramCtx.fillRect(x + 10, y - 28, textWidth, 24);
+                histogramCtx.fillStyle = '#000000';
+                histogramCtx.fillText(displayText, x + 14, y - 12);
+            }
+
+            histogramCtx.shadowBlur = 0;
+
+            // Labels
+            histogramCtx.fillStyle = '#00ff88';
+            histogramCtx.font = 'bold 12px "Courier New"';
+            histogramCtx.fillText('Channel →', 10, height - 12);
+            histogramCtx.fillText('Counts →', 5, 20);
+        }
+
+        // ============= SPECTRUM CLEAR =============
+        function clearSpectrum() {
+            state.histogram = {};
+            state.pulses = [];
+            state.pulseCounter = 0;
+            state.totalCounts = 0;
+            document.getElementById('totalCounts').textContent = '0';
+            document.getElementById('peakCount').textContent = '0';
+            stopAcquisition();
+            document.getElementById('avgResolution').textContent = 'N/A';
+            document.getElementById('acqStatus').textContent = 'READY';
+            document.getElementById('acqStatus').style.color = '#00ff88';
+        }
+
+        // ============= CALIBRATION =============
+        // Computes linear calibration using entered peak channels:
+        // Energy = [ m x (Channel) ] + B
+        function runCalibration() {
+            const outputEl = document.getElementById('calibrationOutput');
+            const r2El = document.getElementById('calibrationR2');
+            if (!outputEl) return;
+
+            const inputs = document.querySelectorAll('.calibration-input[data-energy]');
+            const points = [];
+
+            const fail = (message) => {
+                outputEl.textContent = message;
+                if (r2El) r2El.textContent = '';
+                state.calibration = null;
+
+                updateChannelToEnergyConverter();
+
+                if (calibrationPlotCtx && calibrationPlotCanvas) {
+                    calibrationPlotCtx.fillStyle = '#000a15';
+                    calibrationPlotCtx.fillRect(0, 0, calibrationPlotCanvas.width, calibrationPlotCanvas.height);
+                }
+            };
+
+            for (const input of inputs) {
+                const raw = (input.value ?? '').toString().trim();
+                if (!raw) {
+                    fail('Complete all peak channel fields to calibrate.');
+                    return;
+                }
+
+                const ch = Number(raw);
+                const energy = Number(input.dataset.energy);
+                if (!Number.isFinite(ch) || !Number.isFinite(energy)) {
+                    fail('Complete all peak channel fields to calibrate.');
+                    return;
+                }
+
+                points.push({ ch, energy });
+            }
+
+            if (points.length !== inputs.length) {
+                fail('Complete all peak channel fields to calibrate.');
+                return;
+            }
+
+            const n = points.length;
+            let sumX = 0;
+            let sumY = 0;
+            let sumXX = 0;
+            let sumXY = 0;
+
+            for (const p of points) {
+                sumX += p.ch;
+                sumY += p.energy;
+                sumXX += p.ch * p.ch;
+                sumXY += p.ch * p.energy;
+            }
+
+            const denom = n * sumXX - sumX * sumX;
+            if (Math.abs(denom) < 1e-12) {
+                fail('Calibration failed: channel values must not all be the same.');
+                return;
+            }
+
+            const m = (n * sumXY - sumX * sumY) / denom;
+            const B = (sumY - m * sumX) / n;
+
+            // Coefficient of determination (R^2)
+            const meanY = sumY / n;
+            let ssRes = 0;
+            let ssTot = 0;
+            for (const p of points) {
+                const yHat = m * p.ch + B;
+                ssRes += (p.energy - yHat) * (p.energy - yHat);
+                ssTot += (p.energy - meanY) * (p.energy - meanY);
+            }
+            const r2 = ssTot > 0 ? 1 - ssRes / ssTot : 1;
+
+            state.calibration = { points, m, B, r2 };
+
+            outputEl.textContent = `Energy = [ ${m.toFixed(6)} x (Channel) ] + ${B.toFixed(3)}`;
+            if (r2El) r2El.textContent = `R² = ${r2.toFixed(6)}`;
+
+            saveCalibrationChannelsToStorage();
+            updateChannelToEnergyConverter();
+
+            drawCalibrationPlot(state.calibration);
+        }
+
+        function drawCalibrationPlot(calibration) {
+            if (!calibrationPlotCtx || !calibrationPlotCanvas || !calibration) return;
+
+            const width = calibrationPlotCanvas.width;
+            const height = calibrationPlotCanvas.height;
+
+            calibrationPlotCtx.fillStyle = '#000a15';
+            calibrationPlotCtx.fillRect(0, 0, width, height);
+
+            const { points, m, B, r2 } = calibration;
+            if (!points || points.length === 0) return;
+
+            const padLeft = 60;
+            const padRight = 20;
+            const padTop = 20;
+            const padBottom = 42;
+            const plotW = Math.max(1, width - padLeft - padRight);
+            const plotH = Math.max(1, height - padTop - padBottom);
+
+            let minX = Math.min(...points.map(p => p.ch));
+            let maxX = Math.max(...points.map(p => p.ch));
+            let minY = Math.min(...points.map(p => p.energy));
+            let maxY = Math.max(...points.map(p => p.energy));
+
+            if (minX === maxX) {
+                minX -= 1;
+                maxX += 1;
+            }
+            if (minY === maxY) {
+                minY -= 1;
+                maxY += 1;
+            }
+
+            const xPad = Math.max(1, (maxX - minX) * 0.05);
+            const yPad = Math.max(1, (maxY - minY) * 0.05);
+            minX -= xPad;
+            maxX += xPad;
+            minY -= yPad;
+            maxY += yPad;
+
+            const xToPx = (x) => padLeft + ((x - minX) / (maxX - minX)) * plotW;
+            const yToPx = (y) => padTop + (1 - (y - minY) / (maxY - minY)) * plotH;
+
+            // Grid
+            calibrationPlotCtx.strokeStyle = '#00330d';
+            calibrationPlotCtx.lineWidth = 0.5;
+            const gridX = 10;
+            const gridY = 8;
+            for (let i = 0; i <= gridX; i++) {
+                const x = padLeft + (i / gridX) * plotW;
+                calibrationPlotCtx.beginPath();
+                calibrationPlotCtx.moveTo(x, padTop);
+                calibrationPlotCtx.lineTo(x, padTop + plotH);
+                calibrationPlotCtx.stroke();
+            }
+            for (let i = 0; i <= gridY; i++) {
+                const y = padTop + (i / gridY) * plotH;
+                calibrationPlotCtx.beginPath();
+                calibrationPlotCtx.moveTo(padLeft, y);
+                calibrationPlotCtx.lineTo(padLeft + plotW, y);
+                calibrationPlotCtx.stroke();
+            }
+
+            // Axes
+            calibrationPlotCtx.strokeStyle = '#00aa66';
+            calibrationPlotCtx.lineWidth = 1;
+            calibrationPlotCtx.beginPath();
+            calibrationPlotCtx.moveTo(padLeft, padTop);
+            calibrationPlotCtx.lineTo(padLeft, padTop + plotH);
+            calibrationPlotCtx.lineTo(padLeft + plotW, padTop + plotH);
+            calibrationPlotCtx.stroke();
+
+            // Trendline
+            const x1 = minX;
+            const x2 = maxX;
+            const y1 = m * x1 + B;
+            const y2 = m * x2 + B;
+            calibrationPlotCtx.strokeStyle = '#ffff00';
+            calibrationPlotCtx.lineWidth = 2;
+            calibrationPlotCtx.setLineDash([]);
+            calibrationPlotCtx.beginPath();
+            calibrationPlotCtx.moveTo(xToPx(x1), yToPx(y1));
+            calibrationPlotCtx.lineTo(xToPx(x2), yToPx(y2));
+            calibrationPlotCtx.stroke();
+
+            // Points
+            calibrationPlotCtx.fillStyle = '#00ff88';
+            for (const p of points) {
+                const px = xToPx(p.ch);
+                const py = yToPx(p.energy);
+                calibrationPlotCtx.beginPath();
+                calibrationPlotCtx.arc(px, py, 4, 0, Math.PI * 2);
+                calibrationPlotCtx.fill();
+            }
+
+            // Labels
+            calibrationPlotCtx.fillStyle = '#00ff88';
+            calibrationPlotCtx.font = 'bold 12px "Courier New"';
+            calibrationPlotCtx.fillText('Energy (keV)', 10, 18);
+            calibrationPlotCtx.fillText('Channel (Ch) →', padLeft + 10, height - 12);
+            calibrationPlotCtx.fillStyle = '#00dd77';
+            calibrationPlotCtx.font = '12px "Courier New"';
+            calibrationPlotCtx.fillText(`R² = ${r2.toFixed(6)}`, width - 140, 18);
+        }
+
+        // ============= UPDATE DISPLAY =============
+        function updateDisplay() {
+            // Batch DOM writes to once per frame
+            document.getElementById('totalCounts').textContent = state.totalCounts;
+            document.getElementById('peakCount').textContent = state.totalCounts > 0 ? Object.keys(state.histogram).length : 0;
+            drawOscilloscope();
+            drawHistogram();
+            requestAnimationFrame(updateDisplay);
+        }
+
+        // ============= RESTART SIMULATION =============
+        function restartSimulation() {
+            location.reload();
+        }
+
+        // ============= HISTOGRAM MOUSE TRACKING =============
+        histogramCanvas.addEventListener('mousemove', (e) => {
+            const rect = histogramCanvas.getBoundingClientRect();
+            histogramMouseData.x = e.clientX - rect.left;
+            histogramMouseData.y = e.clientY - rect.top;
+            histogramMouseData.isHovering = true;
+        });
+
+        histogramCanvas.addEventListener('mouseleave', () => {
+            histogramMouseData.isHovering = false;
+        });
+
+        // ============= ANIMATION LOOP =============
+        updateDisplay();
+    </script>
+</body>
+</html>
