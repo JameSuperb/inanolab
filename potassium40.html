@@ -118,6 +118,8 @@
     #printReport th{background:transparent}
     #printReport .printGraphTitle{font-weight:900;margin:12px 0 8px}
     #printReport .printGraphImg{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+    #printReport table.printDataTable{margin-top:8px}
+    #printReport table.printDataTable th, #printReport table.printDataTable td{text-align:center}
 
     body.printMode{background:none !important;color:var(--bg) !important}
     body.printMode header, body.printMode main, body.printMode #nameOverlay{display:none !important}
@@ -577,8 +579,10 @@
       <h3>Graphs</h3>
       <div class="printGraphTitle">I. Count Rate vs Distance (best fit)</div>
       <img id="printDistanceImg" class="printGraphImg" alt="Count Rate vs Distance graph">
+      <div id="printDistanceData">—</div>
       <div class="printGraphTitle">II. Efficiency Curve (best fit)</div>
       <img id="printEfficiencyImg" class="printGraphImg" alt="Efficiency Curve graph">
+      <div id="printEfficiencyData">—</div>
     </div>
   </div>
 
@@ -2258,7 +2262,18 @@
       try{return canvas.toDataURL('image/png');}catch(_){return null;}
     }
 
-    function populatePrintReport(){
+    function waitForImageReady(imgEl){
+      if(!imgEl || !imgEl.src) return Promise.resolve();
+      if(typeof imgEl.decode === 'function') return imgEl.decode().catch(()=>{});
+      if(imgEl.complete) return Promise.resolve();
+      return new Promise((resolve)=>{
+        const done = ()=>{imgEl.onload=null; imgEl.onerror=null; resolve();};
+        imgEl.onload = done;
+        imgEl.onerror = done;
+      });
+    }
+
+    function populatePrintReport(graphPng){
       const name = storageGet(STORAGE_KEY_FULL_NAME) || '—';
       const startedMs = state.sessionStartMs;
       const finishedMs = Date.now();
@@ -2279,12 +2294,43 @@
       const percentError = (!hasExp || !(acceptedPct>0)) ? null : (100 * Math.abs(state.abundance - acceptedPct) / acceptedPct);
       setText('printPercentError', (percentError===null || !Number.isFinite(percentError)) ? '—' : `${fmt(percentError,2)}%`);
 
-      const distUrl = canvasToDataUrl('distanceChart');
-      const effUrl = canvasToDataUrl('effChart');
+      const distUrl = graphPng?.distanceUrl ?? canvasToDataUrl('distanceChart');
+      const effUrl = graphPng?.efficiencyUrl ?? canvasToDataUrl('effChart');
       const distImg = document.getElementById('printDistanceImg');
       if(distImg) distImg.src = distUrl || '';
       const effImg = document.getElementById('printEfficiencyImg');
       if(effImg) effImg.src = effUrl || '';
+
+      // Raw data under graphs (for transparency)
+      const distDataEl = document.getElementById('printDistanceData');
+      if(distDataEl){
+        const rows = (typeof distRows !== 'undefined' ? distRows : []).map(r=>{
+          const counts = parseCountInputValue(r.countInput);
+          const rate = (counts===null) ? null : (counts / DIST_TIME_SEC);
+          return {x:r.x, rate};
+        });
+        const body = rows.map(r=>`<tr><td>${r.x}</td><td>${r.rate===null ? '—' : fmt(r.rate,3)}</td></tr>`).join('');
+        distDataEl.innerHTML = `
+          <div class="small muted" style="margin:8px 0 6px"><b>Data used</b></div>
+          <table class="printDataTable">
+            <tr><th>Distance (cm)</th><th>Count rate (cps)</th></tr>
+            ${body || '<tr><td colspan="2">—</td></tr>'}
+          </table>
+        `;
+      }
+
+      const effDataEl = document.getElementById('printEfficiencyData');
+      if(effDataEl){
+        const pts = (state.effPoints||[]).filter(p=>Number.isFinite(p?.E) && Number.isFinite(p?.eff));
+        const body = pts.map(p=>`<tr><td>${fmt(p.E,0)}</td><td>${fmt(p.eff,6)}</td></tr>`).join('');
+        effDataEl.innerHTML = `
+          <div class="small muted" style="margin:8px 0 6px"><b>Data used</b></div>
+          <table class="printDataTable">
+            <tr><th>Energy (keV)</th><th>Efficiency</th></tr>
+            ${body || '<tr><td colspan="2">—</td></tr>'}
+          </table>
+        `;
+      }
     }
 
     function downloadResultAsPdf(){
@@ -2292,20 +2338,40 @@
       try{drawDistanceChart();}catch(_){ }
       try{drawEffChart();}catch(_){ }
 
-      populatePrintReport();
+      const distUrl = canvasToDataUrl('distanceChart');
+      const effUrl = canvasToDataUrl('effChart');
 
       const originalTitle = document.title;
       const safeName = (storageGet(STORAGE_KEY_FULL_NAME) || 'Student').replace(/[^a-z0-9 _-]/gi,'').trim() || 'Student';
       document.title = `K-40 Result - ${safeName}`;
 
       document.body.classList.add('printMode');
+      let cleaned = false;
       const cleanup = ()=>{
+        if(cleaned) return;
+        cleaned = true;
         document.body.classList.remove('printMode');
         document.title = originalTitle;
       };
-      window.addEventListener('afterprint', cleanup, {once:true});
 
-      window.print();
+      // Populate report after it becomes visible so images reliably decode.
+      populatePrintReport({distanceUrl:distUrl, efficiencyUrl:effUrl});
+
+      const distImg = document.getElementById('printDistanceImg');
+      const effImgEl = document.getElementById('printEfficiencyImg');
+
+      const doPrint = ()=>{
+        window.addEventListener('afterprint', cleanup, {once:true});
+        window.addEventListener('focus', cleanup, {once:true});
+        window.print();
+      };
+
+      // Wait for images to load/decode before printing (prevents blank graphs in PDF).
+      requestAnimationFrame(()=>{
+        Promise.all([waitForImageReady(distImg), waitForImageReady(effImgEl)]).then(()=>{
+          requestAnimationFrame(doPrint);
+        });
+      });
     }
 
     // Download the result as a PDF (via browser print dialog)
