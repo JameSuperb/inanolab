@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Natural Abundance of K-40</title>
+  <style>
+    :root{
+      --bg:#0f172a; --panel:#111827; --soft:#1f2937; --line:#334155; --text:#e5e7eb; --muted:#94a3b8;
+      --accent:#38bdf8; --accent2:#22c55e; --warn:#f59e0b; --danger:#ef4444; --card:#0b1220;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#0b1020,#111827);color:var(--text)}
+    header{position:sticky;top:0;z-index:10;background:rgba(15,23,42,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+    .topbar{max-width:1400px;margin:0 auto;padding:14px 18px;display:flex;gap:16px;align-items:center;justify-content:space-between}
+    .title h1{margin:0;font-size:20px}
+    .title p{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .progress{font-size:16px;color:var(--text);font-weight:800}
+    main{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:280px 1fr;gap:18px}
+    aside,.section{background:rgba(17,24,39,.96);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+    aside{padding:18px;position:sticky;top:78px;height:fit-content}
+    .section{padding:18px;display:none}
+    .section.active{display:block}
+    .grid2{display:grid;grid-template-columns:1fr;gap:16px}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+
+    /* Step 4 (Effective Distance): stack table + chart as one column */
+    #sec-3 .grid2{grid-template-columns:1fr}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+    h2{margin:0 0 12px;font-size:22px}
+    h3{margin:0 0 10px;font-size:16px}
+    p,li{line-height:1.45}
+    .muted{color:var(--muted)}
+    .bigq{font-size:28px;line-height:1.2;font-weight:700;margin:12px 0}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#082f49;color:#bae6fd;border:1px solid #0ea5e9;font-size:12px}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{border:1px solid var(--line);padding:8px;text-align:center}
+    th{background:#0f172a}
+    input[type="number"]{width:100%;padding:8px;border-radius:8px;border:1px solid #475569;background:#020617;color:var(--text)}
+    input[type="text"]{width:100%;padding:10px;border-radius:10px;border:1px solid #475569;background:#020617;color:var(--text)}
+    input[readonly]{opacity:.9}
+    button.action{background:linear-gradient(180deg,#38bdf8,#0284c7);border:none;color:#082f49;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer}
+    button.secondary{background:#1e293b;border:1px solid #475569;color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer}
+    button:disabled{opacity:.55;cursor:not-allowed;filter:saturate(.8)}
+    .btnrow{display:flex;gap:10px;flex-wrap:wrap}
+    .result{font-size:28px;font-weight:800;color:#a7f3d0}
+    .small{font-size:12px}
+    .kpi{font-size:24px;font-weight:700}
+    .equation{font-family:"Cambria Math",Georgia,serif;background:#08111f;border:1px dashed #3b82f6;border-radius:12px;padding:12px;margin:8px 0;color:#dbeafe}
+    .canvasBox{background:#020617;border:1px solid #334155;border-radius:12px;padding:10px}
+    canvas{width:100%;height:auto;display:block;background:#020617;border-radius:10px}
+    .status{padding:10px;border-radius:12px;background:#052e16;border:1px solid #166534;color:#dcfce7}
+    .warn{background:#3f2200;border-color:#92400e;color:#fde68a}
+    .danger{background:#3f0000;border-color:#991b1b;color:#fecaca}
+    .formula-list li{margin:6px 0}
+    .footer-actions{display:flex;justify-content:space-between;gap:10px;margin-top:18px;flex-wrap:wrap}
+    .mono{font-family:Consolas,monospace}
+    .stepbox{padding:10px;border-left:4px solid var(--accent);background:#08111f;border-radius:8px;margin:8px 0}
+    .ok{color:#86efac}.note{color:#fcd34d}.bad{color:#fca5a5}
+    .tag{font-size:11px;padding:2px 8px;border:1px solid #475569;border-radius:999px;color:var(--muted)}
+
+    /* Step 5 (Efficiency): make the fit equation very visible */
+    #effFitInfo{border-left-color:var(--warn)}
+    .fitEquation{font-size:18px;font-weight:900;text-align:center;border:2px solid var(--warn);border-radius:12px;padding:10px;margin:8px 0}
+
+    /* Step 5 (Efficiency): highlight key columns */
+    th.th-highlight{background:#fcd34d;color:var(--card);font-weight:900}
+
+    /* Startup name gate */
+    .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(2,6,23,.78);z-index:999}
+    .overlay.active{display:flex}
+    .overlay-card{width:min(560px,94vw);background:rgba(17,24,39,.98);border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 44px rgba(0,0,0,.45);padding:18px}
+    .overlay-card h2{margin:0 0 8px;font-size:22px}
+    .overlay-card p{margin:6px 0;color:var(--muted)}
+
+    /* Step 3 (Decay constant): make answer input more prominent */
+    #sec-2 label[for="lambdaAnswer"]{font-size:14px}
+    #sec-2 #lambdaAnswer{font-size:18px;padding:14px 12px;border-radius:12px}
+    #sec-2 #lambdaAnswer::placeholder{font-size:16px}
+
+    /* Step 5 (Efficiency): make ε(1460 keV) input more prominent */
+    #sec-4 label[for="eff1460Answer"]{font-size:14px}
+    #sec-4 #eff1460Answer{font-size:18px;padding:14px 12px;border-radius:12px}
+    #sec-4 #eff1460Answer::placeholder{font-size:16px}
+
+    /* Step 4 (Effective Distance): distance measurement UI */
+    .sim-controls{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+    .sim-controls .field{flex:1;min-width:220px}
+    .range{width:100%}
+    .vizBox{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:0;background:#020617;border:1px solid var(--line);border-radius:12px;padding:12px;overflow:hidden}
+    .vizDetector,.vizSource{width:92px;min-width:92px;height:58px;border-radius:12px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;letter-spacing:.2px}
+    .vizDetector{background:var(--soft)}
+    .vizSource{background:rgba(245,158,11,0.14);border-color:rgba(245,158,11,0.45);color:#fde68a}
+    .vizSource.clickable{cursor:pointer;user-select:none}
+    .vizSource.clickable:focus{outline:2px solid var(--accent);outline-offset:2px}
+    .vizSpacer{position:relative;height:58px;width:140px;flex:0 0 auto;transition:width 320ms ease;display:flex;align-items:center;justify-content:center}
+    .vizSpacer::before{content:'';position:absolute;left:10px;right:10px;top:50%;border-top:2px solid var(--accent);opacity:.85}
+    .vizSpacer::after{content:'';position:absolute;right:10px;top:calc(50% - 6px);border:6px solid transparent;border-left-color:var(--accent);opacity:.85}
+    .vizDistanceTag{position:absolute;top:6px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);background:rgba(15,23,42,.92);padding:2px 8px;border:1px solid var(--line);border-radius:999px;white-space:nowrap}
+    @media (max-width: 1080px){main{grid-template-columns:1fr}.grid2,.grid3{grid-template-columns:1fr}aside{position:static}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <div class="title">
+        <h1>Virtual Gamma Spectroscopy Lab: Natural Abundance of K-40 in KCl</h1>
+        <p>Fixed sample: 50 mg KCl • Realistic count fluctuations with Poisson statistics • Simulated detector geometry and efficiency</p>
+      </div>
+      <div class="progress" id="progressText">Step 1 of 8</div>
+    </div>
+  </header>
+
+  <div id="nameOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="nameOverlayTitle">
+    <div class="overlay-card">
+      <h2 id="nameOverlayTitle">Enter your full name</h2>
+      <p>Start the activity</p>
+      <label class="small muted" for="fullNameInput">Full name</label>
+      <input type="text" id="fullNameInput" autocomplete="name" placeholder="e.g., Juan Dela Cruz" />
+      <div class="btnrow" style="margin-top:12px">
+        <button class="action" id="startAppBtn">Start</button>
+      </div>
+      <div id="nameError" class="status danger" style="margin-top:12px" hidden></div>
+    </div>
+  </div>
+
+  <main>
+    <aside>
+      <h3>Experiment State</h3>
+      <div class="card">
+        <div class="small muted">KCl sample mass</div>
+        <div class="kpi">50 mg</div>
+      </div>
+      <div class="card">
+        <div class="small muted">Accepted abundance</div>
+        <div class="kpi">0.0117%</div>
+      </div>
+      <div class="card">
+        <div class="small muted">Decay constant, λ</div>
+        <div class="kpi mono" id="stateLambda">—</div>
+      </div>
+      <div class="card">
+        <div class="small muted">Effective distance, d</div>
+        <div class="kpi" id="stateD">—</div>
+      </div>
+      <div class="card">
+        <div class="small muted">ε at 1460 keV</div>
+        <div class="kpi" id="stateEff">—</div>
+      </div>
+      <div class="card">
+        <div class="small muted">K-40 activity</div>
+        <div class="kpi" id="stateAct">—</div>
+      </div>
+      <div class="card">
+        <div class="small muted">Total K nuclei</div>
+        <div class="kpi mono" id="stateKTotal">—</div>
+      </div>
+      <div class="card">
+        <div class="small muted">Experimental abundance</div>
+        <div class="kpi" id="stateAbundance">—</div>
+      </div>
+      <div class="btnrow">
+        <button class="secondary" id="resetAll">Reset experiment</button>
+        <button class="secondary" id="clearSavedName" style="display:none">Clear saved name</button>
+      </div>
+      <p class="muted small">Simulation model: gamma counts are generated from source activity, geometry factor, detector efficiency, and Poisson counting noise. Spectra use Gaussian photopeaks on top of a continuum background.</p>
+    </aside>
+
+    <div>
+      <section class="section active" id="sec-0">
+        <span class="pill">Essential Question</span>
+        <div class="bigq">How can we experimentally determine the natural abundance of K-40 by measuring the radioactivity of a KCl sample?</div>
+        <div class="grid2">
+          <div class="card">
+            <h3>Why this matters</h3>
+            <ul>
+              <li>Natural potassium contains stable isotopes and the radioactive isotope <b>K-40</b>.</li>
+              <li>KCl is a convenient potassium-containing sample, so its gamma emission can reveal the abundance of K-40.</li>
+              <li>The experiment connects <b>activity → number of K-40 nuclei → total K nuclei → natural abundance</b>.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Roadmap</h3>
+            <ol>
+              <li>Determine the effective detector distance.</li>
+              <li>Build the detector efficiency calibration curve.</li>
+              <li>Measure the 1460 keV gamma peak from KCl.</li>
+              <li>Calculate the total potassium nuclei in 50 mg of KCl.</li>
+              <li>Compute the natural abundance of K-40.</li>
+            </ol>
+          </div>
+        </div>
+        <div class="footer-actions"><span></span><button class="action nextBtn">Start Investigation →</button></div>
+      </section>
+
+      <section class="section" id="sec-1">
+        <span class="pill">Scientific Background</span>
+        <div class="grid2">
+          <div class="card">
+            <h3>Potassium isotopes</h3>
+            <table>
+              <tr><th>Isotope</th><th>Type</th><th>Approx. abundance</th></tr>
+              <tr><td>K-39</td><td>Stable</td><td>~93.3%</td></tr>
+              <tr><td>K-41</td><td>Stable</td><td>~6.7%</td></tr>
+              <tr><td>K-40</td><td>Radioactive</td><td>~0.0117%</td></tr>
+            </table>
+            <div class="equation">A = λN</div>
+            <div class="equation">N<sub>K40</sub> = A / λ</div>
+            <p><b>A</b> is activity, <b>λ</b> is decay constant, and <b>N</b> is the number of radioactive nuclei.</p>
+          </div>
+          <div class="card">
+            <h3>Why the 1460 keV peak matters</h3>
+            <p>K-40 emits a characteristic gamma ray at <b>1460 keV</b>. Measuring this peak allows us to estimate the activity of K-40 in the KCl sample.</p>
+            <div class="equation">Natural abundance of K-40 = (K-40 nuclei / total K nuclei) × 100%</div>
+            <p class="muted">The detector does not catch every emitted gamma ray, so we must calibrate detector efficiency before measuring KCl.</p>
+          </div>
+        </div>
+        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="action nextBtn">Next →</button></div>
+      </section>
+
+      <section class="section" id="sec-2">
+        <span class="pill">Mathematical Framework</span>
+        <div class="grid2">
+          <div class="card">
+            <h3>Core equations</h3>
+            <ol class="formula-list">
+              <li>
+                <b>Decay constant</b>
+                <div class="equation">λ = ln(2) / t<sub>1/2</sub></div>
+                <p class="muted small">Instruction: Calculate <b>λ</b> using the half-life of K-40 with a calculator, then submit your answer below.</p>
+                <label class="small muted" for="lambdaAnswer">Your answer (1/s)</label>
+                <input type="text" id="lambdaAnswer" inputmode="decimal" placeholder="e.g., 9.9e-17 or 9.9×10^-17" aria-describedby="lambdaFeedback">
+                <div class="btnrow" style="margin-top:10px">
+                  <button class="action" id="lambdaSubmit">Submit</button>
+                </div>
+                <div id="lambdaFeedback" class="status warn" style="margin-top:12px">Submit your calculated decay constant to unlock the next step.</div>
+              </li>
+              <li><b>Activity from the measured gamma count rate</b><div class="equation">A = R<sub>net</sub> / (εY)</div></li>
+              <li><b>Number of K-40 nuclei</b><div class="equation">N<sub>K40</sub> = A / λ</div></li>
+              <li><b>Total potassium nuclei in KCl</b><div class="equation">N<sub>K</sub> = (m/M)N<sub>A</sub></div></li>
+              <li><b>Natural abundance</b><div class="equation">Abundance = (N<sub>K40</sub> / N<sub>K</sub>) × 100%</div></li>
+            </ol>
+          </div>
+          <div class="card">
+            <h3>Constants used in this app</h3>
+            <ul>
+              <li>KCl mass = <b>0.05 g</b> (50 mg)</li>
+              <li>Molar mass of KCl = <b>74.55 g/mol</b></li>
+              <li>Avogadro's number = <b>6.022 × 10<sup>23</sup></b></li>
+              <li>K-40 gamma yield at 1460 keV = <b>0.1068</b></li>
+              <li>K-40 half-life = <b>1.29 × 10<sup>9</sup> years</b> (≈ <b id="k40HalfLifeSeconds">—</b> s)</li>
+            </ul>
+            <div id="mathDerived" class="status"></div>
+          </div>
+        </div>
+        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="action nextBtn" id="mathNext" disabled>Next →</button></div>
+      </section>
+
+      <section class="section" id="sec-3">
+        <span class="pill">The Effective Distance</span>
+        <div class="grid2">
+          <div class="card">
+            <h3>Distance-variation measurement with Cs-137</h3>
+            <p class="muted">Use the slider to set the measured distance <b>x</b> of the Cs-137 source (5, 10, 15, 20 cm). Click <b>Measure the radioactivity</b> to count for <b>20 s</b> and record the <b>photopeak counts</b>. Repeat for all distances to unlock the fit.</p>
+
+            <div class="sim-controls" style="margin-top:12px">
+              <div>
+                <div class="small muted">Distance x</div>
+                <div class="kpi" id="csDistanceText">5 cm</div>
+              </div>
+              <div class="field">
+                <label class="small muted" for="csDistanceSlider">Adjust distance (cm)</label>
+                <input class="range" type="range" id="csDistanceSlider" min="5" max="20" step="5" value="5" aria-label="Distance x in centimeters">
+              </div>
+            </div>
+
+            <div class="vizBox" id="vizBox" aria-label="Source and detector distance diagram">
+              <div class="vizDetector">Detector</div>
+              <div class="vizSpacer" id="vizSpacer"><span class="vizDistanceTag" id="vizDistanceTag">5 cm</span></div>
+              <div class="vizSource">Cs‑137</div>
+            </div>
+
+            <div class="btnrow" style="margin-top:12px">
+              <button class="action" id="measureCs">Measure the radioactivity (20 s)</button>
+            </div>
+            <div id="csMeasureStatus" class="status warn" style="margin-top:12px">Choose a distance, then press <b>Measure the radioactivity</b>. The 662 keV photopeak will develop as counts accumulate.</div>
+
+            <div class="canvasBox" style="margin-top:12px"><canvas id="csSpectrumChart" width="680" height="320"></canvas></div>
+            <p class="small muted">Cs‑137 photopeak at <b>662 keV</b> (spectrum view during the 20 s count).</p>
+
+            <div class="small muted" style="margin-top:12px;margin-bottom:6px"><b>Distance measurement table</b></div>
+            <table id="distTable">
+              <tr><th>Distance x (cm)</th><th>Photopeak counts</th><th>Time (s)</th><th>Count rate (cps)</th></tr>
+            </table>
+          </div>
+          <div class="card">
+            <div class="btnrow" style="margin-bottom:12px">
+              <button class="action" id="fitDist" style="display:none">Fit for d</button>
+            </div>
+            <div id="distResult" class="status warn" style="margin-bottom:12px">Record photopeak counts for all distances to unlock <b>Fit for d</b>.</div>
+            <h3>Count rate vs distance</h3>
+            <div class="canvasBox"><canvas id="distanceChart" width="680" height="400"></canvas></div>
+            <p class="muted">Model: <span class="mono">R = k / (x + d)<sup>2</sup></span>. The fitted d represents the effective internal distance to the detector's sensitive center.</p>
+          </div>
+        </div>
+        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="action nextBtn" id="distNext" disabled>Next →</button></div>
+      </section>
+
+      <section class="section" id="sec-4">
+        <span class="pill">Efficiency Calibration Curve</span>
+        <div class="grid2">
+          <div class="card">
+            <h3>Calibration measurements (fixed distance)</h3>
+            <p class="muted">Click the <b>source</b> to choose <b>Cs-137</b>, <b>Na-22</b>, or <b>Bi-207</b>. The detector-to-source distance is fixed at <b>10 cm</b>. Press <b>Start measurement</b> to count for <b>20 s</b>; the spectrum will develop and the <b>photopeak counts</b> will be recorded in the table.</p>
+
+            <div class="vizBox" id="calVizBox" aria-label="Calibration source and detector distance diagram">
+              <div class="vizDetector">Detector</div>
+              <div class="vizSpacer" id="calVizSpacer"><span class="vizDistanceTag" id="calVizDistanceTag">10 cm</span></div>
+              <div class="vizSource" id="calSourceBox">Cs‑137</div>
+            </div>
+
+            <div class="btnrow" id="calSourceOptions" style="margin-top:10px">
+              <button class="secondary" type="button" data-cal-src="cs137" style="padding:8px 10px">Cs-137</button>
+              <button class="secondary" type="button" data-cal-src="na22" style="padding:8px 10px">Na-22</button>
+              <button class="secondary" type="button" data-cal-src="bi207" style="padding:8px 10px">Bi-207</button>
+            </div>
+
+            <div class="btnrow" style="margin-top:12px">
+              <button class="action" id="startCalMeasure">Start measurement</button>
+            </div>
+            <div id="effResult" class="status warn" style="margin-top:12px">You need a fitted effective distance before calibrating detector efficiency.</div>
+
+            <div class="canvasBox" style="margin-top:12px"><canvas id="calSpectrumChart" width="680" height="320"></canvas></div>
+            <p class="small muted">Calibration spectrum view during the 20 s count.</p>
+
+            <div class="small muted" style="margin-top:12px;margin-bottom:6px"><b>Calibration photopeak table</b></div>
+            <table id="effTable">
+              <tr><th>Source</th><th class="th-highlight">Energy (keV)</th><th>Yield</th><th>Activity (µCi)</th><th title="Geometry factor">G</th><th>Counts</th><th>Time (s)</th><th>Rate (cps)</th><th class="th-highlight">ε</th></tr>
+            </table>
+
+            <div class="small muted" style="margin-top:12px"><b>Efficiency formula</b></div>
+            <div class="equation mono fitEquation">ε = R / (A · Y · G)</div>
+            <div class="small muted" style="margin-top:6px">
+              Where <b>R</b> = Counts / Time (cps), <b>A</b> = Activity (Bq) = Activity(µCi) × 3.7 × 10<sup>4</sup>, <b>Y</b> = gamma yield, and <b>G</b> is the geometry factor computed using the fitted <b>d</b> from Step 4.
+            </div>
+          </div>
+          <div class="card">
+            <h3>Efficiency vs energy</h3>
+            <div class="btnrow" style="margin-bottom:10px">
+              <button class="action" id="buildEff" style="display:none">Build Efficiency Curve</button>
+            </div>
+            <div id="effFitInfo" class="stepbox">Build the efficiency curve to show the fit equation and R<sup>2</sup>.</div>
+            <div class="canvasBox"><canvas id="effChart" width="680" height="400"></canvas></div>
+            <div class="stepbox" id="effInterpolateBox" style="margin-top:12px">
+              <h3>Interpolate</h3>
+              <p class="muted small" style="margin:6px 0 10px">Using the <b>Fit equation</b> above, calculate the detector efficiency at <b>1460 keV</b> (ε at 1460 keV). Enter your result below.</p>
+              <label class="small muted" for="eff1460Answer">Your ε(1460 keV)</label>
+              <input type="text" id="eff1460Answer" inputmode="decimal" placeholder="e.g., 0.62 or 6.2e-1" aria-describedby="eff1460Feedback" disabled>
+              <div class="btnrow" style="margin-top:10px">
+                <button class="action" id="eff1460Submit" disabled>Submit</button>
+              </div>
+              <div id="eff1460Feedback" class="status warn" style="margin-top:12px">Build the efficiency curve first to unlock the interpolation check.</div>
+              <div class="stepbox" style="margin-top:12px"><b>Accepted ε(1460 keV):</b> <span id="eff1460Text" class="result" style="font-size:22px">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="action nextBtn" id="effNext" style="display:none">Next →</button></div>
+      </section>
+
+      <section class="section" id="sec-5">
+        <span class="pill">Measure the Gamma Rate Count of K-40 from KCl Sample</span>
+        <div class="grid2">
+          <div class="card">
+            <h3>Acquire KCl spectrum</h3>
+            <p class="muted">The simulated spectrum contains a continuum background and a Gaussian photopeak at 1460 keV. Counting statistics are included. Use the generated peak counts to compute the net count rate.</p>
+            <div class="grid3">
+              <div>
+                <label>Counting time (s)</label>
+                <input type="number" id="kclTime" min="60" max="3600" step="10" value="1200">
+              </div>
+              <div>
+                <label>Peak window center (keV)</label>
+                <input type="number" id="peakCenter" value="1460" readonly>
+              </div>
+              <div>
+                <label>Gamma yield Y</label>
+                <input type="number" id="k40Yield" value="0.1068" readonly>
+              </div>
+            </div>
+            <div class="btnrow" style="margin-top:12px">
+              <button class="action" id="acquireSpectrum">Acquire spectrum</button>
+              <button class="secondary" id="computeActivity">Compute activity</button>
+            </div>
+            <table style="margin-top:12px">
+              <tr><th>Background count rate (cps)</th><th>Peak counts</th><th>Total rate in ROI (cps)</th><th>Net rate (cps)</th></tr>
+              <tr><td id="bgRateCell">—</td><td id="peakCountsCell">—</td><td id="roiRateCell">—</td><td id="netRateCell">—</td></tr>
+            </table>
+            <div id="activityResult" class="status warn" style="margin-top:12px">Acquire the spectrum first, then compute the activity using A = R<sub>net</sub> / (εY).</div>
+          </div>
+          <div class="card">
+            <h3>Simulated gamma spectrum (0–2000 keV)</h3>
+            <div class="canvasBox"><canvas id="spectrumChart" width="680" height="400"></canvas></div>
+          </div>
+        </div>
+        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="action nextBtn">Next →</button></div>
+      </section>
+
+      <section class="section" id="sec-6">
+        <span class="pill">Calculate the Total Potassium Nuclei in the KCl Sample</span>
+        <div class="grid2">
+          <div class="card">
+            <h3>Known values</h3>
+            <ul>
+              <li>Mass of KCl sample, m = <b>0.05 g</b></li>
+              <li>Molar mass of KCl, M = <b>74.55 g/mol</b></li>
+              <li>Avogadro's number, N<sub>A</sub> = <b>6.022 × 10<sup>23</sup></b></li>
+              <li>Each KCl formula unit contains <b>1 potassium atom</b>.</li>
+            </ul>
+            <button class="action" id="calcPotassium">Calculate total potassium nuclei</button>
+            <div id="kAtomsResult" class="status warn" style="margin-top:12px">Press the button to calculate the total K nuclei in 50 mg of KCl.</div>
+          </div>
+          <div class="card">
+            <h3>Calculation breakdown</h3>
+            <div class="equation">n = m / M</div>
+            <div class="equation">N<sub>K</sub> = nN<sub>A</sub></div>
+            <div id="kAtomsBreakdown" class="stepbox muted">No calculation yet.</div>
+          </div>
+        </div>
+        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="action nextBtn">Next →</button></div>
+      </section>
+
+      <section class="section" id="sec-7">
+        <span class="pill">Calculate the Natural Abundance of K-40</span>
+        <div class="grid2">
+          <div class="card">
+            <h3>Final calculation</h3>
+            <div class="equation">N<sub>K40</sub> = A / λ</div>
+            <div class="equation">Abundance = (N<sub>K40</sub> / N<sub>K</sub>) × 100%</div>
+            <button class="action" id="calcAbundance">Calculate natural abundance</button>
+            <div id="abundanceResult" class="status warn" style="margin-top:12px">Complete the previous steps first.</div>
+          </div>
+          <div class="card">
+            <h3>Summary</h3>
+            <table>
+              <tr><th>Quantity</th><th>Value</th></tr>
+              <tr><td>Decay constant, λ</td><td id="summaryLambda">—</td></tr>
+              <tr><td>K-40 activity, A</td><td id="summaryAct">—</td></tr>
+              <tr><td>K-40 nuclei, N<sub>K40</sub></td><td id="summaryNK40">—</td></tr>
+              <tr><td>Total K nuclei, N<sub>K</sub></td><td id="summaryNKTot">—</td></tr>
+              <tr><td>Experimental abundance</td><td id="summaryAbundance">—</td></tr>
+              <tr><td>Accepted abundance</td><td>0.0117%</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="secondary" id="downloadHtml">Download a copy from this folder</button></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY_FULL_NAME = 'inanolab_k40_fullName';
+    const nameOverlay = document.getElementById('nameOverlay');
+    const fullNameInput = document.getElementById('fullNameInput');
+    const startAppBtn = document.getElementById('startAppBtn');
+    const nameError = document.getElementById('nameError');
+    const clearSavedNameBtn = document.getElementById('clearSavedName');
+
+    function normalizeFullName(value){
+      return String(value||'').replace(/\s+/g,' ').trim();
+    }
+    function storageGet(key){
+      try{return normalizeFullName(localStorage.getItem(key)||'');}catch(_){return '';}
+    }
+    function storageSet(key,value){
+      try{localStorage.setItem(key,value);return true;}catch(_){return false;}
+    }
+    function storageRemove(key){
+      try{localStorage.removeItem(key);return true;}catch(_){return false;}
+    }
+
+    function setNameError(message){
+      if(!nameError) return;
+      if(!message){nameError.hidden=true;nameError.textContent='';return;}
+      nameError.hidden=false;
+      nameError.textContent=message;
+    }
+
+    function showNameOverlay(){
+      if(!nameOverlay) return;
+      nameOverlay.classList.add('active');
+      document.body.style.overflow='hidden';
+      setNameError('');
+      if(fullNameInput){
+        fullNameInput.focus();
+        fullNameInput.select();
+      }
+    }
+    function hideNameOverlay(){
+      if(!nameOverlay) return;
+      nameOverlay.classList.remove('active');
+      document.body.style.overflow='';
+      setNameError('');
+    }
+    function updateSavedNameControls(){
+      const saved = storageGet(STORAGE_KEY_FULL_NAME);
+      if(clearSavedNameBtn) clearSavedNameBtn.style.display = saved ? 'inline-block' : 'none';
+    }
+
+    function saveFullNameAndStart(){
+      const name = normalizeFullName(fullNameInput?.value);
+      if(name.length < 2){
+        setNameError('Please enter your full name to start.');
+        if(fullNameInput) fullNameInput.focus();
+        return;
+      }
+      const ok = storageSet(STORAGE_KEY_FULL_NAME, name);
+      if(!ok){
+        setNameError('Could not save your name (local storage is unavailable). Please enable local storage and try again.');
+        return;
+      }
+      hideNameOverlay();
+      updateSavedNameControls();
+    }
+    function clearSavedName(){
+      storageRemove(STORAGE_KEY_FULL_NAME);
+      if(fullNameInput) fullNameInput.value='';
+      updateSavedNameControls();
+      showNameOverlay();
+    }
+
+    if(startAppBtn) startAppBtn.onclick = saveFullNameAndStart;
+    if(fullNameInput){
+      fullNameInput.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter'){
+          e.preventDefault();
+          saveFullNameAndStart();
+        }
+      });
+    }
+    if(clearSavedNameBtn) clearSavedNameBtn.onclick = clearSavedName;
+
+    // Gate app start behind saved name
+    (function initNameGate(){
+      const saved = storageGet(STORAGE_KEY_FULL_NAME);
+      updateSavedNameControls();
+      if(saved) hideNameOverlay();
+      else showNameOverlay();
+    })();
+
+    const sections = [
+      'Essential Question','Scientific Background','Mathematical Framework','The Effective Distance',
+      'Efficiency Calibration Curve','Measure the Gamma Rate Count of K-40 from KCl Sample',
+      'Calculate the Total Potassium Nuclei in the KCl Sample','Calculate the Natural Abundance of K-40'
+    ];
+    let currentSection = 0;
+
+    // Step 3: required decay constant checkpoint
+    const lambdaAnswerInput = document.getElementById('lambdaAnswer');
+    const lambdaSubmitBtn = document.getElementById('lambdaSubmit');
+    const lambdaFeedback = document.getElementById('lambdaFeedback');
+    const mathNextBtn = document.getElementById('mathNext');
+    let lambdaCheckpointPassed = false;
+
+    function parseUserScientificNumber(value){
+      if(value===null || value===undefined) return null;
+      let s = String(value).trim();
+      if(!s) return null;
+      s = s
+        .toLowerCase()
+        .replace(/[,\s]/g,'')
+        .replace(/[()]/g,'')
+        .replace(/×/g,'x')
+        .replace(/[−–—]/g,'-')
+        .replace(/(1\/s|\/s|s\^-1|s-1|sec\^-1|sec-1)/g,'');
+
+      // e.g., 1.7e-17
+      if(/^[+-]?\d*\.?\d+(e[+-]?\d+)?$/.test(s)){
+        const n = Number(s);
+        return Number.isFinite(n) ? n : null;
+      }
+
+      // e.g., 1.7x10^-17, 1.7*10-17
+      const m = s.match(/^([+-]?\d*\.?\d+)(?:x|\*)10\^?([+-]?\d+)$/);
+      if(m){
+        const a = Number(m[1]);
+        const exp = Number(m[2]);
+        if(Number.isFinite(a) && Number.isFinite(exp)) return a * Math.pow(10, exp);
+      }
+
+      return null;
+    }
+
+    function setLambdaFeedback(type, html){
+      if(!lambdaFeedback) return;
+      lambdaFeedback.className = `status${type ? ' ' + type : ''}`;
+      lambdaFeedback.innerHTML = html;
+    }
+
+    function setMathNextEnabled(enabled){
+      if(mathNextBtn) mathNextBtn.disabled = !enabled;
+    }
+
+    function checkLambdaAnswer(){
+      const n = parseUserScientificNumber(lambdaAnswerInput?.value);
+      if(n===null){
+        setLambdaFeedback('danger','Please enter a number (e.g., <b>1.7e-17</b> or <b>1.7×10^-17</b>).');
+        lambdaAnswerInput?.focus();
+        return;
+      }
+      const min = 1.65e-17;
+      const max = 1.85e-17;
+      if(n >= min && n <= max){
+        lambdaCheckpointPassed = true;
+        state.lambdaUser = n;
+        updateSidebar();
+        setLambdaFeedback('',`Correct. Your value is within the accepted range (≈ <b>1.7–1.8 × 10<sup>-17</sup> 1/s</b>). You may proceed.`);
+        setMathNextEnabled(true);
+      } else {
+        lambdaCheckpointPassed = false;
+        state.lambdaUser = null;
+        updateSidebar();
+        setMathNextEnabled(false);
+        setLambdaFeedback('danger','Not quite. Make sure you convert the half-life from years to seconds before computing λ.');
+      }
+    }
+
+    if(lambdaSubmitBtn) lambdaSubmitBtn.onclick = checkLambdaAnswer;
+    if(lambdaAnswerInput){
+      lambdaAnswerInput.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter'){
+          e.preventDefault();
+          checkLambdaAnswer();
+        }
+      });
+    }
+
+    // Lock Step 3 Next until checkpoint is passed
+    setMathNextEnabled(false);
+
+    function showSection(i){
+      if(currentSection===2 && i>2 && !lambdaCheckpointPassed){
+        setLambdaFeedback('danger','Submit the decay constant answer above to unlock the next step.');
+        lambdaAnswerInput?.focus();
+        return;
+      }
+      currentSection=i;
+      document.querySelectorAll('.section').forEach((sec,idx)=>sec.classList.toggle('active',idx===i));
+      document.getElementById('progressText').textContent = `Step ${i+1} of ${sections.length}`;
+      if(i===3){
+        // Step 4 uses element widths for the distance diagram; refresh after showing.
+        updateDistanceUi();
+      }
+      if(i===4){
+        // Step 5 also measures element widths; refresh after showing.
+        updateCalibrationUi();
+      }
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+    document.querySelectorAll('.nextBtn').forEach(btn=>btn.onclick=()=>showSection(Math.min(currentSection+1,sections.length-1)));
+    document.querySelectorAll('.prevBtn').forEach(btn=>btn.onclick=()=>showSection(Math.max(currentSection-1,0)));
+
+    // Physics constants and hidden simulation parameters
+    const CONST = {
+      sampleMassG: 0.05,
+      molarMassKCl: 74.55,
+      NA: 6.022e23,
+      k40Yield: 0.1068,
+      k40AbundanceAccepted: 0.000117, // fractional
+      yearsToSec: 365.25*24*3600,
+      k40HalfLifeYears: 1.29e9,
+      detectorDiameterCm: 5.08, // ~2 inch
+      bgRate: 0.1,
+      microCiToBq: 3.7e4
+    };
+    CONST.detectorAreaCm2 = Math.PI*(CONST.detectorDiameterCm/2)**2;
+    CONST.lambdaK40 = Math.log(2)/(CONST.k40HalfLifeYears*CONST.yearsToSec);
+
+    // True hidden detector model
+    const truth = {
+      effectiveDistanceCm: 2.45,
+      csIntensityK: 10000, // for distance fit count rate generation
+      effA: 5.18,
+      effB: 0.30,
+      effC: 0.02,
+      calibrationDistanceX: 10.0,
+      spectrumResolutionSigmaKeV: 24,
+      spectrumBackgroundBase: 8
+    };
+
+    const state = {
+      lambdaUser:null,
+      dFit:null, kFit:null,
+      effPoints:[], effModel:null, eff1460:null,
+      kclPeakCounts:null, kclTime:1200, kclNetRate:null, k40Activity:null,
+      totalKNuclei:null, k40Nuclei:null, abundance:null,
+      lastSpectrum:null
+    };
+
+    function fmt(x, digits=4){
+      if(x===null || x===undefined || Number.isNaN(x)) return '—';
+      if(Math.abs(x)>=1e6 || (Math.abs(x)>0 && Math.abs(x)<1e-3)) return x.toExponential(3);
+      return Number(x).toFixed(digits).replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1');
+    }
+
+    function sciHtml(x, digits=2){
+      if(x===null || x===undefined || Number.isNaN(x)) return '—';
+      const s = Number(x).toExponential(digits);
+      const m = s.match(/^([+-]?\d(?:\.\d+)?)e([+-]?\d+)$/);
+      if(!m) return s;
+      const mantissa = m[1];
+      const exponent = String(Number(m[2]));
+      return `${mantissa} × 10<sup>${exponent}</sup>`;
+    }
+
+    function updateSidebar(){
+      document.getElementById('stateLambda').innerHTML = state.lambdaUser ? `${sciHtml(state.lambdaUser, 2)} 1/s` : '—';
+      document.getElementById('stateD').textContent = state.dFit? fmt(state.dFit,3)+' cm':'—';
+      document.getElementById('stateEff').textContent = state.eff1460? fmt(state.eff1460,5):'—';
+      document.getElementById('stateAct').textContent = state.k40Activity? fmt(state.k40Activity,3)+' Bq':'—';
+      document.getElementById('stateKTotal').textContent = state.totalKNuclei? state.totalKNuclei.toExponential(3):'—';
+      document.getElementById('stateAbundance').textContent = state.abundance? fmt(state.abundance,5)+' %':'—';
+    }
+
+    const k40HalfLifeSeconds = CONST.k40HalfLifeYears*CONST.yearsToSec;
+    const halfLifeSecondsEl = document.getElementById('k40HalfLifeSeconds');
+    if(halfLifeSecondsEl) halfLifeSecondsEl.innerHTML = sciHtml(k40HalfLifeSeconds, 2);
+
+    document.getElementById('mathDerived').innerHTML = `Use <b>t<sub>1/2</sub> = 1.29 × 10<sup>9</sup> years</b> = <b>${sciHtml(k40HalfLifeSeconds, 2)} s</b>. Then compute <b>λ</b> in <b>1/s</b> and submit it on the left.`;
+
+    // Random number helpers
+    function randn(){
+      let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
+      return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+    }
+    function poisson(lambda){
+      if(lambda<=0) return 0;
+      if(lambda<35){
+        const L=Math.exp(-lambda); let p=1,k=0;
+        do{k++; p*=Math.random();}while(p>L);
+        return k-1;
+      }
+      return Math.max(0, Math.round(lambda + Math.sqrt(lambda)*randn()));
+    }
+
+    function trueEfficiency(EkeV){
+      return Math.max(0.001, truth.effA*Math.pow(EkeV,-truth.effB)+truth.effC);
+    }
+    function geometryFactor(x,d){
+      return CONST.detectorAreaCm2/(4*Math.PI*Math.pow(x+d,2));
+    }
+
+    // Section 3: Effective distance
+    const distXs = [5,10,15,20];
+    const DIST_TIME_SEC = 20;
+    const distTable = document.getElementById('distTable');
+
+    const fitDistBtn = document.getElementById('fitDist');
+    const distResult = document.getElementById('distResult');
+    const distNextBtn = document.getElementById('distNext');
+
+    function setDistNextEnabled(enabled){
+      if(distNextBtn) distNextBtn.disabled = !enabled;
+    }
+
+    function parseCountInputValue(inputEl){
+      const raw = String(inputEl?.value ?? '').trim();
+      if(!raw) return null;
+      const n = Number(raw);
+      if(!Number.isFinite(n) || n < 0) return null;
+      return Math.round(n);
+    }
+
+    const distRows = distXs.map((x)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td>${x}</td>
+        <td><input type="number" min="0" step="1" inputmode="numeric" data-count-input aria-label="Photopeak counts at distance ${x} cm"></td>
+        <td data-time>${DIST_TIME_SEC}</td>
+        <td data-rate>—</td>
+      `;
+      distTable.appendChild(tr);
+      const countInput = tr.querySelector('[data-count-input]');
+      const rateCell = tr.querySelector('[data-rate]');
+      countInput.addEventListener('input', ()=>{
+        // Any manual change invalidates a previous fit
+        if(state.dFit!==null){
+          state.dFit=null; state.kFit=null;
+          updateSidebar();
+        }
+        const counts = parseCountInputValue(countInput);
+        rateCell.textContent = (counts===null) ? '—' : fmt(counts/DIST_TIME_SEC,3);
+        drawDistanceChart();
+        updateFitDistanceAvailability();
+      });
+      return {x, tr, countInput, rateCell};
+    });
+
+    function isDistanceTableComplete(){
+      return distRows.every(r=>parseCountInputValue(r.countInput)!==null);
+    }
+
+    function updateFitDistanceAvailability(){
+      const filled = distRows.reduce((n,r)=>n + (parseCountInputValue(r.countInput)!==null ? 1 : 0), 0);
+      const complete = filled === distRows.length;
+
+      if(fitDistBtn) fitDistBtn.style.display = complete ? 'inline-block' : 'none';
+
+      // Hide the measurement button after all four table entries are completed
+      const measureBtn = document.getElementById('measureCs');
+      if(measureBtn){
+        const wrapper = measureBtn.closest('.btnrow');
+        if(wrapper) wrapper.style.display = complete ? 'none' : '';
+        else measureBtn.style.display = complete ? 'none' : 'inline-block';
+      }
+
+      // Lock the Step 4 → Step 5 transition until the d fit is completed
+      setDistNextEnabled(state.dFit !== null);
+
+      if(distResult && state.dFit===null){
+        if(!complete){
+          distResult.className='status warn';
+          distResult.innerHTML = `Record photopeak counts for all distances (<b>${filled}/${distRows.length}</b>) to unlock <b>Fit for d</b>.`;
+        } else {
+          distResult.className='status';
+          distResult.innerHTML = 'All distances recorded. You can now fit the inverse-square model <b>R = k/(x + d)<sup>2</sup></b> to determine <b>d</b>.';
+        }
+      }
+    }
+
+    function fitDistance(){
+      const rows=[...distTable.querySelectorAll('tr')].slice(1);
+      const data=rows.map((tr,idx)=>({x:distXs[idx], r:parseFloat(tr.querySelector('[data-rate]').textContent)})).filter(d=>!Number.isNaN(d.r));
+      if(data.length<distXs.length){
+        if(distResult){
+          distResult.className='status danger';
+          distResult.textContent='Complete the distance table first (all four distances) before fitting.';
+        }
+        return;
+      }
+      let best={sse:Infinity,d:null,k:null};
+      for(let d=0.2; d<=6; d+=0.01){
+        const f = data.map(p=>1/Math.pow(p.x+d,2));
+        const num = data.reduce((s,p,i)=>s+p.r*f[i],0);
+        const den = f.reduce((s,v)=>s+v*v,0);
+        const k = num/den;
+        const sse = data.reduce((s,p)=>s+Math.pow(p.r - k/Math.pow(p.x+d,2),2),0);
+        if(sse<best.sse) best={sse,d,k};
+      }
+      state.dFit=best.d; state.kFit=best.k;
+
+      const yMean = data.reduce((s,p)=>s+p.r,0) / data.length;
+      const sst = data.reduce((s,p)=>s+Math.pow(p.r - yMean,2),0);
+      const r2 = (sst > 0) ? (1 - (best.sse / sst)) : null;
+      const r2Text = (r2===null || !Number.isFinite(r2)) ? '—' : (()=>{
+        const r2Safe = Math.max(-1, Math.min(1, r2));
+        const r2Disp = (r2Safe < 1) ? (Math.trunc(r2Safe * 10000) / 10000) : r2Safe;
+        return Number(r2Disp).toFixed(4);
+      })();
+      if(distResult){
+        distResult.className='status';
+        distResult.innerHTML=`Best fit: <b>d = ${fmt(best.d,3)} cm</b>, <b>R<sup>2</sup> = ${r2Text}</b>. This corrects the detector geometry.`;
+      }
+      updateSidebar(); drawDistanceChart();
+      updateFitDistanceAvailability();
+    }
+
+    function drawAxes(ctx,w,h,margins,xLabel,yLabel,xmin,xmax,ymin,ymax){
+      ctx.clearRect(0,0,w,h); ctx.fillStyle='#020617'; ctx.fillRect(0,0,w,h); ctx.strokeStyle='#334155'; ctx.lineWidth=1;
+      for(let i=0;i<=5;i++){
+        let y=margins.t + i*(h-margins.t-margins.b)/5; ctx.beginPath(); ctx.moveTo(margins.l,y); ctx.lineTo(w-margins.r,y); ctx.stroke();
+      }
+      for(let i=0;i<=5;i++){
+        let x=margins.l + i*(w-margins.l-margins.r)/5; ctx.beginPath(); ctx.moveTo(x,margins.t); ctx.lineTo(x,h-margins.b); ctx.stroke();
+      }
+      ctx.strokeStyle='#94a3b8'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(margins.l,margins.t); ctx.lineTo(margins.l,h-margins.b); ctx.lineTo(w-margins.r,h-margins.b); ctx.stroke();
+      ctx.fillStyle='#cbd5e1'; ctx.font='12px Arial';
+      for(let i=0;i<=5;i++){
+        let x=margins.l + i*(w-margins.l-margins.r)/5; let xv=xmin+(xmax-xmin)*i/5; ctx.fillText(fmt(xv,1),x-10,h-margins.b+18);
+        let y=h-margins.b - i*(h-margins.t-margins.b)/5; let yv=ymin+(ymax-ymin)*i/5; ctx.fillText(fmt(yv,2),6,y+4);
+      }
+      ctx.fillText(xLabel,w/2-30,h-8); ctx.save(); ctx.translate(14,h/2+30); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore();
+      return {
+        px:(x)=>margins.l + (x-xmin)/(xmax-xmin)*(w-margins.l-margins.r),
+        py:(y)=>h-margins.b - (y-ymin)/(ymax-ymin)*(h-margins.t-margins.b)
+      };
+    }
+
+    function drawDistanceChart(){
+      const c=document.getElementById('distanceChart'), ctx=c.getContext('2d'); const w=c.width,h=c.height;
+      const rows=[...distTable.querySelectorAll('tr')].slice(1);
+      const pts=rows.map((tr,idx)=>({x:distXs[idx], y:parseFloat(tr.querySelector('[data-rate]').textContent)})).filter(p=>!Number.isNaN(p.y));
+      const yMax=Math.max(50,...pts.map(p=>p.y))*1.2;
+      const m={l:50,r:20,t:20,b:40}; const map=drawAxes(ctx,w,h,m,'Distance x (cm)','Count rate (cps)',0,22,0,yMax);
+      if(state.dFit!==null){
+        ctx.strokeStyle='#22c55e'; ctx.lineWidth=2;
+        ctx.beginPath();
+        for(let x=0.5;x<=22;x+=0.1){
+          const y=state.kFit/Math.pow(x+state.dFit,2); const px=map.px(x), py=map.py(y);
+          if(x===0.5) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+        }
+        ctx.stroke();
+      }
+      ctx.fillStyle='#38bdf8';
+      pts.forEach(p=>{ctx.beginPath();ctx.arc(map.px(p.x),map.py(p.y),5,0,Math.PI*2);ctx.fill();});
+    }
+
+    // Cs-137 measurement UI: animated spectrum + auto-recording
+    const csDistanceSlider = document.getElementById('csDistanceSlider');
+    const csDistanceText = document.getElementById('csDistanceText');
+    const vizBox = document.getElementById('vizBox');
+    const vizSpacer = document.getElementById('vizSpacer');
+    const vizDistanceTag = document.getElementById('vizDistanceTag');
+    const measureCsBtn = document.getElementById('measureCs');
+    const csMeasureStatus = document.getElementById('csMeasureStatus');
+
+    const CS_SPEC = {
+      bins: 512,
+      Emax: 1200,
+      centerKeV: 662,
+      sigmaKeV: 28
+    };
+
+    let csAccum = Array.from({length:CS_SPEC.bins},()=>0);
+    let csTimer = null;
+    let csElapsed = 0;
+    let csMeasuring = false;
+
+    // Add small real-world variability so the fit is not perfectly correlated.
+    // This helps keep R^2 close to (but not equal to) 1.
+    const CS_MEAS_VARIATION = {
+      intensitySigma: 0.03,
+      intensityMin: 0.92,
+      intensityMax: 1.08,
+      distanceJitterSigmaCm: 0.09,
+      distanceJitterMinCm: -0.25,
+      distanceJitterMaxCm: 0.25
+    };
+    let csMeas = { intensityScale: 1, distanceOffsetCm: 0 };
+
+    function clampNumber(x, min, max){
+      return Math.max(min, Math.min(max, x));
+    }
+
+    function newCsMeasurementVariation(){
+      const scale = 1 + CS_MEAS_VARIATION.intensitySigma * randn();
+      const offset = CS_MEAS_VARIATION.distanceJitterSigmaCm * randn();
+      csMeas.intensityScale = clampNumber(scale, CS_MEAS_VARIATION.intensityMin, CS_MEAS_VARIATION.intensityMax);
+      csMeas.distanceOffsetCm = clampNumber(offset, CS_MEAS_VARIATION.distanceJitterMinCm, CS_MEAS_VARIATION.distanceJitterMaxCm);
+    }
+
+    function setCsStatus(type, html){
+      if(!csMeasureStatus) return;
+      csMeasureStatus.className = `status${type ? ' ' + type : ''}`;
+      csMeasureStatus.innerHTML = html;
+    }
+
+    function updateDistanceUi(){
+      const x = Number(csDistanceSlider?.value || distXs[0]);
+      if(csDistanceText) csDistanceText.textContent = `${x} cm`;
+      if(vizDistanceTag) vizDistanceTag.textContent = `${x} cm`;
+      if(vizSpacer && vizBox){
+        const boxW = vizBox.clientWidth || 520;
+        const minW = 80;
+        const maxW = Math.max(minW, boxW - 92 - 92 - 48);
+        const frac = (x - 5) / 15;
+        const targetW = Math.round(minW + frac * (maxW - minW));
+        vizSpacer.style.width = `${targetW}px`;
+      }
+    }
+
+    function drawCsSpectrum(counts){
+      const c=document.getElementById('csSpectrumChart');
+      if(!c) return;
+      const ctx=c.getContext('2d'); const w=c.width,h=c.height;
+      const dE = CS_SPEC.Emax/CS_SPEC.bins;
+      const yMax = Math.max(12, ...counts) * 1.15;
+      const m={l:60,r:20,t:20,b:40}; const map=drawAxes(ctx,w,h,m,'Energy (keV)','Counts / bin',0,CS_SPEC.Emax,0,yMax);
+
+      ctx.strokeStyle='#38bdf8';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();
+      for(let i=0;i<counts.length;i++){
+        const E=(i+0.5)*dE;
+        const px=map.px(E);
+        const py=map.py(counts[i]);
+        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+
+      // Photopeak marker
+      ctx.strokeStyle='#f59e0b';
+      ctx.setLineDash([6,4]);
+      ctx.beginPath();
+      ctx.moveTo(map.px(CS_SPEC.centerKeV), map.py(0));
+      ctx.lineTo(map.px(CS_SPEC.centerKeV), map.py(yMax*0.95));
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#fcd34d';
+      ctx.fillText('662 keV', map.px(CS_SPEC.centerKeV)-22, map.py(yMax*0.92));
+    }
+
+    function resetCsSpectrum(){
+      csAccum = Array.from({length:CS_SPEC.bins},()=>0);
+      csElapsed = 0;
+      drawCsSpectrum(csAccum);
+    }
+
+    function csContinuumEnergy(){
+      // Bias toward lower energies for a simple Compton-like continuum
+      return CS_SPEC.Emax * Math.pow(Math.random(), 1.7);
+    }
+
+    function simulateCsSecond(distanceXcm){
+      const dE = CS_SPEC.Emax/CS_SPEC.bins;
+      const xTrue = Math.max(0.1, distanceXcm + csMeas.distanceOffsetCm);
+      const peakRate = (truth.csIntensityK * csMeas.intensityScale)/Math.pow(xTrue + truth.effectiveDistanceCm,2);
+      const contRate = 18 + 0.25*peakRate;
+
+      const peakEvents = poisson(peakRate);
+      for(let i=0;i<peakEvents;i++){
+        const E = CS_SPEC.centerKeV + CS_SPEC.sigmaKeV*randn();
+        if(E < 0 || E >= CS_SPEC.Emax) continue;
+        const idx = Math.floor(E/dE);
+        csAccum[idx] += 1;
+      }
+
+      const contEvents = poisson(contRate);
+      for(let i=0;i<contEvents;i++){
+        const E = csContinuumEnergy();
+        if(E < 0 || E >= CS_SPEC.Emax) continue;
+        const idx = Math.floor(E/dE);
+        csAccum[idx] += 1;
+      }
+    }
+
+    function computeCsPhotopeakCounts(){
+      const dE = CS_SPEC.Emax/CS_SPEC.bins;
+      const roiMin = CS_SPEC.centerKeV - 2.5*CS_SPEC.sigmaKeV;
+      const roiMax = CS_SPEC.centerKeV + 2.5*CS_SPEC.sigmaKeV;
+      const iMin = Math.max(0, Math.floor(roiMin/dE));
+      const iMax = Math.min(CS_SPEC.bins-1, Math.floor(roiMax/dE));
+      let sum=0;
+      for(let i=iMin;i<=iMax;i++) sum += csAccum[i];
+      return sum;
+    }
+
+    function recordDistanceCounts(distanceXcm, counts){
+      const row = distRows.find(r=>r.x===distanceXcm);
+      if(!row) return;
+      row.countInput.value = String(counts);
+      row.countInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function setDistanceUiEnabled(enabled){
+      if(csDistanceSlider) csDistanceSlider.disabled = !enabled;
+      if(measureCsBtn) measureCsBtn.disabled = !enabled;
+      distRows.forEach(r=>{ r.countInput.disabled = !enabled; });
+    }
+
+    function startCsMeasurement(){
+      if(csMeasuring) return;
+      const x = Number(csDistanceSlider?.value || distXs[0]);
+      if(!distXs.includes(x)){
+        setCsStatus('danger','Please select one of the allowed distances: 5, 10, 15, or 20 cm.');
+        return;
+      }
+
+      // Any new measurement invalidates a previous fit
+      if(state.dFit!==null){
+        state.dFit=null; state.kFit=null;
+        updateSidebar();
+        drawDistanceChart();
+        updateFitDistanceAvailability();
+      }
+
+      newCsMeasurementVariation();
+
+      resetCsSpectrum();
+      csMeasuring = true;
+      setDistanceUiEnabled(false);
+      setCsStatus('warn', `Measuring at <b>${x} cm</b>… <b>0/${DIST_TIME_SEC}</b> s`);
+
+      const stepMs = 120; // accelerated animation
+      csTimer = setInterval(()=>{
+        csElapsed += 1;
+        simulateCsSecond(x);
+        drawCsSpectrum(csAccum);
+        setCsStatus('warn', `Measuring at <b>${x} cm</b>… <b>${csElapsed}/${DIST_TIME_SEC}</b> s`);
+        if(csElapsed >= DIST_TIME_SEC){
+          clearInterval(csTimer);
+          csTimer = null;
+          csMeasuring = false;
+
+          const peakCounts = computeCsPhotopeakCounts();
+          recordDistanceCounts(x, peakCounts);
+          updateFitDistanceAvailability();
+          setCsStatus('', `Measurement complete at <b>${x} cm</b>. Photopeak counts: <b>${peakCounts}</b> (20 s). Recorded in the table.`);
+          setDistanceUiEnabled(true);
+        }
+      }, stepMs);
+    }
+
+    if(csDistanceSlider) csDistanceSlider.addEventListener('input', updateDistanceUi);
+    if(measureCsBtn) measureCsBtn.onclick = startCsMeasurement;
+
+    if(fitDistBtn) fitDistBtn.onclick = fitDistance;
+    updateDistanceUi();
+    updateFitDistanceAvailability();
+
+    // Section 4: efficiency curve (Step 5)
+    const effTable = document.getElementById('effTable');
+    const effResultEl = document.getElementById('effResult');
+    const eff1460Text = document.getElementById('eff1460Text');
+    const effFitInfo = document.getElementById('effFitInfo');
+    const buildEffBtn = document.getElementById('buildEff');
+    const eff1460AnswerInput = document.getElementById('eff1460Answer');
+    const eff1460SubmitBtn = document.getElementById('eff1460Submit');
+    const eff1460Feedback = document.getElementById('eff1460Feedback');
+    const effNextBtn = document.getElementById('effNext');
+
+    const calSourceBox = document.getElementById('calSourceBox');
+    const calSourceOptions = document.getElementById('calSourceOptions');
+    const calVizBox = document.getElementById('calVizBox');
+    const calVizSpacer = document.getElementById('calVizSpacer');
+    const calVizDistanceTag = document.getElementById('calVizDistanceTag');
+    const startCalMeasureBtn = document.getElementById('startCalMeasure');
+
+    const CAL_TIME_SEC = 20;
+    const calibSources = [
+      {key:'cs137', name:'Cs-137', uCi:1.09, peaks:[{E:662, yield:0.85}]},
+      {key:'na22', name:'Na-22', uCi:17.3, peaks:[{E:511, yield:1.80},{E:1275, yield:1.00}]},
+      {key:'bi207', name:'Bi-207', uCi:1.52, peaks:[{E:570, yield:0.98},{E:1064, yield:0.75}]}
+    ];
+
+    function calPeakKey(srcKey, energyKeV){
+      return `${srcKey}_${Math.round(energyKeV)}`;
+    }
+
+    function formatCalPeakEnergies(src){
+      const energies = (src?.peaks || []).map(p=>Math.round(p.E));
+      if(energies.length===0) return '—';
+      if(energies.length===1) return `${energies[0]} keV`;
+      return `${energies.join(' and ')} keV`;
+    }
+
+    const CAL_SPEC = { bins:512, Emax:1600, sigmaKeV:28 };
+    let calAccum = Array.from({length:CAL_SPEC.bins},()=>0);
+    let calTimer = null;
+    let calElapsed = 0;
+    let calMeasuring = false;
+    let calSelectedKey = 'cs137';
+    const calRowByPeakKey = new Map();
+    const calPeakRows = [];
+
+    function currentCalGeometryFactor(){
+      if(state.dFit===null) return null;
+      const G = geometryFactor(truth.calibrationDistanceX, state.dFit);
+      return Number.isFinite(G) ? G : null;
+    }
+
+    function updateCalGeometryCells(){
+      const G = currentCalGeometryFactor();
+      const text = (G===null) ? '—' : fmt(G,5);
+      calPeakRows.forEach(r=>{
+        if(r.geomCell) r.geomCell.textContent = text;
+      });
+    }
+
+    calibSources.forEach(src=>{
+      src.peaks.forEach(peak=>{
+        const tr=document.createElement('tr');
+        const pk = calPeakKey(src.key, peak.E);
+        tr.dataset.srcKey = src.key;
+        tr.dataset.peakE = String(Math.round(peak.E));
+        tr.innerHTML = `
+          <td>${src.name}</td>
+          <td data-energy>${Math.round(peak.E)}</td>
+          <td data-yield>${fmt(peak.yield,3)}</td>
+          <td data-activity>${fmt(src.uCi,3)}</td>
+          <td data-geom>—</td>
+          <td><input type="number" min="0" step="1" inputmode="numeric" data-cal-count aria-label="Photopeak counts for ${src.name} at ${Math.round(peak.E)} keV"></td>
+          <td data-time>${CAL_TIME_SEC}</td>
+          <td data-rate>—</td>
+          <td data-eff>—</td>
+        `;
+        effTable.appendChild(tr);
+
+        const countInput = tr.querySelector('[data-cal-count]');
+        const geomCell = tr.querySelector('[data-geom]');
+        const rateCell = tr.querySelector('[data-rate]');
+        const effCell = tr.querySelector('[data-eff]');
+
+        const rowObj = {peakKey:pk, srcKey:src.key, E:peak.E, yield:peak.yield, uCi:src.uCi, tr, countInput, geomCell, rateCell, effCell};
+        calPeakRows.push(rowObj);
+        calRowByPeakKey.set(pk, rowObj);
+
+        countInput.addEventListener('input', ()=>{
+          // Any manual change invalidates a previously built curve/interpolation.
+          if(state.effModel || state.eff1460){
+            invalidateEfficiencyCurve();
+          }
+
+          const counts = parseCountInputValue(countInput);
+          if(counts===null){
+            rateCell.textContent = '—';
+            effCell.textContent = '—';
+            const idx = state.effPoints.findIndex(p=>p.key===pk);
+            if(idx>=0) state.effPoints.splice(idx,1);
+          } else {
+            const rate = counts / CAL_TIME_SEC;
+            rateCell.textContent = fmt(rate,4);
+            const A = src.uCi*CONST.microCiToBq;
+            const eff = (state.dFit===null) ? null : (rate/(A*peak.yield*geometryFactor(truth.calibrationDistanceX, state.dFit)));
+            effCell.textContent = (eff===null || !Number.isFinite(eff)) ? '—' : fmt(eff,5);
+            if(eff!==null && Number.isFinite(eff)) upsertEffPoint(pk, peak.E, eff);
+          }
+
+          drawEffChart();
+          updateCalibrationActions();
+          updateCalibrationUi();
+        });
+      });
+    });
+
+    function setEffStatus(type, html){
+      if(!effResultEl) return;
+      effResultEl.className = `status${type ? ' ' + type : ''}`;
+      effResultEl.innerHTML = html;
+    }
+
+    function setEff1460Feedback(type, html){
+      if(!eff1460Feedback) return;
+      eff1460Feedback.className = `status${type ? ' ' + type : ''}`;
+      eff1460Feedback.innerHTML = html;
+    }
+
+    function setEffNextVisible(visible){
+      if(!effNextBtn) return;
+      effNextBtn.style.display = visible ? 'inline-block' : 'none';
+    }
+
+    function updateCalSourceButtons(){
+      if(!calSourceOptions) return;
+      calSourceOptions.querySelectorAll('button[data-cal-src]').forEach(btn=>{
+        const key = btn.getAttribute('data-cal-src');
+        const selected = key === calSelectedKey;
+        btn.classList.remove('action','secondary');
+        btn.classList.add(selected ? 'action' : 'secondary');
+        btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      });
+    }
+
+    function setCalibrationUiEnabled(enabled){
+      if(startCalMeasureBtn) startCalMeasureBtn.disabled = !enabled;
+      if(calSourceBox) calSourceBox.style.pointerEvents = enabled ? '' : 'none';
+      if(calSourceOptions){
+        calSourceOptions.querySelectorAll('button').forEach(b=>b.disabled = !enabled);
+      }
+      if(buildEffBtn) buildEffBtn.disabled = !enabled;
+      if(!enabled){
+        if(eff1460AnswerInput) eff1460AnswerInput.disabled = true;
+        if(eff1460SubmitBtn) eff1460SubmitBtn.disabled = true;
+      }
+    }
+
+    function updateCalibrationUi(){
+      updateCalGeometryCells();
+      const x = truth.calibrationDistanceX;
+      if(calVizDistanceTag) calVizDistanceTag.textContent = `${x} cm`;
+      if(calVizSpacer && calVizBox){
+        const boxW = calVizBox.clientWidth || 520;
+        const minW = 80;
+        const maxW = Math.max(minW, boxW - 92 - 92 - 48);
+        const frac = (x - 5) / 15;
+        const targetW = Math.round(minW + frac * (maxW - minW));
+        calVizSpacer.style.width = `${targetW}px`;
+      }
+      const src = calibSources.find(s=>s.key===calSelectedKey);
+      drawCalSpectrum(calAccum, (src?.peaks || [{E:662}]).map(p=>p.E));
+
+      if(calMeasuring) return;
+
+      if(state.dFit===null){
+        setEffStatus('warn','Fit the effective distance first, then measure the three calibration sources.');
+        return;
+      }
+
+      if(state.eff1460!==null && state.effModel){
+        setEffStatus('', `Accepted <b>ε(1460 keV) = ${fmt(state.eff1460,5)}</b>. You may proceed to the next step.`);
+        return;
+      }
+
+      if(state.effModel){
+        setEffStatus('', 'Efficiency curve built. Now <b>interpolate ε(1460 keV)</b> using the fit equation on the right and submit your answer.');
+        return;
+      }
+
+      if(hasAllCalibrationMeasurements()){
+        setEffStatus('', 'All three sources recorded. You can now build the efficiency curve.');
+        return;
+      }
+
+      const doneCount = completedCalibrationSourcesCount();
+      setEffStatus('warn', `Selected source: <b>${src?.name ?? '—'}</b>${src ? ` (${formatCalPeakEnergies(src)})` : ''}. Press <b>Start measurement</b> to count for <b>${CAL_TIME_SEC} s</b>. Completed <b>${doneCount}/3</b> sources.`);
+    }
+
+    function drawCalSpectrum(counts, peakEnergies){
+      const c=document.getElementById('calSpectrumChart');
+      if(!c) return;
+      const ctx=c.getContext('2d'); const w=c.width,h=c.height;
+      const dE = CAL_SPEC.Emax/CAL_SPEC.bins;
+      const yMax = Math.max(12, ...counts) * 1.15;
+      const m={l:60,r:20,t:20,b:40}; const map=drawAxes(ctx,w,h,m,'Energy (keV)','Counts / bin',0,CAL_SPEC.Emax,0,yMax);
+
+      ctx.strokeStyle='#38bdf8';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();
+      for(let i=0;i<counts.length;i++){
+        const E=(i+0.5)*dE;
+        const px=map.px(E);
+        const py=map.py(counts[i]);
+        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+
+      // Photopeak markers
+      const peaks = Array.isArray(peakEnergies) ? peakEnergies : [peakEnergies];
+      ctx.strokeStyle='#f59e0b';
+      ctx.setLineDash([6,4]);
+      peaks.forEach((EkeV, i)=>{
+        if(!Number.isFinite(EkeV)) return;
+        ctx.beginPath();
+        ctx.moveTo(map.px(EkeV), map.py(0));
+        ctx.lineTo(map.px(EkeV), map.py(yMax*0.95));
+        ctx.stroke();
+        ctx.fillStyle='#fcd34d';
+        ctx.fillText(`${Math.round(EkeV)} keV`, map.px(EkeV)-26, map.py(yMax*0.92));
+      });
+      ctx.setLineDash([]);
+    }
+
+    function resetCalSpectrum(){
+      calAccum = Array.from({length:CAL_SPEC.bins},()=>0);
+      calElapsed = 0;
+      updateCalibrationUi();
+    }
+
+    function calContinuumEnergy(maxKeV){
+      return maxKeV * Math.pow(Math.random(), 1.7);
+    }
+
+    function simulateCalSecond(src){
+      const dE = CAL_SPEC.Emax/CAL_SPEC.bins;
+      const A = src.uCi*CONST.microCiToBq;
+      const x = truth.calibrationDistanceX;
+      const peakRates = src.peaks.map(p=>A*p.yield*geometryFactor(x, truth.effectiveDistanceCm)*trueEfficiency(p.E));
+      const totalPeakRate = peakRates.reduce((s,v)=>s+v,0);
+      const contRate = 10 + 0.18*totalPeakRate;
+      const bgRate = 4;
+
+      src.peaks.forEach((p,pi)=>{
+        const peakEvents = poisson(peakRates[pi]);
+        for(let i=0;i<peakEvents;i++){
+          const E = p.E + CAL_SPEC.sigmaKeV*randn();
+          if(E < 0 || E >= CAL_SPEC.Emax) continue;
+          const idx = Math.floor(E/dE);
+          calAccum[idx] += 1;
+        }
+      });
+
+      const maxPeakE = Math.max(...src.peaks.map(p=>p.E));
+      const contMax = Math.min(CAL_SPEC.Emax, maxPeakE*1.05);
+      const contEvents = poisson(contRate);
+      for(let i=0;i<contEvents;i++){
+        const E = calContinuumEnergy(contMax);
+        const idx = Math.floor(E/dE);
+        if(idx>=0 && idx<CAL_SPEC.bins) calAccum[idx] += 1;
+      }
+
+      const bgEvents = poisson(bgRate);
+      for(let i=0;i<bgEvents;i++){
+        const E = CAL_SPEC.Emax*Math.random();
+        const idx = Math.floor(E/dE);
+        if(idx>=0 && idx<CAL_SPEC.bins) calAccum[idx] += 1;
+      }
+    }
+
+    function computeCalPhotopeakCounts(energyKeV){
+      const dE = CAL_SPEC.Emax/CAL_SPEC.bins;
+      const roiMin = energyKeV - 2.5*CAL_SPEC.sigmaKeV;
+      const roiMax = energyKeV + 2.5*CAL_SPEC.sigmaKeV;
+      const iMin = Math.max(0, Math.floor(roiMin/dE));
+      const iMax = Math.min(CAL_SPEC.bins-1, Math.floor(roiMax/dE));
+      let sum=0;
+      for(let i=iMin;i<=iMax;i++) sum += calAccum[i];
+      return sum;
+    }
+
+    function hasAllCalibrationMeasurements(){
+      return calibSources.every(src => src.peaks.every(p => state.effPoints.some(ep => ep.key===calPeakKey(src.key, p.E))));
+    }
+
+    function completedCalibrationSourcesCount(){
+      return calibSources.reduce((n,src)=>{
+        const ok = src.peaks.every(p => state.effPoints.some(ep => ep.key===calPeakKey(src.key, p.E)));
+        return n + (ok ? 1 : 0);
+      },0);
+    }
+
+    function updateCalibrationActions(){
+      const complete = hasAllCalibrationMeasurements();
+      if(buildEffBtn) buildEffBtn.style.display = complete ? 'inline-block' : 'none';
+      if(buildEffBtn) buildEffBtn.disabled = !complete || calMeasuring;
+
+      // Interpolation checkpoint: enabled only after curve build and when not measuring.
+      const canAttempt = !!state.effModel && !calMeasuring && state.dFit!==null;
+      const passed = state.eff1460!==null && Number.isFinite(state.eff1460);
+      if(eff1460AnswerInput) eff1460AnswerInput.disabled = !canAttempt || passed;
+      if(eff1460SubmitBtn) eff1460SubmitBtn.disabled = !canAttempt || passed;
+      if(!state.effModel){
+        setEff1460Feedback('warn','Build the efficiency curve first to unlock the interpolation check.');
+      } else if(calMeasuring){
+        setEff1460Feedback('warn','Finish the current measurement first, then submit your interpolated ε(1460 keV).');
+      } else if(passed){
+        setEff1460Feedback('', 'Correct. Your ε(1460 keV) is within ±5% tolerance.');
+      } else {
+        setEff1460Feedback('warn','Enter your interpolated ε(1460 keV) and press Submit (±5% tolerance).');
+      }
+      setEffNextVisible(passed);
+    }
+
+    function invalidateEfficiencyCurve(){
+      state.effModel = null;
+      state.eff1460 = null;
+      if(eff1460Text) eff1460Text.textContent = '—';
+      if(eff1460AnswerInput) eff1460AnswerInput.value = '';
+      if(effFitInfo) effFitInfo.innerHTML = 'Build the efficiency curve to show the fit equation and R<sup>2</sup>.';
+      updateSidebar();
+      updateCalibrationActions();
+      drawEffChart();
+    }
+
+    function setCalSource(key){
+      const src = calibSources.find(s=>s.key===key);
+      if(!src) return;
+      calSelectedKey = key;
+      if(calSourceBox) calSourceBox.textContent = src.name.replace('-', '‑');
+      updateCalSourceButtons();
+      resetCalSpectrum();
+
+      if(state.dFit===null){
+        setEffStatus('warn','Fit the effective distance first, then measure the three calibration sources.');
+      }else{
+        setEffStatus('warn', `Selected source: <b>${src.name}</b> (${formatCalPeakEnergies(src)}). Press <b>Start measurement</b> to count for <b>${CAL_TIME_SEC} s</b>.`);
+      }
+    }
+
+    function upsertEffPoint(key, E, eff){
+      const idx = state.effPoints.findIndex(p=>p.key===key);
+      const point = {key, E, eff};
+      if(idx>=0) state.effPoints[idx] = point;
+      else state.effPoints.push(point);
+      state.effPoints.sort((a,b)=>a.E-b.E);
+    }
+
+    function recordCalibrationResult(src, peakCountsByEnergy){
+      // Fill the table inputs; the input handler will compute rate/eff and update state.effPoints.
+      src.peaks.forEach(p=>{
+        const pk = calPeakKey(src.key, p.E);
+        const row = calRowByPeakKey.get(pk);
+        const counts = peakCountsByEnergy.get(Math.round(p.E));
+        if(!row || counts===undefined) return;
+        row.countInput.value = String(counts);
+        row.countInput.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    }
+
+    function startCalibrationMeasurement(){
+      if(calMeasuring) return;
+      if(state.dFit===null){
+        setEffStatus('danger','Fit the effective distance first.');
+        return;
+      }
+      const src = calibSources.find(s=>s.key===calSelectedKey);
+      if(!src){
+        setEffStatus('danger','Please select a calibration source first.');
+        return;
+      }
+
+      // Any new measurement invalidates a previously built curve/interpolation.
+      if(state.effModel || state.eff1460){
+        invalidateEfficiencyCurve();
+      }
+
+      resetCalSpectrum();
+      calMeasuring = true;
+      setCalibrationUiEnabled(false);
+      updateCalibrationActions();
+      setEffStatus('warn', `Measuring <b>${src.name}</b> at <b>${truth.calibrationDistanceX} cm</b>… <b>0/${CAL_TIME_SEC}</b> s`);
+
+      const stepMs = 120; // accelerated animation
+      calTimer = setInterval(()=>{
+        calElapsed += 1;
+        simulateCalSecond(src);
+        drawCalSpectrum(calAccum, src.peaks.map(p=>p.E));
+        setEffStatus('warn', `Measuring <b>${src.name}</b> at <b>${truth.calibrationDistanceX} cm</b>… <b>${calElapsed}/${CAL_TIME_SEC}</b> s`);
+
+        if(calElapsed >= CAL_TIME_SEC){
+          clearInterval(calTimer);
+          calTimer = null;
+          calMeasuring = false;
+
+          const peakCountsByEnergy = new Map();
+          src.peaks.forEach(p=>{
+            peakCountsByEnergy.set(Math.round(p.E), computeCalPhotopeakCounts(p.E));
+          });
+          recordCalibrationResult(src, peakCountsByEnergy);
+
+          const complete = hasAllCalibrationMeasurements();
+          const doneCount = completedCalibrationSourcesCount();
+          const countsText = src.peaks.map(p=>`${Math.round(p.E)} keV = <b>${peakCountsByEnergy.get(Math.round(p.E))}</b>`).join(', ');
+          setEffStatus('', `Measurement complete for <b>${src.name}</b>. Photopeak counts: ${countsText} (20 s). ${complete ? 'You can now build the efficiency curve.' : `Completed <b>${doneCount}/3</b> sources.`}`);
+
+          setCalibrationUiEnabled(true);
+          updateCalibrationActions();
+        }
+      }, stepMs);
+    }
+
+    function buildEfficiencyCurve(){
+      if(state.dFit===null){
+        setEffStatus('danger','Fit the effective distance first.');
+        return;
+      }
+      if(!hasAllCalibrationMeasurements()){
+        setEffStatus('danger','Complete the three calibration measurements first (Cs-137, Na-22, Bi-207).');
+        return;
+      }
+      const pts = state.effPoints.filter(p=>Number.isFinite(p.eff) && p.eff>0);
+      if(pts.length < 3){
+        setEffStatus('danger','Not enough valid points to build the curve.');
+        return;
+      }
+
+      const minEff = Math.min(...pts.map(p=>p.eff));
+      const cMax = Math.min(0.05, minEff - 1e-6);
+      if(!(cMax > 0)){
+        setEffStatus('danger','Efficiency values are too small/invalid to fit an offset power-law model.');
+        return;
+      }
+
+      // Fit ln(eff-c) ~ a + b ln(E), grid over c to keep positive.
+      let best={sse:Infinity,a:null,b:null,c:null};
+      for(let c=0;c<=cMax;c+=0.0005){
+        const xs=pts.map(p=>Math.log(p.E));
+        const ys=pts.map(p=>Math.log(p.eff-c));
+        const n=xs.length, sx=xs.reduce((a,b)=>a+b,0), sy=ys.reduce((a,b)=>a+b,0), sxx=xs.reduce((a,b)=>a+b*b,0), sxy=xs.reduce((a,b,i)=>a+b*ys[i],0);
+        const denom=n*sxx-sx*sx; if(Math.abs(denom)<1e-12) continue;
+        const b=(n*sxy-sx*sy)/denom, a=(sy-b*sx)/n;
+        const sse=pts.reduce((s,p)=>s+Math.pow((Math.exp(a+b*Math.log(p.E))+c)-p.eff,2),0);
+        if(sse<best.sse) best={sse,a,b,c};
+      }
+      if(best.a===null){
+        setEffStatus('danger','Could not build a curve from the current points.');
+        return;
+      }
+
+      state.effModel = best;
+
+      // Report fit equation and coefficient of determination (in the log-linearized space).
+      const xs = pts.map(p=>Math.log(p.E));
+      const ys = pts.map(p=>Math.log(p.eff-best.c));
+      const yMean = ys.reduce((s,v)=>s+v,0) / ys.length;
+      const sst = ys.reduce((s,v)=>s+Math.pow(v - yMean,2),0);
+      const sseLog = ys.reduce((s,v,i)=>{
+        const yPred = best.a + best.b*xs[i];
+        return s + Math.pow(v - yPred,2);
+      },0);
+      const r2Log = (sst > 0) ? (1 - (sseLog / sst)) : null;
+      const r2Text = (r2Log===null || !Number.isFinite(r2Log)) ? '—' : (()=>{
+        const r2Safe = Math.max(-1, Math.min(1, r2Log));
+        const r2Disp = (r2Safe < 1) ? (Math.trunc(r2Safe * 10000) / 10000) : r2Safe;
+        return Number(r2Disp).toFixed(4);
+      })();
+
+      const A = Math.exp(best.a);
+      if(effFitInfo){
+        effFitInfo.innerHTML = `
+          <div class="small muted"><b>Fit equation (use this)</b> <span class="muted">(E in keV)</span></div>
+          <div class="equation mono fitEquation">ε(E) = ${fmt(A,4)} · E<sup>${fmt(best.b,4)}</sup> + ${fmt(best.c,5)}</div>
+          <div class="small muted" style="margin-top:6px"><b>Line form:</b> <span class="mono">ln(ε − ${fmt(best.c,5)}) = ${fmt(best.a,4)} + ${fmt(best.b,4)}·ln(E)</span></div>
+          <div class="small muted" style="margin-top:6px"><b>R<sup>2</sup> = ${r2Text}</b></div>
+        `;
+      }
+
+      setEffStatus('', 'Efficiency curve built. Now <b>interpolate ε(1460 keV)</b> using the fit equation and submit your answer on the right.');
+      updateCalibrationActions();
+      drawEffChart();
+    }
+
+    function modelEff(E){
+      if(!state.effModel) return null;
+      return Math.exp(state.effModel.a + state.effModel.b*Math.log(E))+state.effModel.c;
+    }
+
+    function checkEff1460Answer(){
+      if(!state.effModel){
+        setEff1460Feedback('danger','Build the efficiency curve first.');
+        return;
+      }
+      const userVal = parseUserScientificNumber(eff1460AnswerInput?.value);
+      if(userVal===null){
+        setEff1460Feedback('danger','Please enter a number (e.g., <b>0.62</b> or <b>6.2e-1</b>).');
+        eff1460AnswerInput?.focus();
+        return;
+      }
+      if(!(userVal > 0)){
+        setEff1460Feedback('danger','Efficiency must be a positive number.');
+        eff1460AnswerInput?.focus();
+        return;
+      }
+      const exact = modelEff(1460);
+      if(exact===null || !Number.isFinite(exact) || exact<=0){
+        setEff1460Feedback('danger','Could not compute the expected ε(1460 keV). Rebuild the curve and try again.');
+        return;
+      }
+      const relErr = Math.abs(userVal - exact) / exact;
+      const lo = exact * 0.95;
+      const hi = exact * 1.05;
+      if(relErr <= 0.05){
+        state.eff1460 = userVal;
+        if(eff1460Text) eff1460Text.textContent = fmt(state.eff1460,5);
+        updateSidebar();
+        updateCalibrationActions();
+        updateCalibrationUi();
+        drawEffChart();
+        setEff1460Feedback('', `Correct. Your value is within ±5% (acceptable range: <b>${fmt(lo,5)}</b> to <b>${fmt(hi,5)}</b>).`);
+      } else {
+        state.eff1460 = null;
+        if(eff1460Text) eff1460Text.textContent = '—';
+        setEffNextVisible(false);
+        setEff1460Feedback('danger', `Not quite. Your value must be within ±5% of the interpolated ε(1460 keV). Try again. <span class="small">Accepted range: <b>${fmt(lo,5)}</b> to <b>${fmt(hi,5)}</b></span>`);
+        updateSidebar();
+      }
+    }
+
+    function drawEffChart(){
+      const c=document.getElementById('effChart'), ctx=c.getContext('2d');
+      const w=c.width,h=c.height;
+      const pts=state.effPoints||[];
+      const yMax=Math.max(0.08,...pts.map(p=>p.eff||0))*1.25;
+      const m={l:60,r:20,t:20,b:42};
+      const map=drawAxes(ctx,w,h,m,'Energy (keV)','Efficiency',450,1500,0,yMax);
+
+      if(state.effModel){
+        ctx.strokeStyle='#22c55e';
+        ctx.lineWidth=2;
+        ctx.beginPath();
+        for(let E=450;E<=1500;E+=3){
+          const y=modelEff(E);
+          const px=map.px(E);
+          const py=map.py(y);
+          if(E===450) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+        }
+        ctx.stroke();
+      }
+
+      if(state.eff1460!==null && state.effModel){
+        ctx.strokeStyle='#f59e0b';
+        ctx.setLineDash([6,4]);
+        ctx.beginPath();
+        ctx.moveTo(map.px(1460),map.py(0));
+        ctx.lineTo(map.px(1460),map.py(modelEff(1460)));
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.fillStyle='#38bdf8';
+      pts.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(map.px(p.E),map.py(p.eff),5,0,Math.PI*2);
+        ctx.fill();
+      });
+    }
+
+    if(calSourceOptions){
+      calSourceOptions.querySelectorAll('button[data-cal-src]').forEach(btn=>{
+        btn.addEventListener('click', ()=>setCalSource(btn.getAttribute('data-cal-src')));
+      });
+    }
+
+    if(startCalMeasureBtn) startCalMeasureBtn.onclick = startCalibrationMeasurement;
+    if(buildEffBtn) buildEffBtn.onclick = buildEfficiencyCurve;
+    if(eff1460SubmitBtn) eff1460SubmitBtn.onclick = checkEff1460Answer;
+    if(eff1460AnswerInput){
+      eff1460AnswerInput.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter'){
+          e.preventDefault();
+          checkEff1460Answer();
+        }
+      });
+    }
+
+    setCalSource('cs137');
+    updateCalibrationActions();
+    drawEffChart();
+
+    // Section 5: KCl spectrum and activity
+    function totalKNucleiFromMass(){
+      return (CONST.sampleMassG/CONST.molarMassKCl)*CONST.NA;
+    }
+    function acceptedK40Activity(){
+      const NK = totalKNucleiFromMass();
+      const NK40 = NK*CONST.k40AbundanceAccepted;
+      return CONST.lambdaK40*NK40;
+    }
+    function generateSpectrumData(timeSec){
+      const bins = 512, Emax=2000, dE=Emax/bins;
+      const data=[];
+
+      const A = acceptedK40Activity();
+      const epsilon = state.eff1460 || trueEfficiency(1460);
+      const peakRate = A*CONST.k40Yield*epsilon; // cps in the 1460-keV photopeak (effective/absolute for this fixed setup)
+      const sigma = truth.spectrumResolutionSigmaKeV;
+      const roiHalfWidth = 3*sigma;
+
+      // Background shape (relative weights). Scale so the expected background rate in the ROI equals CONST.bgRate.
+      const bgShape = new Array(bins);
+      const inRoi = new Array(bins);
+      let roiShapeSum = 0;
+      for(let i=0;i<bins;i++){
+        const E=(i+0.5)*dE;
+        const shapeRaw = truth.spectrumBackgroundBase*Math.exp(-E/1800)
+          + 1.4*Math.exp(-Math.pow((E-250)/300,2))
+          + 0.5*Math.sin(E/110+1.2)
+          + 1.0;
+        const shape = Math.max(0, shapeRaw);
+        bgShape[i] = shape;
+        const roi = (Math.abs(E-1460) <= roiHalfWidth);
+        inRoi[i] = roi;
+        if(roi) roiShapeSum += shape;
+      }
+      const bgScale = (roiShapeSum > 0) ? (CONST.bgRate / roiShapeSum) : 0;
+
+      // Signal mean per bin: peakRate*timeSec distributed as a Gaussian.
+      const norm = 1/(sigma*Math.sqrt(2*Math.PI));
+
+      let roiCounts = 0;
+      let areaCounts = 0;
+      for(let i=0;i<bins;i++){
+        const E=(i+0.5)*dE;
+        const bgMean = bgScale * bgShape[i] * timeSec;
+        const sigPdf = norm * Math.exp(-0.5*Math.pow((E-1460)/sigma,2));
+        const sigMean = peakRate * timeSec * sigPdf * dE;
+
+        const bgCount = poisson(Math.max(0, bgMean));
+        const sigCount = poisson(Math.max(0, sigMean));
+        const c = bgCount + sigCount;
+
+        data.push({E, c});
+        areaCounts += sigCount;
+        if(inRoi[i]) roiCounts += c;
+      }
+      const bgRate = CONST.bgRate;
+      return {data, areaCounts, roiCounts, peakRate, bgRate};
+    }
+
+    function acquireSpectrum(){
+      if(state.eff1460===null){document.getElementById('activityResult').className='status danger';document.getElementById('activityResult').textContent='Interpolate ε(1460 keV) first.';return;}
+      const t = Number(document.getElementById('kclTime').value)||1200; state.kclTime=t;
+      state.lastSpectrum = generateSpectrumData(t);
+      drawSpectrum(state.lastSpectrum.data);
+      const roiRate = state.lastSpectrum.roiCounts/t;
+      const netRate = Math.max(0, roiRate - CONST.bgRate);
+      state.kclPeakCounts = state.lastSpectrum.roiCounts;
+      state.kclNetRate = netRate;
+      document.getElementById('bgRateCell').textContent = fmt(CONST.bgRate,4);
+      document.getElementById('peakCountsCell').textContent = state.lastSpectrum.roiCounts;
+      document.getElementById('roiRateCell').textContent = fmt(roiRate,4);
+      document.getElementById('netRateCell').textContent = fmt(netRate,4);
+      document.getElementById('activityResult').className='status';
+      document.getElementById('activityResult').innerHTML='Spectrum acquired. Now compute the K-40 activity using the net count rate and ε(1460 keV).';
+    }
+    function computeActivity(){
+      if(state.kclNetRate===null || state.eff1460===null){document.getElementById('activityResult').className='status danger';document.getElementById('activityResult').textContent='Acquire the spectrum and interpolate ε(1460 keV) first.';return;}
+      state.k40Activity = state.kclNetRate/(state.eff1460*CONST.k40Yield);
+      document.getElementById('activityResult').className='status';
+      document.getElementById('activityResult').innerHTML=`Computed K-40 activity: <b>${fmt(state.k40Activity,4)} Bq</b> using A = R<sub>net</sub> / (εY).`;
+      updateSidebar();
+    }
+    function drawSpectrum(data){
+      const c=document.getElementById('spectrumChart'), ctx=c.getContext('2d'); const w=c.width,h=c.height;
+      const yMax=Math.max(...data.map(d=>d.c))*1.15;
+      const m={l:50,r:20,t:20,b:40}; const map=drawAxes(ctx,w,h,m,'Energy (keV)','Counts / bin',0,2000,0,yMax);
+      ctx.strokeStyle='#38bdf8'; ctx.lineWidth=1.5; ctx.beginPath();
+      data.forEach((p,i)=>{const x=map.px(p.E), y=map.py(p.c); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);}); ctx.stroke();
+      ctx.strokeStyle='#f59e0b'; ctx.setLineDash([6,4]); ctx.beginPath(); ctx.moveTo(map.px(1460),map.py(0)); ctx.lineTo(map.px(1460),map.py(yMax*0.95)); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle='#fcd34d'; ctx.fillText('1460 keV', map.px(1460)-24, map.py(yMax*0.92));
+    }
+
+    document.getElementById('acquireSpectrum').onclick=acquireSpectrum;
+    document.getElementById('computeActivity').onclick=computeActivity;
+
+    // Section 6: total K nuclei
+    function calcPotassium(){
+      const n = CONST.sampleMassG/CONST.molarMassKCl;
+      const NK = n*CONST.NA;
+      state.totalKNuclei = NK;
+      document.getElementById('kAtomsResult').className='status';
+      document.getElementById('kAtomsResult').innerHTML = `Total potassium nuclei in the sample: <b>${NK.toExponential(4)}</b>.`;
+      document.getElementById('kAtomsBreakdown').innerHTML = `
+        n = m/M = ${CONST.sampleMassG} / ${CONST.molarMassKCl} = <b>${n.toExponential(4)} mol</b><br>
+        N<sub>K</sub> = nN<sub>A</sub> = (${n.toExponential(4)})(6.022 × 10<sup>23</sup>) = <b>${NK.toExponential(4)}</b>
+      `;
+      updateSidebar();
+    }
+    document.getElementById('calcPotassium').onclick=calcPotassium;
+
+    // Section 7: natural abundance
+    function calcAbundance(){
+      if(state.k40Activity===null || state.totalKNuclei===null){document.getElementById('abundanceResult').className='status danger';document.getElementById('abundanceResult').textContent='Compute the activity and total K nuclei first.';return;}
+      state.k40Nuclei = state.k40Activity/CONST.lambdaK40;
+      state.abundance = (state.k40Nuclei/state.totalKNuclei)*100;
+      const errorPct = 100*Math.abs(state.abundance-0.0117)/0.0117;
+      const cls = errorPct<8?'status':(errorPct<20?'status warn':'status danger');
+      document.getElementById('abundanceResult').className = cls;
+      document.getElementById('abundanceResult').innerHTML = `
+        Experimental natural abundance of K-40 = <b>${fmt(state.abundance,5)}%</b><br>
+        K-40 nuclei = <b>${state.k40Nuclei.toExponential(4)}</b><br>
+        Percent error relative to 0.0117% = <b>${fmt(errorPct,2)}%</b>
+      `;
+      document.getElementById('summaryLambda').innerHTML = `${CONST.lambdaK40.toExponential(3)} s<sup>-1</sup>`;
+      document.getElementById('summaryAct').textContent = `${fmt(state.k40Activity,4)} Bq`;
+      document.getElementById('summaryNK40').textContent = state.k40Nuclei.toExponential(4);
+      document.getElementById('summaryNKTot').textContent = state.totalKNuclei.toExponential(4);
+      document.getElementById('summaryAbundance').textContent = `${fmt(state.abundance,5)}%`;
+      updateSidebar();
+    }
+    document.getElementById('calcAbundance').onclick=calcAbundance;
+
+    // Download button notice only
+    document.getElementById('downloadHtml').onclick=()=>alert('The HTML file is already saved in the working folder for download.');
+
+    // Reset
+    document.getElementById('resetAll').onclick=()=>location.reload();
+
+    // Initial drawings
+    drawDistanceChart(); drawCsSpectrum(Array.from({length:512},()=>0)); drawEffChart(); drawSpectrum(Array.from({length:512},(_,i)=>({E:(i+0.5)*(2000/512),c:0})));
+    updateSidebar();
+  </script>
+</body>
+</html>
