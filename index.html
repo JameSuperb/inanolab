@@ -202,26 +202,8 @@
         .main-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem 2rem 2rem;
+            padding: 2rem 2rem 7rem;
             margin-top: 0;
-        }
-
-        /* In-content page navigation (replaces fixed nav bars) */
-        .page-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            padding-top: 1rem;
-            margin-top: 1rem;
-            border-top: 1px solid #e9ecef;
-        }
-
-        .page-controls button:disabled {
-            opacity: 0.55;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
         .section {
@@ -1224,7 +1206,7 @@
             }
 
             .main-content {
-                padding: 1.25rem 1rem 2rem;
+                padding: 1.25rem 1rem 7rem;
             }
 
             .nav-button-text {
@@ -2121,11 +2103,33 @@
                 </form>
             </section>
         </div>
-        <div class="page-controls" aria-label="Page navigation">
-            <button type="button" id="page-prev" class="btn-subtle">← Back</button>
-            <button type="button" id="page-next" class="btn-primary">Next →</button>
-        </div>
     </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Site navigation">
+        <div class="nav-buttons">
+            <a href="#" class="nav-button" data-section="about" aria-label="About">
+                <div class="nav-button-icon" aria-hidden="true">🔬</div>
+                <div class="nav-button-text">About</div>
+            </a>
+            <a href="#" class="nav-button" data-section="cost" aria-label="Cost of Analysis">
+                <div class="nav-button-icon" aria-hidden="true">🧮</div>
+                <div class="nav-button-text">Cost of Analysis</div>
+            </a>
+            <a href="#" class="nav-button" data-section="request" aria-label="Service Request">
+                <div class="nav-button-icon" aria-hidden="true">📝</div>
+                <div class="nav-button-text">Service Request</div>
+            </a>
+            <a href="#" class="nav-button" data-section="preparation" aria-label="Sample Prep">
+                <div class="nav-button-icon" aria-hidden="true">⚗️</div>
+                <div class="nav-button-text">Sample Prep</div>
+            </a>
+            <a href="#" class="nav-button" data-section="extras" aria-label="Extras">
+                <div class="nav-button-icon" aria-hidden="true">🔧</div>
+                <div class="nav-button-text">Extras</div>
+            </a>
+        </div>
+    </nav>
     
     <!-- Lightbox Overlay -->
     <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Sample image viewer" aria-hidden="true">
@@ -3344,13 +3348,8 @@
         });
 
         
-
         // Page navigation functionality
-        const PAGE_ORDER = ['about', 'cost', 'request', 'preparation', 'extras'];
-        let currentPageId = 'about';
-
         function showPage(pageId) {
-            currentPageId = pageId;
             // Hide all pages
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
@@ -3391,26 +3390,6 @@
                     siteFooter.style.display = 'none';
                 }
             }
-
-            updatePageControls();
-        }
-
-        function updatePageControls() {
-            const prevBtn = document.getElementById('page-prev');
-            const nextBtn = document.getElementById('page-next');
-            if (!prevBtn || !nextBtn) return;
-
-            const idx = PAGE_ORDER.indexOf(currentPageId);
-            prevBtn.disabled = idx <= 0;
-            nextBtn.disabled = idx >= PAGE_ORDER.length - 1;
-        }
-
-        function goRelativePage(delta) {
-            const idx = PAGE_ORDER.indexOf(currentPageId);
-            if (idx === -1) return;
-            const nextIdx = idx + delta;
-            if (nextIdx < 0 || nextIdx >= PAGE_ORDER.length) return;
-            showPage(PAGE_ORDER[nextIdx]);
         }
 
         // Navigation button click handlers
@@ -3421,12 +3400,6 @@
                 showPage(pageId);
             });
         });
-
-        // In-content Previous/Next handlers (replaces fixed nav bars)
-        const pagePrevBtn = document.getElementById('page-prev');
-        const pageNextBtn = document.getElementById('page-next');
-        if (pagePrevBtn) pagePrevBtn.addEventListener('click', () => goRelativePage(-1));
-        if (pageNextBtn) pageNextBtn.addEventListener('click', () => goRelativePage(1));
 
         // CTA button handler (specific to a dedicated Request CTA only)
         // Use a specific ID to avoid hijacking other links styled with .cta-button (e.g., download links)
