@@ -63,6 +63,9 @@
     #effFitInfo{border-left-color:var(--warn)}
     .fitEquation{font-size:18px;font-weight:900;text-align:center;border:2px solid var(--warn);border-radius:12px;padding:10px;margin:8px 0}
 
+    /* Step 5 (Efficiency): show geometry factor subtly */
+    #sec-4 .geomEquation{font-size:14px;font-weight:700;text-align:center;border:1px dashed var(--line);background:transparent;color:var(--muted);padding:8px 10px;margin:6px 0}
+
     /* Step 5 (Efficiency): highlight key columns */
     th.th-highlight{background:#fcd34d;color:var(--card);font-weight:900}
 
@@ -82,6 +85,51 @@
     #sec-4 label[for="eff1460Answer"]{font-size:14px}
     #sec-4 #eff1460Answer{font-size:18px;padding:14px 12px;border-radius:12px}
     #sec-4 #eff1460Answer::placeholder{font-size:16px}
+
+    /* Step 6 (Activity): make A input prominent (match interpolate styling) */
+    #sec-5 label[for="activityAnswer"]{font-size:14px}
+    #sec-5 #activityAnswer{font-size:18px;padding:14px 12px;border-radius:12px}
+    #sec-5 #activityAnswer::placeholder{font-size:16px}
+    #sec-5 #activityBox .activityTitle{font-size:16px}
+    #sec-5 #activityBox .activityVars{font-size:17px;line-height:1.6}
+
+    /* Step 7 (Total K nuclei): make input prominent */
+    #sec-6 label[for="kAtomsAnswer"]{font-size:14px}
+    #sec-6 #kAtomsAnswer{font-size:18px;padding:14px 12px;border-radius:12px}
+    #sec-6 #kAtomsAnswer::placeholder{font-size:16px}
+
+    /* Step 8 (Abundance): make equation/input prominent */
+    #sec-7 label[for="abundanceAnswer"]{font-size:14px}
+    #sec-7 #abundanceAnswer{font-size:18px;padding:14px 12px;border-radius:12px}
+    #sec-7 #abundanceAnswer::placeholder{font-size:16px}
+    #sec-7 .abundanceEquation{font-size:20px}
+    #sec-7 .percentErrorHighlight{display:inline-block;margin-top:8px;font-weight:900}
+    #sec-7 #downloadHtml{padding:14px 18px;font-size:16px;border-radius:12px}
+
+    /* Print/PDF report (Save as PDF via browser print dialog) */
+    #printReport{display:none;max-width:920px;margin:0 auto;padding:24px}
+    #printReport h1{margin:0 0 6px;font-size:20px}
+    #printReport h2{margin:18px 0 10px;font-size:18px}
+    #printReport h3{margin:0 0 10px;font-size:14px}
+    #printReport .printBlock{border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+    #printReport .printMeta{display:grid;grid-template-columns:1fr;gap:6px;font-size:14px}
+    #printReport table{font-size:13px}
+    #printReport th,#printReport td{text-align:left}
+    #printReport th{background:transparent}
+    #printReport .printGraphTitle{font-weight:900;margin:12px 0 8px}
+    #printReport .printGraphImg{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px}
+
+    body.printMode{background:none !important;color:var(--bg) !important}
+    body.printMode header, body.printMode main, body.printMode #nameOverlay{display:none !important}
+    body.printMode #printReport{display:block}
+
+    @media print{
+      body{background:none !important;color:var(--bg) !important}
+      header, main, #nameOverlay{display:none !important}
+      #printReport{display:block !important;max-width:none;margin:0;padding:0}
+      #printReport .printBlock{break-inside:avoid}
+      #printReport img{break-inside:avoid}
+    }
 
     /* Step 4 (Effective Distance): distance measurement UI */
     .sim-controls{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
@@ -249,6 +297,8 @@
               <li>Avogadro's number = <b>6.022 × 10<sup>23</sup></b></li>
               <li>K-40 gamma yield at 1460 keV = <b>0.1068</b></li>
               <li>K-40 half-life = <b>1.29 × 10<sup>9</sup> years</b> (≈ <b id="k40HalfLifeSeconds">—</b> s)</li>
+              <li>Detector face diameter (circular) = <b id="detectorDiameterCmText">—</b> cm</li>
+              <li>Detector face area, A<sub>det</sub> = π(D/2)<sup>2</sup> ≈ <b id="detectorAreaCm2Text">—</b> cm<sup>2</sup></li>
             </ul>
             <div id="mathDerived" class="status"></div>
           </div>
@@ -338,6 +388,12 @@
               <tr><th>Source</th><th class="th-highlight">Energy (keV)</th><th>Yield</th><th>Activity (µCi)</th><th title="Geometry factor">G</th><th>Counts</th><th>Time (s)</th><th>Rate (cps)</th><th class="th-highlight">ε</th></tr>
             </table>
 
+            <div class="small muted" style="margin-top:12px">Geometric factor</div>
+            <div class="equation mono geomEquation">G = A<sub>det</sub> / (4π (x + d)<sup>2</sup>)</div>
+            <div class="small muted" style="margin-top:6px">
+              Here, <b>x</b> is the source-to-detector distance (10 cm in this step), <b>d</b> is the fitted effective distance, and <b>A<sub>det</sub></b> is the detector face area.
+            </div>
+
             <div class="small muted" style="margin-top:12px"><b>Efficiency formula</b></div>
             <div class="equation mono fitEquation">ε = R / (A · Y · G)</div>
             <div class="small muted" style="margin-top:6px">
@@ -355,7 +411,7 @@
               <h3>Interpolate</h3>
               <p class="muted small" style="margin:6px 0 10px">Using the <b>Fit equation</b> above, calculate the detector efficiency at <b>1460 keV</b> (ε at 1460 keV). Enter your result below.</p>
               <label class="small muted" for="eff1460Answer">Your ε(1460 keV)</label>
-              <input type="text" id="eff1460Answer" inputmode="decimal" placeholder="e.g., 0.62 or 6.2e-1" aria-describedby="eff1460Feedback" disabled>
+              <input type="text" id="eff1460Answer" inputmode="decimal" placeholder="e.g., 0.1" aria-describedby="eff1460Feedback" disabled>
               <div class="btnrow" style="margin-top:10px">
                 <button class="action" id="eff1460Submit" disabled>Submit</button>
               </div>
@@ -389,13 +445,29 @@
             </div>
             <div class="btnrow" style="margin-top:12px">
               <button class="action" id="acquireSpectrum">Acquire spectrum</button>
-              <button class="secondary" id="computeActivity">Compute activity</button>
             </div>
             <table style="margin-top:12px">
               <tr><th>Background count rate (cps)</th><th>Peak counts</th><th>Total rate in ROI (cps)</th><th>Net rate (cps)</th></tr>
               <tr><td id="bgRateCell">—</td><td id="peakCountsCell">—</td><td id="roiRateCell">—</td><td id="netRateCell">—</td></tr>
             </table>
-            <div id="activityResult" class="status warn" style="margin-top:12px">Acquire the spectrum first, then compute the activity using A = R<sub>net</sub> / (εY).</div>
+
+            <div class="stepbox" id="activityBox" style="margin-top:12px">
+              <div class="muted activityTitle"><b>Compute the activity</b></div>
+              <div class="equation mono fitEquation">A = R<sub>net</sub> / (ε · Y)</div>
+              <div class="muted activityVars" style="margin-top:6px">
+                <b>A</b> = activity of K-40 (<b>Bq</b> = s<sup>-1</sup>)<br>
+                <b>R<sub>net</sub></b> = net count rate in ROI (<b>cps</b>) = <span class="mono" id="activityRnetVal">—</span> cps<br>
+                <b>ε</b> = detector efficiency at 1460 keV = <span class="mono" id="activityEffVal">—</span><br>
+                <b>Y</b> = gamma yield at 1460 keV = <span class="mono" id="activityYieldVal">—</span>
+              </div>
+
+              <label class="small muted" for="activityAnswer" style="margin-top:10px;display:block">Your activity, A (Bq)</label>
+              <input type="text" id="activityAnswer" inputmode="decimal" placeholder="e.g., 0.9" aria-describedby="activityFeedback" disabled>
+              <div class="btnrow" style="margin-top:10px">
+                <button class="action" id="activitySubmit" disabled>Submit</button>
+              </div>
+              <div id="activityFeedback" class="status warn" style="margin-top:12px">Acquire the spectrum first to unlock the activity calculation check.</div>
+            </div>
           </div>
           <div class="card">
             <h3>Simulated gamma spectrum (0–2000 keV)</h3>
@@ -416,8 +488,12 @@
               <li>Avogadro's number, N<sub>A</sub> = <b>6.022 × 10<sup>23</sup></b></li>
               <li>Each KCl formula unit contains <b>1 potassium atom</b>.</li>
             </ul>
-            <button class="action" id="calcPotassium">Calculate total potassium nuclei</button>
-            <div id="kAtomsResult" class="status warn" style="margin-top:12px">Press the button to calculate the total K nuclei in 50 mg of KCl.</div>
+            <label class="small muted" for="kAtomsAnswer">Your total potassium nuclei, N<sub>K</sub></label>
+            <input type="text" id="kAtomsAnswer" inputmode="decimal" placeholder="e.g., 1e20" aria-describedby="kAtomsResult">
+            <div class="btnrow" style="margin-top:10px">
+              <button class="action" id="kAtomsSubmit">Submit</button>
+            </div>
+            <div id="kAtomsResult" class="status warn" style="margin-top:12px">Submit your calculated N<sub>K</sub> to unlock <b>Next</b> (±5% tolerance).</div>
           </div>
           <div class="card">
             <h3>Calculation breakdown</h3>
@@ -426,7 +502,7 @@
             <div id="kAtomsBreakdown" class="stepbox muted">No calculation yet.</div>
           </div>
         </div>
-        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="action nextBtn">Next →</button></div>
+        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="action nextBtn" id="kAtomsNext" disabled>Next →</button></div>
       </section>
 
       <section class="section" id="sec-7">
@@ -434,9 +510,21 @@
         <div class="grid2">
           <div class="card">
             <h3>Final calculation</h3>
-            <div class="equation">N<sub>K40</sub> = A / λ</div>
-            <div class="equation">Abundance = (N<sub>K40</sub> / N<sub>K</sub>) × 100%</div>
-            <button class="action" id="calcAbundance">Calculate natural abundance</button>
+            <div class="equation mono">N<sub>K40</sub> = A / λ</div>
+            <div class="equation mono fitEquation abundanceEquation">Abundance = (N<sub>K40</sub> / N<sub>K</sub>) × 100%</div>
+
+            <div class="muted" style="margin-top:6px">
+              Use the values below (from your previous steps):<br>
+              <b>A</b> = <span class="mono" id="abundanceAVal">—</span> Bq<br>
+              <b>λ</b> = <span class="mono" id="abundanceLambdaVal">—</span> s<sup>-1</sup><br>
+              <b>N<sub>K</sub></b> = <span class="mono" id="abundanceNKVal">—</span>
+            </div>
+
+            <label class="small muted" for="abundanceAnswer" style="margin-top:10px;display:block">Your experimental abundance of K-40 (%)</label>
+            <input type="text" id="abundanceAnswer" inputmode="decimal" placeholder="e.g., 0.02" aria-describedby="abundanceResult" disabled>
+            <div class="btnrow" style="margin-top:10px">
+              <button class="action" id="abundanceSubmit" disabled>Submit</button>
+            </div>
             <div id="abundanceResult" class="status warn" style="margin-top:12px">Complete the previous steps first.</div>
           </div>
           <div class="card">
@@ -445,17 +533,54 @@
               <tr><th>Quantity</th><th>Value</th></tr>
               <tr><td>Decay constant, λ</td><td id="summaryLambda">—</td></tr>
               <tr><td>K-40 activity, A</td><td id="summaryAct">—</td></tr>
-              <tr><td>K-40 nuclei, N<sub>K40</sub></td><td id="summaryNK40">—</td></tr>
               <tr><td>Total K nuclei, N<sub>K</sub></td><td id="summaryNKTot">—</td></tr>
-              <tr><td>Experimental abundance</td><td id="summaryAbundance">—</td></tr>
+              <tr><td>Experimental abundance</td><td>
+                <div id="summaryAbundance">—</div>
+                <div class="status warn percentErrorHighlight" style="text-align:center"><span class="mono">Percent error = <span id="summaryPercentError">—</span></span></div>
+              </td></tr>
               <tr><td>Accepted abundance</td><td>0.0117%</td></tr>
             </table>
           </div>
         </div>
-        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="secondary" id="downloadHtml">Download a copy from this folder</button></div>
+        <div class="footer-actions"><button class="secondary prevBtn">← Previous</button><button class="action" id="downloadHtml">Download the Result</button></div>
       </section>
     </div>
   </main>
+
+  <div id="printReport" aria-hidden="true">
+    <h1>Virtual Gamma Spectroscopy Lab: Natural Abundance of K-40 in KCl</h1>
+
+    <div class="printBlock">
+      <div class="printMeta">
+        <div><b>Name:</b> <span id="printName">—</span></div>
+        <div><b>Date &amp; Time started:</b> <span id="printStarted">—</span></div>
+        <div><b>Time Elapsed:</b> <span id="printElapsed">—</span></div>
+        <div><b>Date &amp; Time finished:</b> <span id="printFinished">—</span></div>
+      </div>
+    </div>
+
+    <h2>Results</h2>
+    <div class="printBlock">
+      <h3>Summary of Values</h3>
+      <table>
+        <tr><th>Quantity</th><th>Value</th></tr>
+        <tr><td>Decay constant, λ</td><td id="printLambda">—</td></tr>
+        <tr><td>K-40 activity, A</td><td id="printAct">—</td></tr>
+        <tr><td>Total K nuclei, N<sub>K</sub></td><td id="printNK">—</td></tr>
+        <tr><td>Experimental abundance</td><td id="printAbundance">—</td></tr>
+        <tr><td>Accepted abundance</td><td id="printAcceptedAbundance">—</td></tr>
+        <tr><td>Percent error</td><td id="printPercentError">—</td></tr>
+      </table>
+    </div>
+
+    <div class="printBlock">
+      <h3>Graphs</h3>
+      <div class="printGraphTitle">I. Count Rate vs Distance (best fit)</div>
+      <img id="printDistanceImg" class="printGraphImg" alt="Count Rate vs Distance graph">
+      <div class="printGraphTitle">II. Efficiency Curve (best fit)</div>
+      <img id="printEfficiencyImg" class="printGraphImg" alt="Efficiency Curve graph">
+    </div>
+  </div>
 
   <script>
     const STORAGE_KEY_FULL_NAME = 'inanolab_k40_fullName';
@@ -518,6 +643,8 @@
         setNameError('Could not save your name (local storage is unavailable). Please enable local storage and try again.');
         return;
       }
+
+      state.sessionStartMs = Date.now();
       hideNameOverlay();
       updateSavedNameControls();
     }
@@ -543,8 +670,8 @@
     (function initNameGate(){
       const saved = storageGet(STORAGE_KEY_FULL_NAME);
       updateSavedNameControls();
-      if(saved) hideNameOverlay();
-      else showNameOverlay();
+      if(fullNameInput && saved) fullNameInput.value = saved;
+      showNameOverlay();
     })();
 
     const sections = [
@@ -568,6 +695,7 @@
       s = s
         .toLowerCase()
         .replace(/[,\s]/g,'')
+        .replace(/%/g,'')
         .replace(/[()]/g,'')
         .replace(/×/g,'x')
         .replace(/[−–—]/g,'-')
@@ -612,12 +740,14 @@
       if(n >= min && n <= max){
         lambdaCheckpointPassed = true;
         state.lambdaUser = n;
+        state.abundance = null;
         updateSidebar();
         setLambdaFeedback('',`Correct. Your value is within the accepted range (≈ <b>1.7–1.8 × 10<sup>-17</sup> 1/s</b>). You may proceed.`);
         setMathNextEnabled(true);
       } else {
         lambdaCheckpointPassed = false;
         state.lambdaUser = null;
+        state.abundance = null;
         updateSidebar();
         setMathNextEnabled(false);
         setLambdaFeedback('danger','Not quite. Make sure you convert the half-life from years to seconds before computing λ.');
@@ -654,6 +784,9 @@
         // Step 5 also measures element widths; refresh after showing.
         updateCalibrationUi();
       }
+      if(i===7){
+        updateAbundanceControls();
+      }
       window.scrollTo({top:0,behavior:'smooth'});
     }
     document.querySelectorAll('.nextBtn').forEach(btn=>btn.onclick=()=>showSection(Math.min(currentSection+1,sections.length-1)));
@@ -688,6 +821,7 @@
     };
 
     const state = {
+      sessionStartMs:null,
       lambdaUser:null,
       dFit:null, kFit:null,
       effPoints:[], effModel:null, eff1460:null,
@@ -713,17 +847,48 @@
     }
 
     function updateSidebar(){
-      document.getElementById('stateLambda').innerHTML = state.lambdaUser ? `${sciHtml(state.lambdaUser, 2)} 1/s` : '—';
-      document.getElementById('stateD').textContent = state.dFit? fmt(state.dFit,3)+' cm':'—';
-      document.getElementById('stateEff').textContent = state.eff1460? fmt(state.eff1460,5):'—';
-      document.getElementById('stateAct').textContent = state.k40Activity? fmt(state.k40Activity,3)+' Bq':'—';
-      document.getElementById('stateKTotal').textContent = state.totalKNuclei? state.totalKNuclei.toExponential(3):'—';
-      document.getElementById('stateAbundance').textContent = state.abundance? fmt(state.abundance,5)+' %':'—';
+      document.getElementById('stateLambda').innerHTML = (state.lambdaUser!==null && Number.isFinite(state.lambdaUser)) ? `${sciHtml(state.lambdaUser, 2)} 1/s` : '—';
+      document.getElementById('stateD').textContent = (state.dFit!==null && Number.isFinite(state.dFit)) ? fmt(state.dFit,3)+' cm' : '—';
+      document.getElementById('stateEff').textContent = (state.eff1460!==null && Number.isFinite(state.eff1460)) ? fmt(state.eff1460,5) : '—';
+      document.getElementById('stateAct').textContent = (state.k40Activity!==null && Number.isFinite(state.k40Activity)) ? fmt(state.k40Activity,3)+' Bq' : '—';
+      document.getElementById('stateKTotal').textContent = (state.totalKNuclei!==null && Number.isFinite(state.totalKNuclei)) ? state.totalKNuclei.toExponential(3) : '—';
+      document.getElementById('stateAbundance').textContent = (state.abundance!==null && Number.isFinite(state.abundance)) ? fmt(state.abundance,5)+' %' : '—';
+
+      // Step 8: expose values for manual abundance calculation + keep summary in sync.
+      const abundanceAVal = document.getElementById('abundanceAVal');
+      if(abundanceAVal) abundanceAVal.textContent = (state.k40Activity!==null && Number.isFinite(state.k40Activity)) ? fmt(state.k40Activity,4) : '—';
+      const abundanceLambdaVal = document.getElementById('abundanceLambdaVal');
+      if(abundanceLambdaVal) abundanceLambdaVal.innerHTML = (state.lambdaUser!==null && Number.isFinite(state.lambdaUser)) ? sciHtml(state.lambdaUser, 3) : '—';
+      const abundanceNKVal = document.getElementById('abundanceNKVal');
+      if(abundanceNKVal) abundanceNKVal.textContent = (state.totalKNuclei!==null && Number.isFinite(state.totalKNuclei)) ? state.totalKNuclei.toExponential(4) : '—';
+
+      const summaryLambdaEl = document.getElementById('summaryLambda');
+      if(summaryLambdaEl) summaryLambdaEl.innerHTML = (state.lambdaUser!==null && Number.isFinite(state.lambdaUser)) ? `${sciHtml(state.lambdaUser, 3)} s<sup>-1</sup>` : '—';
+      const summaryActEl = document.getElementById('summaryAct');
+      if(summaryActEl) summaryActEl.textContent = (state.k40Activity!==null && Number.isFinite(state.k40Activity)) ? `${fmt(state.k40Activity,4)} Bq` : '—';
+      const summaryNKTotEl = document.getElementById('summaryNKTot');
+      if(summaryNKTotEl) summaryNKTotEl.textContent = (state.totalKNuclei!==null && Number.isFinite(state.totalKNuclei)) ? state.totalKNuclei.toExponential(4) : '—';
+      const summaryAbundanceEl = document.getElementById('summaryAbundance');
+      if(summaryAbundanceEl) summaryAbundanceEl.textContent = (state.abundance!==null && Number.isFinite(state.abundance)) ? `${fmt(state.abundance,5)}%` : '—';
+
+      const summaryPercentErrorEl = document.getElementById('summaryPercentError');
+      if(summaryPercentErrorEl){
+        const acceptedPct = CONST.k40AbundanceAccepted * 100;
+        const hasExp = (state.abundance!==null && Number.isFinite(state.abundance));
+        const err = (!hasExp || !(acceptedPct>0)) ? null : (100 * Math.abs(state.abundance - acceptedPct) / acceptedPct);
+        summaryPercentErrorEl.textContent = (err===null || !Number.isFinite(err)) ? '—' : `${fmt(err,2)}%`;
+      }
     }
 
     const k40HalfLifeSeconds = CONST.k40HalfLifeYears*CONST.yearsToSec;
     const halfLifeSecondsEl = document.getElementById('k40HalfLifeSeconds');
     if(halfLifeSecondsEl) halfLifeSecondsEl.innerHTML = sciHtml(k40HalfLifeSeconds, 2);
+
+    const detectorDiameterEl = document.getElementById('detectorDiameterCmText');
+    if(detectorDiameterEl) detectorDiameterEl.textContent = fmt(CONST.detectorDiameterCm, 2);
+
+    const detectorAreaEl = document.getElementById('detectorAreaCm2Text');
+    if(detectorAreaEl) detectorAreaEl.textContent = fmt(CONST.detectorAreaCm2, 2);
 
     document.getElementById('mathDerived').innerHTML = `Use <b>t<sub>1/2</sub> = 1.29 × 10<sup>9</sup> years</b> = <b>${sciHtml(k40HalfLifeSeconds, 2)} s</b>. Then compute <b>λ</b> in <b>1/s</b> and submit it on the left.`;
 
@@ -1401,6 +1566,10 @@
       return calibSources.every(src => src.peaks.every(p => state.effPoints.some(ep => ep.key===calPeakKey(src.key, p.E))));
     }
 
+    function isCalibrationTableComplete(){
+      return calPeakRows.every(r=>parseCountInputValue(r.countInput)!==null);
+    }
+
     function completedCalibrationSourcesCount(){
       return calibSources.reduce((n,src)=>{
         const ok = src.peaks.every(p => state.effPoints.some(ep => ep.key===calPeakKey(src.key, p.E)));
@@ -1412,6 +1581,15 @@
       const complete = hasAllCalibrationMeasurements();
       if(buildEffBtn) buildEffBtn.style.display = complete ? 'inline-block' : 'none';
       if(buildEffBtn) buildEffBtn.disabled = !complete || calMeasuring;
+
+      // Hide source selection and Start measurement controls once all table rows have counts.
+      const tableComplete = isCalibrationTableComplete();
+      if(calSourceOptions) calSourceOptions.style.display = tableComplete ? 'none' : '';
+      if(startCalMeasureBtn){
+        const wrapper = startCalMeasureBtn.closest('.btnrow');
+        if(wrapper) wrapper.style.display = tableComplete ? 'none' : '';
+        else startCalMeasureBtn.style.display = tableComplete ? 'none' : 'inline-block';
+      }
 
       // Interpolation checkpoint: enabled only after curve build and when not measuring.
       const canAttempt = !!state.effModel && !calMeasuring && state.dFit!==null;
@@ -1766,8 +1944,79 @@
       return {data, areaCounts, roiCounts, peakRate, bgRate};
     }
 
+    const activityAnswerInput = document.getElementById('activityAnswer');
+    const activitySubmitBtn = document.getElementById('activitySubmit');
+    const activityFeedback = document.getElementById('activityFeedback');
+    const activityRnetVal = document.getElementById('activityRnetVal');
+    const activityEffVal = document.getElementById('activityEffVal');
+    const activityYieldVal = document.getElementById('activityYieldVal');
+
+    function setActivityFeedback(type, html){
+      if(!activityFeedback) return;
+      activityFeedback.className = `status${type ? ' ' + type : ''}`;
+      activityFeedback.innerHTML = html;
+    }
+
+    function setActivityUiEnabled(enabled){
+      if(activityAnswerInput) activityAnswerInput.disabled = !enabled;
+      if(activitySubmitBtn) activitySubmitBtn.disabled = !enabled;
+    }
+
+    function updateActivityValues(){
+      if(activityRnetVal) activityRnetVal.textContent = (state.kclNetRate===null) ? '—' : fmt(state.kclNetRate,4);
+      if(activityEffVal) activityEffVal.textContent = (state.eff1460===null) ? '—' : fmt(state.eff1460,5);
+      if(activityYieldVal) activityYieldVal.textContent = fmt(CONST.k40Yield,4);
+    }
+
+    function expectedActivityFromCurrent(){
+      if(state.kclNetRate===null || state.eff1460===null) return null;
+      const denom = state.eff1460*CONST.k40Yield;
+      if(!(denom>0)) return null;
+      return state.kclNetRate/denom;
+    }
+
+    function checkActivityAnswer(){
+      const expected = expectedActivityFromCurrent();
+      if(expected===null){
+        setActivityFeedback('danger','Acquire the spectrum and interpolate ε(1460 keV) first.');
+        return;
+      }
+      const userVal = parseUserScientificNumber(activityAnswerInput?.value);
+      if(userVal===null){
+        setActivityFeedback('danger','Please enter a number (e.g., <b>12.3</b> or <b>1.23e1</b>).');
+        activityAnswerInput?.focus();
+        return;
+      }
+      if(!(userVal>=0)){
+        setActivityFeedback('danger','Activity must be a non-negative number.');
+        activityAnswerInput?.focus();
+        return;
+      }
+
+      const lo = expected * 0.95;
+      const hi = expected * 1.05;
+      const ok = (expected===0) ? (Math.abs(userVal) <= 1e-6) : (userVal >= lo && userVal <= hi);
+
+      if(ok){
+        state.k40Activity = userVal;
+        state.abundance = null;
+        updateSidebar();
+        setActivityFeedback('', `Correct. Your value is within ±5% (acceptable range: <b>${fmt(lo,4)}</b> to <b>${fmt(hi,4)}</b> Bq).`);
+      } else {
+        state.k40Activity = null;
+        state.abundance = null;
+        updateSidebar();
+        setActivityFeedback('danger', `Not quite. Your value must be within ±5% of the expected activity. <span class="small">Accepted range: <b>${fmt(lo,4)}</b> to <b>${fmt(hi,4)}</b> Bq</span>`);
+      }
+    }
+
     function acquireSpectrum(){
-      if(state.eff1460===null){document.getElementById('activityResult').className='status danger';document.getElementById('activityResult').textContent='Interpolate ε(1460 keV) first.';return;}
+      if(state.eff1460===null){
+        setActivityUiEnabled(false);
+        updateActivityValues();
+        setActivityFeedback('danger','Interpolate ε(1460 keV) first.');
+        return;
+      }
       const t = Number(document.getElementById('kclTime').value)||1200; state.kclTime=t;
       state.lastSpectrum = generateSpectrumData(t);
       drawSpectrum(state.lastSpectrum.data);
@@ -1775,18 +2024,16 @@
       const netRate = Math.max(0, roiRate - CONST.bgRate);
       state.kclPeakCounts = state.lastSpectrum.roiCounts;
       state.kclNetRate = netRate;
+      state.k40Activity = null; // new spectrum invalidates prior activity entry
+      state.abundance = null;
       document.getElementById('bgRateCell').textContent = fmt(CONST.bgRate,4);
       document.getElementById('peakCountsCell').textContent = state.lastSpectrum.roiCounts;
       document.getElementById('roiRateCell').textContent = fmt(roiRate,4);
       document.getElementById('netRateCell').textContent = fmt(netRate,4);
-      document.getElementById('activityResult').className='status';
-      document.getElementById('activityResult').innerHTML='Spectrum acquired. Now compute the K-40 activity using the net count rate and ε(1460 keV).';
-    }
-    function computeActivity(){
-      if(state.kclNetRate===null || state.eff1460===null){document.getElementById('activityResult').className='status danger';document.getElementById('activityResult').textContent='Acquire the spectrum and interpolate ε(1460 keV) first.';return;}
-      state.k40Activity = state.kclNetRate/(state.eff1460*CONST.k40Yield);
-      document.getElementById('activityResult').className='status';
-      document.getElementById('activityResult').innerHTML=`Computed K-40 activity: <b>${fmt(state.k40Activity,4)} Bq</b> using A = R<sub>net</sub> / (εY).`;
+      if(activityAnswerInput) activityAnswerInput.value='';
+      updateActivityValues();
+      setActivityUiEnabled(true);
+      setActivityFeedback('warn','Now compute <b>A</b> using the formula above and submit your answer (tolerance ±5%).');
       updateSidebar();
     }
     function drawSpectrum(data){
@@ -1800,47 +2047,270 @@
     }
 
     document.getElementById('acquireSpectrum').onclick=acquireSpectrum;
-    document.getElementById('computeActivity').onclick=computeActivity;
+    document.getElementById('activitySubmit').onclick=checkActivityAnswer;
+    if(activityAnswerInput){
+      activityAnswerInput.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter'){
+          e.preventDefault();
+          checkActivityAnswer();
+        }
+      });
+    }
+    setActivityUiEnabled(false);
+    updateActivityValues();
 
-    // Section 6: total K nuclei
-    function calcPotassium(){
-      const n = CONST.sampleMassG/CONST.molarMassKCl;
-      const NK = n*CONST.NA;
-      state.totalKNuclei = NK;
-      document.getElementById('kAtomsResult').className='status';
-      document.getElementById('kAtomsResult').innerHTML = `Total potassium nuclei in the sample: <b>${NK.toExponential(4)}</b>.`;
-      document.getElementById('kAtomsBreakdown').innerHTML = `
-        n = m/M = ${CONST.sampleMassG} / ${CONST.molarMassKCl} = <b>${n.toExponential(4)} mol</b><br>
-        N<sub>K</sub> = nN<sub>A</sub> = (${n.toExponential(4)})(6.022 × 10<sup>23</sup>) = <b>${NK.toExponential(4)}</b>
-      `;
+    // Section 6: total K nuclei (student submission)
+    const kAtomsAnswerInput = document.getElementById('kAtomsAnswer');
+    const kAtomsSubmitBtn = document.getElementById('kAtomsSubmit');
+    const kAtomsResultEl = document.getElementById('kAtomsResult');
+    const kAtomsBreakdownEl = document.getElementById('kAtomsBreakdown');
+    const kAtomsNextBtn = document.getElementById('kAtomsNext');
+
+    function setKAtomsFeedback(type, html){
+      if(!kAtomsResultEl) return;
+      kAtomsResultEl.className = `status${type ? ' ' + type : ''}`;
+      kAtomsResultEl.innerHTML = html;
+    }
+
+    function setKAtomsNextEnabled(enabled){
+      if(kAtomsNextBtn) kAtomsNextBtn.disabled = !enabled;
+    }
+
+    function setKAtomsUiEnabled(enabled){
+      if(kAtomsAnswerInput) kAtomsAnswerInput.disabled = !enabled;
+      if(kAtomsSubmitBtn) kAtomsSubmitBtn.disabled = !enabled;
+    }
+
+    function expectedTotalKNuclei(){
+      return (CONST.sampleMassG/CONST.molarMassKCl)*CONST.NA;
+    }
+
+    function checkKAtomsAnswer(){
+      const userVal = parseUserScientificNumber(kAtomsAnswerInput?.value);
+      if(userVal===null){
+        setKAtomsFeedback('danger','Please enter a number (e.g., <b>1e20</b> or <b>1×10^20</b>).');
+        kAtomsAnswerInput?.focus();
+        return;
+      }
+      if(!(userVal > 0)){
+        setKAtomsFeedback('danger','Total potassium nuclei must be a positive number.');
+        kAtomsAnswerInput?.focus();
+        return;
+      }
+
+      const expected = expectedTotalKNuclei();
+      const lo = expected * 0.95;
+      const hi = expected * 1.05;
+      const relErr = Math.abs(userVal - expected) / expected;
+
+      if(relErr <= 0.05){
+        state.totalKNuclei = userVal;
+        state.abundance = null;
+        const n = CONST.sampleMassG/CONST.molarMassKCl;
+        if(kAtomsBreakdownEl){
+          kAtomsBreakdownEl.innerHTML = `
+            n = m/M = ${CONST.sampleMassG} / ${CONST.molarMassKCl} = <b>${n.toExponential(4)} mol</b><br>
+            N<sub>K</sub> = nN<sub>A</sub> = (${n.toExponential(4)})(6.022 × 10<sup>23</sup>) = <b>${userVal.toExponential(4)}</b>
+          `;
+        }
+        setKAtomsFeedback('', `Correct. Your value is within ±5% (acceptable range: <b>${lo.toExponential(4)}</b> to <b>${hi.toExponential(4)}</b>). You may proceed.`);
+        setKAtomsNextEnabled(true);
+        setKAtomsUiEnabled(false);
+        updateSidebar();
+        return;
+      }
+
+      state.totalKNuclei = null;
+      state.abundance = null;
+      setKAtomsNextEnabled(false);
+      if(kAtomsBreakdownEl) kAtomsBreakdownEl.innerHTML = 'No calculation yet.';
+      setKAtomsFeedback('danger', `Not quite. Your value must be within ±5% of the expected total potassium nuclei. <span class="small">Accepted range: <b>${lo.toExponential(4)}</b> to <b>${hi.toExponential(4)}</b></span>`);
       updateSidebar();
     }
-    document.getElementById('calcPotassium').onclick=calcPotassium;
 
-    // Section 7: natural abundance
-    function calcAbundance(){
-      if(state.k40Activity===null || state.totalKNuclei===null){document.getElementById('abundanceResult').className='status danger';document.getElementById('abundanceResult').textContent='Compute the activity and total K nuclei first.';return;}
-      state.k40Nuclei = state.k40Activity/CONST.lambdaK40;
-      state.abundance = (state.k40Nuclei/state.totalKNuclei)*100;
-      const errorPct = 100*Math.abs(state.abundance-0.0117)/0.0117;
-      const cls = errorPct<8?'status':(errorPct<20?'status warn':'status danger');
-      document.getElementById('abundanceResult').className = cls;
-      document.getElementById('abundanceResult').innerHTML = `
-        Experimental natural abundance of K-40 = <b>${fmt(state.abundance,5)}%</b><br>
-        K-40 nuclei = <b>${state.k40Nuclei.toExponential(4)}</b><br>
-        Percent error relative to 0.0117% = <b>${fmt(errorPct,2)}%</b>
-      `;
-      document.getElementById('summaryLambda').innerHTML = `${CONST.lambdaK40.toExponential(3)} s<sup>-1</sup>`;
-      document.getElementById('summaryAct').textContent = `${fmt(state.k40Activity,4)} Bq`;
-      document.getElementById('summaryNK40').textContent = state.k40Nuclei.toExponential(4);
-      document.getElementById('summaryNKTot').textContent = state.totalKNuclei.toExponential(4);
-      document.getElementById('summaryAbundance').textContent = `${fmt(state.abundance,5)}%`;
-      updateSidebar();
+    if(kAtomsSubmitBtn) kAtomsSubmitBtn.onclick = checkKAtomsAnswer;
+    if(kAtomsAnswerInput){
+      kAtomsAnswerInput.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter'){
+          e.preventDefault();
+          checkKAtomsAnswer();
+        }
+      });
     }
-    document.getElementById('calcAbundance').onclick=calcAbundance;
+    setKAtomsNextEnabled(false);
 
-    // Download button notice only
-    document.getElementById('downloadHtml').onclick=()=>alert('The HTML file is already saved in the working folder for download.');
+    // Section 7: natural abundance (student submission)
+    const abundanceAnswerInput = document.getElementById('abundanceAnswer');
+    const abundanceSubmitBtn = document.getElementById('abundanceSubmit');
+    const abundanceResultEl = document.getElementById('abundanceResult');
+
+    function setAbundanceFeedback(type, html){
+      if(!abundanceResultEl) return;
+      abundanceResultEl.className = `status${type ? ' ' + type : ''}`;
+      abundanceResultEl.innerHTML = html;
+    }
+
+    function setAbundanceUiEnabled(enabled){
+      if(abundanceAnswerInput) abundanceAnswerInput.disabled = !enabled;
+      if(abundanceSubmitBtn) abundanceSubmitBtn.disabled = !enabled;
+    }
+
+    function expectedAbundancePercent(){
+      if(state.k40Activity===null || state.totalKNuclei===null || state.lambdaUser===null) return null;
+      const lambda = state.lambdaUser;
+      if(!(lambda > 0) || !(state.totalKNuclei > 0)) return null;
+      const NK40 = state.k40Activity / lambda;
+      return (NK40 / state.totalKNuclei) * 100;
+    }
+
+    function updateAbundanceControls(){
+      const expected = expectedAbundancePercent();
+      const passed = state.abundance!==null && Number.isFinite(state.abundance);
+      const canAttempt = expected!==null && Number.isFinite(expected) && expected>=0;
+
+      setAbundanceUiEnabled(canAttempt && !passed);
+
+      if(!canAttempt){
+        setAbundanceFeedback('warn','Complete the previous steps first (λ, activity <b>A</b>, and total K nuclei <b>N<sub>K</sub></b>).');
+        return;
+      }
+
+      if(passed){
+        setAbundanceFeedback('', `Accepted experimental abundance: <b>${fmt(state.abundance,5)}%</b>.`);
+        return;
+      }
+
+      setAbundanceFeedback('warn','Compute the experimental abundance and submit your answer (±5% tolerance).');
+    }
+
+    function checkAbundanceAnswer(){
+      const expected = expectedAbundancePercent();
+      if(expected===null){
+        state.abundance = null;
+        updateSidebar();
+        updateAbundanceControls();
+        return;
+      }
+
+      const userVal = parseUserScientificNumber(abundanceAnswerInput?.value);
+      if(userVal===null){
+        setAbundanceFeedback('danger','Please enter a number in percent (e.g., <b>0.02</b> or <b>2e-2</b>).');
+        abundanceAnswerInput?.focus();
+        return;
+      }
+      if(!(userVal >= 0)){
+        setAbundanceFeedback('danger','Abundance must be a non-negative number in percent.');
+        abundanceAnswerInput?.focus();
+        return;
+      }
+
+      const lo = expected * 0.95;
+      const hi = expected * 1.05;
+      const ok = (expected===0) ? (Math.abs(userVal) <= 1e-12) : (Math.abs(userVal - expected) / expected <= 0.05);
+
+      if(ok){
+        state.abundance = userVal;
+        updateSidebar();
+        setAbundanceFeedback('', `Correct. Your value is within ±5% (acceptable range: <b>${fmt(lo,5)}%</b> to <b>${fmt(hi,5)}%</b>).`);
+        setAbundanceUiEnabled(false);
+      } else {
+        state.abundance = null;
+        updateSidebar();
+        setAbundanceFeedback('danger', `Not quite. Your value must be within ±5% of the expected abundance. <span class="small">Accepted range: <b>${fmt(lo,5)}%</b> to <b>${fmt(hi,5)}%</b></span>`);
+      }
+    }
+
+    if(abundanceSubmitBtn) abundanceSubmitBtn.onclick = checkAbundanceAnswer;
+    if(abundanceAnswerInput){
+      abundanceAnswerInput.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter'){
+          e.preventDefault();
+          checkAbundanceAnswer();
+        }
+      });
+    }
+    updateAbundanceControls();
+
+    function pad2(n){return String(n).padStart(2,'0');}
+    function formatElapsedMs(ms){
+      if(ms===null || ms===undefined || !Number.isFinite(ms) || ms < 0) return '—';
+      const totalSeconds = Math.floor(ms/1000);
+      const hh = Math.floor(totalSeconds/3600);
+      const mm = Math.floor((totalSeconds%3600)/60);
+      const ss = totalSeconds%60;
+      return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
+    }
+    function formatDateTime(ms){
+      if(ms===null || ms===undefined || !Number.isFinite(ms)) return '—';
+      try{return new Date(ms).toLocaleString();}catch(_){return '—';}
+    }
+    function setText(id, text){
+      const el = document.getElementById(id);
+      if(el) el.textContent = text;
+    }
+    function setHtml(id, html){
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = html;
+    }
+    function canvasToDataUrl(canvasId){
+      const canvas = document.getElementById(canvasId);
+      if(!canvas || typeof canvas.toDataURL !== 'function') return null;
+      try{return canvas.toDataURL('image/png');}catch(_){return null;}
+    }
+
+    function populatePrintReport(){
+      const name = storageGet(STORAGE_KEY_FULL_NAME) || '—';
+      const startedMs = state.sessionStartMs;
+      const finishedMs = Date.now();
+
+      setText('printName', name);
+      setText('printStarted', formatDateTime(startedMs));
+      setText('printFinished', formatDateTime(finishedMs));
+      setText('printElapsed', (startedMs!==null && Number.isFinite(startedMs)) ? formatElapsedMs(finishedMs - startedMs) : '—');
+
+      setHtml('printLambda', (state.lambdaUser!==null && Number.isFinite(state.lambdaUser)) ? `${sciHtml(state.lambdaUser, 3)} s<sup>-1</sup>` : '—');
+      setText('printAct', (state.k40Activity!==null && Number.isFinite(state.k40Activity)) ? `${fmt(state.k40Activity,4)} Bq` : '—');
+      setText('printNK', (state.totalKNuclei!==null && Number.isFinite(state.totalKNuclei)) ? state.totalKNuclei.toExponential(4) : '—');
+      setText('printAbundance', (state.abundance!==null && Number.isFinite(state.abundance)) ? `${fmt(state.abundance,5)}%` : '—');
+
+      const acceptedPct = CONST.k40AbundanceAccepted * 100;
+      setText('printAcceptedAbundance', `${fmt(acceptedPct,4)}%`);
+      const hasExp = (state.abundance!==null && Number.isFinite(state.abundance));
+      const percentError = (!hasExp || !(acceptedPct>0)) ? null : (100 * Math.abs(state.abundance - acceptedPct) / acceptedPct);
+      setText('printPercentError', (percentError===null || !Number.isFinite(percentError)) ? '—' : `${fmt(percentError,2)}%`);
+
+      const distUrl = canvasToDataUrl('distanceChart');
+      const effUrl = canvasToDataUrl('effChart');
+      const distImg = document.getElementById('printDistanceImg');
+      if(distImg) distImg.src = distUrl || '';
+      const effImg = document.getElementById('printEfficiencyImg');
+      if(effImg) effImg.src = effUrl || '';
+    }
+
+    function downloadResultAsPdf(){
+      // Keep key graphs fresh before capture
+      try{drawDistanceChart();}catch(_){ }
+      try{drawEffChart();}catch(_){ }
+
+      populatePrintReport();
+
+      const originalTitle = document.title;
+      const safeName = (storageGet(STORAGE_KEY_FULL_NAME) || 'Student').replace(/[^a-z0-9 _-]/gi,'').trim() || 'Student';
+      document.title = `K-40 Result - ${safeName}`;
+
+      document.body.classList.add('printMode');
+      const cleanup = ()=>{
+        document.body.classList.remove('printMode');
+        document.title = originalTitle;
+      };
+      window.addEventListener('afterprint', cleanup, {once:true});
+
+      window.print();
+    }
+
+    // Download the result as a PDF (via browser print dialog)
+    const downloadBtn = document.getElementById('downloadHtml');
+    if(downloadBtn) downloadBtn.onclick = downloadResultAsPdf;
 
     // Reset
     document.getElementById('resetAll').onclick=()=>location.reload();
