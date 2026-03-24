@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LBYPH03 Practical Exam — Monitor</title>
+<style>
+:root{
+	--bg1:#e0f2fe;
+	--bg2:#eef2ff;
+	--page:#f3f7ff;
+
+	--card:#ffffff;
+	--text:#0f172a;
+	--muted:#475569;
+
+	--primary:#2563eb;
+	--primaryDark:#1d4ed8;
+
+	--success:#16a34a;
+	--successDark:#15803d;
+	--danger:#dc2626;
+	--dangerDark:#b91c1c;
+
+	--border:#dbeafe;
+	--shadow: 0 14px 34px rgba(2,6,23,.12);
+}
+
+*{ box-sizing:border-box; }
+
+body{
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+	margin: 18px;
+	color: var(--text);
+	background:
+		radial-gradient(900px 600px at 18% 18%, var(--bg1) 0%, rgba(224,242,254,0.0) 62%),
+		radial-gradient(900px 600px at 82% 18%, var(--bg2) 0%, rgba(238,242,255,0.0) 62%),
+		linear-gradient(180deg, var(--page) 0%, #ffffff 100%);
+}
+
+.container{
+	max-width: 1100px;
+	margin: 0 auto;
+	background: var(--card);
+	padding: 22px;
+	border-radius: 16px;
+	border: 1px solid var(--border);
+	box-shadow: var(--shadow);
+}
+
+h1{ margin: 0 0 10px; font-size: 22px; letter-spacing: .2px; }
+
+p{ color: var(--muted); margin: 8px 0; }
+
+.controls{
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+	margin: 14px 0 10px;
+}
+
+button{
+	padding: 10px 14px;
+	border-radius: 12px;
+	border: 1px solid transparent;
+	background: var(--primary);
+	color: white;
+	font-weight: 800;
+	cursor: pointer;
+}
+button:hover{ background: var(--primaryDark); }
+button:disabled{ opacity:.6; cursor:not-allowed; }
+
+.badge{
+	font-weight: 800;
+	font-size: 12px;
+	padding: 6px 10px;
+	border-radius: 999px;
+	border: 1px solid var(--border);
+	background: rgba(37,99,235,.04);
+	color: var(--muted);
+}
+
+.formFeedback{
+	margin: 10px 0 0;
+	font-weight: 900;
+}
+.formFeedback.is-error{ color: var(--danger); }
+.formFeedback.is-ok{ color: var(--success); }
+
+.tableWrap{
+	margin-top: 12px;
+	overflow: auto;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: #fff;
+}
+
+table{
+	width: 100%;
+	border-collapse: collapse;
+	min-width: 980px;
+}
+
+th, td{
+	padding: 10px;
+	border-bottom: 1px solid var(--border);
+	vertical-align: top;
+	text-align: left;
+	font-size: 13px;
+}
+
+th{
+	position: sticky;
+	top: 0;
+	background: #ffffff;
+	z-index: 1;
+	font-size: 12px;
+	letter-spacing: .3px;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+.typePill{
+	display:inline-flex;
+	align-items:center;
+	gap:6px;
+	border-radius: 999px;
+	padding: 4px 10px;
+	font-weight: 900;
+	border: 1px solid var(--border);
+	background: rgba(2,6,23,.03);
+	color: var(--text);
+}
+
+.typePill.start{ background: rgba(37,99,235,.06); }
+.typePill.final{ background: rgba(22,163,74,.08); }
+
+.smallBtn{
+	padding: 6px 10px;
+	border-radius: 10px;
+	font-weight: 800;
+	font-size: 12px;
+}
+
+.smallBtn.secondary{
+	background: #ffffff;
+	color: var(--text);
+	border: 1px solid var(--border);
+}
+
+.smallBtn.secondary:hover{
+	background: rgba(2,6,23,.03);
+}
+
+pre{
+	white-space: pre-wrap;
+	word-break: break-word;
+	margin: 10px 0 0;
+	padding: 10px;
+	border-radius: 12px;
+	border: 1px solid var(--border);
+	background: rgba(2,6,23,.03);
+	font-size: 12px;
+}
+
+/* Viewer overlay */
+body.viewer-open{ overflow: hidden; }
+body.viewer-open #pageContent{ filter: blur(12px); user-select:none; pointer-events:none; }
+
+.viewerOverlay{ z-index: 9998; }
+
+.viewerDialog{
+	width: min(980px, 100%);
+	max-height: 88vh;
+	overflow: auto;
+}
+
+.viewerHeader{
+	display:flex;
+	align-items:flex-start;
+	justify-content: space-between;
+	gap: 14px;
+	margin-bottom: 10px;
+}
+
+.viewerTitle{
+	margin: 0;
+	font-size: 18px;
+}
+
+.viewerMeta{ color: var(--muted); font-weight: 700; font-size: 12px; margin-top: 4px; }
+
+.viewerSectionTitle{ margin: 14px 0 8px; font-size: 14px; }
+
+.miniTableWrap{
+	overflow: auto;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: #fff;
+}
+
+table.miniTable{
+	width: 100%;
+	border-collapse: collapse;
+	min-width: 640px;
+}
+
+.miniTable th, .miniTable td{
+	padding: 10px;
+	border-bottom: 1px solid var(--border);
+	vertical-align: top;
+	text-align: left;
+	font-size: 13px;
+}
+
+.miniTable th{
+	position: static;
+	background: #ffffff;
+	z-index: auto;
+	font-size: 12px;
+	letter-spacing: .3px;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+
+.mutedBox{
+	margin-top: 10px;
+	padding: 12px;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: rgba(2,6,23,.03);
+	color: var(--muted);
+	font-weight: 800;
+}
+
+/* Password overlay */
+body.modal-open{ overflow: hidden; }
+body.modal-open #pageContent{ filter: blur(12px); user-select:none; pointer-events:none; }
+
+.overlay{
+	position: fixed;
+	inset: 0;
+	background: rgba(2,6,23,0.60);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	z-index: 9999;
+}
+
+.dialog{
+	width: min(720px, 100%);
+	background: var(--card);
+	border-radius: 16px;
+	padding: 20px;
+	border: 1px solid rgba(219,234,254,.9);
+	box-shadow: var(--shadow);
+}
+
+.dialog h2{ margin: 0 0 6px; }
+
+input{
+	padding: 10px 12px;
+	border-radius: 12px;
+	border: 1px solid var(--border);
+	outline: none;
+	width: 100%;
+	max-width: 420px;
+}
+input:focus{
+	border-color: rgba(37,99,235,.55);
+	box-shadow: 0 0 0 3px rgba(37,99,235,.18);
+}
+
+.actions{ display:flex; justify-content:flex-end; gap:10px; margin-top: 12px; }
+</style>
+</head>
+
+<body class="modal-open">
+
+<div id="authOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+	<div class="dialog">
+		<h2 id="authTitle">Monitor Access</h2>
+		<p>This page shows student submissions for the LBYPH03 practical test.</p>
+		<p style="margin-top:14px; margin-bottom:8px;">Password</p>
+		<input id="authPassword" type="password" autocomplete="current-password" placeholder="Enter monitor password" />
+		<p id="authFeedback" class="formFeedback" aria-live="polite"></p>
+		<div class="actions">
+			<button id="authBtn" type="button">Unlock</button>
+		</div>
+	</div>
+</div>
+
+<div id="viewerOverlay" class="overlay viewerOverlay" role="dialog" aria-modal="true" aria-labelledby="viewerTitle" style="display:none;">
+	<div class="dialog viewerDialog">
+		<div class="viewerHeader">
+			<div>
+				<h2 id="viewerTitle" class="viewerTitle">Record</h2>
+				<div id="viewerMeta" class="viewerMeta"></div>
+			</div>
+			<button id="viewerCloseBtn" class="smallBtn secondary" type="button">Close</button>
+		</div>
+		<div id="viewerBody"></div>
+	</div>
+</div>
+
+<div id="pageContent">
+	<div class="container">
+		<h1>LBYPH03 Practical Exam — Monitor</h1>
+		<p>Loads records from Google Apps Script using <strong>func=retrieve</strong> and shows them in a table. Includes both start/peek logs and final submissions.</p>
+
+		<div class="controls">
+			<button id="loadBtn" type="button" disabled>Load / Refresh</button>
+			<span id="statusBadge" class="badge">Locked</span>
+			<span id="countBadge" class="badge" style="display:none;"></span>
+		</div>
+
+		<p id="statusText" class="formFeedback" aria-live="polite"></p>
+
+		<div class="tableWrap">
+			<table>
+				<thead>
+					<tr>
+						<th>Received At</th>
+						<th>Type</th>
+						<th>Student</th>
+						<th>Started</th>
+						<th>Ended</th>
+						<th>Duration</th>
+						<th>Total Score</th>
+						<th>Max</th>
+						<th>JSON</th>
+					</tr>
+				</thead>
+				<tbody id="rowsTbody">
+					<tr><td colspan="9" style="color: var(--muted);">Unlock to load records.</td></tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<script>
+// Same Apps Script endpoint as practicaltest.html
+const APPS_SCRIPT_DEPLOYMENT_ID = "AKfycbyzWIX59n8ru6NxHh3rGi6vPFAu6IQKywRgn6iwVBKpxMG4Oz7ROgFd8AXlAIKvsapipA";
+const APPS_SCRIPT_URL = `https://script.google.com/macros/s/${APPS_SCRIPT_DEPLOYMENT_ID}/exec`;
+
+// Client-side password gate (NOTE: not secure against someone viewing the source)
+const MONITOR_PASSWORD = "jamesuperb";
+
+function setStatus(message, isError = false){
+	const el = document.getElementById("statusText");
+	if (!el) return;
+	el.textContent = message || "";
+	el.classList.toggle("is-error", Boolean(isError));
+	el.classList.toggle("is-ok", Boolean(!isError && message));
+}
+
+function setBadge(text){
+	const badge = document.getElementById("statusBadge");
+	if (badge) badge.textContent = text;
+}
+
+function setCount(n){
+	const badge = document.getElementById("countBadge");
+	if (!badge) return;
+	if (!Number.isFinite(n)){
+		badge.style.display = "none";
+		return;
+	}
+	badge.style.display = "inline-flex";
+	badge.textContent = `${n} record${n === 1 ? "" : "s"}`;
+}
+
+function safeJSONParse(text){
+	try { return JSON.parse(text); } catch { return null; }
+}
+
+function pickRecords(payload){
+	if (!payload) return [];
+	if (Array.isArray(payload)) return payload;
+	if (Array.isArray(payload.records)) return payload.records;
+	if (Array.isArray(payload.rows)) return payload.rows;
+	if (Array.isArray(payload.data)) return payload.data;
+	return [];
+}
+
+function toText(v){
+	if (v === null || v === undefined) return "";
+	return String(v);
+}
+
+function extractReceivedAt(record){
+	if (!record) return "";
+	if (typeof record === "string") return "";
+	if (Array.isArray(record)){
+		// Common pattern: [timestamp, resultjson]
+		return toText(record[0] ?? "");
+	}
+	return toText(record.receivedAt || record.timestamp || record.time || record.createdAt || record.date || "");
+}
+
+function extractResultJson(record){
+	if (!record) return "";
+	if (typeof record === "string") return record;
+	if (Array.isArray(record)){
+		return record[1] ?? "";
+	}
+	// Apps Script retrieve payload commonly returns `{ timestamp, result: <object|string> }`
+	// but keep compatibility with other possible key names.
+	return record.result
+		?? record.Result
+		?? record.resultjson
+		?? record.resultJson
+		?? record.resultJSON
+		?? record.json
+		?? record.payload
+		?? record.data
+		?? "";
+}
+
+function classify(parsed){
+	if (!parsed || typeof parsed !== "object") return "unknown";
+	const hasFinalSignals = Boolean(parsed.endedAtISO) || (parsed.scores && parsed.scores.total) || (parsed.answers && typeof parsed.answers === "object");
+	if (hasFinalSignals) return "final";
+	if (typeof parsed.studentName === "string" && !parsed.endedAtISO && !parsed.scores && !parsed.answers) return "start";
+	return "unknown";
+}
+
+function formatScore(parsed){
+	if (!parsed || typeof parsed !== "object") return { score: "", max: "" };
+	const total = parsed.scores && parsed.scores.total;
+	if (!total) return { score: "", max: "" };
+	const score = Number(total.score);
+	const max = Number(total.max);
+	return {
+		score: Number.isFinite(score) ? String(score) : "",
+		max: Number.isFinite(max) ? String(max) : "",
+	};
+}
+
+function htmlEscape(s){
+	return toText(s)
+		.replaceAll("&", "&amp;")
+		.replaceAll("<", "&lt;")
+		.replaceAll(">", "&gt;")
+		.replaceAll('"', "&quot;")
+		.replaceAll("'", "&#39;");
+}
+
+function asIsoOrBlank(v){
+	const s = toText(v);
+	if (!s) return "";
+	// Keep display as-is (already ISO in our reports)
+	return s;
+}
+
+function percentFromEntry(entry){
+	const score = Number(entry?.score);
+	const max = Number(entry?.max);
+	const computed = (Number.isFinite(score) && Number.isFinite(max) && max > 0) ? (score / max) * 100 : NaN;
+
+	let provided = Number(entry?.percent);
+	if (!Number.isFinite(provided)) provided = NaN;
+
+	// If provided is a 0..1 fraction (common), scale it up.
+	// Use computed as a sanity check when available.
+	if (Number.isFinite(provided) && provided > 0 && provided <= 1.2){
+		const scaled = provided * 100;
+		provided = (Number.isFinite(computed) && computed > 1.2) ? scaled : scaled;
+	}
+
+	let pct = NaN;
+	if (Number.isFinite(computed)){
+		pct = computed;
+		// If provided looks like a real percent and is non-zero, prefer it.
+		if (Number.isFinite(provided) && provided > 1.2) pct = provided;
+		// If provided is 0 but computed is positive, keep computed.
+	} else if (Number.isFinite(provided)){
+		pct = provided;
+	}
+
+	if (!Number.isFinite(pct)) return "";
+	return `${Math.round(pct * 10) / 10}%`;
+}
+
+function viewerOpen(){
+	const overlay = document.getElementById("viewerOverlay");
+	if (overlay) overlay.style.display = "flex";
+	document.body.classList.add("viewer-open");
+}
+
+function viewerClose(){
+	const overlay = document.getElementById("viewerOverlay");
+	if (overlay) overlay.style.display = "none";
+	document.body.classList.remove("viewer-open");
+	const body = document.getElementById("viewerBody");
+	if (body) body.innerHTML = "";
+}
+
+function renderViewer(row){
+	const titleEl = document.getElementById("viewerTitle");
+	const metaEl = document.getElementById("viewerMeta");
+	const bodyEl = document.getElementById("viewerBody");
+	if (!bodyEl) return;
+
+	const parsed = row?.parsed && typeof row.parsed === "object" ? row.parsed : null;
+	const typeLabel = row?.type === "final" ? "Final submission" : (row?.type === "start" ? "Start log" : "Unknown");
+	const student = toText(row?.studentName || parsed?.studentName || "").trim();
+
+	if (titleEl) titleEl.textContent = student ? `${student} — ${typeLabel}` : typeLabel;
+	if (metaEl) metaEl.textContent = `Received: ${toText(row?.receivedAt || "")}  •  Started: ${toText(row?.startedAt || "")}  •  Ended: ${toText(row?.endedAt || "")}`;
+
+	const summaryRows = [
+		["Student", student],
+		["Type", typeLabel],
+		["Received At", toText(row?.receivedAt || "")],
+		["Started", asIsoOrBlank(parsed?.startedAtISO || row?.startedAt || "")],
+		["Ended", asIsoOrBlank(parsed?.endedAtISO || row?.endedAt || "")],
+		["Duration", toText(parsed?.durationFormatted || row?.duration || "")],
+		["Total Score", toText(row?.score?.score || "")],
+		["Max", toText(row?.score?.max || "")],
+	];
+
+	let html = `
+		<h3 class="viewerSectionTitle">Summary</h3>
+		<div class="miniTableWrap">
+			<table class="miniTable" aria-label="Summary">
+				<thead><tr><th>Field</th><th>Value</th></tr></thead>
+				<tbody>
+					${summaryRows.map(([k, v]) => `<tr><td>${htmlEscape(k)}</td><td>${htmlEscape(v)}</td></tr>`).join("")}
+				</tbody>
+			</table>
+		</div>
+	`;
+
+	const scores = parsed?.scores && typeof parsed.scores === "object" ? parsed.scores : null;
+	if (scores){
+		const keys = Object.keys(scores);
+		keys.sort((a, b) => {
+			if (a === "total") return -1;
+			if (b === "total") return 1;
+			return a.localeCompare(b);
+		});
+
+		html += `
+			<h3 class="viewerSectionTitle">Scores</h3>
+			<div class="miniTableWrap">
+				<table class="miniTable" aria-label="Scores">
+					<thead><tr><th>Section</th><th>Score</th><th>Max</th><th>Percent</th></tr></thead>
+					<tbody>
+						${keys.map((k) => {
+							const entry = scores[k];
+							const label = toText(entry?.label || k);
+							const sc = toText(entry?.score ?? "");
+							const mx = toText(entry?.max ?? "");
+							const pct = percentFromEntry(entry);
+							return `<tr><td>${htmlEscape(label)}</td><td>${htmlEscape(sc)}</td><td>${htmlEscape(mx)}</td><td>${htmlEscape(pct)}</td></tr>`;
+						}).join("")}
+					</tbody>
+				</table>
+			</div>
+		`;
+	}
+
+	const answers = parsed?.answers && typeof parsed.answers === "object" ? parsed.answers : null;
+	if (answers){
+		const keys = Object.keys(answers);
+		keys.sort((a, b) => a.localeCompare(b));
+		html += `
+			<h3 class="viewerSectionTitle">Answers</h3>
+			<div class="miniTableWrap">
+				<table class="miniTable" aria-label="Answers">
+					<thead><tr><th>Item</th><th>Value</th><th>Last Changed</th></tr></thead>
+					<tbody>
+						${keys.map((k) => {
+							const entry = answers[k];
+							const value = (entry && typeof entry === "object") ? toText(entry.value ?? "") : toText(entry);
+							const changed = (entry && typeof entry === "object") ? toText(entry.lastChangedAtISO ?? entry.changedAtISO ?? "") : "";
+							return `<tr><td>${htmlEscape(k)}</td><td>${htmlEscape(value)}</td><td>${htmlEscape(changed)}</td></tr>`;
+						}).join("")}
+					</tbody>
+				</table>
+			</div>
+		`;
+	}
+
+	if (!scores && !answers){
+		html += `<div class="mutedBox">This record looks like a start/peek log (no scores or answers included).</div>`;
+	}
+
+	// Keep raw JSON available for troubleshooting, but not the default view.
+	if (row?.rawJsonString){
+		html += `
+			<details style="margin-top:12px;">
+				<summary style="font-weight:900; color: var(--muted); cursor:pointer;">Raw JSON</summary>
+				<pre>${htmlEscape(row.rawJsonString)}</pre>
+			</details>
+		`;
+	}
+
+	bodyEl.innerHTML = html;
+}
+
+function buildRowHtml(row, idx){
+	const type = row.type === "final" ? "final" : (row.type === "start" ? "start" : "unknown");
+	const typeLabel = type === "final" ? "Final" : (type === "start" ? "Start" : "Unknown");
+
+	const score = row.score.score;
+	const max = row.score.max;
+	const viewIdx = String(idx);
+
+	return `
+		<tr>
+			<td>${htmlEscape(row.receivedAt)}</td>
+			<td><span class="typePill ${type}">${typeLabel}</span></td>
+			<td>${htmlEscape(row.studentName)}</td>
+			<td>${htmlEscape(row.startedAt)}</td>
+			<td>${htmlEscape(row.endedAt)}</td>
+			<td>${htmlEscape(row.duration)}</td>
+			<td>${htmlEscape(score)}</td>
+			<td>${htmlEscape(max)}</td>
+			<td>
+				<button class="smallBtn secondary" type="button" data-view-index="${htmlEscape(viewIdx)}">View</button>
+			</td>
+		</tr>
+	`;
+}
+
+function wireViewButtons(){
+	document.querySelectorAll("button[data-view-index]").forEach((btn) => {
+		btn.addEventListener("click", () => {
+			const idx = Number(btn.getAttribute("data-view-index"));
+			const rows = window.__monitorRows;
+			const row = Array.isArray(rows) ? rows[idx] : null;
+			if (!row) return;
+			renderViewer(row);
+			viewerOpen();
+		});
+	});
+}
+
+async function loadRecords(){
+	const btn = document.getElementById("loadBtn");
+	if (btn) btn.disabled = true;
+	setBadge("Loading...");
+	setStatus("Loading submissions...", false);
+	setCount(NaN);
+
+	const tbody = document.getElementById("rowsTbody");
+	if (tbody){
+		tbody.innerHTML = `<tr><td colspan="9" style="color: var(--muted);">Loading...</td></tr>`;
+	}
+
+	try{
+		const url = `${APPS_SCRIPT_URL}?func=retrieve&t=${Date.now()}`;
+		const resp = await fetch(url, { method: "GET" });
+		if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+		let payload = null;
+		try {
+			payload = await resp.json();
+		} catch {
+			payload = safeJSONParse(await resp.text());
+		}
+		if (!payload) throw new Error("Could not parse JSON response from Apps Script.");
+
+		const records = pickRecords(payload);
+		const rows = records.map((rec) => {
+			const receivedAt = extractReceivedAt(rec);
+			const raw = extractResultJson(rec);
+			let parsed = null;
+			let rawJsonString = "";
+
+			if (typeof raw === "string"){
+				rawJsonString = raw;
+				parsed = safeJSONParse(raw);
+			} else if (raw && typeof raw === "object"){
+				parsed = raw;
+				rawJsonString = JSON.stringify(raw);
+			}
+
+			const type = classify(parsed);
+			const score = formatScore(parsed);
+
+			return {
+				receivedAt,
+				type,
+				studentName: toText(parsed?.studentName || ""),
+				startedAt: toText(parsed?.startedAtISO || ""),
+				endedAt: toText(parsed?.endedAtISO || ""),
+				duration: toText(parsed?.durationFormatted || parsed?.durationSeconds || ""),
+				score,
+				rawJsonString,
+				parsed,
+			};
+		});
+
+		// Sort: prefer receivedAt, else startedAt, else endedAt (descending)
+		rows.sort((a, b) => {
+			const ak = a.receivedAt || a.startedAt || a.endedAt || "";
+			const bk = b.receivedAt || b.startedAt || b.endedAt || "";
+			return bk.localeCompare(ak);
+		});
+
+		if (tbody){
+			if (!rows.length){
+				tbody.innerHTML = `<tr><td colspan="9" style="color: var(--muted);">No records returned.</td></tr>`;
+			} else {
+				tbody.innerHTML = rows.map(buildRowHtml).join("");
+			}
+		}
+
+		// Keep the latest load accessible for the viewer modal.
+		window.__monitorRows = rows;
+		wireViewButtons();
+		setBadge("Loaded");
+		setCount(rows.length);
+		setStatus(`Loaded ${rows.length} record${rows.length === 1 ? "" : "s"}.`, false);
+	} catch (err){
+		console.error(err);
+		setBadge("Error");
+		setCount(NaN);
+		setStatus(
+			`Failed to load records. If the browser console shows a CORS error, Apps Script must allow cross-origin reads for func=retrieve. (${err?.message || err})`,
+			true
+		);
+		if (tbody){
+			tbody.innerHTML = `<tr><td colspan="9" style="color: var(--danger); font-weight: 900;">Error loading records.</td></tr>`;
+		}
+	} finally {
+		if (btn) btn.disabled = false;
+	}
+}
+
+function unlock(){
+	const input = document.getElementById("authPassword");
+	const feedback = document.getElementById("authFeedback");
+	const val = (input?.value || "").toString();
+	if (val !== MONITOR_PASSWORD){
+		if (feedback){
+			feedback.textContent = "Incorrect password.";
+			feedback.classList.add("is-error");
+			feedback.classList.remove("is-ok");
+		}
+		input?.focus();
+		return;
+	}
+
+	if (feedback){
+		feedback.textContent = "";
+		feedback.classList.remove("is-error");
+		feedback.classList.remove("is-ok");
+	}
+
+	const overlay = document.getElementById("authOverlay");
+	if (overlay) overlay.style.display = "none";
+	document.body.classList.remove("modal-open");
+
+	const loadBtn = document.getElementById("loadBtn");
+	if (loadBtn) loadBtn.disabled = false;
+	setBadge("Unlocked");
+	setStatus("Unlocked. Click Load / Refresh.", false);
+
+	// Auto-load once unlocked
+	loadRecords();
+}
+
+document.getElementById("authBtn")?.addEventListener("click", unlock);
+document.getElementById("authPassword")?.addEventListener("keydown", (e) => {
+	if (e.key === "Enter") unlock();
+});
+document.getElementById("loadBtn")?.addEventListener("click", loadRecords);
+
+document.getElementById("viewerCloseBtn")?.addEventListener("click", viewerClose);
+document.addEventListener("keydown", (e) => {
+	if (e.key === "Escape"){
+		const overlay = document.getElementById("viewerOverlay");
+		if (overlay && overlay.style.display !== "none") viewerClose();
+	}
+});
+
+// Clicking the dark backdrop closes the viewer (but not clicks inside the dialog).
+document.getElementById("viewerOverlay")?.addEventListener("click", (e) => {
+	if (e.target && e.target.id === "viewerOverlay") viewerClose();
+});
+
+// Lock initial state
+setBadge("Locked");
+setStatus("Enter password to unlock.", false);
+setCount(NaN);
+
+// Global rows cache
+window.__monitorRows = [];
+</script>
+</body>
+</html>

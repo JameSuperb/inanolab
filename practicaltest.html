@@ -1,0 +1,2822 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>LBYPH03 Practical Exam</title>
+<style>
+/* Student-friendly theme (applies only to this page) */
+:root{
+	--bg1:#e0f2fe;
+	--bg2:#eef2ff;
+	--page:#f3f7ff;
+
+	--card:#ffffff;
+	--text:#0f172a;
+	--muted:#475569;
+
+	--primary:#2563eb;
+	--primaryDark:#1d4ed8;
+
+	--success:#16a34a;
+	--successDark:#15803d;
+	--danger:#dc2626;
+	--dangerDark:#b91c1c;
+
+	--border:#dbeafe;
+	--shadow: 0 14px 34px rgba(2,6,23,.12);
+}
+
+*{ box-sizing:border-box; }
+
+body{
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+	margin: 20px;
+	color: var(--text);
+	background:
+		radial-gradient(1200px 600px at 20% 0%, var(--bg1) 0%, var(--page) 55%, var(--bg2) 100%);
+}
+
+
+/* Timer (top-right, fixed) */
+#timerBadge{
+	position: fixed;
+	top: 14px;
+	right: 14px;
+	z-index: 10000;
+	background: rgba(0,0,0,0.88);
+	color: #ffffff;
+	padding: 8px 10px;
+	border-radius: 999px;
+	font-weight: 800;
+	font-size: 13px;
+	letter-spacing: .3px;
+	display: none;
+}
+.container{
+	max-width: 950px;
+	margin: auto;
+	background: var(--card);
+	padding: 28px;
+	border-radius: 16px;
+	border: 1px solid var(--border);
+	box-shadow: var(--shadow);
+}
+
+h2{
+	margin: 0 0 14px;
+	color: var(--text);
+	letter-spacing: .2px;
+}
+
+.section{
+	margin: 18px 0 26px;
+	padding: 16px;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.section.inactive{
+	opacity: 0.55;
+	filter: grayscale(0.15);
+	pointer-events: none;
+}
+
+.section h3{
+	margin: 0 0 10px;
+	color: var(--text);
+}
+
+p{ color: var(--muted); }
+
+input, select, textarea{
+	padding: 8px 10px;
+	margin: 6px 0;
+	border-radius: 10px;
+	border: 1px solid var(--border);
+	outline: none;
+}
+
+input:focus, select:focus, textarea:focus{
+	border-color: rgba(37,99,235,.55);
+	box-shadow: 0 0 0 3px rgba(37,99,235,.18);
+}
+
+textarea{
+	width: 100%;
+	max-width: 700px;
+	min-height: 90px;
+	resize: vertical;
+}
+
+button{
+	padding: 10px 14px;
+	margin-top: 10px;
+	border-radius: 12px;
+	border: 1px solid transparent;
+	background: var(--primary);
+	color: white;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+button:hover{ background: var(--primaryDark); }
+button:active{ transform: translateY(1px); }
+
+button:disabled{
+	opacity: 0.6;
+	cursor: not-allowed;
+	transform: none;
+}
+
+.finishRow{
+	display: flex;
+	justify-content: center;
+	margin-top: 14px;
+}
+
+#finishBtn{
+	background: var(--success);
+	font-size: 18px;
+	padding: 14px 22px;
+	border-radius: 14px;
+	min-width: 220px;
+}
+
+#finishBtn:hover{ background: var(--successDark); }
+
+.formFeedback{
+	margin: 10px 0 0;
+	font-weight: 800;
+}
+
+.formFeedback.is-error{ color: var(--danger); }
+.formFeedback.is-ok{ color: var(--success); }
+
+canvas{
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	background: #fff;
+}
+
+/* Intro overlay (kept, themed) */
+body.modal-open { overflow: hidden; }
+body.modal-open #pageContent {
+	filter: blur(12px);
+	user-select: none;
+	pointer-events: none;
+}
+
+/* Testing phase: hide intro overlay and keep page interactive */
+body.testing-mode #introOverlay{ display: none; }
+
+.introOverlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(2,6,23,0.60);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+	z-index: 9999;
+}
+
+.introDialog {
+	width: min(950px, 100%);
+	background: var(--card);
+	border-radius: 16px;
+	padding: 22px;
+	border: 1px solid rgba(219,234,254,.9);
+	box-shadow: var(--shadow);
+}
+
+.introDialog h2 {
+	margin: 0 0 8px;
+}
+
+.introDialog p {
+	margin: 12px 0;
+	line-height: 1.55;
+	color: var(--muted);
+}
+
+.introActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-top: 16px;
+}
+
+/* MCQ: quiz-card presentation */
+.mcqQ{
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	padding: 14px;
+	margin: 14px 0;
+	background: #ffffff;
+}
+
+.mcqLegend{
+	font-weight: 800;
+	margin: 0 0 10px;
+	padding: 0;
+}
+
+.mcqOptions{
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+
+@media (max-width: 720px){
+	.mcqOptions{ grid-template-columns: 1fr; }
+}
+
+.mcqRadio{
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.mcqOption{
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 12px;
+	border-radius: 12px;
+	border: 1px solid var(--border);
+	background: rgba(37,99,235,.03);
+	cursor: pointer;
+	user-select: none;
+}
+
+.mcqOption:hover{
+	border-color: rgba(37,99,235,.45);
+	background: rgba(37,99,235,.06);
+}
+
+.mcqRadio:focus-visible + .mcqOption,
+.mcqOption:focus-within{
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(37,99,235,.18);
+	border-color: rgba(37,99,235,.55);
+}
+
+.mcqRadio:checked + .mcqOption{
+	border-color: rgba(37,99,235,.85);
+	background: rgba(37,99,235,.12);
+}
+
+.mcqChip{
+	flex: 0 0 auto;
+	min-width: 30px;
+	height: 30px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 999px;
+	font-weight: 800;
+	color: var(--text);
+	background: #ffffff;
+	border: 1px solid var(--border);
+}
+
+.mcqChoiceText{
+	color: var(--text);
+	line-height: 1.35;
+}
+
+/* Section 2: Standing waves activity */
+.swGrid{
+	display: block;
+}
+
+.swSimCard{
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	padding: 14px;
+	background: #fff;
+}
+
+.swSimTop{
+	display: flex;
+	justify-content: space-between;
+	gap: 10px;
+	color: var(--muted);
+	margin-bottom: 10px;
+}
+
+.swHint{
+	font-size: 12px;
+}
+
+.swSliderRow{
+	display: grid;
+	grid-template-columns: 160px 1fr 70px;
+	gap: 10px;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.swSimControls{
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+	margin-top: 10px;
+}
+
+.swSimControls .swRunBtn{
+	background: var(--primary);
+}
+
+.swSimControls .swRunBtn:hover{
+	background: var(--primaryDark);
+}
+
+.swSimControls .swRunBtn.is-running{
+	background: var(--success);
+}
+
+.swSimControls .swRunBtn.is-running:hover{
+	background: var(--successDark);
+}
+
+.swSimControls .swStopBtn{
+	background: var(--danger);
+}
+
+.swSimControls .swStopBtn:hover{
+	background: var(--dangerDark);
+}
+
+.swTable{
+	width: 100%;
+	border-collapse: collapse;
+	overflow: hidden;
+	border-radius: 12px;
+	border: 1px solid var(--border);
+	background: #fff;
+}
+
+.swTable th,
+.swTable td{
+	padding: 10px;
+	border-bottom: 1px solid var(--border);
+	vertical-align: middle;
+}
+
+.swTable th{ text-align: left; color: var(--text); }
+
+.swTable input{
+	width: 100%;
+	max-width: 180px;
+}
+
+.swEqRow{
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+	align-items: start;
+}
+
+@media (max-width: 900px){
+	.swEqRow{ grid-template-columns: 1fr; }
+}
+
+.swFormulaCard{
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	padding: 14px;
+	background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.swFormula{
+	font-weight: 900;
+	font-size: 18px;
+	color: var(--text);
+}
+
+/* Section 4: Refraction of light station */
+.refStation{
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	background: #fff;
+	padding: 14px;
+}
+
+.refControls{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+	justify-content: space-between;
+	margin: 10px 0 6px;
+}
+
+.refSlider{
+	display: grid;
+	grid-template-columns: 180px 1fr 80px;
+	gap: 10px;
+	align-items: center;
+	width: 100%;
+}
+
+.refReadouts{
+	color: var(--muted);
+	font-size: 13px;
+	font-weight: 700;
+}
+
+#s6_readouts{
+	font-size: 16px;
+	line-height: 1.4;
+	margin-top: 8px;
+}
+
+#refCanvas{
+	width: 100%;
+	max-width: 520px;
+	height: auto;
+	display: block;
+	margin: 0 auto;
+}
+
+#s4PlotCanvas{
+	width: 100%;
+	max-width: 520px;
+	height: auto;
+	display: block;
+	margin: 0 auto;
+}
+
+#lensCanvas{
+	width: 100%;
+	max-width: 720px;
+	height: auto;
+	display: block;
+	margin: 0 auto;
+}
+</style>
+</head>
+
+<body class="modal-open">
+
+<div id="introOverlay" class="introOverlay" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+	<div class="introDialog">
+		<h2 id="introTitle">Introduction</h2>
+		<p>Welcome to the LBYPH03 Practical Exam in Waves and Optics. This assessment consists of a multiple-choice section and five virtual laboratory stations designed to evaluate your understanding of standing waves, dispersion, refraction, and converging lenses. Carefully read each instruction and perform the required tasks using the provided simulations and input fields. Ensure that all answers are based on your own observations and calculations, as some values may vary. Once you proceed, complete all sections within the allotted time before submitting your responses.</p>
+		<p style="margin-top:14px; margin-bottom:8px;">Student Name</p>
+		<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; width:100%; max-width:420px;">
+			<input id="introFirstName" autocomplete="given-name" placeholder="First name" style="width:100%;">
+			<input id="introLastName" autocomplete="family-name" placeholder="Last name" style="width:100%;">
+		</div>
+		<p id="introFeedback" class="formFeedback" aria-live="polite" style="margin-top:10px;"></p>
+		<div class="introActions">
+			<button type="button" onclick="closeIntro()">Proceed</button>
+		</div>
+	</div>
+</div>
+
+		<div id="submitOverlay" class="introOverlay" role="dialog" aria-modal="true" aria-labelledby="submitTitle" style="display:none;">
+			<div class="introDialog">
+				<h2 id="submitTitle">Submitting Results</h2>
+				<p>Please wait. Do not close this tab while submission is in progress.</p>
+			</div>
+		</div>
+
+		<div id="submitDoneOverlay" class="introOverlay" role="dialog" aria-modal="true" aria-labelledby="submitDoneTitle" style="display:none;">
+			<div class="introDialog">
+				<h2 id="submitDoneTitle">Submission Complete</h2>
+				<p id="submitDoneMessage">Your results were submitted.</p>
+				<div class="introActions">
+					<button id="submitDoneOkBtn" type="button">OK</button>
+				</div>
+			</div>
+		</div>
+
+		<div id="mcqConfirmOverlay" class="introOverlay" role="dialog" aria-modal="true" aria-labelledby="mcqConfirmTitle" style="display:none;">
+			<div class="introDialog" style="width: min(720px, 100%);">
+				<h2 id="mcqConfirmTitle">Confirm submission</h2>
+				<p>Are you sure you want to submit your answers for Section 1?</p>
+				<p style="margin-top:8px;">Once confirmed, you won’t be able to change these answers.</p>
+				<div class="introActions">
+					<button id="mcqConfirmCancelBtn" type="button">Cancel</button>
+					<button id="mcqConfirmOkBtn" type="button">Confirm</button>
+				</div>
+			</div>
+		</div>
+
+<div id="timerBadge" aria-label="Elapsed time">00:00</div>
+
+<div id="pageContent">
+<div class="container">
+
+<h2>LBYPH03 Practical Exam</h2>
+
+<!-- ================= MCQ ================= -->
+<div class="section" data-step="1">
+<h3>Section 1: Standing Waves</h3>
+
+<div id="mcq"></div>
+
+<button id="mcqSubmitBtn" type="button" onclick="requestSubmitMCQ()">Submit answers</button>
+<p id="mcqScore"></p>
+</div>
+
+<!-- ================= STATION 1 ================= -->
+<div class="section" data-step="2">
+<h3>Section 2: Standing Waves</h3>
+
+<div class="swGrid">
+	<div>
+		<p><strong>A.</strong> The frequency is set to 100 Hz. Adjust the load by moving the slider to produce the desired number of waves according to the table below. Ensure that the amplitude of the standing waves is at the maximum. Place the value of the added load on the 2nd column of the table. Compute the total mass by adding the hanger mass (0.005 kg) to the added load, then find the tension using: <strong>T = m<sub>total</sub>(9.8 m/s²)</strong></p>
+
+		<div class="swSimCard" style="margin: 10px 0 14px;">
+			<div class="swSimTop">
+				<div><strong>Set Frequency:</strong> 100 Hz</div>
+				<div class="swHint">Adjust added load to match n = 5, 4, 3</div>
+			</div>
+
+			<label class="swSliderRow">
+				<span><strong>Added load (kg)</strong></span>
+				<input type="range" min="0.005" max="0.150" step="0.001" value="0.070" id="swAddedLoad" oninput="swUpdateFromUI()">
+				<span id="swAddedLoadVal">0.070</span>
+			</label>
+
+			<canvas id="swCanvas" width="420" height="180"></canvas>
+
+			<div class="swSimControls">
+				<button id="swRunBtn" class="swRunBtn" type="button" onclick="swRun()">Run</button>
+				<button id="swStopBtn" class="swStopBtn" type="button" onclick="swStop()">Stop</button>
+			</div>
+		</div>
+
+		<table class="swTable">
+			<thead>
+				<tr>
+					<th>Number of waves (n)</th>
+					<th>Added load (kg)</th>
+					<th>Total mass (kg)</th>
+					<th>Tension (Newton) (T)</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>5</td>
+					<td><input id="s2_a_n5_added" type="number" step="0.001" inputmode="decimal"></td>
+					<td><input id="s2_a_n5_total" type="number" step="0.001" inputmode="decimal"></td>
+					<td><input id="s2_a_n5_T" type="number" step="0.01" inputmode="decimal"></td>
+				</tr>
+				<tr>
+					<td>4</td>
+					<td><input id="s2_a_n4_added" type="number" step="0.001" inputmode="decimal"></td>
+					<td><input id="s2_a_n4_total" type="number" step="0.001" inputmode="decimal"></td>
+					<td><input id="s2_a_n4_T" type="number" step="0.01" inputmode="decimal"></td>
+				</tr>
+				<tr>
+					<td>3</td>
+					<td><input id="s2_a_n3_added" type="number" step="0.001" inputmode="decimal"></td>
+					<td><input id="s2_a_n3_total" type="number" step="0.001" inputmode="decimal"></td>
+					<td><input id="s2_a_n3_T" type="number" step="0.01" inputmode="decimal"></td>
+				</tr>
+			</tbody>
+		</table>
+
+		<p style="margin-top:14px;"><strong>B.</strong> The values of tension (T) are automatically substituded and number of waves (n) to the calculate the experimental frequency.</p>
+
+		<div class="swEqRow">
+			<div>
+				<table class="swTable" style="max-width:420px;">
+					<thead>
+						<tr>
+							<th>Number of waves (n)</th>
+							<th><em>Experimental Frequency</em></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr><td>5</td><td><input id="s2_b_n5_f" type="number" step="0.01" inputmode="decimal"></td></tr>
+						<tr><td>4</td><td><input id="s2_b_n4_f" type="number" step="0.01" inputmode="decimal"></td></tr>
+						<tr><td>3</td><td><input id="s2_b_n3_f" type="number" step="0.01" inputmode="decimal"></td></tr>
+					</tbody>
+				</table>
+			</div>
+			<div class="swFormulaCard">
+				<div class="swFormula">f = 34 · √(T(n²))</div>
+			</div>
+		</div>
+
+			<p style="margin-top:14px;"><strong>C.</strong> What are the variables that affects the formation of standing waves? List at least three variables. (3pts)</p>
+			<textarea id="s2_c_answer" placeholder="Type your answer here..." style="display:block;"></textarea>
+
+			<div style="margin-top:10px;">
+				<button id="sec2SubmitBtn" type="button" onclick="submitSection2()">Submit answers</button>
+			</div>
+			<p id="sec2Feedback" class="formFeedback" aria-live="polite"></p>
+			<p id="sec2Score" class="formFeedback" aria-live="polite"></p>
+	</div>
+</div>
+</div>
+
+<!-- ================= STATION 2 ================= -->
+<div class="section" data-step="3">
+<h3>Section 3: Refraction</h3>
+
+<div id="mcqS3"></div>
+
+<button id="mcqS3SubmitBtn" type="button" onclick="submitMCQS3()">Submit answers</button>
+<p id="mcqS3Score"></p>
+</div>
+
+<!-- ================= STATION 3 ================= -->
+<div class="section" data-step="4">
+<h3>Section 4: Refraction of Light</h3>
+
+<p><strong>A.</strong> Determine the angle of refraction after adjusting the angle of incidence according to the table below. Then calculate the sine of those angles.</p>
+
+<div class="refStation">
+	<div class="refReadouts" style="margin-bottom:6px;">Initial placement of the glass</div>
+
+	<div class="refControls">
+		<label class="refSlider">
+			<span><strong>Rotate glass (°)</strong></span>
+			<input id="refRotate" type="range" min="-60" max="60" step="1" value="20" oninput="refUpdateFromUI()">
+			<span id="refRotateVal">20</span>
+		</label>
+		<div class="refReadouts">
+			<span>Angle of Incidence (i): </span><span id="refIVal">20°</span>
+			&nbsp;|&nbsp;
+			<span>Angle of Refraction (r): </span><span id="refRVal">13°</span>
+		</div>
+	</div>
+
+	<canvas id="refCanvas" width="520" height="360"></canvas>
+</div>
+
+<p class="refReadouts" style="margin: 10px 0 0;">
+	Formula (Snell’s Law): <strong>n = sin(&theta;<sub>i</sub>) / sin(&theta;<sub>r</sub>)</strong>
+</p>
+
+<table class="swTable" style="margin-top:14px; max-width:720px;">
+	<thead>
+		<tr>
+			<th>Angle of Incidence (&theta;<sub>i</sub>)</th>
+			<th>sin(&theta;<sub>i</sub>)</th>
+			<th>Angle of Refraction (&theta;<sub>r</sub>)</th>
+			<th>sin(&theta;<sub>r</sub>)</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>10°</td>
+			<td><span id="s4_sini_10">—</span></td>
+			<td><input id="s4_r_10" type="number" step="0.1" inputmode="decimal"></td>
+			<td><input id="s4_sinr_10" type="number" step="0.001" inputmode="decimal"></td>
+		</tr>
+		<tr>
+			<td>20°</td>
+			<td><span id="s4_sini_20">—</span></td>
+			<td><input id="s4_r_20" type="number" step="0.1" inputmode="decimal"></td>
+			<td><input id="s4_sinr_20" type="number" step="0.001" inputmode="decimal"></td>
+		</tr>
+		<tr>
+			<td>30°</td>
+			<td><span id="s4_sini_30">—</span></td>
+			<td><input id="s4_r_30" type="number" step="0.1" inputmode="decimal"></td>
+			<td><input id="s4_sinr_30" type="number" step="0.001" inputmode="decimal"></td>
+		</tr>
+		<tr>
+			<td>40°</td>
+			<td><span id="s4_sini_40">—</span></td>
+			<td><input id="s4_r_40" type="number" step="0.1" inputmode="decimal"></td>
+			<td><input id="s4_sinr_40" type="number" step="0.001" inputmode="decimal"></td>
+		</tr>
+		<tr>
+			<td>50°</td>
+			<td><span id="s4_sini_50">—</span></td>
+			<td><input id="s4_r_50" type="number" step="0.1" inputmode="decimal"></td>
+			<td><input id="s4_sinr_50" type="number" step="0.001" inputmode="decimal"></td>
+		</tr>
+	</tbody>
+</table>
+
+<div class="refStation" style="margin-top:14px;">
+	<div class="refReadouts" style="margin-bottom:8px;">Scatter plot: x = sin(&theta;<sub>r</sub>), y = sin(&theta;<sub>i</sub>)</div>
+	<canvas id="s4PlotCanvas" width="520" height="320"></canvas>
+	<div id="s4TrendlineStats" class="refReadouts" style="margin-top:8px;">
+		Trendline appears after completing the table.
+	</div>
+	<div style="margin-top:12px;">
+		<p style="margin: 8px 0 4px;"><strong>1.</strong> What is the slope of the trendline?</p>
+		<input id="s4_q1_slope" type="number" step="0.001" inputmode="decimal" placeholder="Enter slope">
+
+		<p style="margin: 10px 0 4px;"><strong>2.</strong> What physical quantity of the glass does the slope represent?</p>
+		<input id="s4_q2_meaning" type="text" placeholder="Type your answer" style="width:100%; max-width:520px; display:block;">
+
+		<div style="margin-top:10px;">
+			<button id="s4SubmitBtn" type="button" onclick="submitSection4()">Submit answers</button>
+		</div>
+		<p id="s4Feedback" class="formFeedback" aria-live="polite"></p>
+		<p id="s4Score" class="formFeedback" aria-live="polite"></p>
+	</div>
+</div>
+</div>
+
+<!-- ================= STATION 4 ================= -->
+<div class="section" data-step="5">
+<h3>Section 5: Converging Lens</h3>
+
+<div id="mcqS5"></div>
+
+<button id="mcqS5SubmitBtn" type="button" onclick="submitMCQS5()">Submit answers</button>
+<p id="mcqS5Score"></p>
+</div>
+
+<!-- ================= STATION 5 ================= -->
+<div class="section" data-step="6">
+<h3>Section 6: Converging Lens (Measurement)</h3>
+
+<div class="refStation">
+	<p class="refReadouts" style="margin:0 0 10px;">
+		Use the slider to set the object distance <em>d</em><sub>o</sub>. Record the displayed image distance <em>d</em><sub>i</sub> and image height <em>h</em><sub>i</sub> in the table.
+	</p>
+
+	<div class="refControls" style="margin-top:0;">
+		<div class="refSlider">
+			<label for="s6_do"><strong>Object distance</strong> (<em>d</em><sub>o</sub>)</label>
+			<input id="s6_do" type="range" min="25" max="60" step="1" value="50" oninput="lensUpdateFromUI()">
+			<div class="refReadouts"><span id="s6_do_out">50</span> cm</div>
+		</div>
+	</div>
+
+	<canvas id="lensCanvas" width="720" height="240"></canvas>
+	<div class="refReadouts" id="s6_readouts"></div>
+	<p class="refReadouts" style="margin: 8px 0 0;">
+		Note: Enter <em>h</em><sub>i</sub> as a positive value (magnitude). The negative sign means the image is inverted. Ignore the sign.
+	</p>
+</div>
+
+<p style="margin-top:12px;">Complete the table by recording <em>d</em><sub>i</sub> and <em>h</em><sub>i</sub> for each <em>d</em><sub>o</sub>.</p>
+
+<table class="swTable" style="margin-top:10px; max-width:720px;">
+	<thead>
+		<tr>
+			<th>Object-Lens Distance (<em>d</em><sub>o</sub>)</th>
+			<th>Image-Lens Distance (<em>d</em><sub>i</sub>)</th>
+			<th>Image height (<em>h</em><sub>i</sub>)</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>50 cm</td>
+			<td><input id="s6_di_50" type="number" step="0.01" inputmode="decimal" placeholder="cm"></td>
+			<td><input id="s6_hi_50" type="number" step="0.01" inputmode="decimal" placeholder="cm"></td>
+		</tr>
+		<tr>
+			<td>45 cm</td>
+			<td><input id="s6_di_45" type="number" step="0.01" inputmode="decimal" placeholder="cm"></td>
+			<td><input id="s6_hi_45" type="number" step="0.01" inputmode="decimal" placeholder="cm"></td>
+		</tr>
+		<tr>
+			<td>40 cm</td>
+			<td><input id="s6_di_40" type="number" step="0.01" inputmode="decimal" placeholder="cm"></td>
+			<td><input id="s6_hi_40" type="number" step="0.01" inputmode="decimal" placeholder="cm"></td>
+		</tr>
+		<tr>
+			<td>35 cm</td>
+			<td><input id="s6_di_35" type="number" step="0.01" inputmode="decimal" placeholder="cm"></td>
+			<td><input id="s6_hi_35" type="number" step="0.01" inputmode="decimal" placeholder="cm"></td>
+		</tr>
+	</tbody>
+</table>
+
+<div style="margin-top:14px;">
+	<p style="margin: 8px 0 6px;"><strong>1.</strong> What is the type of image formed (Real/Virtual)?</p>
+	<select id="s6_q1_type" style="max-width:260px; width:100%;">
+		<option value="" selected>Select an answer</option>
+		<option value="real">Real</option>
+		<option value="virtual">Virtual</option>
+	</select>
+
+	<p style="margin: 12px 0 6px;"><strong>2.</strong> What is the focal length of the lens? Calculate it using your measured <em>d</em><sub>i</sub> when <em>d</em><sub>o</sub> = 50 cm.</p>
+	<p class="refReadouts" style="margin: 4px 0 8px;">
+		Formula: <strong>1/<em>f</em> = 1/<em>d</em><sub>o</sub> + 1/<em>d</em><sub>i</sub></strong> &rArr; <strong><em>f</em> = (<em>d</em><sub>o</sub>&middot;<em>d</em><sub>i</sub>)/(<em>d</em><sub>o</sub> + <em>d</em><sub>i</sub>)</strong>
+	</p>
+	<input id="s6_q2_f" type="number" step="0.01" inputmode="decimal" placeholder="Enter focal length (cm)" style="max-width:260px; width:100%;">
+</div>
+
+<button id="sec6SubmitBtn" type="button" onclick="submitSection6()">Submit answers</button>
+<p id="sec6Feedback" class="formFeedback" aria-live="polite"></p>
+<p id="sec6Score" class="formFeedback" aria-live="polite"></p>
+
+<div id="finishRow" class="finishRow" style="display:none;">
+	<button id="finishBtn" type="button" onclick="finishExam()">Finished</button>
+</div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+// ================= REPORTING (JSON + Apps Script submit) =================
+// Google Apps Script Web App endpoint
+const APPS_SCRIPT_DEPLOYMENT_ID = "AKfycbyzWIX59n8ru6NxHh3rGi6vPFAu6IQKywRgn6iwVBKpxMG4Oz7ROgFd8AXlAIKvsapipA";
+const APPS_SCRIPT_URL = `https://script.google.com/macros/s/${APPS_SCRIPT_DEPLOYMENT_ID}/exec`;
+
+const REPORT_VERSION = "1.0";
+let reportTrackingActive = false;
+
+function nowISO(){
+	return new Date().toISOString();
+}
+
+function reportInitSession(studentName){
+	window.examReportState = {
+		version: REPORT_VERSION,
+		studentName: studentName || "",
+		timing: {
+			startedAtMs: Date.now(),
+			startedAtISO: nowISO(),
+			endedAtMs: null,
+			endedAtISO: null,
+			durationSeconds: null,
+			durationFormatted: null,
+		},
+		answers: {}, // key -> { value: string, lastChangedAtISO: string|null }
+		scores: {},  // sectionKey -> { score, max, submittedAtISO }
+		meta: {
+			testingMode: typeof TESTING_MODE !== "undefined" ? Boolean(TESTING_MODE) : null,
+			userAgent: navigator.userAgent,
+			timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+		},
+	};
+}
+
+function reportGet(){
+	return window.examReportState || null;
+}
+
+function reportEnsureStarted(){
+	const r = reportGet();
+	if (r && r.timing && Number.isFinite(r.timing.startedAtMs)) return;
+	// Fallback: if for some reason closeIntro wasn't used (e.g., testing overrides),
+	// start a session on first tracked interaction.
+	reportInitSession(window.studentName || "");
+}
+
+function reportKeyForControl(el){
+	if (!el) return null;
+	const tag = (el.tagName || "").toLowerCase();
+	if (tag !== "input" && tag !== "select" && tag !== "textarea") return null;
+	const type = (el.getAttribute("type") || "").toLowerCase();
+	if (type === "radio"){
+		const n = (el.getAttribute("name") || "").trim();
+		return n || null;
+	}
+	const id = (el.getAttribute("id") || "").trim();
+	return id || null;
+}
+
+function reportReadValueForKey(key){
+	if (!key) return "";
+	// Radio group names (MCQs)
+	const anyRadio = document.querySelector(`input[type=radio][name="${CSS.escape(key)}"]`);
+	if (anyRadio){
+		const checked = document.querySelector(`input[type=radio][name="${CSS.escape(key)}"]:checked`);
+		return checked ? String(checked.value) : "";
+	}
+	// Non-radio: key is element id
+	const el = document.getElementById(key);
+	if (!el) return "";
+	return (el.value ?? "").toString();
+}
+
+function reportTouchAnswer(key){
+	if (!key) return;
+	reportEnsureStarted();
+	const r = reportGet();
+	if (!r) return;
+	const value = reportReadValueForKey(key);
+	r.answers[key] = {
+		value,
+		lastChangedAtISO: nowISO(),
+	};
+}
+
+function reportOnAnyInput(e){
+	if (!reportTrackingActive) return;
+	const el = e.target;
+	const key = reportKeyForControl(el);
+	if (!key) return;
+	// Only mark change for radios when a radio becomes checked.
+	const type = (el.getAttribute("type") || "").toLowerCase();
+	if (type === "radio" && !el.checked) return;
+	reportTouchAnswer(key);
+}
+
+function reportSetSectionScore(sectionKey, score, max){
+	reportEnsureStarted();
+	const r = reportGet();
+	if (!r) return;
+	r.scores[sectionKey] = {
+		score: Number(score),
+		max: Number(max),
+		submittedAtISO: nowISO(),
+	};
+}
+
+function reportFinalizeTiming(){
+	reportEnsureStarted();
+	const r = reportGet();
+	if (!r) return;
+	if (r.timing.endedAtMs !== null) return;
+	r.timing.endedAtMs = Date.now();
+	r.timing.endedAtISO = nowISO();
+	const durMs = r.timing.endedAtMs - r.timing.startedAtMs;
+	r.timing.durationSeconds = Math.max(0, Math.floor(durMs / 1000));
+	r.timing.durationFormatted = formatElapsed(durMs);
+}
+
+function reportSnapshotAllControls(){
+	reportEnsureStarted();
+	const r = reportGet();
+	if (!r) return;
+
+	// Collect radio group names and non-radio ids under the exam sections.
+	const root = document.getElementById("pageContent") || document;
+	const controls = Array.from(root.querySelectorAll(".section input, .section select, .section textarea"));
+
+	const radioNames = new Set();
+	for (const el of controls){
+		const type = (el.getAttribute("type") || "").toLowerCase();
+		if (type === "radio"){
+			const name = (el.getAttribute("name") || "").trim();
+			if (name) radioNames.add(name);
+			continue;
+		}
+		const id = (el.getAttribute("id") || "").trim();
+		if (!id) continue;
+		if (!r.answers[id]){
+			r.answers[id] = { value: reportReadValueForKey(id), lastChangedAtISO: null };
+		} else {
+			r.answers[id].value = reportReadValueForKey(id);
+		}
+	}
+
+	for (const name of radioNames){
+		if (!r.answers[name]){
+			r.answers[name] = { value: reportReadValueForKey(name), lastChangedAtISO: null };
+		} else {
+			r.answers[name].value = reportReadValueForKey(name);
+		}
+	}
+}
+
+function reportBuildFinal(){
+	reportSnapshotAllControls();
+	reportFinalizeTiming();
+	const r = reportGet();
+	if (!r) return null;
+
+	const getScore = (k) => (r.scores[k] && Number.isFinite(r.scores[k].score)) ? r.scores[k].score : 0;
+	const getMax = (k) => (r.scores[k] && Number.isFinite(r.scores[k].max)) ? r.scores[k].max : 0;
+
+	const totalScore = ["section1","section2","section3","section4","section5","section6"].reduce((sum, k) => sum + getScore(k), 0);
+	const totalMax = ["section1","section2","section3","section4","section5","section6"].reduce((sum, k) => sum + getMax(k), 0);
+
+	return {
+		version: r.version,
+		studentName: r.studentName,
+		startedAtISO: r.timing.startedAtISO,
+		endedAtISO: r.timing.endedAtISO,
+		durationSeconds: r.timing.durationSeconds,
+		durationFormatted: r.timing.durationFormatted,
+		answers: r.answers,
+		scores: {
+			section1: r.scores.section1 || null,
+			section2: r.scores.section2 || null,
+			section3: r.scores.section3 || null,
+			section4: r.scores.section4 || null,
+			section5: r.scores.section5 || null,
+			section6: r.scores.section6 || null,
+			total: { score: totalScore, max: totalMax },
+		},
+		meta: r.meta,
+	};
+}
+
+function reportSubmitToAppsScript(resultObj){
+	if (!resultObj) return;
+	// Use a hidden form + iframe to avoid CORS issues.
+	const iframeId = "appsScriptSubmitFrame";
+	let iframe = document.getElementById(iframeId);
+	if (!iframe){
+		iframe = document.createElement("iframe");
+		iframe.id = iframeId;
+		iframe.name = iframeId;
+		iframe.style.display = "none";
+		document.body.appendChild(iframe);
+	}
+
+	const form = document.createElement("form");
+	form.method = "POST";
+	form.action = APPS_SCRIPT_URL;
+	form.target = iframeId;
+	form.style.display = "none";
+
+	const addField = (name, value) => {
+		const input = document.createElement("input");
+		input.type = "hidden";
+		input.name = name;
+		input.value = value;
+		form.appendChild(input);
+	};
+
+	addField("func", "submit");
+	addField("resultjson", JSON.stringify(resultObj));
+
+	document.body.appendChild(form);
+	form.submit();
+	form.remove();
+}
+
+function reportSubmitStartToAppsScript(studentName){
+	// Background "peek" log: submit only the student's name (no answers/scores).
+	// Uses a dedicated iframe so it can't interfere with the final submission flow.
+	const iframeId = "appsScriptStartFrame";
+	let iframe = document.getElementById(iframeId);
+	if (!iframe){
+		iframe = document.createElement("iframe");
+		iframe.id = iframeId;
+		iframe.name = iframeId;
+		iframe.style.display = "none";
+		document.body.appendChild(iframe);
+	}
+
+	const form = document.createElement("form");
+	form.method = "POST";
+	form.action = APPS_SCRIPT_URL;
+	form.target = iframeId;
+	form.style.display = "none";
+
+	const addField = (name, value) => {
+		const input = document.createElement("input");
+		input.type = "hidden";
+		input.name = name;
+		input.value = value;
+		form.appendChild(input);
+	};
+
+	// Keep Apps Script compatibility: same func, but minimal JSON.
+	addField("func", "submit");
+	addField("resultjson", JSON.stringify({ studentName: (studentName || "").toString() }));
+
+	document.body.appendChild(form);
+	form.submit();
+	form.remove();
+}
+
+function showOverlay(id){
+	const el = document.getElementById(id);
+	if (!el) return;
+	el.style.display = "flex";
+	document.body.classList.add("modal-open");
+}
+
+function hideOverlay(id){
+	const el = document.getElementById(id);
+	if (!el) return;
+	el.style.display = "none";
+	const overlayIds = ["introOverlay", "submitOverlay", "submitDoneOverlay", "mcqConfirmOverlay"];
+	const anyVisible = overlayIds.some((oid) => {
+		const o = document.getElementById(oid);
+		return o && o.style.display !== "none";
+	});
+	if (!anyVisible) document.body.classList.remove("modal-open");
+}
+
+function requestSubmitMCQ(){
+	const btn = document.getElementById("mcqSubmitBtn");
+	if (btn && btn.disabled) return;
+	showOverlay("mcqConfirmOverlay");
+}
+
+function initMcqConfirmDialog(){
+	const cancelBtn = document.getElementById("mcqConfirmCancelBtn");
+	const okBtn = document.getElementById("mcqConfirmOkBtn");
+	if (cancelBtn){
+		cancelBtn.addEventListener("click", () => hideOverlay("mcqConfirmOverlay"));
+	}
+	if (okBtn){
+		okBtn.addEventListener("click", () => {
+			hideOverlay("mcqConfirmOverlay");
+			submitMCQ();
+		});
+	}
+}
+
+function showSubmitDone(message, isError){
+	const title = document.getElementById("submitDoneTitle");
+	if (title) title.textContent = isError ? "Submission Issue" : "Submission Complete";
+	const msg = document.getElementById("submitDoneMessage");
+	if (msg) msg.textContent = message;
+	showOverlay("submitDoneOverlay");
+}
+
+function initSubmitDialogs(){
+	const okBtn = document.getElementById("submitDoneOkBtn");
+	if (okBtn){
+		okBtn.addEventListener("click", () => hideOverlay("submitDoneOverlay"));
+	}
+	const doneOverlay = document.getElementById("submitDoneOverlay");
+	if (doneOverlay){
+		doneOverlay.addEventListener("click", (e) => {
+			if (e.target === doneOverlay) hideOverlay("submitDoneOverlay");
+		});
+	}
+}
+
+function finishExam(){
+	const btn = document.getElementById("finishBtn");
+	if (btn) btn.disabled = true;
+	showOverlay("submitOverlay");
+
+	let completed = false;
+	let timeoutId = null;
+
+	try {
+		reportTrackingActive = false;
+		const finalReport = reportBuildFinal();
+		window.lastExamReportJSON = finalReport;
+
+		const iframeId = "appsScriptSubmitFrame";
+		let iframe = document.getElementById(iframeId);
+		if (!iframe){
+			iframe = document.createElement("iframe");
+			iframe.id = iframeId;
+			iframe.name = iframeId;
+			iframe.style.display = "none";
+			document.body.appendChild(iframe);
+		}
+
+		const token = String(Date.now()) + "_" + String(Math.random());
+		iframe.dataset.submitToken = token;
+
+		const onLoad = () => {
+			if (completed) return;
+			if (iframe.dataset.submitToken !== token) return;
+			completed = true;
+			if (timeoutId) clearTimeout(timeoutId);
+			hideOverlay("submitOverlay");
+			showSubmitDone("Your results were submitted.", false);
+			iframe.removeEventListener("load", onLoad);
+		};
+		iframe.addEventListener("load", onLoad);
+
+		reportSubmitToAppsScript(finalReport);
+
+		timeoutId = setTimeout(() => {
+			if (completed) return;
+			completed = true;
+			hideOverlay("submitOverlay");
+			showSubmitDone("Submission may have failed (no response). Please notify your instructor.", true);
+			if (btn) btn.disabled = false;
+			iframe.removeEventListener("load", onLoad);
+		}, 15000);
+	} catch (err){
+		console.error("Report submit failed:", err);
+		if (timeoutId) clearTimeout(timeoutId);
+		hideOverlay("submitOverlay");
+		showSubmitDone("Submission failed. Please notify your instructor.", true);
+		if (btn) btn.disabled = false;
+	}
+}
+
+function reportInitTracking(){
+	// Attach listeners once.
+	if (window.__reportTrackingInitialized) return;
+	window.__reportTrackingInitialized = true;
+	document.addEventListener("input", reportOnAnyInput, true);
+	document.addEventListener("change", reportOnAnyInput, true);
+}
+
+// ================= INTRO OVERLAY =================
+function closeIntro(){
+	const feedbackEl = document.getElementById("introFeedback");
+	const setIntroFeedback = (message, isError = false) => {
+		if (!feedbackEl) return;
+		feedbackEl.textContent = message || "";
+		feedbackEl.classList.toggle("is-error", Boolean(isError));
+		feedbackEl.classList.toggle("is-ok", Boolean(!isError && message));
+	};
+
+	const firstName = (document.getElementById("introFirstName")?.value || "").trim();
+	const lastNameRaw = (document.getElementById("introLastName")?.value || "").trim();
+
+	if (!firstName || !lastNameRaw){
+		setIntroFeedback("Please enter your first and last name to proceed.", true);
+		(firstName ? document.getElementById("introLastName") : document.getElementById("introFirstName"))?.focus();
+		return;
+	}
+
+	// Allowlist: only enrolled LBYPH03 students (by last name) may proceed.
+	const normalizeLastName = (s) => s.toUpperCase().replace(/\s+/g, " ").trim();
+	const allowedLastNames = new Set([
+		"ALBERCA",
+		"BALMES",
+		"BARRIENTOS",
+		"CANLAS",
+		"DILAG",
+		"ELEPANO",
+		"FAJILAGO",
+		"GALARAGA",
+		"ISRAEL",
+		"KAWAMURA",
+		"LALLANA",
+		"LANADA",
+		"LARANO",
+		"LEE",
+		"LIMBO",
+		"MALIKSI",
+		"OCCENO",
+		"ORTIZ",
+		"RAFAEL",
+		"RULLODA",
+		"SAN JOSE",
+		"SAVELLANO",
+		"SONAJO",
+		"TANG",
+		"WONG",
+		"OLARVE",
+	]);
+
+	const lastName = normalizeLastName(lastNameRaw);
+	if (!allowedLastNames.has(lastName)){
+		setIntroFeedback("Only students enrolled in the LBYPH03 can take the test.", true);
+		document.getElementById("introLastName")?.focus();
+		return;
+	}
+
+	const fullName = `${firstName} ${lastNameRaw}`.replace(/\s+/g, " ").trim();
+	window.studentName = fullName;
+	window.studentFirstName = firstName;
+	window.studentLastName = lastNameRaw;
+	setIntroFeedback("", false);
+
+	// Start report session exactly when the student proceeds.
+	reportInitSession(fullName);
+	// Log "started" event in the background (name-only JSON).
+	reportSubmitStartToAppsScript(fullName);
+	reportTrackingActive = true;
+
+	const overlay = document.getElementById("introOverlay");
+	if (overlay) overlay.style.display = "none";
+	document.body.classList.remove("modal-open");
+
+	startTimer();
+	if (typeof TESTING_MODE !== "undefined" && TESTING_MODE) getSections().forEach((sec) => setSectionEnabled(sec, true));
+	else setActiveStep(1);
+}
+
+// ================= TIMER =================
+let timerStartMs = null;
+let timerIntervalId = null;
+
+function formatElapsed(ms){
+	const totalSeconds = Math.floor(ms / 1000);
+	const hours = Math.floor(totalSeconds / 3600);
+	const minutes = Math.floor((totalSeconds % 3600) / 60);
+	const seconds = totalSeconds % 60;
+	const two = (n) => String(n).padStart(2, "0");
+	return hours > 0 ? `${two(hours)}:${two(minutes)}:${two(seconds)}` : `${two(minutes)}:${two(seconds)}`;
+}
+
+function startTimer(){
+	if (timerIntervalId) return;
+	timerStartMs = Date.now();
+	const badge = document.getElementById("timerBadge");
+	if (badge) badge.style.display = "inline-flex";
+
+	const tick = () => {
+		const el = document.getElementById("timerBadge");
+		if (!el || timerStartMs === null) return;
+		el.textContent = formatElapsed(Date.now() - timerStartMs);
+	};
+
+	tick();
+	timerIntervalId = setInterval(tick, 1000);
+}
+
+// ================= SECTION FLOW =================
+// Testing phase toggle: when true, all sections are always interactive.
+const TESTING_MODE = false;
+let activeStep = 1;
+
+function getSections(){
+	return Array.from(document.querySelectorAll('.section[data-step]'))
+		.sort((a, b) => Number(a.dataset.step) - Number(b.dataset.step));
+}
+
+function setSectionEnabled(sectionEl, enabled){
+	if (!sectionEl) return;
+	if (TESTING_MODE){
+		sectionEl.classList.remove("inactive");
+		const controls = sectionEl.querySelectorAll("input, select, textarea, button");
+		controls.forEach((el) => {
+			el.disabled = false;
+		});
+		return;
+	}
+	sectionEl.classList.toggle("inactive", !enabled);
+
+	const controls = sectionEl.querySelectorAll("input, select, textarea, button");
+	controls.forEach((el) => {
+		el.disabled = !enabled;
+	});
+}
+
+function setActiveStep(step){
+	if (TESTING_MODE){
+		activeStep = step;
+		getSections().forEach((sec) => setSectionEnabled(sec, true));
+		return;
+	}
+	activeStep = step;
+	getSections().forEach((sec) => {
+		setSectionEnabled(sec, Number(sec.dataset.step) === activeStep);
+	});
+}
+
+function goToNextSection(){
+	const sections = getSections();
+	const maxStep = sections.length ? Number(sections[sections.length - 1].dataset.step) : 1;
+	// If leaving Section 2, freeze the simulation.
+	if (activeStep === 2 && typeof swStop === "function") swStop();
+	if (activeStep < maxStep) setActiveStep(activeStep + 1);
+}
+
+// Lock the flow immediately (intro overlay already blocks interaction)
+if (!TESTING_MODE) setActiveStep(1);
+else getSections().forEach((sec) => setSectionEnabled(sec, true));
+
+["introFirstName", "introLastName"].forEach((id) => {
+	document.getElementById(id)?.addEventListener("keydown", (e) => {
+		if (e.key === "Enter") closeIntro();
+	});
+});
+
+// ================= MCQ =================
+const mcq = [
+	{
+		question: "Standing waves form on a string when:",
+		choices: [
+			"Two waves of different frequencies interfere",
+			"A reflected wave interferes w/ the incoming wave.",
+			"Only one wave travels on the string",
+			"The string is completely at rest",
+		],
+		correctIndex: 1,
+	},
+	{
+		question: "In a standing wave pattern, the points that never move are called:",
+		choices: [
+			"Antinodes",
+			"Nodes",
+			"Crest points",
+			"Interference points",
+		],
+		correctIndex: 1,
+	},
+	{
+		question: "For a string fixed at both ends, which of the following describes an antinode?",
+		choices: [
+			"A point of zero displacement",
+			"A point of maximum displacement",
+			"A point where the string breaks",
+			"A point where frequency is zero",
+		],
+		correctIndex: 1,
+	},
+	{
+		question: "Which type of interference occurs at the node?",
+		choices: [
+			"Constructive",
+			"Destructive",
+			"Both constructive & destructive",
+			"None",
+		],
+		correctIndex: 1,
+	},
+	{
+		question: "In the standing waves experiment, what happens to the tension if the hanging mass increases?",
+		choices: [
+			"Tension decreases",
+			"Tension increases",
+			"Tension stays the same",
+			"None of the above",
+		],
+		correctIndex: 1,
+	},
+];
+
+let mcqHTML = "";
+mcq.forEach((item, i) => {
+	mcqHTML += `<fieldset class="mcqQ">
+		<legend class="mcqLegend">${i + 1}. ${item.question}</legend>
+		<div class="mcqOptions">
+			${item.choices
+				.map((choice, j) => {
+					const letter = String.fromCharCode(65 + j);
+					const id = `q${i}_${j}`;
+					return `
+						<input class="mcqRadio" type="radio" name="q${i}" id="${id}" value="${j}">
+						<label class="mcqOption" for="${id}">
+							<span class="mcqChip">${letter}</span>
+							<span class="mcqChoiceText">${choice}</span>
+						</label>
+					`;
+				})
+				.join("")}
+		</div>
+	</fieldset>`;
+});
+
+document.getElementById("mcq").innerHTML = mcqHTML;
+
+// ================= SECTION 3 (MCQ) =================
+const mcqS3 = [
+	{
+		question: "What physical quantity does the refractive index compare?",
+		choices: [
+			"Speed of light in vacuum & in medium",
+			"Frequency in vacuum & in medium",
+			"Wavelength in vacuum & in medium",
+			"Period in vacuum & in medium",
+		],
+		correctIndex: 0,
+	},
+	{
+		question: "A high index of refraction means that light in the material:",
+		choices: [
+			"Travels more slowly",
+			"Travels more quickly",
+			"Is not refracted",
+			"Is not reflected",
+		],
+		correctIndex: 0,
+	},
+	{
+		question: "What happens when light enters a medium with a lower refractive index?",
+		choices: [
+			"Bends away from the normal",
+			"Stays in a straight line",
+			"Bends toward the normal",
+			"Total internal reflection",
+		],
+		correctIndex: 0,
+	},
+	{
+		question: "A light ray travels from a denser medium (glass) to a less dense medium (air) and strikes the interface at an angle less than the critical angle. What phenomenon occurs?",
+		choices: [
+			"Reflection",
+			"Refraction",
+			"Dispersion",
+			"Total internal reflection",
+		],
+		correctIndex: 1,
+	},
+];
+
+let mcqS3HTML = "";
+mcqS3.forEach((item, i) => {
+	mcqS3HTML += `<fieldset class="mcqQ">
+		<legend class="mcqLegend">${i + 1}. ${item.question}</legend>
+		<div class="mcqOptions">
+			${item.choices
+				.map((choice, j) => {
+					const letter = String.fromCharCode(65 + j);
+					const id = `s3_q${i}_${j}`;
+					return `
+						<input class="mcqRadio" type="radio" name="s3_q${i}" id="${id}" value="${j}">
+						<label class="mcqOption" for="${id}">
+							<span class="mcqChip">${letter}</span>
+							<span class="mcqChoiceText">${choice}</span>
+						</label>
+					`;
+				})
+				.join("")}
+		</div>
+	</fieldset>`;
+});
+
+if (document.getElementById("mcqS3")){
+	document.getElementById("mcqS3").innerHTML = mcqS3HTML;
+}
+
+// ================= SECTION 5 (MCQ) =================
+const mcqS5 = [
+	{
+		question: "Which type of lens is considered a converging lens?",
+		choices: [
+			"Convex lens",
+			"Concave lens",
+			"Any",
+			"Both",
+		],
+		correctIndex: 0,
+	},
+	{
+		question: "When an image is formed on the side opposite the refracted light rays (the left side of the lens where the object is located), the image is considered:",
+		choices: [
+			"Real",
+			"Virtual",
+			"Imaginary",
+			"Complex",
+		],
+		correctIndex: 1,
+	},
+	{
+		question: "If the object is placed beyond 2<em>f</em> of a converging lens. What image is formed?",
+		choices: [
+			"Virtual, upright",
+			"Virtual, inverted",
+			"Real, upright",
+			"Real, inverted",
+		],
+		correctIndex: 3,
+	},
+	{
+		question: "If h<sub>i</sub> is negative while h<sub>o</sub> is positive, what does it mean?",
+		choices: [
+			"Image is inverted",
+			"Image is upright",
+			"No image",
+			"Same size",
+		],
+		correctIndex: 0,
+	},
+	{
+		question: "If d<sub>i</sub> is bigger than d<sub>o</sub>, what does it mean?",
+		choices: [
+			"Bigger magnification",
+			"Smaller magnification",
+			"No image",
+			"Same size",
+		],
+		correctIndex: 0,
+	},
+	{
+		question: "Where should the object be placed so that no image is formed by a converging lens?",
+		choices: [
+			"At the focal point (<em>f</em>)",
+			"At the lens",
+			"At 2<em>f</em>",
+			"At 0.5<em>f</em>",
+		],
+		correctIndex: 0,
+	},
+];
+
+let mcqS5HTML = "";
+mcqS5.forEach((item, i) => {
+	mcqS5HTML += `<fieldset class="mcqQ">
+		<legend class="mcqLegend">${i + 1}. ${item.question}</legend>
+		<div class="mcqOptions">
+			${item.choices
+				.map((choice, j) => {
+					const letter = String.fromCharCode(65 + j);
+					const id = `s5_q${i}_${j}`;
+					return `
+						<input class="mcqRadio" type="radio" name="s5_q${i}" id="${id}" value="${j}">
+						<label class="mcqOption" for="${id}">
+							<span class="mcqChip">${letter}</span>
+							<span class="mcqChoiceText">${choice}</span>
+						</label>
+					`;
+				})
+				.join("")}
+		</div>
+	</fieldset>`;
+});
+
+if (document.getElementById("mcqS5")){
+	document.getElementById("mcqS5").innerHTML = mcqS5HTML;
+}
+
+function submitMCQ(){
+let score=0;
+mcq.forEach((item,i)=>{
+let ans=document.querySelector(`input[name=q${i}]:checked`);
+if(ans && parseInt(ans.value)===item.correctIndex) score++;
+});
+document.getElementById("mcqScore").innerText="Score: "+score;
+
+	window.section1Score = score;
+	reportSetSectionScore("section1", score, mcq.length);
+
+const btn = document.getElementById("mcqSubmitBtn");
+if (btn) btn.disabled = true;
+
+if (typeof TESTING_MODE === "undefined" || !TESTING_MODE) goToNextSection();
+}
+
+function submitMCQS3(){
+	let score = 0;
+	mcqS3.forEach((item, i) => {
+		const ans = document.querySelector(`input[name=s3_q${i}]:checked`);
+		if (ans && parseInt(ans.value) === item.correctIndex) score++;
+	});
+	const out = document.getElementById("mcqS3Score");
+	if (out) out.textContent = "Score: " + score;
+	const btn = document.getElementById("mcqS3SubmitBtn");
+	if (btn) btn.disabled = true;
+	window.section3Score = score;
+	reportSetSectionScore("section3", score, mcqS3.length);
+	if (typeof TESTING_MODE === "undefined" || !TESTING_MODE) goToNextSection();
+}
+
+function submitMCQS5(){
+	let score = 0;
+	mcqS5.forEach((item, i) => {
+		const ans = document.querySelector(`input[name=s5_q${i}]:checked`);
+		if (ans && parseInt(ans.value) === item.correctIndex) score++;
+	});
+	const out = document.getElementById("mcqS5Score");
+	if (out) out.textContent = "Score: " + score;
+	const btn = document.getElementById("mcqS5SubmitBtn");
+	if (btn) btn.disabled = true;
+	window.section5Score = score;
+	reportSetSectionScore("section5", score, mcqS5.length);
+	if (typeof TESTING_MODE === "undefined" || !TESTING_MODE) goToNextSection();
+}
+
+// ================= SECTION 2: SUBMIT + SCORING =================
+function submitSection2(){
+	const feedbackEl = document.getElementById("sec2Feedback");
+	const scoreEl = document.getElementById("sec2Score");
+	if (feedbackEl){
+		feedbackEl.textContent = "";
+		feedbackEl.classList.remove("is-error", "is-ok");
+	}
+	if (scoreEl){
+		scoreEl.textContent = "";
+		scoreEl.classList.remove("is-error", "is-ok");
+	}
+
+	const ids = [
+		"s2_a_n5_added","s2_a_n5_total","s2_a_n5_T",
+		"s2_a_n4_added","s2_a_n4_total","s2_a_n4_T",
+		"s2_a_n3_added","s2_a_n3_total","s2_a_n3_T",
+		"s2_b_n5_f","s2_b_n4_f","s2_b_n3_f",
+		"s2_c_answer",
+	];
+
+	for (const id of ids){
+		const el = document.getElementById(id);
+		const v = (el?.value ?? "").toString().trim();
+		if (!v){
+			if (feedbackEl){
+				feedbackEl.textContent = "Please complete all cells in the table and answer the essay before proceeding.";
+				feedbackEl.classList.add("is-error");
+			}
+			el?.focus();
+			return;
+		}
+	}
+
+	const withinTol = (value, expected, relTol = 0.20) => {
+		if (!Number.isFinite(value) || !Number.isFinite(expected)) return false;
+		const denom = Math.abs(expected) > 0 ? Math.abs(expected) : 1;
+		return Math.abs(value - expected) <= relTol * denom;
+	};
+
+	const SEC2_FREQ_COEFF = 34;
+
+	const expectedForN = (n) => {
+		// Standing-wave relation: f = (n/(2L)) * sqrt(T/mu)  => T = mu * (2Lf/n)^2
+		const T = sw.mu * Math.pow((2 * sw.L * sw.f) / n, 2);
+		const mTotal = T / sw.g;
+		const added = mTotal - sw.hangerMass;
+		// Worksheet formula (Section B): f = 34 · √(T(n²))
+		const fExp = SEC2_FREQ_COEFF * Math.sqrt(T * (n * n));
+		return { added, mTotal, T, fExp };
+	};
+
+	const expected = {
+		n5: expectedForN(5),
+		n4: expectedForN(4),
+		n3: expectedForN(3),
+	};
+
+	const totalPoints = 15;
+	let score = 0;
+	const read = (id) => Number(document.getElementById(id)?.value);
+
+	// Part A (9 points)
+	if (withinTol(read("s2_a_n5_added"), expected.n5.added)) score++;
+	if (withinTol(read("s2_a_n5_total"), expected.n5.mTotal)) score++;
+	if (withinTol(read("s2_a_n5_T"), expected.n5.T)) score++;
+
+	if (withinTol(read("s2_a_n4_added"), expected.n4.added)) score++;
+	if (withinTol(read("s2_a_n4_total"), expected.n4.mTotal)) score++;
+	if (withinTol(read("s2_a_n4_T"), expected.n4.T)) score++;
+
+	if (withinTol(read("s2_a_n3_added"), expected.n3.added)) score++;
+	if (withinTol(read("s2_a_n3_total"), expected.n3.mTotal)) score++;
+	if (withinTol(read("s2_a_n3_T"), expected.n3.T)) score++;
+
+	// Part B (3 points): experimental frequency (via worksheet formula)
+	if (withinTol(read("s2_b_n5_f"), expected.n5.fExp)) score++;
+	if (withinTol(read("s2_b_n4_f"), expected.n4.fExp)) score++;
+	if (withinTol(read("s2_b_n3_f"), expected.n3.fExp)) score++;
+
+	// Part C (3 points): auto-score based on mentioning accepted variables (up to 3)
+	const essayRaw = (document.getElementById("s2_c_answer")?.value ?? "").toString().toLowerCase();
+	const hasAny = (needles) => needles.some((k) => essayRaw.includes(k));
+	const mentioned = new Set();
+	if (hasAny(["length", "string length", "length of the string", "l="])) mentioned.add("length");
+	if (hasAny(["added load", "load", "added mass", "mass added"])) mentioned.add("added load");
+	if (hasAny(["mass hanger", "hanger mass", "hanger"])) mentioned.add("mass hanger");
+	if (hasAny(["tension", "t"])) mentioned.add("tension");
+	if (hasAny(["frequency", "freq", "hz"])) mentioned.add("frequency");
+	if (hasAny(["linear mass density", "mass density", "density", "mu", "μ"])) mentioned.add("linear mass density");
+	if (mentioned.size >= 3) score += 3;
+	else score += mentioned.size;
+
+	window.section2Score = score;
+	reportSetSectionScore("section2", score, totalPoints);
+	if (scoreEl){
+		scoreEl.textContent = `Section 2 Score: ${score}/${totalPoints}`;
+		scoreEl.classList.add("is-ok");
+	}
+
+	const btn = document.getElementById("sec2SubmitBtn");
+	if (btn) btn.disabled = true;
+
+	if (typeof TESTING_MODE === "undefined" || !TESTING_MODE) goToNextSection();
+}
+
+function initSection2AutoFrequency(){
+	const SEC2_FREQ_COEFF = 34;
+	const wire = (n, tId, fId) => {
+		const tEl = document.getElementById(tId);
+		const fEl = document.getElementById(fId);
+		if (!tEl || !fEl) return;
+
+		const compute = () => {
+			const T = Number(tEl.value);
+			if (!Number.isFinite(T)) return;
+			const f = SEC2_FREQ_COEFF * Math.sqrt(T * (n * n));
+			if (!Number.isFinite(f)) return;
+			fEl.value = f.toFixed(2);
+		};
+
+		tEl.addEventListener("input", compute);
+	};
+
+	wire(5, "s2_a_n5_T", "s2_b_n5_f");
+	wire(4, "s2_a_n4_T", "s2_b_n4_f");
+	wire(3, "s2_a_n3_T", "s2_b_n3_f");
+}
+
+// ================= SECTION 6: CONVERGING LENS (MEASUREMENT) =================
+const lens = {
+	f: 15,      // cm
+	h0: 5,      // cm
+	do: 50,     // cm
+};
+
+function lensCompute(doCm){
+	const f = lens.f;
+	const denom = (1 / f) - (1 / doCm);
+	const di = denom !== 0 ? (1 / denom) : Number.POSITIVE_INFINITY;
+	const m = -di / doCm;
+	const hi = m * lens.h0; // signed
+	return { di, hi, m };
+}
+
+function lensSetupCanvas(){
+	const canvas = document.getElementById("lensCanvas");
+	if (!canvas) return;
+	const dpr = window.devicePixelRatio || 1;
+	const cssW = canvas.clientWidth || 720;
+	// Dynamically size the canvas height so the image arrow stays visible
+	const hScale = 18;
+	const { hi } = lensCompute(lens.do);
+	const objHpx = lens.h0 * hScale;
+	const imgHpx = Math.abs(hi) * hScale;
+	const margin = 26;
+	const topSpace = objHpx + 52;
+	const bottomSpace = imgHpx + 64;
+	const minH = Math.max(240, Math.round(cssW * (240 / 720)));
+	const maxH = 720;
+	const cssH = Math.min(maxH, Math.max(minH, Math.round(topSpace + bottomSpace + margin * 2)));
+	canvas.width = Math.round(cssW * dpr);
+	canvas.height = Math.round(cssH * dpr);
+	const ctx = canvas.getContext("2d");
+	if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function lensUpdateReadouts(){
+	const doOut = document.getElementById("s6_do_out");
+	if (doOut) doOut.textContent = String(lens.do);
+
+	const { di, hi } = lensCompute(lens.do);
+	const diText = Number.isFinite(di) ? di.toFixed(2) : "∞";
+	const hiSigned = Number.isFinite(hi) ? hi.toFixed(2) : "—";
+	const hiAbs = Number.isFinite(hi) ? Math.abs(hi).toFixed(2) : "—";
+	const readouts = document.getElementById("s6_readouts");
+	if (readouts){
+		readouts.innerHTML = `Readouts: <strong>d<sub>o</sub> = ${lens.do.toFixed(0)} cm</strong> · <strong>d<sub>i</sub> = ${diText} cm</strong> · <strong>h<sub>i</sub> = ${hiSigned} cm</strong> (|h<sub>i</sub>| = ${hiAbs} cm)`;
+	}
+}
+
+function lensDraw(){
+	const canvas = document.getElementById("lensCanvas");
+	if (!canvas) return;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return;
+
+	const W = canvas.clientWidth || 720;
+	const H = canvas.clientHeight || 240;
+	ctx.clearRect(0, 0, W, H);
+
+	const margin = 26;
+	const xLens = W * 0.5;
+	const yTop = margin;
+	const yBottom = H - margin;
+
+	const { di, hi } = lensCompute(lens.do);
+	const leftScale = (xLens - margin) / lens.do;
+	const rightScale = (W - xLens - margin) / di;
+	const scale = Math.min(leftScale, rightScale);
+
+	const xObj = xLens - lens.do * scale;
+	const xImg = xLens + di * scale;
+
+	const hScale = 18;
+	const objHpx = lens.h0 * hScale;
+	const imgHpx = Math.abs(hi) * hScale;
+
+	// Place axis with enough space above/below for the arrows
+	const topSpace = objHpx + 52;
+	const bottomSpace = imgHpx + 64;
+	let yAxis = margin + topSpace;
+	// Clamp axis if the canvas height is too small (shouldn't happen, but safe)
+	yAxis = Math.max(yTop + 60, Math.min(yBottom - Math.max(60, bottomSpace), yAxis));
+
+	const drawArrow = (x, y0, y1, color) => {
+		ctx.strokeStyle = color;
+		ctx.fillStyle = color;
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.moveTo(x, y0);
+		ctx.lineTo(x, y1);
+		ctx.stroke();
+		const dir = y1 < y0 ? -1 : 1;
+		ctx.beginPath();
+		ctx.moveTo(x, y1);
+		ctx.lineTo(x - 6, y1 - 10 * dir);
+		ctx.lineTo(x + 6, y1 - 10 * dir);
+		ctx.closePath();
+		ctx.fill();
+	};
+
+	const drawDoubleArrow = (x0, x1, y, color) => {
+		ctx.strokeStyle = color;
+		ctx.fillStyle = color;
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.moveTo(x0, y);
+		ctx.lineTo(x1, y);
+		ctx.stroke();
+		const head = (x, dir) => {
+			ctx.beginPath();
+			ctx.moveTo(x, y);
+			ctx.lineTo(x - 8 * dir, y - 6);
+			ctx.lineTo(x - 8 * dir, y + 6);
+			ctx.closePath();
+			ctx.fill();
+		};
+		head(x0, -1);
+		head(x1, 1);
+	};
+
+	// Baseline + ruler ticks
+	ctx.strokeStyle = "rgba(15,23,42,0.25)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.moveTo(margin, yAxis);
+	ctx.lineTo(W - margin, yAxis);
+	ctx.stroke();
+
+	ctx.strokeStyle = "rgba(15,23,42,0.18)";
+	ctx.lineWidth = 1;
+	const maxCm = 70;
+	for (let cm = -maxCm; cm <= maxCm; cm += 5){
+		const x = xLens + cm * scale;
+		if (x < margin || x > W - margin) continue;
+		const isTen = cm % 10 === 0;
+		ctx.beginPath();
+		ctx.moveTo(x, yAxis);
+		ctx.lineTo(x, yAxis + (isTen ? 12 : 7));
+		ctx.stroke();
+		if (isTen){
+			ctx.fillStyle = "rgba(15,23,42,0.55)";
+			ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+			ctx.textAlign = "center";
+			ctx.fillText(String(Math.abs(cm)), x, yAxis + 26);
+		}
+	}
+
+	// Lens
+	ctx.fillStyle = "rgba(37,99,235,0.22)";
+	ctx.strokeStyle = "rgba(37,99,235,0.8)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.ellipse(xLens, (yTop + yAxis) * 0.5, 14, 44, 0, 0, Math.PI * 2);
+	ctx.fill();
+	ctx.stroke();
+
+	// Object and image
+	drawArrow(xObj, yAxis, yAxis - objHpx, "rgba(15,23,42,0.95)");
+	drawArrow(xImg, yAxis, yAxis + imgHpx, "rgba(15,23,42,0.75)");
+
+	// Distance arrows
+	drawDoubleArrow(xObj, xLens, yAxis - 24, "rgba(220,38,38,0.9)");
+	drawDoubleArrow(xLens, xImg, yAxis - 24, "rgba(220,38,38,0.9)");
+
+	// Labels
+	ctx.fillStyle = "rgba(15,23,42,0.9)";
+	ctx.font = "700 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+	ctx.textAlign = "center";
+	ctx.fillText("Object", xObj, yAxis - objHpx - 10);
+	ctx.fillText("Lens", xLens, yTop + 14);
+	ctx.fillText("Image", xImg, yAxis + imgHpx + 18);
+
+	ctx.fillStyle = "rgba(220,38,38,0.95)";
+	ctx.font = "700 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+	ctx.fillText("dₒ", (xObj + xLens) / 2, yAxis - 30);
+	ctx.fillText("dᵢ", (xLens + xImg) / 2, yAxis - 30);
+
+	ctx.fillStyle = "rgba(15,23,42,0.75)";
+	ctx.font = "700 12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+	ctx.textAlign = "left";
+	ctx.fillText("h₀", xObj + 8, yAxis - objHpx / 2);
+	ctx.fillText("hᵢ", xImg + 8, yAxis + imgHpx / 2);
+
+	ctx.strokeStyle = "rgba(15,23,42,0.10)";
+	ctx.lineWidth = 1;
+	ctx.strokeRect(margin, yTop, W - margin * 2, yBottom - yTop);
+}
+
+function lensUpdateFromUI(){
+	const slider = document.getElementById("s6_do");
+	if (!slider) return;
+	const v = Number(slider.value);
+	if (!Number.isFinite(v)) return;
+	lens.do = v;
+	lensUpdateReadouts();
+	lensSetupCanvas();
+	lensDraw();
+}
+
+function lensSetDo(doCm){
+	const slider = document.getElementById("s6_do");
+	if (slider) slider.value = String(doCm);
+	lens.do = doCm;
+	lensUpdateReadouts();
+	lensSetupCanvas();
+	lensDraw();
+}
+
+function lensInit(){
+	const canvas = document.getElementById("lensCanvas");
+	if (!canvas) return;
+	const slider = document.getElementById("s6_do");
+	if (slider) slider.value = String(lens.do);
+	const rerender = () => {
+		lensSetupCanvas();
+		lensUpdateReadouts();
+		lensDraw();
+	};
+	window.addEventListener("resize", rerender);
+	rerender();
+}
+
+function submitSection6(){
+	const feedbackEl = document.getElementById("sec6Feedback");
+	const scoreEl = document.getElementById("sec6Score");
+	if (feedbackEl){
+		feedbackEl.textContent = "";
+		feedbackEl.classList.remove("is-ok", "is-error");
+	}
+	if (scoreEl) scoreEl.textContent = "";
+
+	const rows = [50, 45, 40, 35];
+	const withinTol = (value, expected, relTol = 0.12) => {
+		if (!Number.isFinite(value) || !Number.isFinite(expected)) return false;
+		const denom = Math.max(1e-9, Math.abs(expected));
+		return Math.abs(value - expected) / denom <= relTol;
+	};
+
+	const q1 = (document.getElementById("s6_q1_type")?.value ?? "").toString().trim().toLowerCase();
+	const q2F = Number(document.getElementById("s6_q2_f")?.value);
+
+	let tableComplete = true;
+	for (const doVal of rows){
+		const diV = Number(document.getElementById(`s6_di_${doVal}`)?.value);
+		const hiV = Number(document.getElementById(`s6_hi_${doVal}`)?.value);
+		if (!Number.isFinite(diV) || !Number.isFinite(hiV)){
+			tableComplete = false;
+			break;
+		}
+	}
+
+	const questionsComplete = Boolean(q1) && Number.isFinite(q2F);
+	if (!tableComplete || !questionsComplete){
+		if (feedbackEl){
+			feedbackEl.textContent = "Please complete the table and answer both questions before submitting.";
+			feedbackEl.classList.add("is-error");
+		}
+		return;
+	}
+
+	let score = 0;
+	const totalPoints = (rows.length * 2) + 2;
+	for (const doVal of rows){
+		const expected = lensCompute(doVal);
+		const diExpected = expected.di;
+		const hiExpectedAbs = Math.abs(expected.hi);
+
+		const diV = Number(document.getElementById(`s6_di_${doVal}`)?.value);
+		const hiV = Number(document.getElementById(`s6_hi_${doVal}`)?.value);
+		const hiAbs = Math.abs(hiV);
+
+		if (withinTol(diV, diExpected, 0.12)) score++;
+		if (withinTol(hiAbs, hiExpectedAbs, 0.12)) score++;
+	}
+
+	// Q1 (1 point)
+	if (q1 === "real") score++;
+
+	// Q2 (1 point): compute focal length from the student's entered d_i at d_o = 50 cm
+	const di50 = Number(document.getElementById("s6_di_50")?.value);
+	const do50 = 50;
+	let fExpected = lens.f;
+	if (Number.isFinite(di50) && di50 > 0){
+		const invF = (1 / do50) + (1 / di50);
+		if (Number.isFinite(invF) && invF > 0) fExpected = 1 / invF;
+	}
+	if (withinTol(q2F, fExpected, 0.20)) score++;
+
+	window.section6Score = score;
+	reportSetSectionScore("section6", score, totalPoints);
+	if (scoreEl){
+		scoreEl.textContent = `Score: ${score} / ${totalPoints}`;
+		scoreEl.classList.add(score === totalPoints ? "is-ok" : "is-error");
+	}
+	if (feedbackEl){
+		feedbackEl.textContent = score === totalPoints ? "Submitted." : "Submitted. Review your answers.";
+		feedbackEl.classList.add(score === totalPoints ? "is-ok" : "is-error");
+	}
+
+	const btn = document.getElementById("sec6SubmitBtn");
+	if (btn) btn.disabled = true;
+	const finishRow = document.getElementById("finishRow");
+	if (finishRow) finishRow.style.display = "flex";
+	if (typeof TESTING_MODE === "undefined" || !TESTING_MODE) goToNextSection();
+}
+
+// ================= SECTION 2: STANDING WAVES (SIM) =================
+const sw = {
+	g: 9.8,
+	hangerMass: 0.005,
+	f: 100,
+	L: 1.0,
+	mu: 0.00027,
+	animId: null,
+	running: false,
+};
+
+function swUpdateFromUI(){
+	const slider = document.getElementById("swAddedLoad");
+	const out = document.getElementById("swAddedLoadVal");
+	if (!slider || !out) return;
+	out.textContent = Number(slider.value).toFixed(3);
+	if (!sw.running) swRenderStatic();
+}
+
+function swCompute(){
+	const slider = document.getElementById("swAddedLoad");
+	const mAdded = slider ? Number(slider.value) : 0.005;
+	const mTotal = mAdded + sw.hangerMass;
+	const T = mTotal * sw.g;
+	const nCont = 2 * sw.L * sw.f * Math.sqrt(sw.mu / T);
+	const n = Math.max(1, Math.min(8, Math.round(nCont)));
+	const detune = Math.abs(nCont - n);
+	// Resonance envelope: peaks at detune=0, vanishes at detune=0.5 (halfway between modes)
+	const resonance = Math.pow(Math.max(0, Math.cos(Math.PI * detune)), 10);
+	const amp = 28 * resonance;
+	return { T, n, amp };
+}
+
+function swDrawFrame(ms){
+	const canvas = document.getElementById("swCanvas");
+	if (!canvas) return;
+	const ctx = canvas.getContext("2d");
+	const w = canvas.width;
+	const h = canvas.height;
+
+	ctx.clearRect(0, 0, w, h);
+
+	// string baseline
+	ctx.strokeStyle = "rgba(15,23,42,.18)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.moveTo(14, h / 2);
+	ctx.lineTo(w - 14, h / 2);
+	ctx.stroke();
+
+	const { n, amp } = swCompute();
+	const t = (ms || 0) / 1000;
+	const omega = 2 * Math.PI * sw.f;
+	const phase = Math.sin(omega * t);
+
+	ctx.strokeStyle = "rgba(37,99,235,.95)";
+	ctx.lineWidth = 2.5;
+	ctx.beginPath();
+
+	const drawableW = w - 28;
+	for (let px = 0; px <= drawableW; px++){
+		const x = px / drawableW;
+		const y = amp * Math.sin(n * Math.PI * x) * phase;
+		const X = 14 + px;
+		const Y = (h / 2) - y;
+		if (px === 0) ctx.moveTo(X, Y);
+		else ctx.lineTo(X, Y);
+	}
+	ctx.stroke();
+
+	// end clamps
+	ctx.fillStyle = "rgba(15,23,42,.25)";
+	ctx.fillRect(10, (h / 2) - 22, 6, 44);
+	ctx.fillRect(w - 16, (h / 2) - 22, 6, 44);
+}
+
+function swLoop(ms){
+	swDrawFrame(ms);
+	if (!sw.running) return;
+	sw.animId = requestAnimationFrame(swLoop);
+}
+
+function swRenderStatic(){
+	// Render a static standing wave (phase = 0)
+	swDrawFrame(0);
+}
+
+function swRun(){
+	if (sw.running) return;
+	sw.running = true;
+	const runBtn = document.getElementById("swRunBtn");
+	if (runBtn){
+		runBtn.textContent = "Running";
+		runBtn.classList.add("is-running");
+	}
+	if (sw.animId) cancelAnimationFrame(sw.animId);
+	sw.animId = requestAnimationFrame(swLoop);
+}
+
+function swStop(){
+	sw.running = false;
+	const runBtn = document.getElementById("swRunBtn");
+	if (runBtn){
+		runBtn.textContent = "Run";
+		runBtn.classList.remove("is-running");
+	}
+	if (sw.animId) cancelAnimationFrame(sw.animId);
+	sw.animId = null;
+	swRenderStatic();
+}
+
+function swInit(){
+	const slider = document.getElementById("swAddedLoad");
+	if (slider && (!slider.value || slider.value === "")) slider.value = "0.070";
+	swUpdateFromUI();
+	// Default: not running
+	swStop();
+}
+
+// ================= STATION 4 (Refraction Station) =================
+const ref = {
+	nAir: 1.0,
+	nGlass: 1.5,
+	thetaDeg: 20,
+	canvas: null,
+	ctx: null,
+};
+
+function refClamp(v, lo, hi){
+	return Math.max(lo, Math.min(hi, v));
+}
+
+function refRad(deg){
+	return (deg * Math.PI) / 180;
+}
+
+function refDeg(rad){
+	return (rad * 180) / Math.PI;
+}
+
+function refDot(a, b){
+	return a.x * b.x + a.y * b.y;
+}
+
+function refScale(v, s){
+	return { x: v.x * s, y: v.y * s };
+}
+
+function refAdd(a, b){
+	return { x: a.x + b.x, y: a.y + b.y };
+}
+
+function refSub(a, b){
+	return { x: a.x - b.x, y: a.y - b.y };
+}
+
+function refAng(v){
+	return Math.atan2(v.y, v.x);
+}
+
+function refNorm(v){
+	const m = Math.hypot(v.x, v.y) || 1;
+	return { x: v.x / m, y: v.y / m };
+}
+
+function refShortDelta(a, b){
+	// returns signed smallest delta to go from angle a to b
+	let d = b - a;
+	while (d <= -Math.PI) d += 2 * Math.PI;
+	while (d > Math.PI) d -= 2 * Math.PI;
+	return d;
+}
+
+function refSetupCanvas(){
+	if (!ref.canvas) return null;
+	const canvas = ref.canvas;
+	const ctx = ref.ctx;
+	const dpr = window.devicePixelRatio || 1;
+	const rect = canvas.getBoundingClientRect();
+	const cssW = rect.width || canvas.width;
+	const cssH = rect.height || canvas.height;
+	const pxW = Math.max(1, Math.round(cssW * dpr));
+	const pxH = Math.max(1, Math.round(cssH * dpr));
+	if (canvas.width !== pxW) canvas.width = pxW;
+	if (canvas.height !== pxH) canvas.height = pxH;
+	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+	return { w: cssW, h: cssH };
+}
+
+function refDrawAngleArc(ctx, center, r, a0, a1, labelText){
+	const delta = refShortDelta(a0, a1);
+	const aEnd = a0 + delta;
+
+	ctx.strokeStyle = "rgba(15,23,42,.55)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.arc(center.x, center.y, r, a0, aEnd, delta < 0);
+	ctx.stroke();
+
+	const mid = a0 + delta / 2;
+	const labelPos = {
+		x: center.x + (r + 14) * Math.cos(mid),
+		y: center.y + (r + 14) * Math.sin(mid),
+	};
+	ctx.fillStyle = "rgba(15,23,42,.85)";
+	ctx.font = "600 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "middle";
+	ctx.fillText(labelText, labelPos.x, labelPos.y);
+}
+
+function refDraw(){
+	if (!ref.canvas || !ref.ctx) return;
+	const dims = refSetupCanvas();
+	if (!dims) return;
+	const { w, h } = dims;
+	const ctx = ref.ctx;
+
+	ctx.clearRect(0, 0, w, h);
+
+	const center = { x: w * 0.5, y: h * 0.56 };
+	const glassR = Math.min(130, Math.min(w, h) * 0.28);
+	const ringR = glassR + 38;
+	const theta = refRad(ref.thetaDeg);
+
+	// Treat theta as the rotation of the surface normal (so i tracks the slider).
+	// Normal points into the glass; interface (tangent) is perpendicular to normal.
+	const nHat = refNorm({ x: Math.cos(theta), y: Math.sin(theta) });
+	const tHat = refNorm({ x: -Math.sin(theta), y: Math.cos(theta) });
+
+	// Incident ray (air -> boundary) fixed from left to center
+	const I = { x: 1, y: 0 };
+	const cosI = refClamp(refDot(I, nHat), -1, 1);
+	const iRad = Math.acos(cosI);
+	const sinI = Math.sin(iRad);
+	const sinR = (ref.nAir / ref.nGlass) * sinI;
+	const rRad = Math.asin(refClamp(sinR, -1, 1));
+	const signT = Math.sign(refDot(I, tHat)) || 1;
+	const T = refNorm(refAdd(refScale(nHat, Math.cos(rRad)), refScale(tHat, signT * Math.sin(rRad))));
+
+	// Update readouts
+	const iDeg = Math.round(refDeg(iRad));
+	const rDeg = Math.round(refDeg(rRad));
+	const iEl = document.getElementById("refIVal");
+	const rEl = document.getElementById("refRVal");
+	if (iEl) iEl.textContent = `${iDeg}°`;
+	if (rEl) rEl.textContent = `${rDeg}°`;
+
+	// Background protractor ring
+	ctx.strokeStyle = "rgba(15,23,42,.18)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.arc(center.x, center.y, ringR, 0, Math.PI * 2);
+	ctx.stroke();
+
+	// Minor ticks (every 10°) around ring for orientation
+	ctx.strokeStyle = "rgba(15,23,42,.22)";
+	ctx.lineWidth = 1.5;
+	for (let d = 0; d < 360; d += 10){
+		const a = refRad(d);
+		const inner = ringR - (d % 30 === 0 ? 12 : 7);
+		ctx.beginPath();
+		ctx.moveTo(center.x + inner * Math.cos(a), center.y + inner * Math.sin(a));
+		ctx.lineTo(center.x + ringR * Math.cos(a), center.y + ringR * Math.sin(a));
+		ctx.stroke();
+	}
+
+	// Glass "moon" (rotating semicircle)
+	const aN = refAng(nHat);
+	ctx.fillStyle = "rgba(148,163,184,.38)";
+	ctx.beginPath();
+	ctx.moveTo(center.x, center.y);
+	ctx.arc(center.x, center.y, glassR, aN - Math.PI / 2, aN + Math.PI / 2);
+	ctx.closePath();
+	ctx.fill();
+
+	// Glass outline
+	ctx.strokeStyle = "rgba(15,23,42,.35)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.arc(center.x, center.y, glassR, 0, Math.PI * 2);
+	ctx.stroke();
+
+	// Interface (diameter) and normal
+	ctx.strokeStyle = "rgba(15,23,42,.55)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	const pA = refSub(center, refScale(tHat, glassR));
+	const pB = refAdd(center, refScale(tHat, glassR));
+	ctx.moveTo(pA.x, pA.y);
+	ctx.lineTo(pB.x, pB.y);
+	ctx.stroke();
+
+	ctx.save();
+	ctx.setLineDash([6, 6]);
+	ctx.strokeStyle = "rgba(15,23,42,.35)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.moveTo(center.x - nHat.x * ringR, center.y - nHat.y * ringR);
+	ctx.lineTo(center.x + nHat.x * ringR, center.y + nHat.y * ringR);
+	ctx.stroke();
+	ctx.restore();
+
+	// Rays
+	const rayLen = ringR + 26;
+	ctx.strokeStyle = "rgba(37,99,235,.95)";
+	ctx.lineWidth = 3;
+	ctx.lineCap = "round";
+	// incident (from air side)
+	ctx.beginPath();
+	ctx.moveTo(center.x - I.x * rayLen, center.y - I.y * rayLen);
+	ctx.lineTo(center.x, center.y);
+	ctx.stroke();
+	// refracted (into glass)
+	ctx.beginPath();
+	ctx.moveTo(center.x, center.y);
+	ctx.lineTo(center.x + T.x * rayLen, center.y + T.y * rayLen);
+	ctx.stroke();
+
+	// Small point at interface
+	ctx.fillStyle = "rgba(15,23,42,.55)";
+	ctx.beginPath();
+	ctx.arc(center.x, center.y, 3.2, 0, Math.PI * 2);
+	ctx.fill();
+
+	// Angle arcs + labels
+	const normalAir = refScale(nHat, -1);
+	const incDraw = refScale(I, -1);
+	refDrawAngleArc(ctx, center, 40, refAng(normalAir), refAng(incDraw), `i = ${iDeg}°`);
+	refDrawAngleArc(ctx, center, 56, refAng(nHat), refAng(T), `r = ${rDeg}°`);
+
+	// Quick captions
+	ctx.fillStyle = "rgba(15,23,42,.78)";
+	ctx.font = "600 12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+	ctx.textAlign = "left";
+	ctx.textBaseline = "top";
+	ctx.fillText("Air", 12, 12);
+	ctx.textAlign = "right";
+	ctx.fillText("Glass", w - 12, 12);
+}
+
+function refUpdateFromUI(){
+	const slider = document.getElementById("refRotate");
+	if (!slider) return;
+	const theta = Number(slider.value || 0);
+	ref.thetaDeg = theta;
+	const valEl = document.getElementById("refRotateVal");
+	if (valEl) valEl.textContent = String(theta);
+	refDraw();
+}
+
+function refInit(){
+	const canvas = document.getElementById("refCanvas");
+	if (!canvas) return;
+	ref.canvas = canvas;
+	ref.ctx = canvas.getContext("2d");
+	refUpdateFromUI();
+	window.addEventListener("resize", () => {
+		if (!ref.canvas) return;
+		refDraw();
+	});
+}
+
+function initSection4SineIncidence(){
+	const angles = [10, 20, 30, 40, 50];
+	angles.forEach((deg) => {
+		const el = document.getElementById(`s4_sini_${deg}`);
+		if (!el) return;
+		const s = Math.sin(refRad(deg));
+		el.textContent = s.toFixed(3);
+	});
+}
+
+const s4Plot = {
+	canvas: null,
+	ctx: null,
+	lastRegression: null,
+};
+
+function s4Num(id){
+	const el = document.getElementById(id);
+	if (!el) return null;
+	const isFormField = "value" in el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT");
+	const raw = String(isFormField ? (el.value ?? "") : (el.textContent ?? "")).trim();
+	if (!raw) return null;
+	const v = Number(raw);
+	return Number.isFinite(v) ? v : null;
+}
+
+function s4GetPoints(){
+	const angles = [10, 20, 30, 40, 50];
+	const points = [];
+	angles.forEach((deg) => {
+		// x = sin(theta_r) (manual), y = sin(theta_i) (auto)
+		const x = s4Num(`s4_sinr_${deg}`);
+		const y = s4Num(`s4_sini_${deg}`);
+		if (x === null || y === null) return;
+		points.push({ x, y, deg });
+	});
+	points.sort((a, b) => a.x - b.x);
+	return points;
+}
+
+function s4AllRowsComplete(){
+	const angles = [10, 20, 30, 40, 50];
+	return angles.every((deg) => s4Num(`s4_sinr_${deg}`) !== null);
+}
+
+function s4AllTableItemsComplete(){
+	const angles = [10, 20, 30, 40, 50];
+	return angles.every((deg) => (
+		s4Num(`s4_r_${deg}`) !== null &&
+		s4Num(`s4_sinr_${deg}`) !== null
+	));
+}
+
+function s4LinearRegression(points){
+	// returns {m, b, r2}
+	const n = points.length;
+	if (n < 2) return null;
+	let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0;
+	for (const p of points){
+		sumX += p.x;
+		sumY += p.y;
+		sumXX += p.x * p.x;
+		sumXY += p.x * p.y;
+	}
+	const denom = n * sumXX - sumX * sumX;
+	if (Math.abs(denom) < 1e-12) return null;
+	const m = (n * sumXY - sumX * sumY) / denom;
+	const b = (sumY - m * sumX) / n;
+
+	const yBar = sumY / n;
+	let ssTot = 0;
+	let ssRes = 0;
+	for (const p of points){
+		const yHat = m * p.x + b;
+		ssTot += (p.y - yBar) * (p.y - yBar);
+		ssRes += (p.y - yHat) * (p.y - yHat);
+	}
+	const r2 = ssTot > 1e-12 ? 1 - (ssRes / ssTot) : 1;
+	return { m, b, r2 };
+}
+
+function s4SetupCanvas(){
+	if (!s4Plot.canvas) return null;
+	const canvas = s4Plot.canvas;
+	const ctx = s4Plot.ctx;
+	const dpr = window.devicePixelRatio || 1;
+	const rect = canvas.getBoundingClientRect();
+	const cssW = rect.width || canvas.width;
+	const cssH = rect.height || canvas.height;
+	const pxW = Math.max(1, Math.round(cssW * dpr));
+	const pxH = Math.max(1, Math.round(cssH * dpr));
+	if (canvas.width !== pxW) canvas.width = pxW;
+	if (canvas.height !== pxH) canvas.height = pxH;
+	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+	return { w: cssW, h: cssH };
+}
+
+function s4SmoothPath(ctx, pts){
+	if (pts.length < 2) return;
+	ctx.beginPath();
+	ctx.moveTo(pts[0].x, pts[0].y);
+	for (let i = 0; i < pts.length - 1; i++){
+		const p0 = pts[i];
+		const p1 = pts[i + 1];
+		const mid = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+		ctx.quadraticCurveTo(p0.x, p0.y, mid.x, mid.y);
+	}
+	const last = pts[pts.length - 1];
+	ctx.lineTo(last.x, last.y);
+}
+
+function s4DrawPlot(){
+	if (!s4Plot.canvas || !s4Plot.ctx) return;
+	const dims = s4SetupCanvas();
+	if (!dims) return;
+	const { w, h } = dims;
+	const ctx = s4Plot.ctx;
+
+	ctx.clearRect(0, 0, w, h);
+
+	// Plot area
+	const padL = 58;
+	const padR = 16;
+	const padT = 16;
+	const padB = 54;
+	const plotW = Math.max(10, w - padL - padR);
+	const plotH = Math.max(10, h - padT - padB);
+
+	const points = s4GetPoints();
+	const baseMaxX = Math.max(0.8, ...points.map((p) => p.x));
+	const xVals = [Math.sin(refRad(10)), Math.sin(refRad(50))];
+	const baseMaxY = Math.max(0.8, ...xVals);
+	const maxX = Math.min(1.0, Math.max(0.85, baseMaxX + 0.05));
+	const maxY = Math.min(1.0, Math.max(0.85, baseMaxY + 0.05));
+
+	const xToPx = (x) => padL + (x / maxX) * plotW;
+	const yToPx = (y) => padT + plotH - (y / maxY) * plotH;
+
+	// Grid + axes
+	ctx.strokeStyle = "rgba(15,23,42,.18)";
+	ctx.lineWidth = 1;
+	for (let k = 0; k <= 5; k++){
+		const gx = padL + (plotW * k) / 5;
+		const gy = padT + (plotH * k) / 5;
+		ctx.beginPath();
+		ctx.moveTo(gx, padT);
+		ctx.lineTo(gx, padT + plotH);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(padL, gy);
+		ctx.lineTo(padL + plotW, gy);
+		ctx.stroke();
+	}
+
+	ctx.strokeStyle = "rgba(15,23,42,.45)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.moveTo(padL, padT);
+	ctx.lineTo(padL, padT + plotH);
+	ctx.lineTo(padL + plotW, padT + plotH);
+	ctx.stroke();
+
+	// Tick labels
+	ctx.fillStyle = "rgba(15,23,42,.75)";
+	ctx.font = "700 12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "top";
+	for (let k = 0; k <= 5; k++){
+		const v = (maxX * k) / 5;
+		const gx = padL + (plotW * k) / 5;
+		ctx.fillText(v.toFixed(2), gx, padT + plotH + 8);
+	}
+	ctx.textAlign = "right";
+	ctx.textBaseline = "middle";
+	for (let k = 0; k <= 5; k++){
+		const v = (maxY * k) / 5;
+		const gy = padT + plotH - (plotH * k) / 5;
+		ctx.fillText(v.toFixed(2), padL - 8, gy);
+	}
+
+	// Axis titles
+	ctx.fillStyle = "rgba(15,23,42,.85)";
+	ctx.font = "800 13px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+	ctx.textAlign = "center";
+	ctx.textBaseline = "top";
+	ctx.fillText("sin(θr)", padL + plotW / 2, h - 24);
+	ctx.save();
+	ctx.translate(18, padT + plotH / 2);
+	ctx.rotate(-Math.PI / 2);
+	ctx.fillText("sin(θi)", 0, 0);
+	ctx.restore();
+
+	// Smooth connecting line for points (only when at least 2 points entered)
+	if (points.length >= 2){
+		const ptsPx = points.map((p) => ({ x: xToPx(p.x), y: yToPx(p.y) }));
+		ctx.strokeStyle = "rgba(37,99,235,.55)";
+		ctx.lineWidth = 2.5;
+		s4SmoothPath(ctx, ptsPx);
+		ctx.stroke();
+	}
+
+	// Points
+	for (const p of points){
+		const px = xToPx(p.x);
+		const py = yToPx(p.y);
+		ctx.fillStyle = "rgba(37,99,235,.95)";
+		ctx.beginPath();
+		ctx.arc(px, py, 4.5, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.strokeStyle = "rgba(255,255,255,.95)";
+		ctx.lineWidth = 2;
+		ctx.stroke();
+	}
+
+	// Trendline + stats (only when table is complete)
+	const statsEl = document.getElementById("s4TrendlineStats");
+	if (s4AllRowsComplete()){
+		const fullPoints = s4GetPoints();
+		const reg = s4LinearRegression(fullPoints);
+		if (reg){
+			s4Plot.lastRegression = reg;
+			const x1 = 0;
+			const y1 = reg.m * x1 + reg.b;
+			const x2 = maxX;
+			const y2 = reg.m * x2 + reg.b;
+			ctx.strokeStyle = "rgba(220,38,38,.85)";
+			ctx.lineWidth = 2.5;
+			ctx.beginPath();
+			ctx.moveTo(xToPx(x1), yToPx(y1));
+			ctx.lineTo(xToPx(x2), yToPx(y2));
+			ctx.stroke();
+
+			if (statsEl){
+				const mStr = reg.m.toFixed(3);
+				const bStr = reg.b.toFixed(3);
+				const r2Str = Math.max(0, Math.min(1, reg.r2)).toFixed(3);
+				statsEl.innerHTML = `Trendline: <strong>sin(&theta;<sub>i</sub>) = ${mStr} sin(&theta;<sub>r</sub>) + ${bStr}</strong> &nbsp;|&nbsp; <strong>R<sup>2</sup> = ${r2Str}</strong>`;
+			}
+		} else {
+			s4Plot.lastRegression = null;
+			if (statsEl) statsEl.textContent = "Trendline unavailable (check values).";
+		}
+	} else {
+		s4Plot.lastRegression = null;
+		if (statsEl) statsEl.textContent = "Enter sin(θr) values to plot points. Trendline appears after completing the table.";
+	}
+}
+
+function submitSection4(){
+	const feedbackEl = document.getElementById("s4Feedback");
+	const scoreEl = document.getElementById("s4Score");
+	if (feedbackEl){
+		feedbackEl.textContent = "";
+		feedbackEl.classList.remove("is-error", "is-ok");
+	}
+	if (scoreEl){
+		scoreEl.textContent = "";
+		scoreEl.classList.remove("is-error", "is-ok");
+	}
+
+	// Require the full table (θr and sin(θr)) so we can grade the 10 table items.
+	if (!s4AllTableItemsComplete()){
+		if (feedbackEl){
+			feedbackEl.textContent = "Please complete the table (enter θr and sin(θr) for all rows) before submitting.";
+			feedbackEl.classList.add("is-error");
+		}
+		return;
+	}
+
+	if (!s4AllRowsComplete() || !s4Plot.lastRegression){
+		if (feedbackEl){
+			feedbackEl.textContent = "Make sure the trendline appears on the graph before submitting.";
+			feedbackEl.classList.add("is-error");
+		}
+		return;
+	}
+
+	const expectedSlope = s4Plot.lastRegression.m;
+	const enteredSlope = s4Num("s4_q1_slope");
+	const meaningRaw = (document.getElementById("s4_q2_meaning")?.value ?? "").toString().toLowerCase();
+
+	if (enteredSlope === null || meaningRaw.trim() === ""){
+		if (feedbackEl){
+			feedbackEl.textContent = "Please answer both questions before submitting.";
+			feedbackEl.classList.add("is-error");
+		}
+		return;
+	}
+
+	const withinTol = (value, expected, relTol = 0.10) => {
+		const denom = Math.max(1e-12, Math.abs(expected));
+		return Math.abs(value - expected) / denom <= relTol;
+	};
+
+	let score = 0;
+	const totalPoints = 12;
+
+	// Table items (10 pts): 5× θr and 5× sin(θr), checked against the simulation (Snell's law) with 15% tolerance.
+	const angles = [10, 20, 30, 40, 50];
+	angles.forEach((deg) => {
+		const thetaIDeg = deg;
+		const expectedSinR = (ref.nAir / ref.nGlass) * Math.sin(refRad(thetaIDeg));
+		const expectedThetaR = refDeg(Math.asin(refClamp(expectedSinR, -1, 1)));
+
+		const enteredThetaR = s4Num(`s4_r_${deg}`);
+		const enteredSinR = s4Num(`s4_sinr_${deg}`);
+
+		if (enteredThetaR !== null && withinTol(enteredThetaR, expectedThetaR, 0.15)) score++;
+		if (enteredSinR !== null && withinTol(enteredSinR, expectedSinR, 0.15)) score++;
+	});
+
+	// Graph questions (2 pts)
+	if (withinTol(enteredSlope, expectedSlope, 0.10)) score++;
+
+	const mentionsIndexOfRefraction = (
+		meaningRaw.includes("index of refraction") ||
+		meaningRaw.includes("refractive index") ||
+		(meaningRaw.includes("refractive") && meaningRaw.includes("index"))
+	);
+	if (mentionsIndexOfRefraction) score++;
+
+	if (scoreEl){
+		scoreEl.textContent = `Score: ${score}/${totalPoints}`;
+		scoreEl.classList.add(score === totalPoints ? "is-ok" : "is-error");
+	}
+	if (feedbackEl){
+		feedbackEl.textContent = score === totalPoints ? "Submitted." : "Submitted. Review your answers.";
+		feedbackEl.classList.add(score === totalPoints ? "is-ok" : "is-error");
+	}
+
+	const btn = document.getElementById("s4SubmitBtn");
+	if (btn) btn.disabled = true;
+
+	window.section4Score = score;
+	reportSetSectionScore("section4", score, totalPoints);
+	if (typeof TESTING_MODE === "undefined" || !TESTING_MODE) goToNextSection();
+}
+
+function initSection4Plot(){
+	const canvas = document.getElementById("s4PlotCanvas");
+	if (!canvas) return;
+	s4Plot.canvas = canvas;
+	s4Plot.ctx = canvas.getContext("2d");
+
+	[10, 20, 30, 40, 50].forEach((deg) => {
+		const el = document.getElementById(`s4_sinr_${deg}`);
+		if (!el) return;
+		el.addEventListener("input", s4DrawPlot);
+	});
+
+	s4DrawPlot();
+	window.addEventListener("resize", s4DrawPlot);
+}
+
+// Initialize standing-waves sim once the DOM is ready (script is at end of body)
+reportInitTracking();
+initSubmitDialogs();
+initMcqConfirmDialog();
+swInit();
+initSection2AutoFrequency();
+refInit();
+initSection4SineIncidence();
+initSection4Plot();
+lensInit();
+
+</script>
+</body>
+</html>
