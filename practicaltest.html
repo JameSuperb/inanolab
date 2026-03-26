@@ -76,6 +76,11 @@ h2{
 	background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
+/* Progressive reveal: sections not yet unlocked */
+.section.hidden{
+	display: none;
+}
+
 .section.inactive{
 	opacity: 0.55;
 	filter: grayscale(0.15);
@@ -205,6 +210,44 @@ body.testing-mode #introOverlay{ display: none; }
 	justify-content: flex-end;
 	gap: 10px;
 	margin-top: 16px;
+}
+
+/* Submission summary (for screenshot proof) */
+.submitSummary{
+	margin-top: 12px;
+	padding: 14px;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.submitSummaryTitle{
+	margin: 0 0 10px;
+	font-weight: 900;
+	color: var(--text);
+}
+
+.submitSummaryGrid{
+	display: grid;
+	grid-template-columns: 170px 1fr;
+	gap: 8px 12px;
+	align-items: baseline;
+}
+
+@media (max-width: 560px){
+	.submitSummaryGrid{ grid-template-columns: 1fr; }
+}
+
+.submitSummaryLabel{
+	font-size: 13px;
+	font-weight: 900;
+	color: var(--muted);
+}
+
+.submitSummaryValue{
+	font-size: 14px;
+	font-weight: 800;
+	color: var(--text);
 }
 
 /* Time-gate overlay (countdown before exam window) */
@@ -515,7 +558,27 @@ body.testing-mode #introOverlay{ display: none; }
 		<div id="submitDoneOverlay" class="introOverlay" role="dialog" aria-modal="true" aria-labelledby="submitDoneTitle" style="display:none;">
 			<div class="introDialog">
 				<h2 id="submitDoneTitle">Submission Complete</h2>
+				<p id="submitDoneCongrats" style="display:none; font-weight:900;">Congratulations for finishing the test.</p>
 				<p id="submitDoneMessage">Your results were submitted.</p>
+				<div id="submitSummary" class="submitSummary" style="display:none;" aria-label="Completion summary">
+					<p class="submitSummaryTitle">Completion summary (take a screenshot)</p>
+					<div class="submitSummaryGrid">
+						<div class="submitSummaryLabel">Student</div>
+						<div id="sum_student" class="submitSummaryValue"></div>
+
+						<div class="submitSummaryLabel">Started (PHT)</div>
+						<div id="sum_started" class="submitSummaryValue"></div>
+
+						<div class="submitSummaryLabel">Finished (PHT)</div>
+						<div id="sum_finished" class="submitSummaryValue"></div>
+
+						<div class="submitSummaryLabel">Duration</div>
+						<div id="sum_duration" class="submitSummaryValue"></div>
+
+						<div class="submitSummaryLabel">Total score</div>
+						<div id="sum_score" class="submitSummaryValue"></div>
+					</div>
+				</div>
 				<div class="introActions">
 					<button id="submitDoneOkBtn" type="button">OK</button>
 				</div>
@@ -525,8 +588,8 @@ body.testing-mode #introOverlay{ display: none; }
 		<div id="mcqConfirmOverlay" class="introOverlay" role="dialog" aria-modal="true" aria-labelledby="mcqConfirmTitle" style="display:none;">
 			<div class="introDialog" style="width: min(720px, 100%);">
 				<h2 id="mcqConfirmTitle">Confirm submission</h2>
-				<p>Are you sure you want to submit your answers for Section 1?</p>
-				<p style="margin-top:8px;">Once confirmed, you won’t be able to change these answers.</p>
+				<p id="mcqConfirmPrompt">Are you sure you want to submit your answers?</p>
+				<p id="mcqConfirmWarning" style="margin-top:8px;">Once confirmed, you won’t be able to change these answers.</p>
 				<div class="introActions">
 					<button id="mcqConfirmCancelBtn" type="button">Cancel</button>
 					<button id="mcqConfirmOkBtn" type="button">Confirm</button>
@@ -610,7 +673,7 @@ body.testing-mode #introOverlay{ display: none; }
 			</tbody>
 		</table>
 
-		<p style="margin-top:14px;"><strong>B.</strong> The values of tension (T) are automatically substituded and number of waves (n) to the calculate the experimental frequency.</p>
+		<p style="margin-top:14px;"><strong>B.</strong> The values of tension (T) and number of waves are used (n) to calculate automatically the experimental frequency.</p>
 
 		<div class="swEqRow">
 			<div>
@@ -637,7 +700,7 @@ body.testing-mode #introOverlay{ display: none; }
 			<textarea id="s2_c_answer" placeholder="Type your answer here..." style="display:block;"></textarea>
 
 			<div style="margin-top:10px;">
-				<button id="sec2SubmitBtn" type="button" onclick="submitSection2()">Submit answers</button>
+				<button id="sec2SubmitBtn" type="button" onclick="requestSubmitSection2()">Submit answers</button>
 			</div>
 			<p id="sec2Feedback" class="formFeedback" aria-live="polite"></p>
 			<p id="sec2Score" class="formFeedback" aria-live="polite"></p>
@@ -651,7 +714,7 @@ body.testing-mode #introOverlay{ display: none; }
 
 <div id="mcqS3"></div>
 
-<button id="mcqS3SubmitBtn" type="button" onclick="submitMCQS3()">Submit answers</button>
+<button id="mcqS3SubmitBtn" type="button" onclick="requestSubmitMCQS3()">Submit answers</button>
 <p id="mcqS3Score"></p>
 </div>
 
@@ -741,7 +804,7 @@ body.testing-mode #introOverlay{ display: none; }
 		<input id="s4_q2_meaning" type="text" placeholder="Type your answer" style="width:100%; max-width:520px; display:block;">
 
 		<div style="margin-top:10px;">
-			<button id="s4SubmitBtn" type="button" onclick="submitSection4()">Submit answers</button>
+			<button id="s4SubmitBtn" type="button" onclick="requestSubmitSection4()">Submit answers</button>
 		</div>
 		<p id="s4Feedback" class="formFeedback" aria-live="polite"></p>
 		<p id="s4Score" class="formFeedback" aria-live="polite"></p>
@@ -755,7 +818,7 @@ body.testing-mode #introOverlay{ display: none; }
 
 <div id="mcqS5"></div>
 
-<button id="mcqS5SubmitBtn" type="button" onclick="submitMCQS5()">Submit answers</button>
+<button id="mcqS5SubmitBtn" type="button" onclick="requestSubmitMCQS5()">Submit answers</button>
 <p id="mcqS5Score"></p>
 </div>
 
@@ -832,7 +895,7 @@ body.testing-mode #introOverlay{ display: none; }
 	<input id="s6_q2_f" type="number" step="0.01" inputmode="decimal" placeholder="Enter focal length (cm)" style="max-width:260px; width:100%;">
 </div>
 
-<button id="sec6SubmitBtn" type="button" onclick="submitSection6()">Submit answers</button>
+<button id="sec6SubmitBtn" type="button" onclick="requestSubmitSection6()">Submit answers</button>
 <p id="sec6Feedback" class="formFeedback" aria-live="polite"></p>
 <p id="sec6Score" class="formFeedback" aria-live="polite"></p>
 
@@ -1125,6 +1188,8 @@ function hideOverlay(id){
 }
 
 // ================= EXAM TIME GATE (client-side, Philippine time) =================
+// Production switch: keep true to enforce the March 27 access window.
+const ENABLE_TIME_GATE = true;
 // March 27, 2026 12:00–16:00 PHT (UTC+8). Explicit offset avoids local timezone surprises.
 const EXAM_START_MS = Date.parse("2026-03-27T12:00:00+08:00");
 const EXAM_END_MS = Date.parse("2026-03-27T16:00:00+08:00");
@@ -1174,6 +1239,17 @@ function setOverlayVisible(id, visible){
 }
 
 function timeGateUpdate(){
+	// Disabled for testing
+	if (!ENABLE_TIME_GATE){
+		setOverlayVisible("timeGateOverlay", false);
+		setOverlayVisible("introOverlay", true);
+		if (timeGateIntervalId){
+			clearInterval(timeGateIntervalId);
+			timeGateIntervalId = null;
+		}
+		return;
+	}
+
 	// Developer bypass
 	if (typeof TESTING_MODE !== "undefined" && TESTING_MODE){
 		setOverlayVisible("timeGateOverlay", false);
@@ -1236,41 +1312,283 @@ function timeGateUpdate(){
 }
 
 function requestSubmitMCQ(){
+	requestSubmitSection1();
+}
+
+let pendingConfirmAction = null;
+
+function openConfirmDialog({ promptText, warningText, onConfirm }){
+	const promptEl = document.getElementById("mcqConfirmPrompt");
+	if (promptEl) promptEl.textContent = (promptText || "Are you sure you want to submit your answers?").toString();
+	const warnEl = document.getElementById("mcqConfirmWarning");
+	if (warnEl) warnEl.textContent = (warningText || "Once confirmed, you won’t be able to change these answers.").toString();
+	pendingConfirmAction = typeof onConfirm === "function" ? onConfirm : null;
+	showOverlay("mcqConfirmOverlay");
+}
+
+function setBasicFeedback(el, message, isError){
+	if (!el) return;
+	el.textContent = (message || "").toString();
+	el.classList.toggle("formFeedback", true);
+	el.classList.toggle("is-error", Boolean(isError));
+	el.classList.toggle("is-ok", Boolean(!isError && message));
+}
+
+function mcqMissingIndex(namePrefix, count){
+	for (let i = 0; i < count; i++){
+		const sel = document.querySelector(`input[type=radio][name="${CSS.escape(namePrefix + i)}"]:checked`);
+		if (!sel) return i;
+	}
+	return -1;
+}
+
+const SEC2_REQUIRED_IDS = [
+	"s2_a_n5_added","s2_a_n5_total","s2_a_n5_T",
+	"s2_a_n4_added","s2_a_n4_total","s2_a_n4_T",
+	"s2_a_n3_added","s2_a_n3_total","s2_a_n3_T",
+	"s2_b_n5_f","s2_b_n4_f","s2_b_n3_f",
+	"s2_c_answer",
+];
+
+function sectionHasAllValues(ids){
+	for (const id of ids){
+		const el = document.getElementById(id);
+		const v = (el?.value ?? "").toString().trim();
+		if (!v) return { ok: false, firstMissingId: id };
+	}
+	return { ok: true, firstMissingId: null };
+}
+
+function requestSubmitSection1(){
 	const btn = document.getElementById("mcqSubmitBtn");
 	if (btn && btn.disabled) return;
-	showOverlay("mcqConfirmOverlay");
+	const missing = mcqMissingIndex("q", (typeof mcq !== "undefined" && mcq) ? mcq.length : 0);
+	const out = document.getElementById("mcqScore");
+	if (missing !== -1){
+		setBasicFeedback(out, "Please answer all questions in Section 1 before submitting.", true);
+		return;
+	}
+	setBasicFeedback(out, "", false);
+	openConfirmDialog({
+		promptText: "Are you sure you want to submit your answers for Section 1?",
+		warningText: "Once confirmed, you won’t be able to change these answers.",
+		onConfirm: submitMCQ,
+	});
+}
+
+function requestSubmitSection2(){
+	const btn = document.getElementById("sec2SubmitBtn");
+	if (btn && btn.disabled) return;
+	const check = sectionHasAllValues(SEC2_REQUIRED_IDS);
+	const feedbackEl = document.getElementById("sec2Feedback");
+	if (!check.ok){
+		setBasicFeedback(feedbackEl, "Please complete all cells in the table and answer the essay before proceeding.", true);
+		document.getElementById(check.firstMissingId)?.focus();
+		return;
+	}
+	setBasicFeedback(feedbackEl, "", false);
+	openConfirmDialog({
+		promptText: "Are you sure you want to submit your answers for Section 2?",
+		warningText: "Once confirmed, you won’t be able to change these answers.",
+		onConfirm: submitSection2,
+	});
+}
+
+function requestSubmitMCQS3(){
+	const btn = document.getElementById("mcqS3SubmitBtn");
+	if (btn && btn.disabled) return;
+	const missing = mcqMissingIndex("s3_q", (typeof mcqS3 !== "undefined" && mcqS3) ? mcqS3.length : 0);
+	const out = document.getElementById("mcqS3Score");
+	if (missing !== -1){
+		setBasicFeedback(out, "Please answer all questions in Section 3 before submitting.", true);
+		return;
+	}
+	setBasicFeedback(out, "", false);
+	openConfirmDialog({
+		promptText: "Are you sure you want to submit your answers for Section 3?",
+		warningText: "Once confirmed, you won’t be able to change these answers.",
+		onConfirm: submitMCQS3,
+	});
+}
+
+function requestSubmitSection4(){
+	const btn = document.getElementById("s4SubmitBtn");
+	if (btn && btn.disabled) return;
+	const feedbackEl = document.getElementById("s4Feedback");
+
+	// Mirror the same completeness requirements as submitSection4(), but stop before scoring.
+	if (typeof s4AllTableItemsComplete === "function" && !s4AllTableItemsComplete()){
+		setBasicFeedback(feedbackEl, "Please complete the table (enter θr and sin(θr) for all rows) before submitting.", true);
+		return;
+	}
+	if (typeof s4AllRowsComplete === "function" && (!s4AllRowsComplete() || !s4Plot.lastRegression)){
+		setBasicFeedback(feedbackEl, "Make sure the trendline appears on the graph before submitting.", true);
+		return;
+	}
+	const enteredSlope = (typeof s4Num === "function") ? s4Num("s4_q1_slope") : null;
+	const meaningRaw = (document.getElementById("s4_q2_meaning")?.value ?? "").toString();
+	if (enteredSlope === null || meaningRaw.trim() === ""){
+		setBasicFeedback(feedbackEl, "Please answer both questions before submitting.", true);
+		return;
+	}
+
+	setBasicFeedback(feedbackEl, "", false);
+	openConfirmDialog({
+		promptText: "Are you sure you want to submit your answers for Section 4?",
+		warningText: "Once confirmed, you won’t be able to change these answers.",
+		onConfirm: submitSection4,
+	});
+}
+
+function requestSubmitMCQS5(){
+	const btn = document.getElementById("mcqS5SubmitBtn");
+	if (btn && btn.disabled) return;
+	const missing = mcqMissingIndex("s5_q", (typeof mcqS5 !== "undefined" && mcqS5) ? mcqS5.length : 0);
+	const out = document.getElementById("mcqS5Score");
+	if (missing !== -1){
+		setBasicFeedback(out, "Please answer all questions in Section 5 before submitting.", true);
+		return;
+	}
+	setBasicFeedback(out, "", false);
+	openConfirmDialog({
+		promptText: "Are you sure you want to submit your answers for Section 5?",
+		warningText: "Once confirmed, you won’t be able to change these answers.",
+		onConfirm: submitMCQS5,
+	});
+}
+
+function requestSubmitSection6(){
+	const btn = document.getElementById("sec6SubmitBtn");
+	if (btn && btn.disabled) return;
+	const feedbackEl = document.getElementById("sec6Feedback");
+
+	const rows = [50, 45, 40, 35];
+	let tableComplete = true;
+	for (const doVal of rows){
+		const diV = Number(document.getElementById(`s6_di_${doVal}`)?.value);
+		const hiV = Number(document.getElementById(`s6_hi_${doVal}`)?.value);
+		if (!Number.isFinite(diV) || !Number.isFinite(hiV)){
+			tableComplete = false;
+			break;
+		}
+	}
+	const q1 = (document.getElementById("s6_q1_type")?.value ?? "").toString().trim();
+	const q2F = Number(document.getElementById("s6_q2_f")?.value);
+	const questionsComplete = Boolean(q1) && Number.isFinite(q2F);
+	if (!tableComplete || !questionsComplete){
+		setBasicFeedback(feedbackEl, "Please complete the table and answer both questions before submitting.", true);
+		return;
+	}
+
+	setBasicFeedback(feedbackEl, "", false);
+	openConfirmDialog({
+		promptText: "Are you sure you want to submit your answers for Section 6?",
+		warningText: "Once confirmed, you won’t be able to change these answers.",
+		onConfirm: submitSection6,
+	});
 }
 
 function initMcqConfirmDialog(){
 	const cancelBtn = document.getElementById("mcqConfirmCancelBtn");
 	const okBtn = document.getElementById("mcqConfirmOkBtn");
 	if (cancelBtn){
-		cancelBtn.addEventListener("click", () => hideOverlay("mcqConfirmOverlay"));
+		cancelBtn.addEventListener("click", () => {
+			pendingConfirmAction = null;
+			hideOverlay("mcqConfirmOverlay");
+		});
 	}
 	if (okBtn){
 		okBtn.addEventListener("click", () => {
 			hideOverlay("mcqConfirmOverlay");
-			submitMCQ();
+			const fn = pendingConfirmAction;
+			pendingConfirmAction = null;
+			if (typeof fn === "function") fn();
 		});
 	}
 }
 
 function showSubmitDone(message, isError){
+	const overlayEl = document.getElementById("submitDoneOverlay");
+	if (overlayEl) overlayEl.dataset.locked = (!isError) ? "1" : "0";
+
 	const title = document.getElementById("submitDoneTitle");
 	if (title) title.textContent = isError ? "Submission Issue" : "Submission Complete";
+	const congrats = document.getElementById("submitDoneCongrats");
+	if (congrats) congrats.style.display = (!isError) ? "block" : "none";
 	const msg = document.getElementById("submitDoneMessage");
-	if (msg) msg.textContent = message;
+	if (msg){
+		if (!isError){
+			const base = (message || "Your results were submitted.").toString();
+			msg.textContent = `${base} Please take a screenshot of the completion summary below as proof.`;
+		} else {
+			msg.textContent = (message || "Submission failed.").toString();
+		}
+	}
+
+	const okBtn = document.getElementById("submitDoneOkBtn");
+	if (okBtn) okBtn.style.display = (!isError) ? "none" : "inline-block";
+
+	const summaryEl = document.getElementById("submitSummary");
+	if (summaryEl) summaryEl.style.display = (!isError) ? "block" : "none";
+	if (!isError) renderSubmitSummary(window.lastExamReportJSON);
 	showOverlay("submitDoneOverlay");
+}
+
+function formatISOToPHT(isoString){
+	if (!isoString) return "";
+	const d = new Date(isoString);
+	if (!Number.isFinite(d.getTime())) return "";
+	return new Intl.DateTimeFormat("en-PH", {
+		timeZone: "Asia/Manila",
+		year: "numeric",
+		month: "long",
+		day: "2-digit",
+		hour: "numeric",
+		minute: "2-digit",
+		second: "2-digit",
+		hour12: true,
+	}).format(d);
+}
+
+function setText(id, value){
+	const el = document.getElementById(id);
+	if (!el) return;
+	el.textContent = (value ?? "").toString();
+}
+
+function renderSubmitSummary(finalReport){
+	const r = finalReport || null;
+	const studentName = (r && r.studentName) ? r.studentName : (window.studentName || "");
+	const startedISO = r ? r.startedAtISO : null;
+	const endedISO = r ? r.endedAtISO : null;
+	const duration = (r && r.durationFormatted) ? r.durationFormatted : "";
+	const totalScore = (r && r.scores && r.scores.total) ? r.scores.total.score : null;
+	const totalMax = (r && r.scores && r.scores.total) ? r.scores.total.max : null;
+
+	setText("sum_student", studentName || "(unknown)");
+	setText("sum_started", formatISOToPHT(startedISO) || "(unavailable)");
+	setText("sum_finished", formatISOToPHT(endedISO) || "(unavailable)");
+	setText("sum_duration", duration || "(unavailable)");
+	if (Number.isFinite(totalScore) && Number.isFinite(totalMax)){
+		setText("sum_score", `${totalScore} / ${totalMax}`);
+	} else {
+		setText("sum_score", "(unavailable)");
+	}
 }
 
 function initSubmitDialogs(){
 	const okBtn = document.getElementById("submitDoneOkBtn");
 	if (okBtn){
-		okBtn.addEventListener("click", () => hideOverlay("submitDoneOverlay"));
+		okBtn.addEventListener("click", () => {
+			const ov = document.getElementById("submitDoneOverlay");
+			if (ov && ov.dataset.locked === "1") return;
+			hideOverlay("submitDoneOverlay");
+		});
 	}
 	const doneOverlay = document.getElementById("submitDoneOverlay");
 	if (doneOverlay){
 		doneOverlay.addEventListener("click", (e) => {
+			if (doneOverlay.dataset.locked === "1") return;
 			if (e.target === doneOverlay) hideOverlay("submitDoneOverlay");
 		});
 	}
@@ -1343,7 +1661,7 @@ function reportInitTracking(){
 // ================= INTRO OVERLAY =================
 function closeIntro(){
 	// Hard guard: never allow proceeding outside the exam window.
-	if (!examAllowedNow()){
+	if (ENABLE_TIME_GATE && !examAllowedNow()){
 		// Show gate again (in case of clock changes / tab sleep).
 		timeGateUpdate();
 		return;
@@ -1493,7 +1811,15 @@ function setActiveStep(step){
 	}
 	activeStep = step;
 	getSections().forEach((sec) => {
-		setSectionEnabled(sec, Number(sec.dataset.step) === activeStep);
+		const secStep = Number(sec.dataset.step);
+		const isVisible = secStep <= activeStep;
+		sec.classList.toggle("hidden", !isVisible);
+		if (!isVisible){
+			setSectionEnabled(sec, false);
+			return;
+		}
+		// Lock completed sections (visible but disabled) and enable only the active one.
+		setSectionEnabled(sec, secStep === activeStep);
 	});
 }
 
@@ -1813,15 +2139,7 @@ function submitSection2(){
 		scoreEl.classList.remove("is-error", "is-ok");
 	}
 
-	const ids = [
-		"s2_a_n5_added","s2_a_n5_total","s2_a_n5_T",
-		"s2_a_n4_added","s2_a_n4_total","s2_a_n4_T",
-		"s2_a_n3_added","s2_a_n3_total","s2_a_n3_T",
-		"s2_b_n5_f","s2_b_n4_f","s2_b_n3_f",
-		"s2_c_answer",
-	];
-
-	for (const id of ids){
+	for (const id of SEC2_REQUIRED_IDS){
 		const el = document.getElementById(id);
 		const v = (el?.value ?? "").toString().trim();
 		if (!v){
@@ -2227,7 +2545,7 @@ function submitSection6(){
 		scoreEl.classList.add(score === totalPoints ? "is-ok" : "is-error");
 	}
 	if (feedbackEl){
-		feedbackEl.textContent = score === totalPoints ? "Submitted." : "Submitted. Review your answers.";
+		feedbackEl.textContent = score === totalPoints ? "Submitted." : "Submitted.";
 		feedbackEl.classList.add(score === totalPoints ? "is-ok" : "is-error");
 	}
 
