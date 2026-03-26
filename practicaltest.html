@@ -207,6 +207,25 @@ body.testing-mode #introOverlay{ display: none; }
 	margin-top: 16px;
 }
 
+/* Time-gate overlay (countdown before exam window) */
+.timeGateCountdown{
+	font-weight: 900;
+	font-size: 34px;
+	letter-spacing: .6px;
+	color: var(--text);
+	padding: 10px 14px;
+	border-radius: 14px;
+	border: 1px solid var(--border);
+	background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+	width: fit-content;
+}
+
+.timeGateMeta{
+	font-size: 13px;
+	font-weight: 800;
+	color: var(--muted);
+}
+
 /* MCQ: quiz-card presentation */
 .mcqQ{
 	border: 1px solid var(--border);
@@ -461,7 +480,16 @@ body.testing-mode #introOverlay{ display: none; }
 
 <body class="modal-open">
 
-<div id="introOverlay" class="introOverlay" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+<div id="timeGateOverlay" class="introOverlay" role="dialog" aria-modal="true" aria-labelledby="timeGateTitle" style="display:flex;">
+	<div class="introDialog" style="width: min(720px, 100%);">
+		<h2 id="timeGateTitle">Exam access</h2>
+		<p id="timeGateMessage">Checking exam window…</p>
+		<div id="timeGateCountdown" class="timeGateCountdown" aria-live="polite">--:--:--</div>
+		<p id="timeGateSchedule" class="timeGateMeta" style="margin-top:10px;"></p>
+	</div>
+</div>
+
+<div id="introOverlay" class="introOverlay" role="dialog" aria-modal="true" aria-labelledby="introTitle" style="display:none;">
 	<div class="introDialog">
 		<h2 id="introTitle">Introduction</h2>
 		<p>Welcome to the LBYPH03 Practical Exam in Waves and Optics. This assessment consists of a multiple-choice section and five virtual laboratory stations designed to evaluate your understanding of standing waves, dispersion, refraction, and converging lenses. Carefully read each instruction and perform the required tasks using the provided simulations and input fields. Ensure that all answers are based on your own observations and calculations, as some values may vary. Once you proceed, complete all sections within the allotted time before submitting your responses.</p>
@@ -1088,12 +1116,123 @@ function hideOverlay(id){
 	const el = document.getElementById(id);
 	if (!el) return;
 	el.style.display = "none";
-	const overlayIds = ["introOverlay", "submitOverlay", "submitDoneOverlay", "mcqConfirmOverlay"];
+	const overlayIds = ["timeGateOverlay", "introOverlay", "submitOverlay", "submitDoneOverlay", "mcqConfirmOverlay"];
 	const anyVisible = overlayIds.some((oid) => {
 		const o = document.getElementById(oid);
 		return o && o.style.display !== "none";
 	});
 	if (!anyVisible) document.body.classList.remove("modal-open");
+}
+
+// ================= EXAM TIME GATE (client-side, Philippine time) =================
+// March 27, 2026 12:00–16:00 PHT (UTC+8). Explicit offset avoids local timezone surprises.
+const EXAM_START_MS = Date.parse("2026-03-27T12:00:00+08:00");
+const EXAM_END_MS = Date.parse("2026-03-27T16:00:00+08:00");
+
+let timeGateIntervalId = null;
+
+function examWindowState(){
+	const now = Date.now();
+	if (now < EXAM_START_MS) return "before";
+	if (now > EXAM_END_MS) return "after";
+	return "during";
+}
+
+function examAllowedNow(){
+	return examWindowState() === "during";
+}
+
+function formatPHT(ms){
+	return new Intl.DateTimeFormat("en-PH", {
+		timeZone: "Asia/Manila",
+		year: "numeric",
+		month: "long",
+		day: "2-digit",
+		hour: "numeric",
+		minute: "2-digit",
+		hour12: true,
+	}).format(new Date(ms));
+}
+
+function formatCountdown(ms){
+	const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+	const days = Math.floor(totalSeconds / 86400);
+	const hours = Math.floor((totalSeconds % 86400) / 3600);
+	const minutes = Math.floor((totalSeconds % 3600) / 60);
+	const seconds = totalSeconds % 60;
+	const two = (n) => String(n).padStart(2, "0");
+	return days > 0
+		? `${days}d ${two(hours)}:${two(minutes)}:${two(seconds)}`
+		: `${two(hours)}:${two(minutes)}:${two(seconds)}`;
+}
+
+function setOverlayVisible(id, visible){
+	const el = document.getElementById(id);
+	if (!el) return;
+	el.style.display = visible ? "flex" : "none";
+	if (visible) document.body.classList.add("modal-open");
+}
+
+function timeGateUpdate(){
+	// Developer bypass
+	if (typeof TESTING_MODE !== "undefined" && TESTING_MODE){
+		setOverlayVisible("timeGateOverlay", false);
+		setOverlayVisible("introOverlay", true);
+		if (timeGateIntervalId){
+			clearInterval(timeGateIntervalId);
+			timeGateIntervalId = null;
+		}
+		return;
+	}
+
+	const state = examWindowState();
+	const titleEl = document.getElementById("timeGateTitle");
+	const msgEl = document.getElementById("timeGateMessage");
+	const countdownEl = document.getElementById("timeGateCountdown");
+	const scheduleEl = document.getElementById("timeGateSchedule");
+
+	if (scheduleEl){
+		scheduleEl.textContent = `Access window (PHT): ${formatPHT(EXAM_START_MS)} to ${formatPHT(EXAM_END_MS)}`;
+	}
+
+	if (state === "during"){
+		setOverlayVisible("timeGateOverlay", false);
+		setOverlayVisible("introOverlay", true);
+		if (timeGateIntervalId){
+			clearInterval(timeGateIntervalId);
+			timeGateIntervalId = null;
+		}
+		return;
+	}
+
+	// Before or after: show the gate, hide the intro
+	setOverlayVisible("introOverlay", false);
+	setOverlayVisible("timeGateOverlay", true);
+
+	if (state === "before"){
+		if (titleEl) titleEl.textContent = "Exam opens in";
+		if (msgEl) msgEl.textContent = "Please wait until the exam window opens (Philippine time).";
+		if (countdownEl){
+			countdownEl.style.display = "inline-flex";
+			countdownEl.textContent = formatCountdown(EXAM_START_MS - Date.now());
+		}
+		if (!timeGateIntervalId){
+			timeGateIntervalId = setInterval(timeGateUpdate, 1000);
+		}
+		return;
+	}
+
+	// state === "after"
+	if (titleEl) titleEl.textContent = "Exam closed";
+	if (msgEl) msgEl.textContent = "The exam window has ended. Please notify your instructor if you need access.";
+	if (countdownEl){
+		countdownEl.style.display = "none";
+		countdownEl.textContent = "";
+	}
+	if (timeGateIntervalId){
+		clearInterval(timeGateIntervalId);
+		timeGateIntervalId = null;
+	}
 }
 
 function requestSubmitMCQ(){
@@ -1203,6 +1342,13 @@ function reportInitTracking(){
 
 // ================= INTRO OVERLAY =================
 function closeIntro(){
+	// Hard guard: never allow proceeding outside the exam window.
+	if (!examAllowedNow()){
+		// Show gate again (in case of clock changes / tab sleep).
+		timeGateUpdate();
+		return;
+	}
+
 	const feedbackEl = document.getElementById("introFeedback");
 	const setIntroFeedback = (message, isError = false) => {
 		if (!feedbackEl) return;
@@ -1312,6 +1458,9 @@ function startTimer(){
 // Testing phase toggle: when true, all sections are always interactive.
 const TESTING_MODE = false;
 let activeStep = 1;
+
+// Initialize the time gate immediately once TESTING_MODE exists.
+timeGateUpdate();
 
 function getSections(){
 	return Array.from(document.querySelectorAll('.section[data-step]'))

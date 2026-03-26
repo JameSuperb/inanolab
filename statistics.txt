@@ -1,0 +1,2563 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistical Test Helper</title>
+  <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.2/dist/jstat.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Inter', '-apple-system', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #1f2937;
+            line-height: 1.6;
+        }
+
+        #app-wrapper {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* Header */
+        .app-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .app-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+            color: #374151;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #ffffff;
+            border-color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            border-color: #dc2626;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 700px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-height: 90%;
+            overflow-y: auto;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Subject Buttons */
+        .subject-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .subject-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            background: #f9fafb;
+            color: #374151;
+            border-radius: 0.625rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .subject-btn:hover {
+            border-color: #667eea;
+            background: #f3f4f6;
+        }
+
+        .subject-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .subject-icon {
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #1f2937;
+            font-size: 0.95rem;
+        }
+
+        .form-select, .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus, .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"] {
+            margin-top: 0.25rem;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .radio-option label {
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #4b5563;
+        }
+
+        .hint-text {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+            background: #f9fafb;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border-left: 3px solid #667eea;
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .recommendation-test {
+            font-size: 1.5rem;
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .recommendation-why {
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin-top: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .recommendation-alternative {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(102, 126, 234, 0.2);
+            font-style: italic;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: flex-end;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: #e5e7eb;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.05);
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+            padding: 1rem 0.5rem;
+        }
+
+        .sidebar-toggle {
+            position: static;
+            width: 100%;
+            height: 44px;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 0.625rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            font-size: 0;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            z-index: 10;
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-toggle:hover {
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .sidebar-toggle:active {
+            transform: translateY(0);
+        }
+        
+        .sidebar-toggle-icon {
+            font-size: 1.5rem;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 0.75rem;
+            padding-left: 0.75rem;
+            letter-spacing: 0.5px;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-section-title {
+            font-size: 0;
+            margin: 0;
+            padding: 0;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: transparent;
+            border: none;
+            border-left: 3px solid transparent;
+            text-align: left;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #4b5563;
+            transition: all 0.2s ease;
+            width: 100%;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar.collapsed .sidebar-item {
+            padding: 0.75rem 0.5rem;
+            justify-content: center;
+            gap: 0;
+        }
+
+        .sidebar-item-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-item-text {
+            font-size: 0;
+            width: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-item-icon {
+            flex-shrink: 0;
+            width: 1.25rem;
+            height: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-left-color: #667eea;
+            color: #667eea;
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border-left-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Data Controls */
+        .data-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.25rem;
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #374151;
+            border-radius: 0.5rem 0.5rem 0 0;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .tab-btn.active {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #667eea;
+            border-bottom-color: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .upload-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            transition: all 0.3s ease;
+        }
+
+        .upload-label:hover {
+            background: #ffffff;
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        #csv-upload {
+            display: none;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .data-input-section {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0 0.75rem 0.75rem 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .column-setup {
+            margin-bottom: 1.5rem;
+        }
+
+        .column-setup-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .column-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .column-input-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .column-input-group label {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #667eea;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .column-input-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .data-entry-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .data-entry-table input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            font-size: 0.875rem;
+        }
+
+        .data-entry-table th {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .data-entry-table td {
+            padding: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .data-entry-button-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Schema Hint */
+        .schema-hint {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        /* Data Table */
+        .data-table-container {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+            overflow: auto;
+            max-height: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            color: #667eea;
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            color: #4b5563;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        /* Results Panel */
+        .results-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-significant {
+            background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%);
+            color: #166534;
+        }
+
+        .status-not-significant {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+        }
+
+        .status-error {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .result-item {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .result-label {
+            font-size: 0.8125rem;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Publication-Ready Tables */
+        .publication-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.875rem;
+            background: white;
+            box-shadow: none;
+        }
+
+        .publication-table thead {
+            background: #ffffff;
+            color: #000000;
+            border-top: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+        }
+
+        .publication-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 700;
+            border: none;
+            color: #000000;
+            font-size: 0.875rem;
+        }
+
+        .publication-table td {
+            padding: 0.75rem 1rem;
+            border: none;
+            border-bottom: 1px solid #d1d5db;
+            color: #374151;
+        }
+
+        .publication-table tbody tr:last-child td {
+            border-bottom: 2px solid #000000;
+        }
+
+        .publication-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        /* Visualization Container */
+        .visualization-container {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .visualization-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .export-button {
+            position: relative;
+            padding: 0.5rem 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid #667eea;
+            color: #667eea;
+            border-radius: 0.375rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .export-button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .results-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1f2937;
+            padding-left: 0.75rem;
+            border-left: 4px solid #667eea;
+            flex: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                padding: 0.75rem;
+                max-height: 120px;
+                overflow-x: auto;
+                display: flex;
+                gap: 2rem;
+            }
+
+            .sidebar-section {
+                margin-bottom: 0;
+                white-space: nowrap;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .app-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .subject-buttons {
+                flex-direction: column;
+            }
+
+            .subject-btn {
+                flex-direction: row;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div id="app-wrapper"><!-- Header -->
+   <div class="app-header">
+    <div class="app-title">
+     📊 Test of Difference
+    </div>
+    <div class="header-buttons"><button class="btn btn-primary" onclick="openGuideModal()">Get Started</button> <button class="btn" onclick="loadDemonstration()">Demo Data</button> <button class="btn btn-danger" onclick="clearData()">Clear</button>
+    </div>
+   </div><!-- Guide Modal -->
+   <div id="guide-modal" class="modal-overlay active">
+    <div class="modal-content"><button class="close-btn" onclick="skipGuideModal()">×</button>
+     <div class="modal-title">
+      Find Your Test
+     </div><!-- Subject Selection -->
+     <div class="form-group">
+      <div class="form-label" style="margin-bottom: 1rem;">
+       What's your subject?
+      </div>
+      <div class="subject-buttons"><button class="subject-btn active" id="subject-biology" onclick="setSubject('biology')"> <span class="subject-icon">🧬</span> <span>Biology</span> </button> <button class="subject-btn" id="subject-chemistry" onclick="setSubject('chemistry')"> <span class="subject-icon">⚗️</span> <span>Chemistry</span> </button> <button class="subject-btn" id="subject-physics" onclick="setSubject('physics')"> <span class="subject-icon">⚡</span> <span>Physics</span> </button>
+      </div>
+     </div><!-- Step 1: Factors -->
+     <div class="form-group" id="step1">
+      <div class="form-label">
+       <strong>Step 1:</strong> How many factors are you analyzing?
+      </div>
+      <div class="hint-text" style="margin-bottom: 1rem;"><span id="factor-intro">A factor is an independent variable you manipulate.</span> For example: <strong><span id="example-one-factor">comparing different dosage of drug</span></strong> (one factor) or <strong><span id="example-two-factors">drug dosage AND temperature conditions</span></strong> (two factors).
+      </div>
+      <div class="radio-group" style="flex-direction: column; gap: 1rem;">
+       <div class="radio-option"><input type="radio" id="factors-one" name="factors" value="one" onchange="updateGuidePath()"> <label for="factors-one">One factor</label>
+       </div>
+       <div class="radio-option"><input type="radio" id="factors-two" name="factors" value="two" onchange="updateGuidePath()"> <label for="factors-two">Two factors</label>
+       </div>
+      </div>
+     </div><!-- Step 2A: Observations (One factor) -->
+     <div class="form-group" id="step2a" style="display: none;">
+      <div class="form-label">
+       <strong>Step 2:</strong> What best describes your study design?
+      </div>
+      <div class="hint-text"><strong>Independent groups:</strong> Different subjects in each condition. <strong><span id="example-independent">e.g., 20 mice on Drug A, 20 different mice on Drug B</span></strong><br><strong>Paired/Matched:</strong> Same subjects twice, or matched pairs. <strong><span id="example-paired">e.g., plant height before and after treatment</span></strong><br><strong>Repeated:</strong> Same subjects multiple times. <strong><span id="example-repeated">e.g., enzyme activity measured on Day 1, Day 7, Day 14</span></strong>
+      </div>
+      <div class="radio-group" style="flex-direction: column; gap: 1rem;">
+       <div class="radio-option"><input type="radio" id="obs-ind" name="observations" value="independent" onchange="updateGuidePath()"> <label for="obs-ind">Independent groups</label>
+       </div>
+       <div class="radio-option"><input type="radio" id="obs-paired" name="observations" value="paired" onchange="updateGuidePath()"> <label for="obs-paired">Paired / matched observations</label>
+       </div>
+       <div class="radio-option"><input type="radio" id="obs-repeated" name="observations" value="repeated" onchange="updateGuidePath()"> <label for="obs-repeated">Repeated measurements</label>
+       </div>
+      </div>
+     </div><!-- Step 2B: Design Type (Two factors) -->
+     <div class="form-group" id="step2b" style="display: none;">
+      <div class="form-label">
+       <strong>Step 2:</strong> What best describes the design?
+      </div>
+      <div class="hint-text"><strong>Independent groups only:</strong> Both factors use completely different subjects. <br><strong>Includes repeated measurements:</strong> At least one factor involves the same subjects measured multiple times.
+      </div>
+      <div class="radio-group" style="flex-direction: column; gap: 1rem;">
+       <div class="radio-option"><input type="radio" id="design-ind" name="design" value="independent-only" onchange="updateGuidePath()"> <label for="design-ind">Independent groups only</label>
+       </div>
+       <div class="radio-option"><input type="radio" id="design-mixed" name="design" value="includes-repeated" onchange="updateGuidePath()"> <label for="design-mixed">Includes repeated measurements</label>
+       </div>
+      </div>
+     </div><!-- Step 3A: Group Count (One factor) -->
+     <div class="form-group" id="step3a" style="display: none;">
+      <div class="form-label">
+       <strong>Step 3:</strong> How many groups or conditions?
+      </div>
+      <div class="hint-text">
+       Count the distinct levels of your factor. (e.g., Control vs Treatment = 2; Low vs Medium vs High = 3)
+      </div>
+      <div class="radio-group" style="flex-direction: column; gap: 1rem;">
+       <div class="radio-option"><input type="radio" id="groups-two" name="condition-count" value="two" onchange="updateGuidePath()"> <label for="groups-two">Two</label>
+       </div>
+       <div class="radio-option"><input type="radio" id="groups-three" name="condition-count" value="three-plus" onchange="updateGuidePath()"> <label for="groups-three">Three or more</label>
+       </div>
+      </div>
+     </div><!-- Step 4: Normality (One factor) -->
+     <div class="form-group" id="step4a" style="display: none;">
+      <div class="form-label">
+       <strong>Step 4:</strong> Is your data normally distributed?
+      </div>
+      <div class="hint-text"><strong>Yes:</strong> Your measurements look roughly bell-shaped.<br><strong>No/Not sure:</strong> Your data is skewed or you haven't checked. When in doubt, choose this.
+      </div>
+      <div class="radio-group" style="flex-direction: column; gap: 1rem;">
+       <div class="radio-option"><input type="radio" id="norm-yes" name="normality" value="yes" onchange="updateGuidePath()"> <label for="norm-yes">Yes</label>
+       </div>
+       <div class="radio-option"><input type="radio" id="norm-no" name="normality" value="no" onchange="updateGuidePath()"> <label for="norm-no">No / Not sure</label>
+       </div>
+      </div>
+     </div><!-- Step 3B: Normality (Two factors) -->
+     <div class="form-group" id="step3b" style="display: none;">
+      <div class="form-label">
+       <strong>Step 3:</strong> Is your data normally distributed?
+      </div>
+      <div class="hint-text"><strong>Yes:</strong> Your measurements look roughly bell-shaped.<br><strong>No/Not sure:</strong> Your data is skewed or you haven't checked. When in doubt, choose this.
+      </div>
+      <div class="radio-group" style="flex-direction: column; gap: 1rem;">
+       <div class="radio-option"><input type="radio" id="norm2-yes" name="normality-2factor" value="yes" onchange="updateGuidePath()"> <label for="norm2-yes">Yes</label>
+       </div>
+       <div class="radio-option"><input type="radio" id="norm2-no" name="normality-2factor" value="no" onchange="updateGuidePath()"> <label for="norm2-no">No / Not sure</label>
+       </div>
+      </div>
+     </div><!-- Recommendation -->
+     <div id="recommendation-display" style="display: none;">
+      <div class="recommendation-card">
+       <div class="recommendation-title">
+        ✅ Perfect for your study design
+       </div>
+       <div class="recommendation-test" id="recommendation-test-name"></div>
+       <div class="recommendation-why" id="recommendation-why"></div>
+       <div id="recommendation-alternative" class="recommendation-alternative"></div>
+      </div>
+     </div>
+     <div class="modal-buttons"><button class="btn" onclick="skipGuideModal()">Skip for Now</button> <button class="btn btn-primary" onclick="useRecommendedTest()" id="use-recommended-btn" style="display: none;">Use This Test</button>
+     </div>
+    </div>
+   </div><!-- Main App -->
+   <div class="main-container" id="main-app" style="display: none;"><!-- Sidebar -->
+    <div class="sidebar" id="sidebar"><button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar"><span class="sidebar-toggle-icon">«</span></button>
+     <div class="sidebar-section">
+      <div class="sidebar-section-title">
+       📈 Core Tests
+      </div><button class="sidebar-item active" onclick="selectTest('ttest-ind')" title="Independent t-test"><span class="sidebar-item-icon">📊</span><span class="sidebar-item-text">Independent t-test</span></button> <button class="sidebar-item" onclick="selectTest('ttest-paired')" title="Paired t-test"><span class="sidebar-item-icon">🔗</span><span class="sidebar-item-text">Paired t-test</span></button> <button class="sidebar-item" onclick="selectTest('anova-one')" title="One-way ANOVA"><span class="sidebar-item-icon">📈</span><span class="sidebar-item-text">One-way ANOVA</span></button> <button class="sidebar-item" onclick="selectTest('anova-two')" title="Two-way ANOVA"><span class="sidebar-item-icon">📊</span><span class="sidebar-item-text">Two-way ANOVA</span></button> <button class="sidebar-item" onclick="selectTest('anova-rm')" title="Repeated Measures ANOVA"><span class="sidebar-item-icon">🔄</span><span class="sidebar-item-text">Repeated Measures ANOVA</span></button>
+     </div>
+     <div class="sidebar-section">
+      <div class="sidebar-section-title">
+       📊 Non-parametric
+      </div><button class="sidebar-item" onclick="selectTest('mann-whitney')" title="Mann–Whitney U"><span class="sidebar-item-icon">⚖️</span><span class="sidebar-item-text">Mann–Whitney U</span></button> <button class="sidebar-item" onclick="selectTest('wilcoxon')" title="Wilcoxon Signed-Rank"><span class="sidebar-item-icon">📐</span><span class="sidebar-item-text">Wilcoxon Signed-Rank</span></button> <button class="sidebar-item" onclick="selectTest('kruskal-wallis')" title="Kruskal–Wallis"><span class="sidebar-item-icon">🎯</span><span class="sidebar-item-text">Kruskal–Wallis</span></button> <button class="sidebar-item" onclick="selectTest('friedman')" title="Friedman Test"><span class="sidebar-item-icon">✓</span><span class="sidebar-item-text">Friedman Test</span></button>
+     </div>
+    </div><!-- Content Area -->
+    <div class="content-area">
+     <div class="data-controls">
+      <div class="tab-buttons"><button class="tab-btn active" onclick="switchTab('raw-data')">Raw Data</button> <button class="tab-btn" onclick="switchTab('results')">Results</button>
+      </div>
+      <div style="display: flex; gap: 0.75rem; align-items: center;"><button class="btn btn-primary" onclick="runTest()">▶ Run Test</button> <label class="upload-label">📁 Upload CSV<input type="file" id="csv-upload" accept=".csv" onchange="handleCSVUpload(event)"></label>
+      </div>
+     </div><!-- Raw Data Tab -->
+     <div id="raw-data" class="tab-content active">
+      <div class="data-input-section">
+       <div class="column-setup">
+        <div class="column-setup-title">
+         📋 Set Up Column Headers
+        </div>
+        <div class="hint-text" id="schema-hint"></div>
+        <div class="column-inputs" id="column-headers-input"></div><button class="btn btn-primary" onclick="applyColumnHeaders()">Apply Headers</button>
+       </div>
+       <div class="data-table-container" id="data-table-container">
+        <div class="empty-state">
+         No data loaded. Click "Demo Data" or upload a CSV, or set up headers and enter data below.
+        </div>
+       </div>
+       <div class="data-entry-button-group"><button class="btn" onclick="addDataRow()">+ Add Row</button> <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All</button>
+       </div>
+      </div>
+     </div><!-- Results Tab -->
+     <div id="results" class="tab-content">
+      <div class="results-panel" id="results-panel" style="display: none;">
+       <div class="results-title">
+        📋 Your Results
+       </div>
+       <div id="results-content"></div>
+      </div>
+      <div id="no-results-message" style="text-align: center; padding: 2rem; color: rgba(255, 255, 255, 0.7); font-size: 0.95rem;">
+       Run a test to see results here.
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+        // ============= Sidebar Toggle =============
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const button = event.target.closest('.sidebar-toggle');
+            const icon = button.querySelector('.sidebar-toggle-icon');
+            sidebar.classList.toggle('collapsed');
+            icon.textContent = sidebar.classList.contains('collapsed') ? '»' : '«';
+        }
+
+        // ============= Tab Management =============
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ============= Column Header Management =============
+        function renderColumnHeaderInputs() {
+            const schema = testSchemas[currentTest];
+            const container = document.getElementById('column-headers-input');
+            let html = '';
+            
+            schema.columns.forEach(col => {
+                html += `
+                    <div class="column-input-group">
+                        <label>${col}</label>
+                        <input type="text" id="header-${col}" value="${col}" placeholder="Enter header name">
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function applyColumnHeaders() {
+            const schema = testSchemas[currentTest];
+            const headers = {};
+            
+            schema.columns.forEach(col => {
+                const input = document.getElementById(`header-${col}`);
+                headers[col] = input?.value || col;
+            });
+            
+            // Store custom headers
+            window.customHeaders = headers;
+            
+            // Render data entry table with new headers
+            renderDataEntryTable();
+        }
+
+        function renderDataEntryTable() {
+            const schema = testSchemas[currentTest];
+            const container = document.getElementById('data-table-container');
+            
+            if (!window.customHeaders) {
+                renderColumnHeaderInputs();
+                applyColumnHeaders();
+                return;
+            }
+            
+            const headers = window.customHeaders;
+            const columns = schema.columns;
+            
+            let html = '<table class="data-entry-table"><thead><tr>';
+            columns.forEach(col => {
+                html += `<th>${headers[col] || col}</th>`;
+            });
+            html += '<th style="width: 40px;"></th></tr></thead><tbody>';
+            
+            if (currentData.length === 0) {
+                // Show one empty row
+                html += '<tr>';
+                columns.forEach((col, idx) => {
+                    html += `<td><input type="text" data-column="${col}" data-row="0" onchange="updateDataCell(0, '${col}', event)"></td>`;
+                });
+                html += '<td><button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="deleteDataRow(0)">×</button></td></tr>';
+            } else {
+                currentData.forEach((row, rowIdx) => {
+                    html += '<tr>';
+                    columns.forEach(col => {
+                        const value = row[col] || '';
+                        html += `<td><input type="text" data-column="${col}" data-row="${rowIdx}" value="${value}" onchange="updateDataCell(${rowIdx}, '${col}', event)"></td>`;
+                    });
+                    html += `<td><button class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="deleteDataRow(${rowIdx})">×</button></td></tr>`;
+                });
+            }
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function updateDataCell(rowIdx, column, event) {
+            const value = event.target.value;
+            const numValue = isNaN(value) ? value : parseFloat(value);
+            
+            if (!currentData[rowIdx]) {
+                currentData[rowIdx] = {};
+            }
+            currentData[rowIdx][column] = numValue;
+        }
+
+        function addDataRow() {
+            const newRow = {};
+            const schema = testSchemas[currentTest];
+            schema.columns.forEach(col => {
+                newRow[col] = '';
+            });
+            currentData.push(newRow);
+            renderDataEntryTable();
+        }
+
+        function deleteDataRow(rowIdx) {
+            currentData.splice(rowIdx, 1);
+            renderDataEntryTable();
+        }
+
+        function clearAllData() {
+            if (currentData.length === 0) return;
+            currentData = [];
+            renderDataEntryTable();
+            document.getElementById('results-panel').style.display = 'none';
+            document.getElementById('no-results-message').style.display = 'block';
+        }
+
+        // ============= State Management =============
+        let currentTest = 'ttest-ind';
+        let currentData = [];
+        let currentResults = null;
+        let recommendedTest = null;
+        let currentSubject = 'biology';
+
+        const subjectExamples = {
+            biology: {
+                factor_intro: 'A factor is an independent variable you manipulate.',
+                one_factor: 'comparing different drug dosages',
+                two_factors: 'drug dosage AND temperature conditions',
+                independent: 'e.g., 20 mice on Drug A, 20 different mice on Drug B',
+                paired: 'e.g., plant height before and after treatment, twin pairs',
+                repeated: 'e.g., enzyme activity on Day 1, Day 7, Day 14'
+            },
+            chemistry: {
+                factor_intro: 'A factor is an independent variable you manipulate.',
+                one_factor: 'comparing different catalyst concentrations',
+                two_factors: 'catalyst concentration AND reaction temperature',
+                independent: 'e.g., samples tested with 5% catalyst, separate samples with 10%',
+                paired: 'e.g., pH before and after titration, paired measurements',
+                repeated: 'e.g., product yield measured at 1 hour, 2 hours, 4 hours'
+            },
+            physics: {
+                factor_intro: 'A factor is an independent variable you manipulate.',
+                one_factor: 'comparing different applied forces',
+                two_factors: 'applied force AND surface friction',
+                independent: 'e.g., objects with 10N force, different objects with 20N',
+                paired: 'e.g., velocity before and after collision, paired measurements',
+                repeated: 'e.g., temperature measured at 0s, 5s, 10s intervals'
+            }
+        };
+
+        const testSchemas = {
+            'ttest-ind': { columns: ['group', 'value'], name: 'Independent t-test' },
+            'ttest-paired': { columns: ['subject', 'pre', 'post'], name: 'Paired t-test' },
+            'anova-one': { columns: ['group', 'value'], name: 'One-way ANOVA' },
+            'anova-two': { columns: ['factorA', 'factorB', 'value'], name: 'Two-way ANOVA' },
+            'anova-rm': { columns: ['subject', 'condition', 'value'], name: 'Repeated Measures ANOVA' },
+            'mann-whitney': { columns: ['group', 'value'], name: 'Mann–Whitney U' },
+            'wilcoxon': { columns: ['subject', 'pre', 'post'], name: 'Wilcoxon Signed-Rank' },
+            'kruskal-wallis': { columns: ['group', 'value'], name: 'Kruskal–Wallis' },
+            'friedman': { columns: ['subject', 'condition', 'value'], name: 'Friedman Test' }
+        };
+
+        const demoDatasets = {
+            'ttest-ind': [
+                { group: 'A', value: 10.2 },
+                { group: 'A', value: 12.1 },
+                { group: 'A', value: 11.5 },
+                { group: 'A', value: 13.0 },
+                { group: 'B', value: 15.3 },
+                { group: 'B', value: 16.8 },
+                { group: 'B', value: 14.9 },
+                { group: 'B', value: 17.2 }
+            ],
+            'ttest-paired': [
+                { subject: '1', pre: 100, post: 108 },
+                { subject: '2', pre: 102, post: 105 },
+                { subject: '3', pre: 98, post: 112 },
+                { subject: '4', pre: 105, post: 110 },
+                { subject: '5', pre: 101, post: 115 }
+            ],
+            'anova-one': [
+                { group: 'A', value: 10.2 },
+                { group: 'A', value: 12.1 },
+                { group: 'A', value: 11.5 },
+                { group: 'B', value: 14.9 },
+                { group: 'B', value: 16.8 },
+                { group: 'B', value: 15.3 },
+                { group: 'C', value: 18.5 },
+                { group: 'C', value: 20.1 },
+                { group: 'C', value: 19.4 }
+            ],
+            'anova-two': [
+                { factorA: 'A1', factorB: 'B1', value: 12.5 },
+                { factorA: 'A1', factorB: 'B1', value: 13.2 },
+                { factorA: 'A1', factorB: 'B2', value: 18.1 },
+                { factorA: 'A1', factorB: 'B2', value: 19.3 },
+                { factorA: 'A2', factorB: 'B1', value: 10.5 },
+                { factorA: 'A2', factorB: 'B1', value: 11.2 },
+                { factorA: 'A2', factorB: 'B2', value: 25.1 },
+                { factorA: 'A2', factorB: 'B2', value: 26.3 }
+            ],
+            'anova-rm': [
+                { subject: '1', condition: 'C1', value: 10.2 },
+                { subject: '1', condition: 'C2', value: 15.5 },
+                { subject: '2', condition: 'C1', value: 12.1 },
+                { subject: '2', condition: 'C2', value: 16.8 },
+                { subject: '3', condition: 'C1', value: 11.5 },
+                { subject: '3', condition: 'C2', value: 14.9 },
+                { subject: '4', condition: 'C1', value: 13.0 },
+                { subject: '4', condition: 'C2', value: 18.2 }
+            ],
+            'mann-whitney': [
+                { group: 'A', value: 8.5 },
+                { group: 'A', value: 10.2 },
+                { group: 'A', value: 9.1 },
+                { group: 'A', value: 11.3 },
+                { group: 'B', value: 14.2 },
+                { group: 'B', value: 16.5 },
+                { group: 'B', value: 15.8 },
+                { group: 'B', value: 17.1 }
+            ],
+            'wilcoxon': [
+                { subject: '1', pre: 95, post: 105 },
+                { subject: '2', pre: 100, post: 108 },
+                { subject: '3', pre: 98, post: 110 },
+                { subject: '4', pre: 103, post: 112 },
+                { subject: '5', pre: 101, post: 115 }
+            ],
+            'kruskal-wallis': [
+                { group: 'A', value: 8.2 },
+                { group: 'A', value: 10.1 },
+                { group: 'A', value: 9.5 },
+                { group: 'B', value: 14.8 },
+                { group: 'B', value: 16.2 },
+                { group: 'B', value: 15.1 },
+                { group: 'C', value: 19.5 },
+                { group: 'C', value: 21.2 },
+                { group: 'C', value: 20.8 }
+            ],
+            'friedman': [
+                { subject: '1', condition: 'C1', value: 10.2 },
+                { subject: '1', condition: 'C2', value: 15.5 },
+                { subject: '1', condition: 'C3', value: 12.8 },
+                { subject: '2', condition: 'C1', value: 12.1 },
+                { subject: '2', condition: 'C2', value: 16.8 },
+                { subject: '2', condition: 'C3', value: 14.9 },
+                { subject: '3', condition: 'C1', value: 11.5 },
+                { subject: '3', condition: 'C2', value: 14.9 },
+                { subject: '3', condition: 'C3', value: 13.2 }
+            ]
+        };
+
+        // ============= Guide Modal Functions =============
+        const testMetadata = {
+            'ttest-ind': {
+                name: 'Independent t-test',
+                why: 'Two independent groups with parametric assumptions.',
+                alternative: null
+            },
+            'mann-whitney': {
+                name: 'Mann–Whitney U',
+                why: 'Two independent groups without normality assumption.',
+                alternative: 'Independent t-test if normality is reasonable'
+            },
+            'ttest-paired': {
+                name: 'Paired t-test',
+                why: 'Same subjects measured twice with parametric assumptions.',
+                alternative: null
+            },
+            'wilcoxon': {
+                name: 'Wilcoxon Signed-Rank',
+                why: 'Same subjects measured twice without normality assumption.',
+                alternative: 'Paired t-test if normality is reasonable'
+            },
+            'anova-one': {
+                name: 'One-way ANOVA',
+                why: 'Three+ independent groups with parametric assumptions.',
+                alternative: null
+            },
+            'kruskal-wallis': {
+                name: 'Kruskal–Wallis',
+                why: 'Three+ independent groups without normality assumption.',
+                alternative: 'One-way ANOVA if normality is reasonable'
+            },
+            'anova-rm': {
+                name: 'Repeated Measures ANOVA',
+                why: 'Three+ conditions on same subjects with parametric assumptions.',
+                alternative: null
+            },
+            'friedman': {
+                name: 'Friedman Test',
+                why: 'Three+ conditions on same subjects without normality assumption.',
+                alternative: 'Repeated Measures ANOVA if normality is reasonable'
+            },
+            'anova-two': {
+                name: 'Two-way ANOVA',
+                why: 'Two independent factors with parametric assumptions.',
+                alternative: null
+            }
+        };
+
+        function openGuideModal() {
+            document.getElementById('guide-modal').classList.add('active');
+            resetGuideFlow();
+        }
+
+        function resetGuideFlow() {
+            document.querySelectorAll('input[type="radio"]').forEach(el => el.checked = false);
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2a').style.display = 'none';
+            document.getElementById('step2b').style.display = 'none';
+            document.getElementById('step3a').style.display = 'none';
+            document.getElementById('step4a').style.display = 'none';
+            document.getElementById('step3b').style.display = 'none';
+            document.getElementById('recommendation-display').style.display = 'none';
+            document.getElementById('use-recommended-btn').style.display = 'none';
+            updateExamples();
+        }
+
+        function setSubject(subject) {
+            currentSubject = subject;
+            
+            document.getElementById('subject-biology').classList.toggle('active', subject === 'biology');
+            document.getElementById('subject-chemistry').classList.toggle('active', subject === 'chemistry');
+            document.getElementById('subject-physics').classList.toggle('active', subject === 'physics');
+
+            updateExamples();
+        }
+
+        function updateExamples() {
+            const examples = subjectExamples[currentSubject];
+            document.getElementById('factor-intro').textContent = examples.factor_intro;
+            document.getElementById('example-one-factor').textContent = examples.one_factor;
+            document.getElementById('example-two-factors').textContent = examples.two_factors;
+            document.getElementById('example-independent').textContent = examples.independent;
+            document.getElementById('example-paired').textContent = examples.paired;
+            document.getElementById('example-repeated').textContent = examples.repeated;
+        }
+
+        function skipGuideModal() {
+            document.getElementById('guide-modal').classList.remove('active');
+            showMainApp();
+        }
+
+        function showMainApp() {
+            document.getElementById('main-app').style.display = 'flex';
+            updateSchemaHint();
+            renderDataTable();
+        }
+
+        function updateGuidePath() {
+            const factors = document.querySelector('input[name="factors"]:checked')?.value;
+
+            document.getElementById('step2a').style.display = factors === 'one' ? 'block' : 'none';
+            document.getElementById('step2b').style.display = factors === 'two' ? 'block' : 'none';
+
+            if (factors === 'one') {
+                const observations = document.querySelector('input[name="observations"]:checked')?.value;
+
+                document.getElementById('step3a').style.display = observations ? 'block' : 'none';
+                document.getElementById('step4a').style.display = 'none';
+
+                if (observations) {
+                    const condCount = document.querySelector('input[name="condition-count"]:checked')?.value;
+                    document.getElementById('step4a').style.display = condCount ? 'block' : 'none';
+                }
+            } else if (factors === 'two') {
+                const design = document.querySelector('input[name="design"]:checked')?.value;
+                document.getElementById('step3b').style.display = design ? 'block' : 'none';
+            }
+
+            determineRecommendation();
+        }
+
+        function determineRecommendation() {
+            const factors = document.querySelector('input[name="factors"]:checked')?.value;
+            let recommended = null;
+            let why = '';
+            let alternative = null;
+
+            if (factors === 'one') {
+                const observations = document.querySelector('input[name="observations"]:checked')?.value;
+                const condCount = document.querySelector('input[name="condition-count"]:checked')?.value;
+                const normality = document.querySelector('input[name="normality"]:checked')?.value;
+
+                if (observations && condCount && normality) {
+                    if (observations === 'independent') {
+                        if (condCount === 'two') {
+                            recommended = normality === 'yes' ? 'ttest-ind' : 'mann-whitney';
+                        } else if (condCount === 'three-plus') {
+                            recommended = normality === 'yes' ? 'anova-one' : 'kruskal-wallis';
+                        }
+                    }
+                    else if (observations === 'paired') {
+                        if (condCount === 'two') {
+                            recommended = normality === 'yes' ? 'ttest-paired' : 'wilcoxon';
+                        } else if (condCount === 'three-plus') {
+                            recommended = normality === 'yes' ? 'anova-rm' : 'friedman';
+                        }
+                    }
+                    else if (observations === 'repeated') {
+                        if (condCount === 'two') {
+                            recommended = normality === 'yes' ? 'ttest-paired' : 'wilcoxon';
+                        } else if (condCount === 'three-plus') {
+                            recommended = normality === 'yes' ? 'anova-rm' : 'friedman';
+                        }
+                    }
+                }
+            } else if (factors === 'two') {
+                const design = document.querySelector('input[name="design"]:checked')?.value;
+                const normality2 = document.querySelector('input[name="normality-2factor"]:checked')?.value;
+
+                if (design && normality2) {
+                    if (design === 'independent-only') {
+                        if (normality2 === 'yes') {
+                            recommended = 'anova-two';
+                        } else {
+                            document.getElementById('recommendation-test-name').textContent = 'Not Supported';
+                            document.getElementById('recommendation-why').textContent = '⚠️ Non-parametric two-way ANOVA is not supported in this version.';
+                            document.getElementById('recommendation-alternative').textContent = '💡 Try: Validate your normality assumption or use parametric test.';
+                            document.getElementById('recommendation-display').style.display = 'block';
+                            document.getElementById('use-recommended-btn').style.display = 'none';
+                            return;
+                        }
+                    } else if (design === 'includes-repeated') {
+                        document.getElementById('recommendation-test-name').textContent = 'Not Supported';
+                        document.getElementById('recommendation-why').textContent = '⚠️ Mixed designs with repeated measurements are not supported yet.';
+                        document.getElementById('recommendation-alternative').textContent = '💡 Tip: Consult a statistician for mixed model analysis.';
+                        document.getElementById('recommendation-display').style.display = 'block';
+                        document.getElementById('use-recommended-btn').style.display = 'none';
+                        return;
+                    }
+                }
+            }
+
+            if (recommended) {
+                recommendedTest = recommended;
+                const metadata = testMetadata[recommended];
+                document.getElementById('recommendation-test-name').textContent = metadata.name;
+                document.getElementById('recommendation-why').textContent = '📋 ' + metadata.why;
+                
+                if (metadata.alternative) {
+                    document.getElementById('recommendation-alternative').textContent = '💡 Alternative: ' + metadata.alternative;
+                } else {
+                    document.getElementById('recommendation-alternative').textContent = '';
+                }
+
+                document.getElementById('recommendation-display').style.display = 'block';
+                document.getElementById('use-recommended-btn').style.display = 'inline-block';
+            } else {
+                document.getElementById('recommendation-display').style.display = 'none';
+                document.getElementById('use-recommended-btn').style.display = 'none';
+            }
+        }
+
+        function useRecommendedTest() {
+            if (recommendedTest) {
+                currentTest = recommendedTest;
+                selectTest(recommendedTest);
+                skipGuideModal();
+            }
+        }
+
+        // ============= Test Selection =============
+        function selectTest(testId) {
+            currentTest = testId;
+
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            const activeBtn = Array.from(document.querySelectorAll('.sidebar-item')).find(btn => btn.textContent.includes(testSchemas[testId].name));
+            if (activeBtn) activeBtn.classList.add('active');
+
+            updateSchemaHint();
+            runTest();
+        }
+
+        function updateSchemaHint() {
+            const schema = testSchemas[currentTest];
+            const columns = schema.columns.join(', ');
+            document.getElementById('schema-hint').textContent = `📌 Required columns: ${columns}`;
+            renderColumnHeaderInputs();
+            renderDataEntryTable();
+        }
+
+        // ============= Data Handling =============
+        function loadDemonstration() {
+            currentData = JSON.parse(JSON.stringify(demoDatasets[currentTest]));
+            renderDataEntryTable();
+            runTest();
+        }
+
+        function clearData() {
+            currentData = [];
+            currentResults = null;
+            document.getElementById('results-panel').style.display = 'none';
+            document.getElementById('no-results-message').style.display = 'block';
+            renderDataEntryTable();
+        }
+
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.trim().split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim());
+                    const data = [];
+
+                    for (let i = 1; i < lines.length; i++) {
+                        if (lines[i].trim() === '') continue;
+                        const values = lines[i].split(',').map(v => v.trim());
+                        const row = {};
+                        headers.forEach((header, idx) => {
+                            row[header] = isNaN(values[idx]) ? values[idx] : parseFloat(values[idx]);
+                        });
+                        data.push(row);
+                    }
+
+                    currentData = data;
+                    renderDataEntryTable();
+                    runTest();
+                } catch (error) {
+                    alert('Error parsing CSV: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function renderDataTable() {
+            const container = document.getElementById('data-table-container');
+
+            if (currentData.length === 0) {
+                container.innerHTML = '<div class="empty-state">No data loaded. Click "Demo Data" or upload a CSV.</div>';
+                return;
+            }
+
+            const headers = Object.keys(currentData[0]);
+            let html = '<table class="data-table"><thead><tr>';
+            headers.forEach(header => {
+                html += `<th>${header}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            currentData.forEach(row => {
+                html += '<tr>';
+                headers.forEach(header => {
+                    html += `<td>${row[header]}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // ============= Statistical Tests =============
+        function validateData(requiredColumns) {
+            if (currentData.length === 0) return false;
+            const firstRow = currentData[0];
+            return requiredColumns.every(col => col in firstRow);
+        }
+
+        function runTest() {
+            const schema = testSchemas[currentTest];
+
+            if (!validateData(schema.columns)) {
+                showResults({
+                    status: 'error',
+                    message: 'Invalid data schema. ' + schema.name + ' requires: ' + schema.columns.join(', ')
+                });
+                return;
+            }
+
+            let results = null;
+            try {
+                switch (currentTest) {
+                    case 'ttest-ind':
+                        results = computeTtestIndependent();
+                        break;
+                    case 'ttest-paired':
+                        results = computeTtestPaired();
+                        break;
+                    case 'anova-one':
+                        results = computeAnovaOne();
+                        break;
+                    case 'anova-two':
+                        results = computeAnovaTwo();
+                        break;
+                    case 'anova-rm':
+                        results = computeAnovaRM();
+                        break;
+                    case 'mann-whitney':
+                        results = computeMannWhitney();
+                        break;
+                    case 'wilcoxon':
+                        results = computeWilcoxon();
+                        break;
+                    case 'kruskal-wallis':
+                        results = computeKruskalWallis();
+                        break;
+                    case 'friedman':
+                        results = computeFriedman();
+                        break;
+                }
+                currentResults = results;
+                showResults(results);
+            } catch (error) {
+                showResults({
+                    status: 'error',
+                    message: 'Computation error: ' + error.message
+                });
+            }
+        }
+
+        function computeTtestIndependent() {
+            const groups = groupBy(currentData, 'group');
+            const groupA = groups[Object.keys(groups)[0]].map(d => d.value);
+            const groupB = groups[Object.keys(groups)[1]].map(d => d.value);
+
+            const meanA = jStat.mean(groupA);
+            const meanB = jStat.mean(groupB);
+            const n1 = groupA.length;
+            const n2 = groupB.length;
+
+            const varA = jStat.variance(groupA, true);
+            const varB = jStat.variance(groupB, true);
+
+            const pooledVar = ((n1 - 1) * varA + (n2 - 1) * varB) / (n1 + n2 - 2);
+            const se = Math.sqrt(pooledVar * (1 / n1 + 1 / n2));
+            const t = (meanA - meanB) / se;
+            const df = n1 + n2 - 2;
+            const pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+
+            const cohensD = (meanA - meanB) / Math.sqrt(pooledVar);
+
+            return {
+                status: 'success',
+                testName: 'Independent t-test',
+                statistic: t.toFixed(4),
+                statisticLabel: 't',
+                df: df,
+                pValue: pValue.toFixed(4),
+                effectSize: cohensD.toFixed(4),
+                effectSizeLabel: "Cohen's d",
+                significant: pValue < 0.05
+            };
+        }
+
+        function computeTtestPaired() {
+            const subjects = groupBy(currentData, 'subject');
+            const diffs = [];
+
+            Object.values(subjects).forEach(measures => {
+                const pre = measures.find(m => 'pre' in m).pre;
+                const post = measures.find(m => 'post' in m).post;
+                diffs.push(post - pre);
+            });
+
+            const meanDiff = jStat.mean(diffs);
+            const seDiff = jStat.stdev(diffs, true) / Math.sqrt(diffs.length);
+            const t = meanDiff / seDiff;
+            const df = diffs.length - 1;
+            const pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
+
+            const cohensD = meanDiff / jStat.stdev(diffs, true);
+
+            return {
+                status: 'success',
+                testName: 'Paired t-test',
+                statistic: t.toFixed(4),
+                statisticLabel: 't',
+                df: df,
+                pValue: pValue.toFixed(4),
+                effectSize: cohensD.toFixed(4),
+                effectSizeLabel: "Cohen's d",
+                significant: pValue < 0.05
+            };
+        }
+
+        function computeAnovaOne() {
+            const groups = groupBy(currentData, 'group');
+            const groupArrays = Object.values(groups).map(g => g.map(d => d.value));
+
+            const allValues = groupArrays.flat();
+            const grandMean = jStat.mean(allValues);
+
+            const k = groupArrays.length;
+            const N = allValues.length;
+
+            let ss_between = 0;
+            groupArrays.forEach(group => {
+                const groupMean = jStat.mean(group);
+                ss_between += group.length * Math.pow(groupMean - grandMean, 2);
+            });
+
+            let ss_within = 0;
+            groupArrays.forEach(group => {
+                const groupMean = jStat.mean(group);
+                group.forEach(val => {
+                    ss_within += Math.pow(val - groupMean, 2);
+                });
+            });
+
+            const df_between = k - 1;
+            const df_within = N - k;
+            const ms_between = ss_between / df_between;
+            const ms_within = ss_within / df_within;
+            const F = ms_between / ms_within;
+            const pValue = 1 - jStat.centralF.cdf(F, df_between, df_within);
+
+            const eta2 = ss_between / (ss_between + ss_within);
+
+            return {
+                status: 'success',
+                testName: 'One-way ANOVA',
+                statistic: F.toFixed(4),
+                statisticLabel: 'F',
+                df: `${df_between}, ${df_within}`,
+                pValue: pValue.toFixed(4),
+                effectSize: eta2.toFixed(4),
+                effectSizeLabel: 'η²',
+                significant: pValue < 0.05
+            };
+        }
+
+        function computeAnovaTwo() {
+            const groups = groupBy(currentData, d => d.factorA + '-' + d.factorB);
+            const allValues = currentData.map(d => d.value);
+            const grandMean = jStat.mean(allValues);
+            const N = allValues.length;
+
+            let ss_total = 0;
+            allValues.forEach(val => {
+                ss_total += Math.pow(val - grandMean, 2);
+            });
+
+            let ss_between = 0;
+            Object.values(groups).forEach(group => {
+                const groupMean = jStat.mean(group.map(d => d.value));
+                group.forEach(d => {
+                    ss_between += Math.pow(groupMean - grandMean, 2);
+                });
+            });
+
+            const ss_within = ss_total - ss_between;
+            const df_between = Object.keys(groups).length - 1;
+            const df_within = N - Object.keys(groups).length;
+
+            const ms_between = ss_between / df_between;
+            const ms_within = ss_within / df_within;
+            const F = ms_between / ms_within;
+            const pValue = 1 - jStat.centralF.cdf(F, df_between, df_within);
+
+            const eta2 = ss_between / ss_total;
+
+            return {
+                status: 'success',
+                testName: 'Two-way ANOVA',
+                statistic: F.toFixed(4),
+                statisticLabel: 'F',
+                df: `${df_between}, ${df_within}`,
+                pValue: pValue.toFixed(4),
+                effectSize: eta2.toFixed(4),
+                effectSizeLabel: 'η²',
+                significant: pValue < 0.05
+            };
+        }
+
+        function computeAnovaRM() {
+            const subjects = groupBy(currentData, 'subject');
+            const conditions = new Set(currentData.map(d => d.condition));
+
+            const subjectCount = Object.keys(subjects).length;
+            const conditionCount = conditions.size;
+            const N = currentData.length;
+
+            const allValues = currentData.map(d => d.value);
+            const grandMean = jStat.mean(allValues);
+
+            let ss_total = 0;
+            allValues.forEach(val => {
+                ss_total += Math.pow(val - grandMean, 2);
+            });
+
+            let ss_between_subjects = 0;
+            Object.values(subjects).forEach(subject => {
+                const subjectMean = jStat.mean(subject.map(d => d.value));
+                subject.forEach(d => {
+                    ss_between_subjects += Math.pow(subjectMean - grandMean, 2);
+                });
+            });
+
+            let ss_conditions = 0;
+            Array.from(conditions).forEach(cond => {
+                const condValues = currentData.filter(d => d.condition === cond).map(d => d.value);
+                const condMean = jStat.mean(condValues);
+                condValues.forEach(val => {
+                    ss_conditions += Math.pow(condMean - grandMean, 2);
+                });
+            });
+
+            const ss_error = ss_total - ss_between_subjects - ss_conditions;
+            const df_conditions = conditionCount - 1;
+            const df_error = (subjectCount - 1) * (conditionCount - 1);
+
+            const ms_conditions = ss_conditions / df_conditions;
+            const ms_error = ss_error / df_error;
+            const F = ms_conditions / ms_error;
+            const pValue = 1 - jStat.centralF.cdf(F, df_conditions, df_error);
+
+            const partialEta2 = ss_conditions / (ss_conditions + ss_error);
+
+            return {
+                status: 'success',
+                testName: 'Repeated Measures ANOVA',
+                statistic: F.toFixed(4),
+                statisticLabel: 'F',
+                df: `${df_conditions}, ${df_error}`,
+                pValue: pValue.toFixed(4),
+                effectSize: partialEta2.toFixed(4),
+                effectSizeLabel: 'Partial η²',
+                significant: pValue < 0.05
+            };
+        }
+
+        function computeMannWhitney() {
+            const groups = groupBy(currentData, 'group');
+            const groupA = groups[Object.keys(groups)[0]].map(d => d.value).sort((a, b) => a - b);
+            const groupB = groups[Object.keys(groups)[1]].map(d => d.value).sort((a, b) => a - b);
+
+            const allValues = [...groupA, ...groupB].sort((a, b) => a - b);
+            const ranks = {};
+            let rank = 1;
+            allValues.forEach((val, idx) => {
+                if (idx === 0 || val !== allValues[idx - 1]) {
+                    ranks[val] = rank;
+                }
+                rank++;
+            });
+
+            let R1 = 0;
+            groupA.forEach(val => {
+                R1 += ranks[val];
+            });
+
+            const n1 = groupA.length;
+            const n2 = groupB.length;
+            const U = n1 * n2 + (n1 * (n1 + 1)) / 2 - R1;
+
+            const meanU = (n1 * n2) / 2;
+            const stdU = Math.sqrt((n1 * n2 * (n1 + n2 + 1)) / 12);
+            const z = Math.abs((U - meanU) / stdU);
+            const pValue = 2 * (1 - jStat.normal.cdf(z, 0, 1));
+
+            const r = z / Math.sqrt(n1 + n2);
+
+            return {
+                status: 'success',
+                testName: 'Mann–Whitney U',
+                statistic: U.toFixed(2),
+                statisticLabel: 'U',
+                pValue: pValue.toFixed(4),
+                effectSize: r.toFixed(4),
+                effectSizeLabel: 'r',
+                significant: pValue < 0.05
+            };
+        }
+
+        function computeWilcoxon() {
+            const subjects = groupBy(currentData, 'subject');
+            const diffs = [];
+
+            Object.values(subjects).forEach(measures => {
+                const pre = measures.find(m => 'pre' in m).pre;
+                const post = measures.find(m => 'post' in m).post;
+                const diff = post - pre;
+                if (diff !== 0) diffs.push(diff);
+            });
+
+            const absDiffs = diffs.map(d => Math.abs(d)).sort((a, b) => a - b);
+            const ranks = {};
+            let rank = 1;
+            absDiffs.forEach((val, idx) => {
+                if (idx === 0 || val !== absDiffs[idx - 1]) {
+                    ranks[val] = rank;
+                }
+                rank++;
+            });
+
+            let T = 0;
+            diffs.forEach(diff => {
+                if (diff > 0) {
+                    T += ranks[Math.abs(diff)];
+                }
+            });
+
+            const n = diffs.length;
+            const meanT = (n * (n + 1)) / 4;
+            const stdT = Math.sqrt((n * (n + 1) * (2 * n + 1)) / 24);
+            const z = Math.abs((T - meanT) / stdT);
+            const pValue = 2 * (1 - jStat.normal.cdf(z, 0, 1));
+
+            const r = z / Math.sqrt(2 * n);
+
+            return {
+                status: 'success',
+                testName: 'Wilcoxon Signed-Rank',
+                statistic: T.toFixed(2),
+                statisticLabel: 'T',
+                pValue: pValue.toFixed(4),
+                effectSize: r.toFixed(4),
+                effectSizeLabel: 'r',
+                significant: pValue < 0.05
+            };
+        }
+
+        function computeKruskalWallis() {
+            const groups = groupBy(currentData, 'group');
+            const groupArrays = Object.values(groups).map(g => g.map(d => d.value));
+
+            const allValues = groupArrays.flat().sort((a, b) => a - b);
+            const ranks = {};
+            let rank = 1;
+            allValues.forEach((val, idx) => {
+                if (idx === 0 || val !== allValues[idx - 1]) {
+                    ranks[val] = rank;
+                }
+                rank++;
+            });
+
+            const N = allValues.length;
+            let H = 0;
+
+            groupArrays.forEach(group => {
+                let R = 0;
+                group.forEach(val => {
+                    R += ranks[val];
+                });
+                H += Math.pow(R, 2) / group.length;
+            });
+
+            H = (12 / (N * (N + 1))) * H - 3 * (N + 1);
+
+            const k = groupArrays.length;
+            const df = k - 1;
+            const pValue = 1 - jStat.chisquare.cdf(H, df);
+
+            return {
+                status: 'success',
+                testName: 'Kruskal–Wallis',
+                statistic: H.toFixed(4),
+                statisticLabel: 'H',
+                df: df,
+                pValue: pValue.toFixed(4),
+                effectSize: 'N/A',
+                effectSizeLabel: '',
+                significant: pValue < 0.05
+            };
+        }
+
+        function computeFriedman() {
+            const subjects = groupBy(currentData, 'subject');
+            const conditions = new Set(currentData.map(d => d.condition));
+
+            const conditionArray = Array.from(conditions).sort();
+            const n = Object.keys(subjects).length;
+            const k = conditionArray.length;
+
+            let R = {};
+            conditionArray.forEach(cond => {
+                R[cond] = 0;
+            });
+
+            Object.values(subjects).forEach(subject => {
+                const subjectValues = {};
+                subject.forEach(d => {
+                    subjectValues[d.condition] = d.value;
+                });
+
+                const values = conditionArray.map(c => subjectValues[c]).sort((a, b) => a - b);
+                const ranks = {};
+                values.forEach((val, idx) => {
+                    ranks[val] = idx + 1;
+                });
+
+                conditionArray.forEach(cond => {
+                    R[cond] += ranks[subjectValues[cond]];
+                });
+            });
+
+            let sumR2 = 0;
+            Object.values(R).forEach(r => {
+                sumR2 += Math.pow(r, 2);
+            });
+
+            const X2 = (12 / (n * k * (k + 1))) * sumR2 - 3 * n * (k + 1);
+
+            const df = k - 1;
+            const pValue = 1 - jStat.chisquare.cdf(X2, df);
+
+            return {
+                status: 'success',
+                testName: 'Friedman Test',
+                statistic: X2.toFixed(4),
+                statisticLabel: 'χ²',
+                df: df,
+                pValue: pValue.toFixed(4),
+                effectSize: 'N/A',
+                effectSizeLabel: '',
+                significant: pValue < 0.05
+            };
+        }
+
+        // ============= Results Display =============
+        function showResults(results) {
+            const panel = document.getElementById('results-panel');
+            const content = document.getElementById('results-content');
+            const noResultsMsg = document.getElementById('no-results-message');
+
+            if (results.status === 'error') {
+                content.innerHTML = `<div class="status-badge status-error">Error</div><p>${results.message}</p>`;
+                panel.style.display = 'block';
+                noResultsMsg.style.display = 'none';
+                return;
+            }
+
+            const significant = results.significant;
+            const badgeClass = significant ? 'status-significant' : 'status-not-significant';
+            const badgeText = significant ? '✅ Significant (p < 0.05)' : '❌ Not Significant (p ≥ 0.05)';
+
+            let html = `<div class="results-section">
+                <div class="status-badge ${badgeClass}">${badgeText}</div>
+                <div class="section-header">
+                    <div class="section-title">Test Statistics</div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="export-button" onclick="copyTableAsTSV('stats-table')">📋 Copy as TSV</button>
+                        <button class="export-button" onclick="exportVisualization('stats-table')">📥 Export as PNG</button>
+                    </div>
+                </div>
+                <div class="visualization-container">
+                    <div id="stats-table">
+                        <table class="publication-table">
+                            <thead>
+                                <tr>
+                                    <th>Test</th>
+                                    <th>${results.statisticLabel} Statistic</th>
+                                    ${results.df ? '<th>Degrees of Freedom</th>' : ''}
+                                    <th>p-value</th>
+                                    ${results.effectSizeLabel && results.effectSize !== 'N/A' ? `<th>${results.effectSizeLabel}</th>` : ''}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>${results.testName}</strong></td>
+                                    <td>${results.statistic}</td>
+                                    ${results.df ? `<td>${results.df}</td>` : ''}
+                                    <td><strong style="color: ${results.significant ? '#166534' : '#991b1b'}">${results.pValue}</strong></td>
+                                    ${results.effectSizeLabel && results.effectSize !== 'N/A' ? `<td>${results.effectSize}</td>` : ''}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
+
+            // Add data summary table
+            html += `<div class="results-section">
+                <div class="section-header">
+                    <div class="section-title">Data Summary</div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <button class="export-button" onclick="copyTableAsTSV('summary-table')">📋 Copy as TSV</button>
+                        <button class="export-button" onclick="exportVisualization('summary-table')">📥 Export as PNG</button>
+                    </div>
+                </div>
+                <div class="visualization-container">
+                    <div id="summary-table">
+                        ${generateSummaryTable()}
+                    </div>
+                </div>
+            </div>`;
+
+            // Add visualization if applicable
+            html += `<div class="results-section">
+                <div class="section-header">
+                    <div class="section-title">Data Visualization</div>
+                    <button class="export-button" onclick="exportVisualization('chart-container')">📥 Export as PNG</button>
+                </div>
+                <div class="visualization-container">
+                    <div id="chart-container" style="width: 100%; height: 400px;"></div>
+                </div>
+            </div>`;
+
+            content.innerHTML = html;
+            panel.style.display = 'block';
+            noResultsMsg.style.display = 'none';
+            
+            // Generate chart
+            generateChart(results);
+            
+            // Switch to results tab
+            switchTab('results');
+        }
+
+        function generateSummaryTable() {
+            const groups = new Set(currentData.map(d => d.group || d.factorA || d.subject || 'All'));
+            let html = '<table class="publication-table"><thead><tr><th>Group</th><th>n</th><th>Mean</th><th>SD</th><th>Min</th><th>Max</th></tr></thead><tbody>';
+
+            if (groups.has('All') || groups.size === 1) {
+                const values = currentData.map(d => d.value).filter(v => v !== undefined);
+                const n = values.length;
+                const mean = jStat.mean(values);
+                const sd = jStat.stdev(values, true);
+                const min = Math.min(...values);
+                const max = Math.max(...values);
+                html += `<tr><td><strong>All Data</strong></td><td>${n}</td><td>${mean.toFixed(2)}</td><td>${sd.toFixed(2)}</td><td>${min.toFixed(2)}</td><td>${max.toFixed(2)}</td></tr>`;
+            } else {
+                Array.from(groups).forEach(group => {
+                    const groupData = currentData.filter(d => (d.group || d.factorA || d.subject) === group);
+                    const values = groupData.map(d => d.value).filter(v => v !== undefined);
+                    if (values.length > 0) {
+                        const n = values.length;
+                        const mean = jStat.mean(values);
+                        const sd = jStat.stdev(values, true);
+                        const min = Math.min(...values);
+                        const max = Math.max(...values);
+                        html += `<tr><td><strong>${group}</strong></td><td>${n}</td><td>${mean.toFixed(2)}</td><td>${sd.toFixed(2)}</td><td>${min.toFixed(2)}</td><td>${max.toFixed(2)}</td></tr>`;
+                    }
+                });
+            }
+
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function generateChart(results) {
+            const container = document.getElementById('chart-container');
+            if (!container) return;
+
+            const groups = groupBy(currentData, 'group');
+            const groupNames = Object.keys(groups).sort();
+
+            if (groupNames.length > 0 && groupNames[0] !== 'undefined') {
+                // Mean with 95% CI and Median plot
+                const groupStats = groupNames.map((name) => {
+                    const data = groups[name];
+                    const values = data.map(d => d.value).sort((a, b) => a - b);
+                    const n = values.length;
+                    const mean = jStat.mean(values);
+                    const median = values[Math.floor(n / 2)];
+                    const sd = jStat.stdev(values, true);
+                    const se = sd / Math.sqrt(n);
+                    const tCritical = 1.96; // 95% CI for large n
+                    const ci95 = tCritical * se;
+
+                    return {
+                        name,
+                        mean,
+                        median,
+                        ciLower: mean - ci95,
+                        ciUpper: mean + ci95,
+                        sd,
+                        n,
+                        se
+                    };
+                });
+
+                // Destroy existing chart if it exists
+                if (window.chartInstance) {
+                    window.chartInstance.destroy();
+                }
+
+                // Clear container and create canvas
+                container.innerHTML = '<canvas></canvas>';
+                const canvas = container.querySelector('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Plugin to draw CI error bars with proper styling
+                const ciErrorBarsPlugin = {
+                    id: 'ciErrorBars',
+                    afterDatasetsDraw(chart) {
+                        const ctx = chart.ctx;
+                        const xScale = chart.scales.x;
+                        const yScale = chart.scales.y;
+
+                        groupStats.forEach((group, idx) => {
+                            const x = xScale.getPixelForValue(idx);
+                            const yMean = yScale.getPixelForValue(group.mean);
+                            const yUpper = yScale.getPixelForValue(group.ciUpper);
+                            const yLower = yScale.getPixelForValue(group.ciLower);
+
+                            // Draw thin vertical line for CI in light blue
+                            ctx.strokeStyle = '#7CB9E8';
+                            ctx.lineWidth = 1.5;
+                            ctx.beginPath();
+                            ctx.moveTo(x, yUpper);
+                            ctx.lineTo(x, yLower);
+                            ctx.stroke();
+
+                            // Draw short horizontal caps at ends (light blue)
+                            const capWidth = 8;
+                            ctx.beginPath();
+                            ctx.moveTo(x - capWidth, yUpper);
+                            ctx.lineTo(x + capWidth, yUpper);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(x - capWidth, yLower);
+                            ctx.lineTo(x + capWidth, yLower);
+                            ctx.stroke();
+                        });
+                    }
+                };
+
+                // Plugin to draw median squares offset to the right
+                const medianPlugin = {
+                    id: 'medianSquares',
+                    afterDatasetsDraw(chart) {
+                        const ctx = chart.ctx;
+                        const xScale = chart.scales.x;
+                        const yScale = chart.scales.y;
+
+                        groupStats.forEach((group, idx) => {
+                            const x = xScale.getPixelForValue(idx + 0.08); // Offset to right
+                            const y = yScale.getPixelForValue(group.median);
+                            const size = 5;
+
+                            // Draw solid black square
+                            ctx.fillStyle = '#000000';
+                            ctx.fillRect(x - size, y - size, size * 2, size * 2);
+                        });
+                    }
+                };
+                
+                // Calculate y-axis range based on CI bounds, not just means
+                let minCIValue = Infinity;
+                let maxCIValue = -Infinity;
+                
+                groupStats.forEach(g => {
+                    minCIValue = Math.min(minCIValue, g.ciLower);
+                    maxCIValue = Math.max(maxCIValue, g.ciUpper);
+                });
+                
+                const ciRange = maxCIValue - minCIValue;
+                const axisPadding = ciRange * 0.15; // 15% padding on each side
+                const yMin = minCIValue - axisPadding;
+                const yMax = maxCIValue + axisPadding;
+
+                window.chartInstance = new Chart(ctx, {
+                    type: 'scatter',
+                    data: {
+                        datasets: [
+                            {
+                                label: 'Mean (95% CI)',
+                                data: groupStats.map((g, idx) => ({
+                                    x: idx,
+                                    y: g.mean
+                                })),
+                                pointRadius: 7,
+                                pointBackgroundColor: '#FFFFFF',
+                                pointBorderColor: '#000000',
+                                pointBorderWidth: 2,
+                                showLine: false,
+                                tension: 0
+                            },
+                            {
+                                label: 'Median',
+                                data: [], // Empty - drawn by plugin
+                                showLine: false,
+                                pointRadius: 5,
+                                pointStyle: 'rect',
+                                pointBackgroundColor: '#000000',
+                                pointBorderColor: '#000000'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            ciErrorBars: {},
+                            medianSquares: {},
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    font: { size: 12, family: 'Arial, sans-serif', weight: '500' },
+                                    color: '#000000',
+                                    usePointStyle: true,
+                                    padding: 20,
+                                    boxPadding: 8
+                                },
+                                align: 'center'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Mean with 95% Confidence Interval and Median',
+                                font: { size: 13, family: 'Arial, sans-serif', weight: 'bold' },
+                                color: '#000000',
+                                padding: { top: 10, bottom: 20 }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                                padding: 12,
+                                titleFont: { size: 12, family: 'Arial, sans-serif', weight: 'bold' },
+                                bodyFont: { size: 11, family: 'Arial, sans-serif' },
+                                borderColor: '#000000',
+                                borderWidth: 1,
+                                displayColors: false,
+                                callbacks: {
+                                    title: function(context) {
+                                        return `Group ${groupStats[context[0].dataIndex].name}`;
+                                    },
+                                    label: function(context) {
+                                        const idx = context.dataIndex;
+                                        const group = groupStats[idx];
+                                        if (context.dataset.label === 'Mean (95% CI)') {
+                                            return `Mean: ${group.mean.toFixed(2)}\n95% CI: [${group.ciLower.toFixed(2)}, ${group.ciUpper.toFixed(2)}]\nMedian: ${group.median.toFixed(2)}`;
+                                        }
+                                        return '';
+                                    },
+                                    afterLabel: function(context) {
+                                        const idx = context.dataIndex;
+                                        const group = groupStats[idx];
+                                        return `n = ${group.n}, SD = ${group.sd.toFixed(2)}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                min: -0.5,
+                                max: groupStats.length - 0.5,
+                                ticks: {
+                                    stepSize: 1,
+                                    callback: function(value) {
+                                        return groupStats[value] ? groupStats[value].name : '';
+                                    },
+                                    font: { size: 12, family: 'Arial, sans-serif', weight: '500' },
+                                    color: '#000000'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Group',
+                                    font: { size: 12, family: 'Arial, sans-serif', weight: 'bold' },
+                                    color: '#000000',
+                                    padding: { top: 12 }
+                                },
+                                grid: {
+                                    display: false,
+                                    drawBorder: true,
+                                    color: '#000000',
+                                    lineWidth: 1
+                                }
+                            },
+                            y: {
+                                min: yMin,
+                                max: yMax,
+                                ticks: {
+                                    font: { size: 11, family: 'Arial, sans-serif' },
+                                    color: '#000000'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Value',
+                                    font: { size: 12, family: 'Arial, sans-serif', weight: 'bold' },
+                                    color: '#000000',
+                                    padding: { bottom: 12 }
+                                },
+                                grid: {
+                                    display: true,
+                                    drawBorder: true,
+                                    color: '#E5E5E5',
+                                    lineWidth: 1,
+                                    drawTicks: true
+                                }
+                            }
+                        }
+                    },
+                    plugins: [ciErrorBarsPlugin, medianPlugin]
+                });
+            }
+        }
+
+        function exportVisualization(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            html2canvas(element, {
+                backgroundColor: '#ffffff',
+                scale: 2,
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = `${elementId}-${new Date().getTime()}.png`;
+                link.click();
+            });
+        }
+
+        function copyTableAsTSV(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+
+            const table = element.querySelector('table');
+            if (!table) return;
+
+            let tsv = '';
+            const rows = table.querySelectorAll('tr');
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('th, td');
+                const rowData = Array.from(cells).map(cell => cell.textContent.trim());
+                tsv += rowData.join('\t') + '\n';
+            });
+
+            navigator.clipboard.writeText(tsv).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        // ============= Utility Functions =============
+        function groupBy(data, key) {
+            const result = {};
+            data.forEach(item => {
+                const keyValue = typeof key === 'function' ? key(item) : item[key];
+                if (!result[keyValue]) result[keyValue] = [];
+                result[keyValue].push(item);
+            });
+            return result;
+        }
+
+        // ============= Initialization =============
+        window.addEventListener('load', () => {
+            document.getElementById('guide-modal').classList.add('active');
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e1a6442615da9a6',t:'MTc3NDQwNDc1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
