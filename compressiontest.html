@@ -1,0 +1,2115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compressive Stress–Strain Analyzer</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #dbe4f0;
+      --accent: #1d4ed8;
+      --accent-soft: rgba(29, 78, 216, 0.10);
+      --success: #0f766e;
+      --danger: #b91c1c;
+      --warning: #b45309;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+
+    .hero-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .hero-actions {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      flex: 0 0 auto;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: white;
+      cursor: pointer;
+      transition: 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      stroke: var(--muted);
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+      line-height: 1.15;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+      max-width: 980px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 18px 20px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fcfdff;
+    }
+
+    .panel-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+
+    .panel-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .panel-body {
+      padding: 18px 20px 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn, .btn, .ghost-btn {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.2s ease;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .btn {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      font-weight: 700;
+    }
+
+    .btn:hover, .tab-btn:hover, .ghost-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .ghost-btn {
+      color: var(--text);
+      background: #fff;
+    }
+
+    .input-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    textarea, input[type="number"], input[type="file"] {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      outline: none;
+      background: white;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+      font-family: Consolas, Monaco, monospace;
+      line-height: 1.45;
+    }
+
+    .inline-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .small-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .data-table-wrap {
+      max-height: 280px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      margin-top: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #edf2f7;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #f9fbff;
+      z-index: 1;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 14px 12px;
+      background: #fff;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .stat-unit {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 0 0 12px;
+      align-items: center;
+    }
+
+    .checkbox-row {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .checkbox-row label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .slider-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfdff;
+    }
+
+    .slider-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .slider-meta .hint {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .formula-box {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: #fbfdff;
+      margin-top: 16px;
+    }
+
+    .formula-box h3 {
+      margin: 0 0 10px;
+      font-size: 15px;
+    }
+
+    .formula-box p {
+      margin: 6px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    #chart {
+      width: 100%;
+      height: 680px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      min-height: 18px;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 18px;
+    }
+
+    .overlay-card {
+      width: min(520px, 100%);
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .overlay-title {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .overlay-text {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .progress-bar {
+      height: 10px;
+      background: #eef2f7;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.08s linear;
+    }
+
+    .success { color: var(--success); }
+    .danger { color: var(--danger); }
+    .warning { color: var(--warning); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text);
+      display: none;
+      z-index: 10000;
+      max-width: min(560px, calc(100vw - 28px));
+    }
+
+    .toast.show {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--muted);
+      flex: 0 0 auto;
+    }
+
+    .toast.success .toast-dot { background: var(--success); }
+    .toast.danger .toast-dot { background: var(--danger); }
+    .toast.warning .toast-dot { background: var(--warning); }
+
+    @media (max-width: 1100px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(150px, 1fr));
+      }
+      #chart { height: 560px; }
+    }
+
+    @media (max-width: 680px) {
+      .container { padding: 14px; }
+      .hero h1 { font-size: 26px; }
+      .stats-grid, .inline-grid { grid-template-columns: 1fr; }
+      #chart { height: 480px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <div class="hero-top">
+        <h1>Compressive Stress–Strain Analyzer</h1>
+        <div class="hero-actions">
+          <button class="icon-btn" id="notesBtn" type="button" aria-label="Scientific notes">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <path d="M14 2v6h6"></path>
+              <path d="M8 13h8"></path>
+              <path d="M8 17h8"></path>
+              <path d="M8 9h2"></path>
+            </svg>
+          </button>
+          <button class="icon-btn" id="detailsBtn" type="button" aria-label="Details">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 10v6"></path>
+              <path d="M12 7h.01"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <div>
+        <section class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Data Input</h2>
+            <p class="panel-subtitle">Use copy-paste input or upload a CSV/TSV file. The first column must be strain and the second column must be stress in MPa.</p>
+          </div>
+          <div class="panel-body">
+            <div class="tabs">
+              <button class="tab-btn active" data-tab="pasteTab">Paste Table</button>
+              <button class="tab-btn" data-tab="uploadTab">Upload CSV / TSV</button>
+            </div>
+
+            <div id="pasteTab" class="tab-content">
+              <div class="input-group">
+                <label for="pasteArea">Paste strain and stress data</label>
+                <textarea id="pasteArea" placeholder="Example:
+0.00	0.00
+0.05	0.01
+0.10	0.03
+0.15	0.06
+0.20	0.10"></textarea>
+              </div>
+              <div class="small-note">Accepted separators: tab, comma, semicolon, or spaces. Header row is optional.</div>
+            </div>
+
+            <div id="uploadTab" class="tab-content" style="display:none;">
+              <div class="input-group">
+                <label for="fileInput">Choose CSV or TSV file</label>
+                <input type="file" id="fileInput" accept=".csv,.tsv,.txt" />
+              </div>
+              <div class="small-note">The app will parse the first two columns as strain and stress (MPa).</div>
+            </div>
+
+            <div class="toolbar">
+              <button class="btn" id="analyzeBtn">Analyze Data</button>
+              <button class="ghost-btn" id="loadSampleBtn">Load Sample Data</button>
+              <button class="ghost-btn" id="clearBtn">Clear</button>
+            </div>
+
+            <div id="status" class="status"></div>
+
+            <div class="data-table-wrap">
+              <table id="previewTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Strain</th>
+                    <th>Stress (MPa)</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <div>
+        <section class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Analysis Results</h2>
+            <p class="panel-subtitle">Automatic detection of the elastic region, elastic modulus, and ultimate compressive strength.</p>
+          </div>
+          <div class="panel-body">
+            <div class="control-row">
+              <div class="toolbar" style="margin-top:0; margin-left:auto;">
+                <button class="ghost-btn" id="downloadPngBtn">Download Graph as PNG</button>
+              </div>
+            </div>
+
+            <div id="chart"></div>
+
+            <div class="formula-box" style="margin-top:16px;">
+              <h3>Region editor</h3>
+              <p class="small-note" style="margin:0 0 12px;">Select a region and adjust its start/end points. Elastic region controls the modulus fit.</p>
+
+              <div class="input-group" style="margin-bottom:12px;">
+                <label for="regionSelect">Region to edit</label>
+                <select id="regionSelect" style="width:100%; border:1px solid var(--line); border-radius:12px; padding:12px; font-size:14px; background:white;">
+                  <option value="seating">Seating Region</option>
+                  <option value="elastic" selected>Elastic Region</option>
+                  <option value="hardening">Hardening Region</option>
+                  <option value="softening">Softening Region</option>
+                  <option value="densification">Densification Region</option>
+                </select>
+              </div>
+
+              <div class="slider-row">
+                <div class="slider-meta">
+                  <div style="font-size:13px; font-weight:700;">Region start</div>
+                  <div class="hint" id="regionStartLabel">—</div>
+                </div>
+                <input type="range" id="regionStart" min="0" max="0" step="1" value="0" disabled />
+              </div>
+
+              <div class="slider-row">
+                <div class="slider-meta">
+                  <div style="font-size:13px; font-weight:700;">Region end</div>
+                  <div class="hint" id="regionEndLabel">—</div>
+                </div>
+                <input type="range" id="regionEnd" min="0" max="0" step="1" value="0" disabled />
+              </div>
+
+              <div class="slider-row" style="margin-top:12px;">
+                <div class="slider-meta" style="margin-bottom:8px;">
+                  <div style="font-size:13px; font-weight:700;">Show on graph</div>
+                  <div class="hint">Toggle regions, elastic fit, and UCS.</div>
+                </div>
+                <div class="checkbox-row" style="margin-bottom:0;">
+                  <label><input type="checkbox" id="showSeating" checked /> Seating</label>
+                  <label><input type="checkbox" id="showElastic" checked /> Elastic</label>
+                  <label><input type="checkbox" id="showHardening" checked /> Hardening</label>
+                  <label><input type="checkbox" id="showSoftening" checked /> Softening</label>
+                  <label><input type="checkbox" id="showDensification" checked /> Densification</label>
+                  <label><input type="checkbox" id="showElasticFit" checked /> Elastic fit</label>
+                  <label><input type="checkbox" id="showUcs" checked /> UCS</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="formula-box">
+              <h3>Fitted line</h3>
+              <p id="fitEquation">Equation: —</p>
+              <p id="fitQuality">Fit quality: —</p>
+              <p id="dataSummary">Data summary: —</p>
+              <div class="toolbar" style="margin-top:12px;">
+                <button class="ghost-btn" id="optimizeElasticBtn">Optimize Elastic Region</button>
+              </div>
+            </div>
+
+            <div class="formula-box">
+              <h3>Summary of Results</h3>
+              <div class="data-table-wrap" style="max-height:none; margin-top:10px;">
+                <table id="summaryTable">
+                  <thead>
+                    <tr>
+                      <th>Result</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Seating Region</td><td id="sumSeating">—</td></tr>
+                    <tr><td>Elastic Region</td><td id="sumElastic">—</td></tr>
+                    <tr><td>Yield Strain</td><td id="sumYieldStrain">—</td></tr>
+                    <tr><td>Yield Stress</td><td id="sumYieldStress">—</td></tr>
+                    <tr><td>Hardening Region</td><td id="sumHardening">—</td></tr>
+                    <tr><td>Softening Region</td><td id="sumSoftening">—</td></tr>
+                    <tr><td>Densification Region</td><td id="sumDensification">—</td></tr>
+                    <tr><td>Ultimate Compressive Strength (UCS)</td><td id="sumUcs">—</td></tr>
+                    <tr><td>Strain at UCS</td><td id="sumStrainAtUcs">—</td></tr>
+                    <tr><td>Elastic Modulus</td><td id="sumElasticModulus">—</td></tr>
+                    <tr><td>R² (Elastic Fit)</td><td id="sumElasticR2">—</td></tr>
+                    <tr><td>Energy to Densification</td><td id="sumEnergyToDensification">—</td></tr>
+                    <tr><td>Energy to UCS</td><td id="sumEnergyToUcs">—</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="toolbar" style="margin-top:12px;">
+                <button class="ghost-btn" id="copyCsvBtn" type="button">Copy Results as CSV</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="optOverlay" role="dialog" aria-modal="true" aria-label="Optimizing elastic region">
+    <div class="overlay-card">
+      <h3 class="overlay-title">Optimizing elastic region…</h3>
+      <p class="overlay-text" id="optOverlayText">Searching for the elastic window with maximum R² near your current selection.</p>
+      <div class="progress-bar" aria-hidden="true">
+        <div class="progress-fill" id="optProgress"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="detailsOverlay" role="dialog" aria-modal="true" aria-label="App details">
+    <div class="overlay-card">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+        <h3 class="overlay-title" style="margin:0;">Details</h3>
+        <button class="icon-btn" id="detailsCloseBtn" type="button" aria-label="Close details">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <p class="overlay-text" style="margin-top:10px;">
+        Analyze compressive test data by entering or uploading strain–stress values. The app automatically detects the
+        ultimate compressive strength (UCS), estimates the elastic region, computes the elastic modulus from the best-fit
+        linear segment, and generates a clean publication-style interactive graph.
+      </p>
+    </div>
+  </div>
+
+  <div class="overlay" id="notesOverlay" role="dialog" aria-modal="true" aria-label="Scientific notes">
+    <div class="overlay-card">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+        <h3 class="overlay-title" style="margin:0;">Scientific Notes</h3>
+        <button class="icon-btn" id="notesCloseBtn" type="button" aria-label="Close scientific notes">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6L6 18"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="formula-box" style="margin-top:14px;">
+        <h3>Essential relationships</h3>
+        <p><strong>Stress:</strong> σ = F / A</p>
+        <p><strong>Strain:</strong> ε = ΔL / L₀</p>
+        <p><strong>Elastic modulus:</strong> E = Δσ / Δε in the initial linear region</p>
+        <p><strong>Ultimate compressive strength (UCS):</strong> maximum stress reached on the curve</p>
+        <p><strong>Yield (approx.):</strong> the elastic → plastic transition; reported here as <strong>Yield Strain</strong> and <strong>Yield Stress</strong> at the end of the Elastic Region.</p>
+        <p><strong>Energy absorbed:</strong> area under the stress–strain curve, ∫σ dε (shown as MPa·strain). This represents energy per unit volume absorbed up to a chosen strain.</p>
+      </div>
+
+      <div class="formula-box">
+        <h3>Key graph features</h3>
+        <p><strong>Seating region:</strong> very low stress with slight fluctuations; machine/sample settling and surface contact (not true material behavior).</p>
+        <p><strong>Elastic region:</strong> nearly linear increase; deformation is reversible and the elastic modulus is obtained from the best-fit line here.</p>
+        <p><strong>Hardening region:</strong> stress continues to increase after yielding as the material strengthens/compacts or work-hardens; slope is typically lower than the elastic region but increases compared with the immediate post-yield segment.</p>
+        <p><strong>Softening region:</strong> stress increases slowly or plateaus; internal structure collapses and energy absorption dominates (common in foams/polymers).</p>
+        <p><strong>Densification region:</strong> sharp rise in stress; material becomes fully compacted and resistance increases rapidly.</p>
+        <p><strong>UCS point:</strong> the highest stress on the curve (maximum load the material withstands).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+    <div class="toast-dot" aria-hidden="true"></div>
+    <div id="toastText">—</div>
+  </div>
+
+  <script>
+    const sampleData = [
+      [0.00, 0.00],[0.02, 0.005],[0.04, 0.011],[0.06, 0.020],[0.08, 0.031],[0.10, 0.045],
+      [0.12, 0.060],[0.14, 0.078],[0.16, 0.098],[0.18, 0.120],[0.20, 0.145],[0.22, 0.173],
+      [0.24, 0.205],[0.26, 0.240],[0.28, 0.279],[0.30, 0.321],[0.32, 0.366],[0.34, 0.413],
+      [0.36, 0.462],[0.38, 0.513],[0.40, 0.566],[0.42, 0.620],[0.44, 0.674],[0.46, 0.726],
+      [0.48, 0.775],[0.50, 0.818],[0.52, 0.852],[0.54, 0.878],[0.56, 0.897],[0.58, 0.912],
+      [0.60, 0.924],[0.62, 0.934],[0.64, 0.942],[0.66, 0.949],[0.68, 0.954],[0.70, 0.960],
+      [0.72, 0.968],[0.74, 0.980],[0.76, 1.000],[0.78, 1.025],[0.80, 1.055],[0.82, 1.100],
+      [0.84, 1.170],[0.86, 1.250],[0.88, 1.360],[0.90, 1.500],[0.92, 1.660],[0.93, 1.740]
+    ];
+
+    let rawData = [];
+    let analysis = null;
+
+    const STORAGE_KEY = 'inanolab.compressiontest.v1';
+
+    function safeJsonParse(text) {
+      try { return JSON.parse(text); } catch { return null; }
+    }
+
+    function serializeAppState() {
+      if (!analysis?.data?.length) return null;
+      const vis = getVisibility();
+      const pickRegion = (r) => {
+        if (!r) return null;
+        return {
+          // Prefer strain-bounds for stability across reloads.
+          xStart: isFinite(r.xStart) ? r.xStart : undefined,
+          xEnd: isFinite(r.xEnd) ? r.xEnd : undefined,
+          // Keep indices as a fallback.
+          startIndex: Number.isInteger(r.startIndex) ? r.startIndex : undefined,
+          endIndex: Number.isInteger(r.endIndex) ? r.endIndex : undefined,
+          manual: !!r.manual
+        };
+      };
+
+      return {
+        savedAt: Date.now(),
+        data: analysis.data,
+        elastic: pickRegion(analysis.elastic),
+        regions: {
+          seating: pickRegion(analysis.regions?.seating),
+          hardening: pickRegion(analysis.regions?.hardening),
+          softening: pickRegion(analysis.regions?.softening),
+          densification: pickRegion(analysis.regions?.densification)
+        },
+        selectedRegionKey: elements.regionSelect?.value || 'elastic',
+        visibility: vis
+      };
+    }
+
+    function saveAppState() {
+      const state = serializeAppState();
+      if (!state) return;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        // Ignore storage failures (quota / privacy mode).
+      }
+    }
+
+    function clearSavedAppState() {
+      try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    }
+
+    function restoreAppState() {
+      const raw = (() => {
+        try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
+      })();
+      if (!raw) return false;
+      const state = safeJsonParse(raw);
+      if (!state?.data?.length) return false;
+
+      // Restore dataset and recompute analysis core (UCS, slopes, etc.).
+      try {
+        analysis = analyzeData(state.data);
+      } catch {
+        return false;
+      }
+
+      // Restore strain-based region bounds (and indices as fallback).
+      const applyRegion = (target, saved) => {
+        if (!target || !saved) return;
+        if (saved.xStart != null && saved.xEnd != null) {
+          target.xStart = saved.xStart;
+          target.xEnd = saved.xEnd;
+          const idx = indicesFromStrainRegion(analysis.data, target);
+          if (idx) {
+            target.startIndex = idx.startIndex;
+            target.endIndex = idx.endIndex;
+          }
+        } else if (Number.isInteger(saved.startIndex) && Number.isInteger(saved.endIndex)) {
+          target.startIndex = saved.startIndex;
+          target.endIndex = saved.endIndex;
+          const sb = regionFromIndicesAsStrain(analysis.data, target.startIndex, target.endIndex);
+          if (sb) {
+            target.xStart = sb.xStart;
+            target.xEnd = sb.xEnd;
+          }
+        }
+        target.manual = !!saved.manual;
+      };
+
+      // Elastic region affects regression; restore it first.
+      if (state.elastic) {
+        const idx = state.elastic.xStart != null && state.elastic.xEnd != null
+          ? indicesFromStrainRegion(analysis.data, state.elastic)
+          : safeRegion(state.elastic.startIndex, state.elastic.endIndex, analysis.data.length);
+        if (idx) {
+          const restored = computeElasticFromIndices(analysis.data, idx.startIndex, idx.endIndex);
+          const sb = regionFromIndicesAsStrain(analysis.data, restored.startIndex, restored.endIndex);
+          if (sb) {
+            restored.xStart = sb.xStart;
+            restored.xEnd = sb.xEnd;
+          }
+          analysis.elastic = restored;
+          analysis.fitPoints = analysis.data.slice(restored.startIndex, restored.endIndex + 1);
+        }
+      }
+
+      ensureRegionsInitialized();
+      applyRegion(analysis.regions.seating, state.regions?.seating);
+      applyRegion(analysis.regions.hardening, state.regions?.hardening);
+      applyRegion(analysis.regions.softening, state.regions?.softening);
+      applyRegion(analysis.regions.densification, state.regions?.densification);
+
+      // Restore visibility toggles.
+      if (state.visibility) {
+        if (elements.showSeating) elements.showSeating.checked = !!state.visibility.seating;
+        if (elements.showElastic) elements.showElastic.checked = !!state.visibility.elastic;
+        if (elements.showHardening) elements.showHardening.checked = !!state.visibility.hardening;
+        if (elements.showSoftening) elements.showSoftening.checked = !!state.visibility.softening;
+        if (elements.showDensification) elements.showDensification.checked = !!state.visibility.densification;
+        if (elements.showElasticFit) elements.showElasticFit.checked = !!state.visibility.elasticFit;
+        if (elements.showUcs) elements.showUcs.checked = !!state.visibility.ucs;
+      }
+
+      // Restore selection.
+      if (state.selectedRegionKey && elements.regionSelect) {
+        elements.regionSelect.value = state.selectedRegionKey;
+      }
+
+      // Update UI
+      updatePreviewTable(analysis.data);
+      syncRegionEditorFromSelection();
+      updateStats(analysis);
+      renderChart();
+      setStatus('Restored previous session from this browser.', 'success');
+      return true;
+    }
+
+    const elements = {
+      pasteArea: document.getElementById('pasteArea'),
+      fileInput: document.getElementById('fileInput'),
+      status: document.getElementById('status'),
+      tableBody: document.querySelector('#previewTable tbody'),
+      fitEquation: document.getElementById('fitEquation'),
+      fitQuality: document.getElementById('fitQuality'),
+      dataSummary: document.getElementById('dataSummary'),
+      regionSelect: document.getElementById('regionSelect'),
+      regionStart: document.getElementById('regionStart'),
+      regionEnd: document.getElementById('regionEnd'),
+      regionStartLabel: document.getElementById('regionStartLabel'),
+      regionEndLabel: document.getElementById('regionEndLabel'),
+      optimizeElasticBtn: document.getElementById('optimizeElasticBtn'),
+      optOverlay: document.getElementById('optOverlay'),
+      optOverlayText: document.getElementById('optOverlayText'),
+      optProgress: document.getElementById('optProgress'),
+      sumSeating: document.getElementById('sumSeating'),
+      sumElastic: document.getElementById('sumElastic'),
+      sumYieldStrain: document.getElementById('sumYieldStrain'),
+      sumYieldStress: document.getElementById('sumYieldStress'),
+      sumHardening: document.getElementById('sumHardening'),
+      sumSoftening: document.getElementById('sumSoftening'),
+      sumDensification: document.getElementById('sumDensification'),
+      sumUcs: document.getElementById('sumUcs'),
+      sumStrainAtUcs: document.getElementById('sumStrainAtUcs'),
+      sumElasticModulus: document.getElementById('sumElasticModulus'),
+      sumElasticR2: document.getElementById('sumElasticR2'),
+      sumEnergyToDensification: document.getElementById('sumEnergyToDensification'),
+      sumEnergyToUcs: document.getElementById('sumEnergyToUcs'),
+      showSeating: document.getElementById('showSeating'),
+      showElastic: document.getElementById('showElastic'),
+      showHardening: document.getElementById('showHardening'),
+      showSoftening: document.getElementById('showSoftening'),
+      showDensification: document.getElementById('showDensification'),
+      showElasticFit: document.getElementById('showElasticFit'),
+      showUcs: document.getElementById('showUcs'),
+      notesBtn: document.getElementById('notesBtn'),
+      notesOverlay: document.getElementById('notesOverlay'),
+      notesCloseBtn: document.getElementById('notesCloseBtn'),
+      detailsBtn: document.getElementById('detailsBtn'),
+      detailsOverlay: document.getElementById('detailsOverlay'),
+      detailsCloseBtn: document.getElementById('detailsCloseBtn'),
+      copyCsvBtn: document.getElementById('copyCsvBtn'),
+      toast: document.getElementById('toast'),
+      toastText: document.getElementById('toastText')
+    };
+
+    let toastTimer = null;
+    function showToast(message, type = '') {
+      if (!elements.toast || !elements.toastText) return;
+      elements.toastText.textContent = message;
+      elements.toast.className = `toast show ${type}`.trim();
+      if (toastTimer) window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => {
+        elements.toast.className = 'toast';
+      }, 2200);
+    }
+
+    function getVisibility() {
+      return {
+        seating: !!elements.showSeating?.checked,
+        elastic: !!elements.showElastic?.checked,
+        hardening: !!elements.showHardening?.checked,
+        softening: !!elements.showSoftening?.checked,
+        densification: !!elements.showDensification?.checked,
+        elasticFit: !!elements.showElasticFit?.checked,
+        ucs: !!elements.showUcs?.checked
+      };
+    }
+
+    function setOverlay(visible, text = '', progress01 = null) {
+      elements.optOverlay.style.display = visible ? 'flex' : 'none';
+      if (text) elements.optOverlayText.textContent = text;
+      if (progress01 === null) {
+        elements.optProgress.style.width = visible ? '25%' : '0%';
+      } else {
+        const pct = Math.max(0, Math.min(1, progress01)) * 100;
+        elements.optProgress.style.width = `${pct.toFixed(1)}%`;
+      }
+    }
+
+    function nextFrame() {
+      return new Promise(resolve => requestAnimationFrame(() => resolve()));
+    }
+
+    function clampInt(value, min, max) {
+      const n = parseInt(value, 10);
+      if (!isFinite(n)) return min;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function clampNumber(value, min, max) {
+      const n = Number(value);
+      if (!isFinite(n)) return min;
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function setStatus(message, type = '') {
+      elements.status.className = 'status ' + type;
+      elements.status.textContent = message;
+    }
+
+    function formatNum(value, decimals = 4) {
+      if (!isFinite(value)) return '—';
+      return Number(value).toFixed(decimals);
+    }
+
+    function parseTextData(text) {
+      const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      const out = [];
+
+      for (const line of lines) {
+        const cleaned = line.replace(/;/g, ',').replace(/\s+/g, ' ').trim();
+        let parts;
+        if (line.includes('\t')) {
+          parts = line.split('\t').map(v => v.trim()).filter(Boolean);
+        } else if (cleaned.includes(',')) {
+          parts = cleaned.split(',').map(v => v.trim()).filter(Boolean);
+        } else {
+          parts = cleaned.split(' ').map(v => v.trim()).filter(Boolean);
+        }
+
+        if (parts.length < 2) continue;
+
+        const a = parseFloat(parts[0]);
+        const b = parseFloat(parts[1]);
+        if (isFinite(a) && isFinite(b)) {
+          out.push([a, b]);
+        }
+      }
+
+      return out;
+    }
+
+    function deduplicateAndSort(data) {
+      const filtered = data
+        .filter(([strain, stress]) => isFinite(strain) && isFinite(stress) && strain >= 0)
+        .sort((a, b) => a[0] - b[0]);
+
+      const result = [];
+      const seen = new Set();
+      for (const row of filtered) {
+        const key = row[0].toFixed(10) + '|' + row[1].toFixed(10);
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(row);
+        }
+      }
+      return result;
+    }
+
+    function updatePreviewTable(data) {
+      elements.tableBody.innerHTML = '';
+      const rows = data.slice(0, 300);
+      rows.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i + 1}</td><td>${formatNum(row[0], 5)}</td><td>${formatNum(row[1], 5)}</td>`;
+        elements.tableBody.appendChild(tr);
+      });
+    }
+
+    function linearRegression(points) {
+      const n = points.length;
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      for (const [x, y] of points) {
+        sumX += x;
+        sumY += y;
+        sumXY += x * y;
+        sumX2 += x * x;
+      }
+      const denominator = (n * sumX2 - sumX * sumX);
+      const slope = denominator === 0 ? 0 : (n * sumXY - sumX * sumY) / denominator;
+      const intercept = (sumY - slope * sumX) / n;
+      const meanY = sumY / n;
+
+      let ssTot = 0;
+      let ssRes = 0;
+      for (const [x, y] of points) {
+        const yHat = slope * x + intercept;
+        ssTot += Math.pow(y - meanY, 2);
+        ssRes += Math.pow(y - yHat, 2);
+      }
+      const r2 = ssTot === 0 ? 1 : 1 - ssRes / ssTot;
+      return { slope, intercept, r2 };
+    }
+
+    function safeRegion(startIndex, endIndex, n) {
+      if (!isFinite(n) || n <= 1) return null;
+      const s = clampInt(startIndex, 0, n - 2);
+      const e = clampInt(endIndex, s + 1, n - 1);
+      return { startIndex: s, endIndex: e };
+    }
+
+    // --- Strain-based regions (Solution 3) ---
+    // Regions are represented by strain values (xStart/xEnd) and converted to indices as needed.
+    function getStrainAtIndex(data, idx) {
+      return data?.[idx]?.[0];
+    }
+
+    function findNearestIndexByStrain(data, strain) {
+      if (!data?.length) return 0;
+      const x = Number(strain);
+      if (!isFinite(x)) return 0;
+      // Assumes data sorted by strain.
+      let lo = 0;
+      let hi = data.length - 1;
+      if (x <= data[0][0]) return 0;
+      if (x >= data[hi][0]) return hi;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        const xm = data[mid][0];
+        if (xm === x) return mid;
+        if (xm < x) lo = mid + 1;
+        else hi = mid - 1;
+      }
+      // hi is index of last < x, lo is first > x
+      const i0 = Math.max(0, Math.min(data.length - 1, hi));
+      const i1 = Math.max(0, Math.min(data.length - 1, lo));
+      const d0 = Math.abs(data[i0][0] - x);
+      const d1 = Math.abs(data[i1][0] - x);
+      return d1 < d0 ? i1 : i0;
+    }
+
+    function findCeilIndexByStrain(data, strain) {
+      if (!data?.length) return 0;
+      const x = Number(strain);
+      if (!isFinite(x)) return 0;
+      let lo = 0;
+      let hi = data.length - 1;
+      if (x <= data[0][0]) return 0;
+      if (x >= data[hi][0]) return hi;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (data[mid][0] < x) lo = mid + 1;
+        else hi = mid;
+      }
+      return lo;
+    }
+
+    function findFloorIndexByStrain(data, strain) {
+      if (!data?.length) return 0;
+      const x = Number(strain);
+      if (!isFinite(x)) return 0;
+      let lo = 0;
+      let hi = data.length - 1;
+      if (x <= data[0][0]) return 0;
+      if (x >= data[hi][0]) return hi;
+      while (lo < hi) {
+        const mid = ((lo + hi + 1) >> 1);
+        if (data[mid][0] > x) hi = mid - 1;
+        else lo = mid;
+      }
+      return lo;
+    }
+
+    function regionFromIndicesAsStrain(data, startIndex, endIndex) {
+      if (!data?.length) return null;
+      const s = clampInt(startIndex, 0, data.length - 2);
+      const e = clampInt(endIndex, s + 1, data.length - 1);
+      const xStart = getStrainAtIndex(data, s);
+      const xEnd = getStrainAtIndex(data, e);
+      if (!(isFinite(xStart) && isFinite(xEnd))) return null;
+      return { xStart, xEnd };
+    }
+
+    function indicesFromStrainRegion(data, region) {
+      if (!data?.length || !region) return null;
+      const x0 = Number(region.xStart);
+      const x1 = Number(region.xEnd);
+      if (!(isFinite(x0) && isFinite(x1))) return null;
+      const minX = data[0][0];
+      const maxX = data[data.length - 1][0];
+      const xs = clampNumber(Math.min(x0, x1), minX, maxX);
+      const xe = clampNumber(Math.max(x0, x1), minX, maxX);
+
+      // Inclusive index window: start = ceil(xs), end = floor(xe)
+      let startIndex = findCeilIndexByStrain(data, xs);
+      let endIndex = findFloorIndexByStrain(data, xe);
+      if (endIndex <= startIndex) {
+        // Ensure at least 2 points.
+        endIndex = Math.min(data.length - 1, startIndex + 1);
+      }
+
+      return { startIndex, endIndex };
+    }
+
+    function detectOtherRegionsFromElastic(data, elastic) {
+      const n = data.length;
+      if (!elastic || n < 6) return null;
+
+      const ucsIndex = data.reduce((bestIdx, row, idx) => row[1] > data[bestIdx][1] ? idx : bestIdx, 0);
+      const elasticStart = clampInt(elastic.startIndex, 0, n - 2);
+      const elasticEnd = clampInt(elastic.endIndex, elasticStart + 1, n - 1);
+
+      // Seating region: before elastic start (if any meaningful window exists)
+      const seating = elasticStart >= 2 ? safeRegion(0, elasticStart - 1, n) : null;
+
+      // Compute local slopes dy/dx for region heuristics
+      const slopes = [];
+      for (let i = 0; i < n - 1; i++) {
+        const dx = data[i + 1][0] - data[i][0];
+        const dy = data[i + 1][1] - data[i][1];
+        slopes.push(dx === 0 ? 0 : dy / dx);
+      }
+
+      const elasticSlope = Math.max(0, elastic.slope || 0);
+
+      // Densification region: where slope spikes high near the end
+      const afterElastic = Math.min(n - 2, elasticEnd);
+      const scanStart = Math.max(afterElastic, Math.floor(0.2 * n));
+      const scanEnd = Math.max(scanStart + 1, Math.min(n - 2, ucsIndex - 1));
+      const slopeWindow = slopes.slice(scanStart, scanEnd + 1).filter(v => isFinite(v));
+      slopeWindow.sort((a, b) => a - b);
+      const median = slopeWindow.length ? slopeWindow[Math.floor(slopeWindow.length / 2)] : 0;
+      const densThreshold = Math.max(median * 2.5, elasticSlope * 1.2);
+      let densStart = -1;
+      for (let i = scanStart; i <= scanEnd; i++) {
+        if (slopes[i] >= densThreshold) {
+          densStart = i;
+          break;
+        }
+      }
+      const densification = densStart >= 0 ? safeRegion(densStart, Math.min(ucsIndex, n - 1), n) : null;
+
+      // Hardening + Softening: split the plateau-like region between transition end and densification start (or UCS)
+      const plateauStart = afterElastic;
+      const plateauEnd = densification ? densification.startIndex - 1 : Math.min(ucsIndex, n - 1);
+
+      let hardening = null;
+      let softening = null;
+      if ((plateauEnd - plateauStart) >= 4) {
+        const mid = plateauStart + Math.floor((plateauEnd - plateauStart) / 2);
+        hardening = safeRegion(plateauStart, Math.max(plateauStart + 1, mid), n);
+        softening = safeRegion(Math.min(mid + 1, plateauEnd - 1), plateauEnd, n);
+      } else if ((plateauEnd - plateauStart) >= 2) {
+        // If too short to split, treat it as softening by default.
+        softening = safeRegion(plateauStart, plateauEnd, n);
+      }
+
+      return { seating, hardening, softening, densification };
+    }
+
+    function computeElasticFromIndices(data, startIndex, endIndex) {
+      if (!data?.length) return null;
+      const safeStart = clampInt(startIndex, 0, data.length - 2);
+      const safeEnd = clampInt(endIndex, safeStart + 1, data.length - 1);
+      const segment = data.slice(safeStart, safeEnd + 1);
+      const fit = linearRegression(segment);
+      return { startIndex: safeStart, endIndex: safeEnd, ...fit, manual: true };
+    }
+
+    function getRegionKeyOrder() {
+      return ['seating', 'elastic', 'hardening', 'softening', 'densification'];
+    }
+
+    function getRegionBounds(key) {
+      if (!analysis?.data?.length) return null;
+      if (key === 'elastic') {
+        // Prefer strain-based bounds when present.
+        if (analysis.elastic?.xStart != null && analysis.elastic?.xEnd != null) {
+          const idx = indicesFromStrainRegion(analysis.data, analysis.elastic);
+          if (!idx) return null;
+          return { ...analysis.elastic, ...idx };
+        }
+        return analysis.elastic;
+      }
+
+      const r = analysis.regions?.[key] || null;
+      if (!r) return null;
+      if (r.xStart != null && r.xEnd != null) {
+        const idx = indicesFromStrainRegion(analysis.data, r);
+        if (!idx) return null;
+        return { ...r, ...idx };
+      }
+      return r;
+    }
+
+    function ensureRegionsInitialized() {
+      if (!analysis) return;
+      if (!analysis.regions) analysis.regions = detectOtherRegionsFromElastic(analysis.data, analysis.elastic) || {};
+    }
+
+    function updateRegionSliderLabels() {
+      if (!analysis?.data?.length) {
+        elements.regionStartLabel.textContent = '—';
+        elements.regionEndLabel.textContent = '—';
+        return;
+      }
+      const startIdx = clampInt(elements.regionStart.value, 0, analysis.data.length - 1);
+      const endIdx = clampInt(elements.regionEnd.value, 0, analysis.data.length - 1);
+      const start = analysis.data[startIdx];
+      const end = analysis.data[endIdx];
+      elements.regionStartLabel.textContent = `#${startIdx + 1} (ε=${formatNum(start[0], 5)}, σ=${formatNum(start[1], 5)} MPa)`;
+      elements.regionEndLabel.textContent = `#${endIdx + 1} (ε=${formatNum(end[0], 5)}, σ=${formatNum(end[1], 5)} MPa)`;
+    }
+
+    function setRegionEditorEnabled(enabled) {
+      elements.regionSelect.disabled = !enabled;
+      elements.regionStart.disabled = !enabled;
+      elements.regionEnd.disabled = !enabled;
+    }
+
+    function syncRegionEditorFromSelection() {
+      if (!analysis?.data?.length) {
+        elements.regionStart.min = '0';
+        elements.regionEnd.min = '0';
+        elements.regionStart.max = '0';
+        elements.regionEnd.max = '0';
+        elements.regionStart.value = '0';
+        elements.regionEnd.value = '0';
+        setRegionEditorEnabled(false);
+        updateRegionSliderLabels();
+        return;
+      }
+
+      ensureRegionsInitialized();
+
+      const maxIdx = analysis.data.length - 1;
+      elements.regionStart.min = '0';
+      elements.regionEnd.min = '0';
+      elements.regionStart.max = String(maxIdx);
+      elements.regionEnd.max = String(maxIdx);
+      setRegionEditorEnabled(true);
+
+      const key = elements.regionSelect.value;
+      const bounds = getRegionBounds(key);
+      const fallback = analysis.elastic;
+      const startIndex = bounds?.startIndex ?? fallback?.startIndex ?? 0;
+      const endIndex = bounds?.endIndex ?? fallback?.endIndex ?? Math.min(1, maxIdx);
+      elements.regionStart.value = String(startIndex);
+      elements.regionEnd.value = String(endIndex);
+      updateRegionSliderLabels();
+    }
+
+    function clampRegionToNeighbors(key, startIdx, endIdx) {
+      const n = analysis.data.length;
+      const order = getRegionKeyOrder();
+      const idx = order.indexOf(key);
+      if (idx === -1) return { startIdx, endIdx };
+
+      const prevKey = idx > 0 ? order[idx - 1] : null;
+      const nextKey = idx < order.length - 1 ? order[idx + 1] : null;
+
+      const prev = prevKey ? getRegionBounds(prevKey) : null;
+      const next = nextKey ? getRegionBounds(nextKey) : null;
+
+      const minStart = prev ? prev.endIndex + 1 : 0;
+      const maxEnd = next ? next.startIndex - 1 : n - 1;
+
+      let s = clampInt(startIdx, minStart, Math.max(minStart, maxEnd - 1));
+      let e = clampInt(endIdx, s + 1, maxEnd);
+      if (e <= s) e = Math.min(maxEnd, s + 1);
+      return { startIdx: s, endIdx: e };
+    }
+
+    function applyRegionEditFromSliders() {
+      if (!analysis?.data?.length) return;
+      ensureRegionsInitialized();
+
+      const key = elements.regionSelect.value;
+      const maxIdx = analysis.data.length - 1;
+      let startIdx = clampInt(elements.regionStart.value, 0, Math.max(0, maxIdx - 1));
+      let endIdx = clampInt(elements.regionEnd.value, 1, maxIdx);
+      if (endIdx <= startIdx) {
+        endIdx = Math.min(maxIdx, startIdx + 1);
+        elements.regionEnd.value = String(endIdx);
+      }
+
+      const clamped = clampRegionToNeighbors(key, startIdx, endIdx);
+      startIdx = clamped.startIdx;
+      endIdx = clamped.endIdx;
+      elements.regionStart.value = String(startIdx);
+      elements.regionEnd.value = String(endIdx);
+
+      if (key === 'elastic') {
+        const newElastic = computeElasticFromIndices(analysis.data, startIdx, endIdx);
+        const strainBounds = regionFromIndicesAsStrain(analysis.data, startIdx, endIdx);
+        if (strainBounds) {
+          newElastic.xStart = strainBounds.xStart;
+          newElastic.xEnd = strainBounds.xEnd;
+        }
+        analysis.elastic = newElastic;
+        analysis.fitPoints = analysis.data.slice(newElastic.startIndex, newElastic.endIndex + 1);
+      } else {
+        const idxRegion = safeRegion(startIdx, endIdx, analysis.data.length);
+        const strainBounds = regionFromIndicesAsStrain(analysis.data, startIdx, endIdx);
+        analysis.regions[key] = {
+          ...(idxRegion || {}),
+          ...(strainBounds || {})
+        };
+      }
+
+      // Keep automatic regions stable unless they haven't been manually set yet.
+      // If elastic changes, re-run auto detection for non-manual regions but do not overwrite user-edited ones.
+      if (key === 'elastic') {
+        const auto = detectOtherRegionsFromElastic(analysis.data, analysis.elastic) || {};
+        for (const k of Object.keys(auto)) {
+          if (!analysis.regions[k] || !analysis.regions[k].manual) {
+            analysis.regions[k] = auto[k];
+          }
+        }
+      }
+
+      // Mark manual edits
+      if (key !== 'elastic' && analysis.regions[key]) {
+        analysis.regions[key].manual = true;
+      }
+
+      updateRegionSliderLabels();
+      updateStats(analysis);
+      renderChart();
+    }
+
+    function optimizeElasticRegionAroundCurrent() {
+      if (!analysis?.data?.length) return;
+
+      // Force editor to Elastic so the user sees the effect.
+      elements.regionSelect.value = 'elastic';
+      syncRegionEditorFromSelection();
+
+      const n = analysis.data.length;
+      const curStart = clampInt(elements.regionStart.value, 0, n - 2);
+      const curEnd = clampInt(elements.regionEnd.value, curStart + 1, n - 1);
+
+      // Search window sizes (in indices). Keep modest for performance.
+      const wiggle = Math.max(2, Math.floor(0.04 * n));
+      const minLen = Math.max(3, Math.floor(0.03 * n));
+      const maxLen = Math.max(minLen + 1, Math.floor(0.25 * n));
+
+      const startMin = Math.max(0, curStart - wiggle);
+      const startMax = Math.min(n - 2, curStart + wiggle);
+      const endMin = Math.max(curStart + 1, curEnd - wiggle);
+      const endMax = Math.min(n - 1, curEnd + wiggle);
+
+      // Candidate count estimate for progress.
+      const total = (startMax - startMin + 1) * (endMax - endMin + 1);
+      let checked = 0;
+
+      let best = { startIndex: curStart, endIndex: curEnd, r2: -Infinity, slope: 0, intercept: 0 };
+      const earlyStopR2 = 0.99995;
+
+      const run = async () => {
+        setOverlay(true, 'Searching for the elastic window with maximum R²…', 0);
+        await nextFrame();
+
+        for (let s = startMin; s <= startMax; s++) {
+          // enforce non-overlap with seating (if it exists) by clamping using existing helper
+          for (let e = endMin; e <= endMax; e++) {
+            checked++;
+
+            const len = e - s + 1;
+            if (len < minLen || len > maxLen) continue;
+
+            const clamped = clampRegionToNeighbors('elastic', s, e);
+            const fit = computeElasticFromIndices(analysis.data, clamped.startIdx, clamped.endIdx);
+            if (fit && fit.r2 > best.r2) {
+              best = { ...fit };
+            }
+
+            if (checked % 150 === 0) {
+              setOverlay(true, `Optimizing… checked ${checked.toLocaleString()} windows`, Math.min(1, checked / Math.max(1, total)));
+              await nextFrame();
+            }
+
+            if (best.r2 >= earlyStopR2) {
+              break;
+            }
+          }
+          if (best.r2 >= earlyStopR2) break;
+        }
+
+        // Apply best window
+        elements.regionStart.value = String(best.startIndex);
+        elements.regionEnd.value = String(best.endIndex);
+        applyRegionEditFromSliders();
+        syncRegionEditorFromSelection();
+
+        setOverlay(true, `Done. Best R² = ${formatNum(best.r2, 5)}.`, 1);
+        await new Promise(r => setTimeout(r, 350));
+        setOverlay(false);
+      };
+
+      run().catch(err => {
+        setOverlay(false);
+        setStatus(err?.message || 'Failed to optimize elastic region.', 'danger');
+      });
+    }
+
+    function analyzeData(data) {
+      const clean = deduplicateAndSort(data);
+      if (clean.length < 3) {
+        throw new Error('At least 3 valid data points are required.');
+      }
+
+      // Manual-first workflow: initialize elastic window to an early segment,
+      // then the user refines it using the Region editor.
+      const defaultEnd = Math.min(clean.length - 1, Math.max(2, Math.floor(0.12 * clean.length)));
+      const elastic = computeElasticFromIndices(clean, 0, defaultEnd);
+      const elasticStrainBounds = regionFromIndicesAsStrain(clean, elastic.startIndex, elastic.endIndex);
+      if (elasticStrainBounds) {
+        elastic.xStart = elasticStrainBounds.xStart;
+        elastic.xEnd = elasticStrainBounds.xEnd;
+      }
+
+      let ucs = -Infinity;
+      let ucsIndex = -1;
+      clean.forEach((d, i) => {
+        if (d[1] > ucs) {
+          ucs = d[1];
+          ucsIndex = i;
+        }
+      });
+
+      const result = {
+        data: clean,
+        ucs,
+        strainAtUcs: clean[ucsIndex][0],
+        ucsIndex,
+        elastic,
+        fitPoints: clean.slice(elastic.startIndex, elastic.endIndex + 1),
+        regions: null
+      };
+      result.regions = detectOtherRegionsFromElastic(result.data, result.elastic);
+
+      // Attach strain bounds to auto-detected regions for consistency.
+      if (result.regions) {
+        for (const k of Object.keys(result.regions)) {
+          const r = result.regions[k];
+          if (!r) continue;
+          const sb = regionFromIndicesAsStrain(result.data, r.startIndex, r.endIndex);
+          if (sb) {
+            r.xStart = sb.xStart;
+            r.xEnd = sb.xEnd;
+          }
+        }
+      }
+      return result;
+    }
+
+    function updateStats(a) {
+      elements.fitEquation.textContent = `Equation: σ = ${formatNum(a.elastic.slope, 4)}ε ${a.elastic.intercept >= 0 ? '+' : '−'} ${formatNum(Math.abs(a.elastic.intercept), 4)}`;
+      elements.fitQuality.textContent = `Fit quality: R² = ${formatNum(a.elastic.r2, 4)}${a.elastic.manual ? ' (manual window)' : (a.elastic.fallback ? ' (fallback fit)' : '')}`;
+      elements.dataSummary.textContent = `Data summary: ${a.data.length} valid points analyzed. UCS detected at point ${a.ucsIndex + 1}.`;
+
+      // Summary table
+      const fmtRange = (region) => {
+        if (!region || !a?.data?.length) return '—';
+        const x0 = a.data[region.startIndex]?.[0];
+        const x1 = a.data[region.endIndex]?.[0];
+        if (!(isFinite(x0) && isFinite(x1))) return '—';
+        return `${formatNum(x0, 2)} - ${formatNum(x1, 2)} (strain)`;
+      };
+
+      elements.sumSeating.textContent = fmtRange(a.regions?.seating);
+      elements.sumElastic.textContent = fmtRange(a.elastic);
+      elements.sumHardening.textContent = fmtRange(a.regions?.hardening);
+      elements.sumSoftening.textContent = fmtRange(a.regions?.softening);
+      elements.sumDensification.textContent = fmtRange(a.regions?.densification);
+      elements.sumUcs.textContent = isFinite(a.ucs) ? `${formatNum(a.ucs, 5)} MPa` : '—';
+      elements.sumStrainAtUcs.textContent = isFinite(a.strainAtUcs) ? `${formatNum(a.strainAtUcs, 5)}` : '—';
+      elements.sumElasticModulus.textContent = isFinite(a.elastic?.slope) ? `${formatNum(a.elastic.slope, 5)} MPa` : '—';
+
+      // New summary metrics
+      elements.sumElasticR2.textContent = isFinite(a.elastic?.r2) ? `${formatNum(a.elastic.r2, 4)}` : '—';
+
+      // Yield (approx.): taken as the end of the Elastic Region (next point)
+      let yieldIdx = null;
+      if (Number.isInteger(a.elastic?.endIndex)) {
+        yieldIdx = Math.min(a.elastic.endIndex + 1, a.data.length - 1);
+      }
+
+      if (yieldIdx != null && a.data[yieldIdx]) {
+        const yStrain = a.data[yieldIdx][0];
+        const yStress = a.data[yieldIdx][1];
+        if (isFinite(yStrain) && isFinite(yStress)) {
+          elements.sumYieldStrain.textContent = `${formatNum(yStrain, 5)}`;
+          elements.sumYieldStress.textContent = `${formatNum(yStress, 5)} MPa`;
+        } else {
+          elements.sumYieldStrain.textContent = '—';
+          elements.sumYieldStress.textContent = '—';
+        }
+      } else {
+        elements.sumYieldStrain.textContent = '—';
+        elements.sumYieldStress.textContent = '—';
+      }
+
+      const integrateEnergy = (endIndexInclusive) => {
+        if (!a?.data?.length) return NaN;
+        const n = a.data.length;
+        const end = Math.max(1, Math.min(Number(endIndexInclusive), n - 1));
+        if (!Number.isFinite(end)) return NaN;
+        let area = 0;
+        for (let i = 0; i < end; i++) {
+          const x0 = a.data[i]?.[0];
+          const y0 = a.data[i]?.[1];
+          const x1 = a.data[i + 1]?.[0];
+          const y1 = a.data[i + 1]?.[1];
+          if (!(isFinite(x0) && isFinite(y0) && isFinite(x1) && isFinite(y1))) continue;
+          const dx = x1 - x0;
+          if (!isFinite(dx) || dx <= 0) continue;
+          area += dx * (y0 + y1) / 2;
+        }
+        return area;
+      };
+
+      // Energy to densification: integrate up to the START of densification region
+      const densStartIdx = a.regions?.densification?.startIndex;
+      const energyToDens = integrateEnergy(densStartIdx);
+      elements.sumEnergyToDensification.textContent = isFinite(energyToDens) ? `${formatNum(energyToDens, 5)} MPa·strain` : '—';
+
+      const energyToUcs = integrateEnergy(a.ucsIndex);
+      elements.sumEnergyToUcs.textContent = isFinite(energyToUcs) ? `${formatNum(energyToUcs, 5)} MPa·strain` : '—';
+    }
+
+    function renderChart() {
+      const data = analysis?.data || [];
+      const traces = [];
+      const shapes = [];
+      const annotations = [];
+      const vis = getVisibility();
+
+      if (data.length) {
+        traces.push({
+          x: data.map(d => d[0]),
+          y: data.map(d => d[1]),
+          type: 'scatter',
+          mode: 'lines+markers',
+          name: 'Stress–Strain Data',
+          legendrank: 10,
+          line: { width: 3 },
+          marker: { size: 6 },
+          hovertemplate: 'Strain: %{x:.5f}<br>Stress: %{y:.5f} MPa<extra></extra>'
+        });
+      }
+
+      if (analysis) {
+        // Use exact data point x-values for region boundaries so the shaded
+        // band aligns with the Region editor readouts.
+        const regionX0 = (startIndex) => analysis.data[startIndex]?.[0];
+        const regionX1 = (endIndex) => analysis.data[endIndex]?.[0];
+
+        const addRegion = (region, label, color, legendColor) => {
+          if (!region) return;
+          const x0 = regionX0(region.startIndex);
+          const x1 = regionX1(region.endIndex);
+          if (!(isFinite(x0) && isFinite(x1)) || x1 <= x0) return;
+          shapes.push({
+            type: 'rect', xref: 'x', yref: 'paper',
+            x0, x1, y0: 0, y1: 1,
+            fillcolor: color,
+            line: { width: 0 },
+            layer: 'below'
+          });
+
+          // Add a legend entry (dummy trace) for the shaded region.
+          traces.push({
+            x: [null],
+            y: [null],
+            type: 'scatter',
+            mode: 'markers',
+            name: label,
+            legendrank: ({
+              'Seating Region': 20,
+              'Elastic Region': 30,
+              'Hardening Region': 45,
+              'Softening Region': 50,
+              'Densification Region': 60
+            }[label] ?? 90),
+            marker: { size: 10, color: legendColor },
+            hoverinfo: 'skip',
+            showlegend: true
+          });
+        };
+
+        // Add visible regions in order.
+        // IMPORTANT: Do not stretch region boundaries to fill gaps created by hidden
+        // regions, otherwise the shaded band start/end no longer match the Region editor.
+        const addVisibleRegionContiguous = (() => {
+          let lastX1 = null;
+          return (region, label, color, legendColor) => {
+            if (!region) return;
+            let x0 = regionX0(region.startIndex);
+            let x1 = regionX1(region.endIndex);
+            if (!(isFinite(x0) && isFinite(x1)) || x1 <= x0) return;
+            shapes.push({
+              type: 'rect', xref: 'x', yref: 'paper',
+              x0, x1, y0: 0, y1: 1,
+              fillcolor: color,
+              line: { width: 0 },
+              layer: 'below'
+            });
+
+            traces.push({
+              x: [null],
+              y: [null],
+              type: 'scatter',
+              mode: 'markers',
+              name: label,
+              legendrank: ({
+                'Seating Region': 20,
+                'Elastic Region': 30,
+                'Hardening Region': 45,
+                'Softening Region': 50,
+                'Densification Region': 60
+              }[label] ?? 90),
+              marker: { size: 10, color: legendColor },
+              hoverinfo: 'skip',
+              showlegend: true
+            });
+
+            lastX1 = x1;
+          };
+        })();
+
+        const regions = analysis.regions;
+        if (regions) {
+          if (vis.seating) addVisibleRegionContiguous(regions.seating, 'Seating Region', 'rgba(148, 163, 184, 0.12)', 'rgba(148, 163, 184, 0.55)');
+          if (vis.hardening) addVisibleRegionContiguous(regions.hardening, 'Hardening Region', 'rgba(124, 58, 237, 0.08)', 'rgba(124, 58, 237, 0.50)');
+          if (vis.softening) addVisibleRegionContiguous(regions.softening, 'Softening Region', 'rgba(15, 118, 110, 0.10)', 'rgba(15, 118, 110, 0.55)');
+          if (vis.densification) addVisibleRegionContiguous(regions.densification, 'Densification Region', 'rgba(185, 28, 28, 0.08)', 'rgba(185, 28, 28, 0.50)');
+        }
+
+        if (vis.elastic) {
+          const x0 = regionX0(analysis.elastic.startIndex);
+          const x1 = regionX1(analysis.elastic.endIndex);
+          shapes.push({
+            type: 'rect', xref: 'x', yref: 'paper',
+            x0, x1, y0: 0, y1: 1,
+            fillcolor: 'rgba(29, 78, 216, 0.10)',
+            line: { width: 0 },
+            layer: 'below'
+          });
+
+          // Yield marker: vertical dashed line at the end of elastic region
+          const yieldX = analysis.data[analysis.elastic.endIndex]?.[0];
+          if (isFinite(yieldX)) {
+            shapes.push({
+              type: 'line',
+              xref: 'x', yref: 'paper',
+              x0: yieldX, x1: yieldX,
+              y0: 0, y1: 1,
+              line: { color: 'rgba(29, 78, 216, 0.7)', width: 2, dash: 'dash' },
+              layer: 'above'
+            });
+
+            traces.push({
+              x: [null],
+              y: [null],
+              type: 'scatter',
+              mode: 'lines',
+              name: 'Yield (end of elastic)',
+              legendrank: 35,
+              line: { color: 'rgba(29, 78, 216, 0.7)', width: 2, dash: 'dash' },
+              hoverinfo: 'skip',
+              showlegend: true
+            });
+          }
+
+          // Elastic region legend entry
+          traces.push({
+            x: [null],
+            y: [null],
+            type: 'scatter',
+            mode: 'markers',
+            name: 'Elastic Region',
+            legendrank: 30,
+            marker: { size: 10, color: 'rgba(29, 78, 216, 0.55)' },
+            hoverinfo: 'skip',
+            showlegend: true
+          });
+        }
+      }
+
+      if (analysis && vis.elasticFit) {
+        const xFit = analysis.fitPoints.map(p => p[0]);
+        const xStart = xFit[0];
+        const xEnd = xFit[xFit.length - 1];
+        const yStart = analysis.elastic.slope * xStart + analysis.elastic.intercept;
+        const yEnd = analysis.elastic.slope * xEnd + analysis.elastic.intercept;
+
+        traces.push({
+          x: [xStart, xEnd],
+          y: [yStart, yEnd],
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Elastic Fit',
+          legendrank: 70,
+          line: { dash: 'dash', width: 3 },
+          hovertemplate: 'Elastic fit<br>Strain: %{x:.5f}<br>Stress: %{y:.5f} MPa<extra></extra>'
+        });
+      }
+
+      if (analysis && vis.ucs) {
+        traces.push({
+          x: [analysis.strainAtUcs],
+          y: [analysis.ucs],
+          type: 'scatter',
+          mode: 'markers+text',
+          name: 'UCS',
+          legendrank: 80,
+          text: [`UCS = ${formatNum(analysis.ucs, 3)} MPa`],
+          textposition: 'top center',
+          marker: { size: 11, color: '#b91c1c' },
+          hovertemplate: 'UCS<br>Strain: %{x:.5f}<br>Stress: %{y:.5f} MPa<extra></extra>'
+        });
+      }
+
+      const layout = {
+        title: {
+          text: 'Stress (MPa) vs Strain',
+          font: { size: 28 }
+        },
+        paper_bgcolor: 'white',
+        plot_bgcolor: 'white',
+        margin: { l: 80, r: 30, t: 80, b: 120 },
+        xaxis: {
+          title: { text: 'Strain', font: { size: 18 } },
+          showgrid: true,
+          gridcolor: '#e8edf5',
+          zeroline: false,
+          tickfont: { size: 13 },
+          titlefont: { size: 18 },
+          mirror: true,
+          linecolor: '#9aa7b8'
+        },
+        yaxis: {
+          title: { text: 'Stress (MPa)', font: { size: 18 } },
+          showgrid: true,
+          gridcolor: '#e8edf5',
+          zeroline: false,
+          tickfont: { size: 13 },
+          titlefont: { size: 18 },
+          mirror: true,
+          linecolor: '#9aa7b8'
+        },
+        legend: {
+          orientation: 'h',
+          yanchor: 'top',
+          y: -0.18,
+          xanchor: 'center',
+          x: 0.5,
+          font: { size: 12 },
+          traceorder: 'normal'
+        },
+        annotations,
+        shapes,
+        hoverlabel: { font: { size: 13 } }
+      };
+
+      Plotly.newPlot('chart', traces, layout, { responsive: true, displaylogo: false, toImageButtonOptions: { format: 'png', filename: 'stress_strain_graph', scale: 3 } });
+    }
+
+    function exportResultsCsv() {
+      if (!analysis) return;
+      const rows = [
+        ['Metric', 'Value', 'Unit'],
+        ['Ultimate Compressive Strength', analysis.ucs, 'MPa'],
+        ['Strain at UCS', analysis.strainAtUcs, 'dimensionless'],
+        ['Elastic Modulus E', analysis.elastic.slope, 'MPa'],
+        ['Elastic Fit Intercept', analysis.elastic.intercept, 'MPa'],
+        ['Elastic Fit R2', analysis.elastic.r2, ''],
+        ['Elastic Region Start Strain', analysis.data[analysis.elastic.startIndex][0], 'dimensionless'],
+        ['Elastic Region End Strain', analysis.data[analysis.elastic.endIndex][0], 'dimensionless']
+      ];
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'compressive_test_results.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    async function copyResultsCsvToClipboard() {
+      if (!analysis) {
+        setStatus('Analyze data first to copy results.', 'warning');
+        showToast('Analyze data first to copy results.', 'warning');
+        return;
+      }
+
+      const getText = (id) => {
+        const el = document.getElementById(id);
+        return (el?.textContent || '').trim();
+      };
+
+      const rows = [
+        ['Result', 'Value'],
+        ['Seating Region', getText('sumSeating')],
+        ['Elastic Region', getText('sumElastic')],
+        ['Yield Strain', getText('sumYieldStrain')],
+        ['Yield Stress', getText('sumYieldStress')],
+        ['Hardening Region', getText('sumHardening')],
+        ['Softening Region', getText('sumSoftening')],
+        ['Densification Region', getText('sumDensification')],
+        ['Ultimate Compressive Strength (UCS)', getText('sumUcs')],
+        ['Strain at UCS', getText('sumStrainAtUcs')],
+        ['Elastic Modulus', getText('sumElasticModulus')],
+        ['R² (Elastic Fit)', getText('sumElasticR2')],
+        ['Energy to Densification', getText('sumEnergyToDensification')],
+        ['Energy to UCS', getText('sumEnergyToUcs')]
+      ];
+
+      const escapeCsv = (value) => {
+        const s = String(value ?? '');
+        if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+        return s;
+      };
+      const csvText = rows.map(r => r.map(escapeCsv).join(',')).join('\r\n');
+
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(csvText);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = csvText;
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          ta.style.top = '0';
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        setStatus('Results copied as CSV.', 'success');
+        showToast('Copied results as CSV.', 'success');
+      } catch (err) {
+        setStatus('Could not copy to clipboard (permission blocked).', 'danger');
+        showToast('Copy failed (permission blocked).', 'danger');
+      }
+    }
+
+    function handleAnalyze() {
+      try {
+        let data = [];
+        const pasted = elements.pasteArea.value.trim();
+        if (pasted) {
+          data = parseTextData(pasted);
+        } else if (rawData.length) {
+          data = rawData;
+        }
+
+        if (!data.length) {
+          throw new Error('Please paste data or upload a CSV/TSV file first.');
+        }
+
+        analysis = analyzeData(data);
+        updatePreviewTable(analysis.data);
+        syncRegionEditorFromSelection();
+        updateStats(analysis);
+        renderChart();
+        saveAppState();
+        setStatus(`Analysis complete. ${analysis.data.length} valid points processed.`, 'success');
+      } catch (error) {
+        analysis = null;
+        syncRegionEditorFromSelection();
+        renderChart();
+        setStatus(error.message, 'danger');
+        elements.fitEquation.textContent = 'Equation: —';
+        elements.fitQuality.textContent = 'Fit quality: —';
+        elements.dataSummary.textContent = 'Data summary: —';
+
+        elements.sumSeating.textContent = '—';
+        elements.sumElastic.textContent = '—';
+        elements.sumYieldStrain.textContent = '—';
+        elements.sumYieldStress.textContent = '—';
+        elements.sumHardening.textContent = '—';
+        elements.sumSoftening.textContent = '—';
+        elements.sumDensification.textContent = '—';
+        elements.sumUcs.textContent = '—';
+        elements.sumStrainAtUcs.textContent = '—';
+        elements.sumElasticModulus.textContent = '—';
+        elements.sumElasticR2.textContent = '—';
+        elements.sumEnergyToDensification.textContent = '—';
+        elements.sumEnergyToUcs.textContent = '—';
+      }
+    }
+
+    function clearAll() {
+      rawData = [];
+      analysis = null;
+      elements.pasteArea.value = '';
+      elements.fileInput.value = '';
+      elements.tableBody.innerHTML = '';
+      elements.fitEquation.textContent = 'Equation: —';
+      elements.fitQuality.textContent = 'Fit quality: —';
+      elements.dataSummary.textContent = 'Data summary: —';
+
+      elements.sumSeating.textContent = '—';
+      elements.sumElastic.textContent = '—';
+      elements.sumYieldStrain.textContent = '—';
+      elements.sumYieldStress.textContent = '—';
+      elements.sumHardening.textContent = '—';
+      elements.sumSoftening.textContent = '—';
+      elements.sumDensification.textContent = '—';
+      elements.sumUcs.textContent = '—';
+      elements.sumStrainAtUcs.textContent = '—';
+      elements.sumElasticModulus.textContent = '—';
+      elements.sumElasticR2.textContent = '—';
+      elements.sumEnergyToDensification.textContent = '—';
+      elements.sumEnergyToUcs.textContent = '—';
+
+      setStatus('Cleared. Ready for new data.', '');
+      clearSavedAppState();
+      syncRegionEditorFromSelection();
+      renderChart();
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).style.display = 'block';
+      });
+    });
+
+    document.getElementById('fileInput').addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        rawData = parseTextData(text);
+        updatePreviewTable(deduplicateAndSort(rawData));
+        setStatus(`Loaded file: ${file.name}. ${rawData.length} rows parsed before cleaning.`, 'success');
+      } catch (err) {
+        setStatus('Failed to read the selected file.', 'danger');
+      }
+    });
+
+    document.getElementById('analyzeBtn').addEventListener('click', handleAnalyze);
+    document.getElementById('loadSampleBtn').addEventListener('click', () => {
+      elements.pasteArea.value = sampleData.map(row => row.join('\t')).join('\n');
+      rawData = sampleData.slice();
+      updatePreviewTable(sampleData);
+      setStatus('Sample data loaded.', 'success');
+    });
+    document.getElementById('clearBtn').addEventListener('click', clearAll);
+    document.getElementById('downloadPngBtn').addEventListener('click', () => {
+      Plotly.downloadImage('chart', { format: 'png', filename: 'stress_strain_graph', scale: 3, width: 1400, height: 900 });
+    });
+    elements.copyCsvBtn.addEventListener('click', copyResultsCsvToClipboard);
+
+    elements.regionSelect.addEventListener('change', () => {
+      syncRegionEditorFromSelection();
+    });
+
+    [elements.regionStart, elements.regionEnd].forEach(slider => {
+      slider.addEventListener('input', () => {
+        updateRegionSliderLabels();
+        applyRegionEditFromSliders();
+        saveAppState();
+      });
+    });
+
+    const rerenderFromVisibility = () => {
+      renderChart();
+      saveAppState();
+    };
+    [
+      elements.showSeating,
+      elements.showElastic,
+      elements.showHardening,
+      elements.showSoftening,
+      elements.showDensification,
+      elements.showElasticFit,
+      elements.showUcs
+    ].forEach(el => {
+      if (!el) return;
+      el.addEventListener('change', rerenderFromVisibility);
+    });
+
+    elements.optimizeElasticBtn.addEventListener('click', () => {
+      if (!analysis?.data?.length) {
+        setStatus('Analyze data first, then choose an elastic region to optimize.', 'warning');
+        return;
+      }
+      optimizeElasticRegionAroundCurrent();
+    });
+
+    function setDetailsOverlay(visible) {
+      elements.detailsOverlay.style.display = visible ? 'flex' : 'none';
+    }
+
+    function setNotesOverlay(visible) {
+      elements.notesOverlay.style.display = visible ? 'flex' : 'none';
+    }
+
+    elements.detailsBtn.addEventListener('click', () => setDetailsOverlay(true));
+    elements.detailsCloseBtn.addEventListener('click', () => setDetailsOverlay(false));
+    elements.detailsOverlay.addEventListener('click', (e) => {
+      if (e.target === elements.detailsOverlay) setDetailsOverlay(false);
+    });
+
+    elements.notesBtn.addEventListener('click', () => setNotesOverlay(true));
+    elements.notesCloseBtn.addEventListener('click', () => setNotesOverlay(false));
+    elements.notesOverlay.addEventListener('click', (e) => {
+      if (e.target === elements.notesOverlay) setNotesOverlay(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (elements.detailsOverlay.style.display === 'flex') setDetailsOverlay(false);
+        if (elements.notesOverlay.style.display === 'flex') setNotesOverlay(false);
+      }
+    });
+
+    renderChart();
+    setStatus('Load sample data, paste your table, or upload a file to begin.', '');
+    syncRegionEditorFromSelection();
+
+    // Attempt to restore last session after initial UI boot.
+    restoreAppState();
+  </script>
+</body>
+</html>
