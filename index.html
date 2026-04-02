@@ -797,22 +797,25 @@
 
         /* Extras Section */
         .extras-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
             margin-top: 2rem;
         }
 
         .extra-service {
-            background: white;
-            border-radius: 10px;
-            padding: 2rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 0;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
         .extra-service:hover {
-            transform: translateY(-3px);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.10);
+            border-color: #cfe2f3;
         }
 
         .extra-service h4 {
@@ -822,58 +825,59 @@
 
         /* Extras - Tool Directory Card */
         .extra-tool {
-            padding: 0;
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            align-items: stretch;
             overflow: hidden;
-            border: 2px solid transparent;
-            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        .extra-tool:hover {
-            border-color: #3498db;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
         .extra-preview {
             display: block;
-            background: #f1f3f5;
-            border-bottom: 1px solid #e9ecef;
+            background: linear-gradient(135deg, #eef4f8, #ddebf3);
+            border-right: 1px solid #e9ecef;
+            min-height: 100%;
         }
         .extra-preview img {
             display: block;
             width: 100%;
-            aspect-ratio: 16 / 9;
+            height: 100%;
+            min-height: 180px;
             object-fit: cover;
         }
         .extra-body {
-            padding: 1.35rem 1.5rem 1.5rem;
+            padding: 1.2rem 1.4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .extra-title {
             margin: 0;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             font-weight: 800;
-            color: #2c3e50;
+            color: #1f2d3d;
         }
         .extra-desc {
-            margin: 0.65rem 0 0;
-            color: #495057;
-            font-size: 0.98rem;
-            line-height: 1.7;
+            margin: 0.55rem 0 0;
+            color: #55606d;
+            font-size: 0.96rem;
+            line-height: 1.65;
         }
         .extra-tags {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.45rem;
             margin-top: 0.85rem;
         }
         .extra-tag {
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
-            padding: 0.25rem 0.6rem;
+            padding: 0.22rem 0.6rem;
             border-radius: 9999px;
-            background: #eef2ff;
-            border: 1px solid #bfdbfe;
-            color: #1e3a8a;
+            background: #f4f8fb;
+            border: 1px solid #d7e6f0;
+            color: #31556b;
             font-weight: 700;
-            font-size: 0.78rem;
+            font-size: 0.74rem;
             letter-spacing: 0.01em;
         }
         .extra-actions {
@@ -903,6 +907,26 @@
         .btn-primary:focus {
             outline: 3px solid rgba(52, 152, 219, 0.35);
             outline-offset: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .extra-tool {
+                grid-template-columns: 1fr;
+            }
+
+            .extra-preview {
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+
+            .extra-preview img {
+                min-height: 180px;
+                max-height: 220px;
+            }
+
+            .extra-body {
+                padding: 1rem 1rem 1.15rem;
+            }
         }
 
         /* Modal (Extras Learn More) */
@@ -1878,6 +1902,45 @@
                             </div>
                         </div>
                     </article>
+                        <article class="extra-service extra-tool">
+                            <a class="extra-preview" href="statistics.html" aria-label="Open Statistics Test for Differences">
+                                <img src="Images/statisticstest.png" alt="Statistics Test for Differences preview" loading="lazy">
+                            </a>
+                            <div class="extra-body">
+                                <h3 class="extra-title">Statistics Test for Differences</h3>
+                                <p class="extra-desc">A browser-based tool for performing statistical tests for differences between groups or samples. Useful for researchers needing to quickly compare means, variances, or distributions. Includes t-tests, ANOVA, and more. No installation required.</p>
+                                <div class="extra-tags" aria-label="Statistics Test tags">
+                                    <span class="extra-tag">Statistics</span>
+                                    <span class="extra-tag">Hypothesis testing</span>
+                                    <span class="extra-tag">t-test</span>
+                                    <span class="extra-tag">ANOVA</span>
+                                </div>
+                                <div class="extra-actions">
+                                    <a class="btn-primary" href="statistics.html">Open Statistics Test</a>
+                                    <button class="btn-subtle" type="button" data-open-modal="statistics" aria-haspopup="dialog">Learn more</button>
+                                </div>
+                            </div>
+                        </article>
+
+                        <article class="extra-service extra-tool">
+                            <a class="extra-preview" href="compressiontest.html" aria-label="Open Compressive Stress-Strain Analyzer">
+                                <img src="Images/compressive.png" alt="Compressive Stress-Strain Analyzer preview" loading="lazy">
+                            </a>
+                            <div class="extra-body">
+                                <h3 class="extra-title">Compressive Stress-Strain Analyzer</h3>
+                                <p class="extra-desc">A browser-based tool for analyzing compressive stress-strain data from mechanical testing. It helps researchers inspect curves, compare sample behavior, and extract useful mechanical response information directly in the browser without installing additional software.</p>
+                                <div class="extra-tags" aria-label="Compressive Stress-Strain Analyzer tags">
+                                    <span class="extra-tag">Mechanical testing</span>
+                                    <span class="extra-tag">Stress-strain</span>
+                                    <span class="extra-tag">Compression</span>
+                                    <span class="extra-tag">Browser-based</span>
+                                </div>
+                                <div class="extra-actions">
+                                    <a class="btn-primary" href="compressiontest.html">Open Stress-Strain Analyzer</a>
+                                    <button class="btn-subtle" type="button" data-open-modal="compression" aria-haspopup="dialog">Learn more</button>
+                                </div>
+                            </div>
+                        </article>
                 </div>
             </section>
         </div>
@@ -2285,6 +2348,124 @@
 
                 <div class="modal-footer">
                     <a class="btn-subtle" href="roughness.html">Open Roughness Visualizer</a>
+                    <button class="btn-primary" type="button" data-close-modal>Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extras: Learn More Modal (Statistics Test for Differences) -->
+    <div id="modal-statistics" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-statistics-title" aria-hidden="true">
+        <div class="modal" role="document">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-statistics-title" class="modal-title">Statistics Test for Differences — Documentation</h3>
+                    <p class="modal-subtitle">Overview of the tool, supported comparisons, and typical use cases.</p>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-content">
+                <div class="modal-grid">
+                    <div>
+                        <div class="modal-media">
+                            <img src="Images/statisticstest.png" alt="Statistics Test for Differences preview" loading="lazy">
+                        </div>
+                        <p class="modal-caption">Tip: Prepare clean grouped data before running significance tests.</p>
+                    </div>
+
+                    <div class="modal-panel">
+                        <h4>About</h4>
+                        <p>
+                            <strong>Website:</strong> <a href="https://www.inanolab.com/statistics.html" target="_blank" rel="noopener">https://www.inanolab.com/statistics.html</a><br>
+                            <strong>Developer / Programmer:</strong> Dr. James Salveo Olarve<br>
+                            <strong>Affiliation:</strong> i-Nano Research Facility, De La Salle University Manila
+                        </p>
+
+                        <h4>What It Does</h4>
+                        <ul>
+                            <li>Helps compare groups or datasets using common <strong>tests for differences</strong>.</li>
+                            <li>Supports practical workflows for <strong>hypothesis testing</strong> in research and student projects.</li>
+                            <li>Provides a browser-based environment for quick statistical checking without extra software installation.</li>
+                            <li>Useful for validating whether observed differences are likely meaningful or due to random variation.</li>
+                        </ul>
+
+                        <h4>Typical Use Cases</h4>
+                        <ul>
+                            <li>Compare mean values between two groups using a <strong>t-test</strong>.</li>
+                            <li>Compare multiple groups using <strong>ANOVA</strong>.</li>
+                            <li>Evaluate experimental and control results in research, laboratory work, or classroom datasets.</li>
+                        </ul>
+
+                        <h4>Quick Start</h4>
+                        <ul>
+                            <li>Open the tool and prepare your data by group or category.</li>
+                            <li>Select the appropriate statistical test for your dataset structure.</li>
+                            <li>Review the output and interpret the results together with your experimental context.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a class="btn-subtle" href="statistics.html">Open Statistics Test</a>
+                    <button class="btn-primary" type="button" data-close-modal>Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extras: Learn More Modal (Compressive Stress-Strain Analyzer) -->
+    <div id="modal-compression" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-compression-title" aria-hidden="true">
+        <div class="modal" role="document">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-compression-title" class="modal-title">Compressive Stress-Strain Analyzer — Documentation</h3>
+                    <p class="modal-subtitle">Overview of the tool, workflow, and common mechanical testing uses.</p>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-content">
+                <div class="modal-grid">
+                    <div>
+                        <div class="modal-media">
+                            <img src="Images/compressive.png" alt="Compressive Stress-Strain Analyzer preview" loading="lazy">
+                        </div>
+                        <p class="modal-caption">Tip: Use clean, properly labeled compression datasets for clearer interpretation.</p>
+                    </div>
+
+                    <div class="modal-panel">
+                        <h4>About</h4>
+                        <p>
+                            <strong>Website:</strong> <a href="https://www.inanolab.com/compressiontest.html" target="_blank" rel="noopener">https://www.inanolab.com/compressiontest.html</a><br>
+                            <strong>Developer / Programmer:</strong> Dr. James Salveo Olarve<br>
+                            <strong>Affiliation:</strong> i-Nano Research Facility, De La Salle University Manila
+                        </p>
+
+                        <h4>What It Does</h4>
+                        <ul>
+                            <li>Analyzes <strong>compressive stress-strain data</strong> from laboratory mechanical testing.</li>
+                            <li>Helps visualize the response of materials under compressive loading.</li>
+                            <li>Supports quick comparison of sample behavior directly in the browser.</li>
+                            <li>Provides a convenient way to inspect curves without installing separate analysis software.</li>
+                        </ul>
+
+                        <h4>Typical Use Cases</h4>
+                        <ul>
+                            <li>Review compressive behavior of engineered, biological, or composite materials.</li>
+                            <li>Compare mechanical response across multiple samples or treatment groups.</li>
+                            <li>Support thesis, laboratory, and research reporting with accessible graph-based inspection.</li>
+                        </ul>
+
+                        <h4>Quick Start</h4>
+                        <ul>
+                            <li>Open the analyzer and load or prepare your compression test data.</li>
+                            <li>Inspect the stress-strain curve and compare trends across samples.</li>
+                            <li>Use the visual output to guide interpretation of material response and performance.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a class="btn-subtle" href="compressiontest.html">Open Stress-Strain Analyzer</a>
                     <button class="btn-primary" type="button" data-close-modal>Close</button>
                 </div>
             </div>
