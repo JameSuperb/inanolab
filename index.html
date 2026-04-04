@@ -868,6 +868,27 @@
             font-size: 0.96rem;
             line-height: 1.65;
         }
+            .extra-doi {
+                margin-top: 0.85rem;
+            }
+            .extra-doi-link {
+                display: inline-flex;
+                align-items: center;
+                max-width: 100%;
+                border-radius: 9999px;
+                overflow: hidden;
+                box-shadow: 0 10px 24px rgba(31, 45, 61, 0.12);
+                transition: transform 0.15s ease, box-shadow 0.2s ease;
+            }
+            .extra-doi-link:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 14px 28px rgba(31, 45, 61, 0.16);
+            }
+            .extra-doi-link img {
+                display: block;
+                max-width: 100%;
+                height: auto;
+            }
         .extra-tags {
             display: flex;
             flex-wrap: wrap;
@@ -1876,6 +1897,11 @@
                         <div class="extra-body">
                             <h3 class="extra-title">MicroMeasure</h3>
                             <p class="extra-desc">Looking for a fast and reliable way to measure features in your microscopy images without installing complex software? MicroMeasure is a browser-based scientific image analysis tool that allows researchers to perform calibrated length, angle, and area measurements, as well as automated particle and hole (pore) analysis, directly from their web browser. It combines essential image-analysis capabilities with an intuitive interface and transparent measurement methods, enabling reproducible, real-unit measurements suitable for research, teaching, and documentation. By reducing technical barriers and simplifying workflows, MicroMeasure offers a practical and accessible alternative for laboratories, educators, and students who need accurate quantitative image analysis anytime, anywhere.</p>
+                            <div class="extra-doi">
+                                <a class="extra-doi-link" href="https://doi.org/10.5281/zenodo.19418862" target="_blank" rel="noopener" aria-label="View the MicroMeasure DOI record on Zenodo">
+                                    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19418862.svg" alt="DOI badge for MicroMeasure">
+                                </a>
+                            </div>
                             <div class="extra-tags" aria-label="MicroMeasure tags">
                                 <span class="extra-tag">Browser-based</span>
                                 <span class="extra-tag">Microscopy</span>
@@ -2267,10 +2293,14 @@
                         <h4>📚 Citation Recommendation</h4>
                         <p>If you use MicroMeasure in academic work:</p>
                         <p>
-                            Olarve, J. S. L. (2026). MicroMeasure: A web-based image analysis and measurement tool. i-Nano Research Facility, De La Salle University Manila. Retrieved from
-                            <a href="https://www.inanolab.com/micromeasure.html" target="_blank" rel="noopener">https://www.inanolab.com/micromeasure.html</a>
+                            Olarve, J. S. (2026). <em>MicroMeasure: A Web-Based Image Measurement Tool</em> (v1.0.1). Zenodo.<br>
+                            <a href="https://doi.org/10.5281/zenodo.19418862" target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.19418862</a>
                         </p>
-                        <p><em>(Updated citation will be provided once DOI is assigned.)</em></p>
+                        <p>
+                            <a class="extra-doi-link" href="https://doi.org/10.5281/zenodo.19418862" target="_blank" rel="noopener" aria-label="View the MicroMeasure DOI record on Zenodo">
+                                <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19418862.svg" alt="DOI badge for MicroMeasure">
+                            </a>
+                        </p>
 
                         <h4>What MicroMeasure Is</h4>
                         <p>MicroMeasure (implemented almost entirely in <strong>micromeasure.html</strong>) is a browser-based measurement + image-analysis tool aimed at microscopy images (e.g., SEM). It runs fully client-side (no install), drawing the image on one canvas and all annotations/analysis overlays on a second canvas.</p>
