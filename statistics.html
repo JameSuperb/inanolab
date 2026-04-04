@@ -63,6 +63,26 @@
             flex-wrap: wrap;
         }
 
+        .header-icon-btn {
+            width: 2.75rem;
+            height: 2.75rem;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.75rem;
+        }
+
+        .header-icon-btn svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            display: block;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+        }
+
         /* Buttons */
         .btn {
             padding: 0.5rem 1rem;
@@ -517,6 +537,10 @@
             box-shadow: 4px 0 12px rgba(0, 0, 0, 0.05);
             transition: width 0.3s ease;
             position: relative;
+        }
+
+        .sidebar-backdrop {
+            display: none;
         }
 
         .sidebar.collapsed {
@@ -1162,22 +1186,87 @@
 
             .app-title {
                 font-size: 1.4rem;
+                flex: 1 1 auto;
+            }
+
+            body.mobile-sidebar-open {
+                overflow: hidden;
+            }
+
+            .sidebar-backdrop {
+                display: block;
+                position: fixed;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.34);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.28s ease;
+                z-index: 1400;
+            }
+
+            .sidebar-backdrop.active {
+                opacity: 1;
+                pointer-events: auto;
             }
 
             .sidebar {
-                width: 100%;
+                position: fixed;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                width: min(86vw, 340px);
+                max-height: none;
                 border-right: none;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-                padding: 0.75rem;
-                max-height: 120px;
-                overflow-x: auto;
-                display: flex;
-                gap: 2rem;
+                border-left: 1px solid rgba(255, 255, 255, 0.28);
+                padding: 1rem 0.9rem 1.25rem;
+                overflow-y: auto;
+                overflow-x: hidden;
+                display: block;
+                gap: 0;
+                box-shadow: -18px 0 34px rgba(15, 23, 42, 0.22);
+                transform: translateX(105%);
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                z-index: 1500;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .sidebar.collapsed {
+                width: min(86vw, 340px);
+                padding: 1rem 0.9rem 1.25rem;
+            }
+
+            .sidebar-toggle {
+                display: none;
             }
 
             .sidebar-section {
-                margin-bottom: 0;
-                white-space: nowrap;
+                margin-bottom: 1.5rem;
+                white-space: normal;
+            }
+
+            .sidebar.collapsed .sidebar-section-title {
+                font-size: 0.75rem;
+                margin-bottom: 0.75rem;
+                padding-left: 0.75rem;
+                height: auto;
+                overflow: visible;
+            }
+
+            .sidebar.collapsed .sidebar-item {
+                padding: 0.75rem;
+                justify-content: flex-start;
+                gap: 0.75rem;
+            }
+
+            .sidebar.collapsed .sidebar-item-text {
+                font-size: 0.875rem;
+                width: auto;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
             }
 
             .content-area {
@@ -1185,8 +1274,8 @@
             }
 
             .app-header {
-                flex-direction: column;
-                align-items: flex-start;
+                flex-direction: row;
+                align-items: center;
             }
 
             .header-buttons,
@@ -1204,6 +1293,22 @@
                 flex-direction: column;
             }
 
+            .header-buttons {
+                width: auto;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-items: center;
+            }
+
+            .header-buttons .btn,
+            .mobile-menu-btn {
+                width: auto;
+            }
+
+            .mobile-menu-btn {
+                display: inline-flex;
+            }
+
             .header-buttons .btn,
             .tab-buttons .tab-btn,
             .modal-buttons .btn,
@@ -1212,6 +1317,12 @@
             .column-setup > .btn,
             .btn-run-test {
                 width: 100%;
+            }
+
+            .header-buttons .btn,
+            .header-buttons .mobile-menu-btn {
+                width: auto;
+                flex: 0 0 auto;
             }
 
             .tab-btn {
@@ -1291,7 +1402,7 @@
     <div class="app-title">
     Statistical Test for Differences
     </div>
-    <div class="header-buttons"><button class="btn" onclick="openHelpModal()">Help</button> <button class="btn btn-primary" onclick="openGuideModal()">Get Started</button>
+    <div class="header-buttons"><button class="btn header-icon-btn" onclick="openHelpModal()" aria-label="Open help" title="Help"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M9.75 9.25C9.75 8.00736 10.7574 7 12 7C13.2426 7 14.25 8.00736 14.25 9.25C14.25 10.2684 13.5718 10.9267 12.8809 11.3696C12.2752 11.758 12 12.1003 12 12.75V13.25" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="16.5" r="1" fill="currentColor"/></svg></button> <button class="btn btn-primary header-icon-btn" onclick="openGuideModal()" aria-label="Get started" title="Get Started"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3L14.75 8.25L20.5 9.1L16.25 13.1L17.25 18.75L12 16L6.75 18.75L7.75 13.1L3.5 9.1L9.25 8.25L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button> <button class="btn header-icon-btn mobile-menu-btn" id="mobile-sidebar-toggle" onclick="toggleMobileSidebar()" aria-label="Open statistical tests" aria-expanded="false" title="Statistical Tests"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 7H20" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M4 12H20" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M4 17H20" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></button>
     </div>
    </div><!-- Guide Modal -->
    <div id="guide-modal" class="modal-overlay active">
@@ -1508,8 +1619,9 @@
          </div>
         </div>
    </div><!-- Main App -->
-   <div class="main-container" id="main-app" style="display: none;"><!-- Sidebar -->
-    <div class="sidebar" id="sidebar"><button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar"><span class="sidebar-toggle-icon">«</span></button>
+    <div class="main-container" id="main-app" style="display: none;"><!-- Sidebar -->
+     <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+     <div class="sidebar" id="sidebar"><button class="sidebar-toggle" onclick="toggleDesktopSidebar()" title="Toggle sidebar"><span class="sidebar-toggle-icon" id="desktop-sidebar-toggle-icon">«</span></button>
      <div class="sidebar-section">
       <div class="sidebar-section-title">
              📈 Core Tests
@@ -1652,12 +1764,55 @@
   </div>
   <script>
         // ============= Sidebar Toggle =============
-        function toggleSidebar() {
+        function isMobileLayout() {
+            return window.matchMedia('(max-width: 768px)').matches;
+        }
+
+        function updateDesktopSidebarIcon() {
+            const icon = document.getElementById('desktop-sidebar-toggle-icon');
             const sidebar = document.getElementById('sidebar');
-            const button = event.target.closest('.sidebar-toggle');
-            const icon = button.querySelector('.sidebar-toggle-icon');
-            sidebar.classList.toggle('collapsed');
+            if (!icon || !sidebar) return;
             icon.textContent = sidebar.classList.contains('collapsed') ? '»' : '«';
+        }
+
+        function setMobileSidebarOpen(isOpen) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const toggleButton = document.getElementById('mobile-sidebar-toggle');
+            if (!sidebar || !backdrop) return;
+
+            sidebar.classList.toggle('mobile-open', isOpen);
+            backdrop.classList.toggle('active', isOpen);
+            document.body.classList.toggle('mobile-sidebar-open', isOpen);
+
+            if (toggleButton) {
+                toggleButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            }
+        }
+
+        function closeMobileSidebar() {
+            setMobileSidebarOpen(false);
+        }
+
+        function toggleMobileSidebar() {
+            if (!isMobileLayout()) return;
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            setMobileSidebarOpen(!sidebar.classList.contains('mobile-open'));
+        }
+
+        function toggleDesktopSidebar() {
+            if (isMobileLayout()) return;
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            sidebar.classList.toggle('collapsed');
+            updateDesktopSidebarIcon();
+        }
+
+        function syncSidebarMode() {
+            if (!isMobileLayout()) {
+                closeMobileSidebar();
+            }
         }
 
         // ============= Tab Management =============
@@ -2598,6 +2753,10 @@
         // ============= Test Selection =============
         function selectTest(testId) {
             currentTest = testId;
+
+            if (isMobileLayout()) {
+                closeMobileSidebar();
+            }
 
             document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
             const activeBtn = Array.from(document.querySelectorAll('.sidebar-item')).find(btn => btn.textContent.includes(testSchemas[testId].name));
@@ -5602,7 +5761,11 @@
         // ============= Initialization =============
         window.addEventListener('load', () => {
             document.getElementById('guide-modal').classList.add('active');
+            syncSidebarMode();
+            updateDesktopSidebarIcon();
         });
+
+        window.addEventListener('resize', syncSidebarMode);
     </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e1a6442615da9a6',t:'MTc3NDQwNDc1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
