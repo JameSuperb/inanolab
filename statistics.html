@@ -1589,8 +1589,15 @@
                                 // Try to get demo data for the current test, else just empty row
                                 let sampleRows = [];
                                 if (demoDatasets && demoDatasets[currentTest] && demoDatasets[currentTest].length > 0) {
-                                    // Use up to 2 sample rows from demo data
-                                    sampleRows = demoDatasets[currentTest].slice(0, 2);
+                                        // Repeated-measures templates should show a full subject across all conditions.
+                                        if (currentTest === 'anova-rm' || currentTest === 'friedman') {
+                                            const firstSubject = demoDatasets[currentTest][0]?.subject;
+                                            sampleRows = demoDatasets[currentTest]
+                                                .filter(row => row.subject === firstSubject)
+                                                .slice(0, 3);
+                                        } else {
+                                            sampleRows = demoDatasets[currentTest].slice(0, 2);
+                                        }
                                 } else {
                                     // Fallback: one empty row
                                     let emptyRow = {};
@@ -1771,6 +1778,24 @@
 
         function getOneWayAnovaGroupedData(data, groupNames) {
             return groupNames.map(groupName => data.filter(row => row.group === groupName));
+        }
+
+        function getPairedMeasurementLabels() {
+            const savedHeaders = getCurrentHeaders();
+
+            return {
+                pre: savedHeaders?.pre || 'Pre',
+                post: savedHeaders?.post || 'Post'
+            };
+        }
+
+        function getTwoWayFactorHeaders() {
+            const savedHeaders = getCurrentHeaders();
+
+            return {
+                factorA: savedHeaders?.factorA || 'Factor A',
+                factorB: savedHeaders?.factorB || 'Factor B'
+            };
         }
 
         function renameIndependentTTestGroups(previousHeaders, nextHeaders) {
@@ -2203,6 +2228,7 @@
         let recommendedTest = null;
         let currentSubject = 'biology';
         let resultSectionVisibility = {
+            interpretation: true,
             stats: true,
             summary: true,
             visualization: true,
@@ -2292,12 +2318,16 @@
             'anova-rm': [
                 { subject: '1', condition: 'C1', value: 10.2 },
                 { subject: '1', condition: 'C2', value: 15.5 },
+                { subject: '1', condition: 'C3', value: 12.8 },
                 { subject: '2', condition: 'C1', value: 12.1 },
                 { subject: '2', condition: 'C2', value: 16.8 },
+                { subject: '2', condition: 'C3', value: 14.9 },
                 { subject: '3', condition: 'C1', value: 11.5 },
                 { subject: '3', condition: 'C2', value: 14.9 },
+                { subject: '3', condition: 'C3', value: 13.2 },
                 { subject: '4', condition: 'C1', value: 13.0 },
-                { subject: '4', condition: 'C2', value: 18.2 }
+                { subject: '4', condition: 'C2', value: 18.2 },
+                { subject: '4', condition: 'C3', value: 15.6 }
             ],
             'mann-whitney': [
                 { group: 'A', value: 8.5 },
@@ -2477,8 +2507,7 @@
         function determineRecommendation() {
             const factors = document.querySelector('input[name="factors"]:checked')?.value;
             let recommended = null;
-            let why = '';
-            let alternative = null;
+            let warningMessage = '';
 
             if (factors === 'one') {
                 const observations = document.querySelector('input[name="observations"]:checked')?.value;
@@ -2502,6 +2531,7 @@
                     }
                     else if (observations === 'repeated') {
                         if (condCount === 'two') {
+                            warningMessage = 'Only two conditions detected. Consider using Paired t-test instead.';
                             recommended = normality === 'yes' ? 'ttest-paired' : 'wilcoxon';
                         } else if (condCount === 'three-plus') {
                             recommended = normality === 'yes' ? 'anova-rm' : 'friedman';
@@ -2541,7 +2571,9 @@
                 document.getElementById('recommendation-test-name').textContent = metadata.name;
                 document.getElementById('recommendation-why').textContent = '📋 ' + metadata.why;
                 
-                if (metadata.alternative) {
+                if (warningMessage) {
+                    document.getElementById('recommendation-alternative').textContent = '⚠️ ' + warningMessage;
+                } else if (metadata.alternative) {
                     document.getElementById('recommendation-alternative').textContent = '💡 Alternative: ' + metadata.alternative;
                 } else {
                     document.getElementById('recommendation-alternative').textContent = '';
@@ -2756,6 +2788,44 @@
             }
         }
 
+        function isRepeatedMeasuresVisualizationTest() {
+            return currentTest === 'anova-rm' || currentTest === 'friedman';
+        }
+
+        function normalizeVisualizationType() {
+            if (isRepeatedMeasuresVisualizationTest()) {
+                if (!['within-subject', 'summary'].includes(currentVisualizationType)) {
+                    currentVisualizationType = 'within-subject';
+                }
+                return;
+            }
+
+            if (!['descriptive', 'box'].includes(currentVisualizationType)) {
+                currentVisualizationType = 'descriptive';
+            }
+        }
+
+        function getVisualizationToggleMarkup() {
+            if (isRepeatedMeasuresVisualizationTest()) {
+                return `<button class="plot-toggle-btn ${currentVisualizationType === 'within-subject' ? 'active' : ''}" data-plot-type="within-subject" onclick="setVisualizationType('within-subject')">Within-Subject Plot</button>
+                        <button class="plot-toggle-btn ${currentVisualizationType === 'summary' ? 'active' : ''}" data-plot-type="summary" onclick="setVisualizationType('summary')">Summary Plot</button>`;
+            }
+
+            return `<button class="plot-toggle-btn ${currentVisualizationType === 'descriptive' ? 'active' : ''}" data-plot-type="descriptive" onclick="setVisualizationType('descriptive')">Descriptive Plot</button>
+                    <button class="plot-toggle-btn ${currentVisualizationType === 'box' ? 'active' : ''}" data-plot-type="box" onclick="setVisualizationType('box')">Box and Whisker Plot</button>`;
+        }
+
+        function getVisualizationHelperMarkup() {
+            if (!isRepeatedMeasuresVisualizationTest()) {
+                return '';
+            }
+
+            return `<div style="margin-top: 1rem; color: #6b7280; font-size: 0.875rem; line-height: 1.7;">
+                        <div>Lines that move together suggest consistent effects.</div>
+                        <div>Diverging lines suggest variability between subjects.</div>
+                    </div>`;
+        }
+
         // ============= Statistical Tests =============
         function validateData(requiredColumns) {
             const currentData = getCurrentDataRows();
@@ -2779,6 +2849,28 @@
             }));
         }
 
+        function getRepeatedMeasuresValidationMessage(currentData) {
+            if (currentTest !== 'anova-rm' && currentTest !== 'friedman') {
+                return null;
+            }
+
+            const conditionCount = new Set(
+                currentData
+                    .map(row => row.condition)
+                    .filter(condition => typeof condition === 'string' && condition.trim() !== '')
+            ).size;
+
+            if (conditionCount >= 3) {
+                return null;
+            }
+
+            if (conditionCount === 2) {
+                return 'Only two conditions detected. Consider using Paired t-test instead.';
+            }
+
+            return 'Repeated-measures analyses require at least three distinct conditions.';
+        }
+
         function runTest() {
             const schema = testSchemas[currentTest];
             const currentData = getCurrentDataRows();
@@ -2790,6 +2882,17 @@
                 });
                 return;
             }
+
+            const repeatedMeasuresValidationMessage = getRepeatedMeasuresValidationMessage(currentData);
+            if (repeatedMeasuresValidationMessage) {
+                showToast(repeatedMeasuresValidationMessage, 'error');
+                showResults({
+                    status: 'error',
+                    message: repeatedMeasuresValidationMessage
+                });
+                return;
+            }
+
             let results = null;
             try {
                 switch (currentTest) {
@@ -2818,8 +2921,9 @@
 
         function computeTtestIndependent(currentData) {
             const groups = groupBy(currentData, 'group');
-            const groupA = groups[Object.keys(groups)[0]].map(d => d.value);
-            const groupB = groups[Object.keys(groups)[1]].map(d => d.value);
+            const groupLabels = Object.keys(groups).slice(0, 2);
+            const groupA = groups[groupLabels[0]].map(d => d.value);
+            const groupB = groups[groupLabels[1]].map(d => d.value);
 
             const meanA = jStat.mean(groupA);
             const meanB = jStat.mean(groupB);
@@ -2835,17 +2939,21 @@
             const df = n1 + n2 - 2;
             const pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
 
-            const cohensD = (meanA - meanB) / Math.sqrt(pooledVar);
+            const cohensD = Math.abs((meanA - meanB) / Math.sqrt(pooledVar));
 
             return {
                 status: 'success',
                 testName: 'Independent t-test',
+                rawStatistic: t,
                 statistic: t.toFixed(4),
                 statisticLabel: 't',
                 df: df,
+                rawPValue: pValue,
                 pValue: pValue.toFixed(4),
+                rawEffectSize: cohensD,
                 effectSize: cohensD.toFixed(4),
                 effectSizeLabel: "Cohen's d",
+                groupLabels,
                 significant: pValue < 0.05
             };
         }
@@ -2853,6 +2961,7 @@
         function computeTtestPaired(currentData) {
             const subjects = groupBy(currentData, 'subject');
             const diffs = [];
+            const measurementLabels = getPairedMeasurementLabels();
 
             Object.values(subjects).forEach(measures => {
                 const pre = measures.find(m => 'pre' in m).pre;
@@ -2866,23 +2975,29 @@
             const df = diffs.length - 1;
             const pValue = 2 * (1 - jStat.studentt.cdf(Math.abs(t), df));
 
-            const cohensD = meanDiff / jStat.stdev(diffs, true);
+            const cohensD = Math.abs(meanDiff / jStat.stdev(diffs, true));
 
             return {
                 status: 'success',
                 testName: 'Paired t-test',
+                rawStatistic: t,
                 statistic: t.toFixed(4),
                 statisticLabel: 't',
                 df: df,
+                rawPValue: pValue,
                 pValue: pValue.toFixed(4),
+                rawEffectSize: cohensD,
                 effectSize: cohensD.toFixed(4),
                 effectSizeLabel: "Cohen's d",
+                measurementLabels,
+                subjectCount: Object.keys(subjects).length,
                 significant: pValue < 0.05
             };
         }
 
         function computeAnovaOne(currentData) {
             const groups = groupBy(currentData, 'group');
+            const groupLabels = Object.keys(groups);
             const groupArrays = Object.values(groups).map(g => g.map(d => d.value));
 
             const allValues = groupArrays.flat();
@@ -2917,18 +3032,35 @@
             return {
                 status: 'success',
                 testName: 'One-way ANOVA',
+                rawStatistic: F,
                 statistic: F.toFixed(4),
                 statisticLabel: 'F',
                 df: `${df_between}, ${df_within}`,
+                rawPValue: pValue,
                 pValue: pValue.toFixed(4),
+                rawEffectSize: eta2,
                 effectSize: eta2.toFixed(4),
                 effectSizeLabel: 'η²',
+                groupLabels,
                 significant: pValue < 0.05
             };
         }
 
         function computeAnovaTwo(currentData) {
-            const groups = groupBy(currentData, d => d.factorA + '-' + d.factorB);
+            const factorHeaders = getTwoWayFactorHeaders();
+            const factorALevels = [...new Set(currentData.map(row => row.factorA).filter(Boolean))].sort();
+            const factorBLevels = [...new Set(currentData.map(row => row.factorB).filter(Boolean))].sort();
+
+            if (factorALevels.length < 2 || factorBLevels.length < 2) {
+                throw new Error('Two-way ANOVA requires at least two levels for each factor.');
+            }
+
+            const groups = groupBy(currentData, row => `${row.factorA}|||${row.factorB}`);
+            const expectedCellCount = factorALevels.length * factorBLevels.length;
+            if (Object.keys(groups).length !== expectedCellCount) {
+                throw new Error('Two-way ANOVA requires observations for every combination of factor levels.');
+            }
+
             const allValues = currentData.map(d => d.value);
             const grandMean = jStat.mean(allValues);
             const N = allValues.length;
@@ -2938,41 +3070,92 @@
                 ss_total += Math.pow(val - grandMean, 2);
             });
 
-            let ss_between = 0;
+            let ssFactorA = 0;
+            factorALevels.forEach(level => {
+                const rows = currentData.filter(row => row.factorA === level);
+                const mean = jStat.mean(rows.map(row => row.value));
+                ssFactorA += rows.length * Math.pow(mean - grandMean, 2);
+            });
+
+            let ssFactorB = 0;
+            factorBLevels.forEach(level => {
+                const rows = currentData.filter(row => row.factorB === level);
+                const mean = jStat.mean(rows.map(row => row.value));
+                ssFactorB += rows.length * Math.pow(mean - grandMean, 2);
+            });
+
+            let ssCells = 0;
+            let ssError = 0;
             Object.values(groups).forEach(group => {
-                const groupMean = jStat.mean(group.map(d => d.value));
-                group.forEach(d => {
-                    ss_between += Math.pow(groupMean - grandMean, 2);
+                const cellValues = group.map(row => row.value);
+                const cellMean = jStat.mean(cellValues);
+                ssCells += group.length * Math.pow(cellMean - grandMean, 2);
+                cellValues.forEach(value => {
+                    ssError += Math.pow(value - cellMean, 2);
                 });
             });
 
-            const ss_within = ss_total - ss_between;
-            const df_between = Object.keys(groups).length - 1;
-            const df_within = N - Object.keys(groups).length;
+            const ssInteraction = Math.max(ssCells - ssFactorA - ssFactorB, 0);
+            const dfFactorA = factorALevels.length - 1;
+            const dfFactorB = factorBLevels.length - 1;
+            const dfInteraction = dfFactorA * dfFactorB;
+            const dfError = N - (factorALevels.length * factorBLevels.length);
 
-            const ms_between = ss_between / df_between;
-            const ms_within = ss_within / df_within;
-            const F = ms_between / ms_within;
-            const pValue = 1 - jStat.centralF.cdf(F, df_between, df_within);
+            if (dfError <= 0) {
+                throw new Error('Two-way ANOVA requires replication within each cell to estimate the error term. Add at least two observations per factor combination.');
+            }
 
-            const eta2 = ss_between / ss_total;
+            const msError = ssError / dfError;
+            if (!Number.isFinite(msError) || msError <= 0) {
+                throw new Error('Two-way ANOVA could not estimate a valid error term from the current data.');
+            }
+
+            function buildAnovaEffectRow(label, description, sumOfSquares, degreesOfFreedom) {
+                const meanSquare = sumOfSquares / degreesOfFreedom;
+                const fStatistic = meanSquare / msError;
+                const pValue = 1 - jStat.centralF.cdf(fStatistic, degreesOfFreedom, dfError);
+                const partialEta2 = sumOfSquares / (sumOfSquares + ssError);
+
+                return {
+                    label,
+                    description,
+                    rawStatistic: fStatistic,
+                    statistic: fStatistic.toFixed(4),
+                    statisticLabel: 'F',
+                    df: `${degreesOfFreedom}, ${dfError}`,
+                    rawPValue: pValue,
+                    pValue: pValue.toFixed(4),
+                    rawEffectSize: partialEta2,
+                    effectSize: partialEta2.toFixed(4),
+                    effectSizeLabel: 'Partial η²',
+                    significant: pValue < 0.05
+                };
+            }
+
+            const rows = [
+                buildAnovaEffectRow(factorHeaders.factorA, `main effect of ${factorHeaders.factorA}`, ssFactorA, dfFactorA),
+                buildAnovaEffectRow(factorHeaders.factorB, `main effect of ${factorHeaders.factorB}`, ssFactorB, dfFactorB),
+                buildAnovaEffectRow(`${factorHeaders.factorA} × ${factorHeaders.factorB}`, `interaction between ${factorHeaders.factorA} and ${factorHeaders.factorB}`, ssInteraction, dfInteraction)
+            ];
 
             return {
                 status: 'success',
                 testName: 'Two-way ANOVA',
-                statistic: F.toFixed(4),
                 statisticLabel: 'F',
-                df: `${df_between}, ${df_within}`,
-                pValue: pValue.toFixed(4),
-                effectSize: eta2.toFixed(4),
-                effectSizeLabel: 'η²',
-                significant: pValue < 0.05
+                effectSizeLabel: 'Partial η²',
+                rowLabel: 'Effect',
+                factorHeaders,
+                factorALevels,
+                factorBLevels,
+                rows,
+                significant: rows.some(row => row.significant)
             };
         }
 
         function computeAnovaRM(currentData) {
             const subjects = groupBy(currentData, 'subject');
             const conditions = new Set(currentData.map(d => d.condition));
+            const conditionLabels = Array.from(conditions).sort();
 
             const subjectCount = Object.keys(subjects).length;
             const conditionCount = conditions.size;
@@ -3017,20 +3200,26 @@
             return {
                 status: 'success',
                 testName: 'Repeated Measures ANOVA',
+                rawStatistic: F,
                 statistic: F.toFixed(4),
                 statisticLabel: 'F',
                 df: `${df_conditions}, ${df_error}`,
+                rawPValue: pValue,
                 pValue: pValue.toFixed(4),
+                rawEffectSize: partialEta2,
                 effectSize: partialEta2.toFixed(4),
                 effectSizeLabel: 'Partial η²',
+                conditionLabels,
+                subjectCount,
                 significant: pValue < 0.05
             };
         }
 
         function computeMannWhitney(currentData) {
             const groups = groupBy(currentData, 'group');
-            const groupA = groups[Object.keys(groups)[0]].map(d => d.value).sort((a, b) => a - b);
-            const groupB = groups[Object.keys(groups)[1]].map(d => d.value).sort((a, b) => a - b);
+            const groupLabels = Object.keys(groups).slice(0, 2);
+            const groupA = groups[groupLabels[0]].map(d => d.value).sort((a, b) => a - b);
+            const groupB = groups[groupLabels[1]].map(d => d.value).sort((a, b) => a - b);
 
             const allValues = [...groupA, ...groupB].sort((a, b) => a - b);
             const ranks = {};
@@ -3061,11 +3250,15 @@
             return {
                 status: 'success',
                 testName: 'Mann–Whitney U',
+                rawStatistic: U,
                 statistic: U.toFixed(2),
                 statisticLabel: 'U',
+                rawPValue: pValue,
                 pValue: pValue.toFixed(4),
+                rawEffectSize: r,
                 effectSize: r.toFixed(4),
                 effectSizeLabel: 'r',
+                groupLabels,
                 significant: pValue < 0.05
             };
         }
@@ -3073,6 +3266,7 @@
         function computeWilcoxon(currentData) {
             const subjects = groupBy(currentData, 'subject');
             const diffs = [];
+            const measurementLabels = getPairedMeasurementLabels();
 
             Object.values(subjects).forEach(measures => {
                 const pre = measures.find(m => 'pre' in m).pre;
@@ -3109,11 +3303,16 @@
             return {
                 status: 'success',
                 testName: 'Wilcoxon Signed-Rank',
+                rawStatistic: T,
                 statistic: T.toFixed(2),
                 statisticLabel: 'T',
+                rawPValue: pValue,
                 pValue: pValue.toFixed(4),
+                rawEffectSize: r,
                 effectSize: r.toFixed(4),
                 effectSizeLabel: 'r',
+                measurementLabels,
+                subjectCount: Object.keys(subjects).length,
                 significant: pValue < 0.05
             };
         }
@@ -3121,6 +3320,7 @@
         function computeKruskalWallis(currentData) {
             const { rankedRows, sampleSize, tieCorrectionFactor } = rankNumericRowsWithAverageTies(currentData);
             const groupedEntries = Object.entries(groupBy(rankedRows, 'group'));
+            const groupLabels = groupedEntries.map(([groupName]) => groupName);
 
             const N = sampleSize;
             let H = 0;
@@ -3142,12 +3342,15 @@
             return {
                 status: 'success',
                 testName: 'Kruskal–Wallis',
+                rawStatistic: H,
                 statistic: H.toFixed(4),
                 statisticLabel: 'H',
                 df: df,
+                rawPValue: pValue,
                 pValue: pValue.toFixed(4),
                 effectSize: 'N/A',
                 effectSizeLabel: '',
+                groupLabels,
                 significant: pValue < 0.05
             };
         }
@@ -3195,12 +3398,16 @@
             return {
                 status: 'success',
                 testName: 'Friedman Test',
+                rawStatistic: X2,
                 statistic: X2.toFixed(4),
                 statisticLabel: 'χ²',
                 df: df,
+                rawPValue: pValue,
                 pValue: pValue.toFixed(4),
                 effectSize: 'N/A',
                 effectSizeLabel: '',
+                conditionLabels: conditionArray,
+                subjectCount: n,
                 significant: pValue < 0.05
             };
         }
@@ -3210,6 +3417,8 @@
             const panel = document.getElementById('results-panel');
             const content = document.getElementById('results-content');
             const noResultsMsg = document.getElementById('no-results-message');
+
+            normalizeVisualizationType();
 
             if (results.status === 'error') {
                 content.innerHTML = `<div class="status-badge status-error">Error</div><p>${results.message}</p>`;
@@ -3241,31 +3450,23 @@
                 <div class="status-badge ${badgeClass}">${badgeText}</div>
             </div>`;
 
+            const primaryNarrative = generatePrimaryResultNarrative(results);
+            if (primaryNarrative) {
+                html += buildResultsSection(
+                    'interpretation',
+                    'Interpretation',
+                    `<div class="visualization-container">
+                        <div id="interpretation-summary">${primaryNarrative}</div>
+                    </div>`
+                );
+            }
+
             html += buildResultsSection(
                 'stats',
                 'Test Statistics',
                 `<div class="visualization-container">
                     <div id="stats-table">
-                        <table class="publication-table">
-                            <thead>
-                                <tr>
-                                    <th>Test</th>
-                                    <th>${results.statisticLabel} Statistic</th>
-                                    ${results.df ? '<th>Degrees of Freedom</th>' : ''}
-                                    <th>p-value</th>
-                                    ${results.effectSizeLabel && results.effectSize !== 'N/A' ? `<th>${results.effectSizeLabel}</th>` : ''}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><strong>${results.testName}</strong></td>
-                                    <td>${results.statistic}</td>
-                                    ${results.df ? `<td>${results.df}</td>` : ''}
-                                    <td><strong style="color: ${results.significant ? '#166534' : '#991b1b'}">${results.pValue}</strong></td>
-                                    ${results.effectSizeLabel && results.effectSize !== 'N/A' ? `<td>${results.effectSize}</td>` : ''}
-                                </tr>
-                            </tbody>
-                        </table>
+                        ${generateStatsTableMarkup(results)}
                     </div>
                 </div>`,
                 `<div style="display: flex; gap: 0.75rem;">
@@ -3293,11 +3494,11 @@
                 'Data Visualization',
                 `<div class="visualization-container">
                     <div id="chart-container" style="width: 100%; height: 400px;"></div>
+                    ${getVisualizationHelperMarkup()}
                 </div>`,
                 `<div class="visualization-controls">
                     <div class="plot-toggle">
-                        <button class="plot-toggle-btn ${currentVisualizationType === 'descriptive' ? 'active' : ''}" data-plot-type="descriptive" onclick="setVisualizationType('descriptive')">Descriptive Plot</button>
-                        <button class="plot-toggle-btn ${currentVisualizationType === 'box' ? 'active' : ''}" data-plot-type="box" onclick="setVisualizationType('box')">Box and Whisker Plot</button>
+                        ${getVisualizationToggleMarkup()}
                     </div>
                     <button class="export-button" onclick="exportVisualization('chart-container')">📥 Export as PNG</button>
                 </div>`
@@ -3409,7 +3610,49 @@
                 return transformedRows;
             }
 
+            if (isRepeatedMeasuresVisualizationTest()) {
+                return currentData.map(row => ({
+                    ...row,
+                    group: row.condition
+                }));
+            }
+
             return currentData;
+        }
+
+        function getRepeatedMeasuresVisualizationData() {
+            const numericRows = getCurrentDataRows().filter(row => (
+                row
+                && typeof row.value === 'number'
+                && Number.isFinite(row.value)
+                && row.subject !== undefined
+                && row.subject !== null
+                && row.subject !== ''
+                && row.condition !== undefined
+                && row.condition !== null
+                && row.condition !== ''
+            ));
+            const conditionLabels = [...new Set(numericRows.map(row => row.condition))].sort();
+            const subjectEntries = Object.entries(groupBy(numericRows, 'subject'))
+                .sort((left, right) => String(left[0]).localeCompare(String(right[0]), undefined, { numeric: true }))
+                .map(([subject, rows]) => {
+                    const valuesByCondition = new Map(rows.map(row => [row.condition, row.value]));
+                    return {
+                        subject,
+                        values: conditionLabels.map(condition => valuesByCondition.get(condition) ?? null)
+                    };
+                });
+            const summaryStats = conditionLabels.map(condition => buildGroupStats(
+                condition,
+                numericRows.filter(row => row.condition === condition)
+            ));
+
+            return {
+                conditionLabels,
+                subjectEntries,
+                summaryStats,
+                numericValues: numericRows.map(row => row.value)
+            };
         }
 
         function isAnovaTest() {
@@ -3465,6 +3708,288 @@
             }
 
             return pValue.toFixed(4);
+        }
+
+        function getEtaSquaredMagnitude(effectSizeValue) {
+            const absoluteEffectSize = Math.abs(effectSizeValue);
+
+            if (absoluteEffectSize < 0.01) {
+                return 'negligible';
+            }
+
+            if (absoluteEffectSize < 0.06) {
+                return 'small';
+            }
+
+            if (absoluteEffectSize < 0.14) {
+                return 'medium';
+            }
+
+            return 'large';
+        }
+
+        function getCorrelationMagnitude(effectSizeValue) {
+            const absoluteEffectSize = Math.abs(effectSizeValue);
+
+            if (absoluteEffectSize < 0.1) {
+                return 'negligible';
+            }
+
+            if (absoluteEffectSize < 0.3) {
+                return 'small';
+            }
+
+            if (absoluteEffectSize < 0.5) {
+                return 'medium';
+            }
+
+            return 'large';
+        }
+
+        function formatReadableList(items) {
+            const filteredItems = items.filter(Boolean);
+
+            if (filteredItems.length <= 1) {
+                return filteredItems[0] || '';
+            }
+
+            if (filteredItems.length === 2) {
+                return `${filteredItems[0]} and ${filteredItems[1]}`;
+            }
+
+            return `${filteredItems.slice(0, -1).join(', ')}, and ${filteredItems[filteredItems.length - 1]}`;
+        }
+
+        function getFormattedStatisticLabel(statisticLabel) {
+            if (['t', 'F', 'U', 'T'].includes(statisticLabel)) {
+                return `<em>${statisticLabel}</em>`;
+            }
+
+            return statisticLabel;
+        }
+
+        function formatStatisticReference(statisticLabel, df, value) {
+            const formattedLabel = getFormattedStatisticLabel(statisticLabel);
+            const numericValue = Number(value);
+
+            if (df !== null && df !== undefined && df !== '') {
+                return `${formattedLabel}(${df}) = ${numericValue.toFixed(2)}`;
+            }
+
+            return `${formattedLabel} = ${numericValue.toFixed(2)}`;
+        }
+
+        function buildEffectSizeSentence(effectSizeLabel, effectSizeValue, magnitude) {
+            return `The effect size is ${magnitude} (${effectSizeLabel} = ${effectSizeValue.toFixed(2)}).`;
+        }
+
+        function generateStatsTableMarkup(results) {
+            const multiRowResults = Array.isArray(results.rows) ? results.rows : null;
+            const hasEffectSizeColumn = multiRowResults
+                ? multiRowResults.some(row => row.effectSizeLabel && row.effectSize !== 'N/A')
+                : results.effectSizeLabel && results.effectSize !== 'N/A';
+            const hasDfColumn = multiRowResults
+                ? multiRowResults.some(row => row.df !== null && row.df !== undefined && row.df !== '')
+                : results.df !== null && results.df !== undefined && results.df !== '';
+
+            let tableHtml = '<table class="publication-table"><thead><tr>';
+            tableHtml += `<th>${multiRowResults ? (results.rowLabel || 'Effect') : 'Test'}</th>`;
+            tableHtml += `<th>${results.statisticLabel} Statistic</th>`;
+            if (hasDfColumn) {
+                tableHtml += '<th>Degrees of Freedom</th>';
+            }
+            tableHtml += '<th>p-value</th>';
+            if (hasEffectSizeColumn) {
+                tableHtml += `<th>${results.effectSizeLabel || multiRowResults.find(row => row.effectSizeLabel)?.effectSizeLabel || 'Effect Size'}</th>`;
+            }
+            tableHtml += '</tr></thead><tbody>';
+
+            if (multiRowResults) {
+                multiRowResults.forEach(row => {
+                    tableHtml += '<tr>';
+                    tableHtml += `<td><strong>${row.label}</strong></td>`;
+                    tableHtml += `<td>${row.statistic}</td>`;
+                    if (hasDfColumn) {
+                        tableHtml += `<td>${row.df || ''}</td>`;
+                    }
+                    tableHtml += `<td><strong style="color: ${row.significant ? '#166534' : '#991b1b'}">${formatDisplayPValue(row.rawPValue ?? Number(row.pValue))}</strong></td>`;
+                    if (hasEffectSizeColumn) {
+                        tableHtml += `<td>${row.effectSize !== 'N/A' ? row.effectSize : ''}</td>`;
+                    }
+                    tableHtml += '</tr>';
+                });
+            } else {
+                tableHtml += '<tr>';
+                tableHtml += `<td><strong>${results.testName}</strong></td>`;
+                tableHtml += `<td>${results.statistic}</td>`;
+                if (hasDfColumn) {
+                    tableHtml += `<td>${results.df || ''}</td>`;
+                }
+                tableHtml += `<td><strong style="color: ${results.significant ? '#166534' : '#991b1b'}">${formatDisplayPValue(results.rawPValue ?? Number(results.pValue))}</strong></td>`;
+                if (hasEffectSizeColumn) {
+                    tableHtml += `<td>${results.effectSize}</td>`;
+                }
+                tableHtml += '</tr>';
+            }
+
+            tableHtml += '</tbody></table>';
+            return tableHtml;
+        }
+
+        function getCohensDMagnitude(effectSizeValue) {
+            const absoluteEffectSize = Math.abs(effectSizeValue);
+
+            if (absoluteEffectSize < 0.2) {
+                return 'negligible';
+            }
+
+            if (absoluteEffectSize < 0.5) {
+                return 'small';
+            }
+
+            if (absoluteEffectSize < 0.8) {
+                return 'medium';
+            }
+
+            if (absoluteEffectSize < 1.2) {
+                return 'large';
+            }
+
+            return 'very large';
+        }
+
+        function generatePrimaryResultNarrative(results) {
+            const pValueText = formatDisplayPValue(results.rawPValue ?? Number(results.pValue));
+
+            switch (currentTest) {
+                case 'ttest-ind': {
+                    const [groupA = 'Group A', groupB = 'Group B'] = results.groupLabels || [];
+                    const statistic = typeof results.rawStatistic === 'number' ? results.rawStatistic : Number(results.statistic);
+                    const effectSize = typeof results.rawEffectSize === 'number'
+                        ? Math.abs(results.rawEffectSize)
+                        : Math.abs(Number(results.effectSize));
+                    const significanceText = results.significant
+                        ? `There is a statistically significant difference between ${groupA} and ${groupB},`
+                        : `There is no statistically significant difference between ${groupA} and ${groupB},`;
+
+                    return `<p style="margin: 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${significanceText}</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${formatStatisticReference('t', results.df, statistic)}, <em>p</em> = ${pValueText}.</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${buildEffectSizeSentence("Cohen's d", effectSize, getCohensDMagnitude(effectSize))}</p>`;
+                }
+
+                case 'ttest-paired': {
+                    const { pre = 'Pre', post = 'Post' } = results.measurementLabels || {};
+                    const statistic = typeof results.rawStatistic === 'number' ? results.rawStatistic : Number(results.statistic);
+                    const effectSize = typeof results.rawEffectSize === 'number'
+                        ? Math.abs(results.rawEffectSize)
+                        : Math.abs(Number(results.effectSize));
+                    const significanceText = results.significant
+                        ? `There is a statistically significant difference between ${pre} and ${post},`
+                        : `There is no statistically significant difference between ${pre} and ${post},`;
+
+                    return `<p style="margin: 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${significanceText}</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${formatStatisticReference('t', results.df, statistic)}, <em>p</em> = ${pValueText}.</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${buildEffectSizeSentence("Cohen's d", effectSize, getCohensDMagnitude(effectSize))}</p>`;
+                }
+
+                case 'anova-one': {
+                    const statistic = typeof results.rawStatistic === 'number' ? results.rawStatistic : Number(results.statistic);
+                    const effectSize = typeof results.rawEffectSize === 'number'
+                        ? results.rawEffectSize
+                        : Number(results.effectSize);
+                    const groupList = formatReadableList(results.groupLabels || ['the groups']);
+                    const significanceText = results.significant
+                        ? `There is a statistically significant difference among the group means of ${groupList},`
+                        : `There is no statistically significant difference among the group means of ${groupList},`;
+
+                    return `<p style="margin: 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${significanceText}</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${formatStatisticReference('F', results.df, statistic)}, <em>p</em> = ${pValueText}.</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${buildEffectSizeSentence('η²', effectSize, getEtaSquaredMagnitude(effectSize))}</p>`;
+                }
+
+                case 'anova-two': {
+                    if (!Array.isArray(results.rows) || results.rows.length === 0) {
+                        return '';
+                    }
+
+                    return results.rows.map(row => {
+                        const significanceText = row.significant
+                            ? `For the ${row.description}, there is a statistically significant effect.`
+                            : `For the ${row.description}, there is no statistically significant effect.`;
+                        return `<p style="margin: 0 0 0.85rem; color: #1f2937; font-size: 1rem; line-height: 1.75;">${significanceText}<br>${formatStatisticReference('F', row.df, row.rawStatistic)}, <em>p</em> = ${formatDisplayPValue(row.rawPValue)}.<br>${buildEffectSizeSentence('Partial η²', row.rawEffectSize, getEtaSquaredMagnitude(row.rawEffectSize))}</p>`;
+                    }).join('');
+                }
+
+                case 'anova-rm': {
+                    const statistic = typeof results.rawStatistic === 'number' ? results.rawStatistic : Number(results.statistic);
+                    const effectSize = typeof results.rawEffectSize === 'number'
+                        ? results.rawEffectSize
+                        : Number(results.effectSize);
+                    const conditionList = formatReadableList(results.conditionLabels || ['the conditions']);
+                    const significanceText = results.significant
+                        ? `There is a statistically significant difference across the repeated-measures conditions ${conditionList},`
+                        : `There is no statistically significant difference across the repeated-measures conditions ${conditionList},`;
+
+                    return `<p style="margin: 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${significanceText}</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${formatStatisticReference('F', results.df, statistic)}, <em>p</em> = ${pValueText}.</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${buildEffectSizeSentence('Partial η²', effectSize, getEtaSquaredMagnitude(effectSize))}</p>`;
+                }
+
+                case 'mann-whitney': {
+                    const [groupA = 'Group A', groupB = 'Group B'] = results.groupLabels || [];
+                    const statistic = typeof results.rawStatistic === 'number' ? results.rawStatistic : Number(results.statistic);
+                    const effectSize = typeof results.rawEffectSize === 'number'
+                        ? Math.abs(results.rawEffectSize)
+                        : Math.abs(Number(results.effectSize));
+                    const significanceText = results.significant
+                        ? `There is a statistically significant difference between ${groupA} and ${groupB},`
+                        : `There is no statistically significant difference between ${groupA} and ${groupB},`;
+
+                    return `<p style="margin: 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${significanceText}</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${formatStatisticReference('U', '', statistic)}, <em>p</em> = ${pValueText}.</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${buildEffectSizeSentence('r', effectSize, getCorrelationMagnitude(effectSize))}</p>`;
+                }
+
+                case 'wilcoxon': {
+                    const { pre = 'Pre', post = 'Post' } = results.measurementLabels || {};
+                    const statistic = typeof results.rawStatistic === 'number' ? results.rawStatistic : Number(results.statistic);
+                    const effectSize = typeof results.rawEffectSize === 'number'
+                        ? Math.abs(results.rawEffectSize)
+                        : Math.abs(Number(results.effectSize));
+                    const significanceText = results.significant
+                        ? `There is a statistically significant difference between ${pre} and ${post},`
+                        : `There is no statistically significant difference between ${pre} and ${post},`;
+
+                    return `<p style="margin: 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${significanceText}</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${formatStatisticReference('T', '', statistic)}, <em>p</em> = ${pValueText}.</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${buildEffectSizeSentence('r', effectSize, getCorrelationMagnitude(effectSize))}</p>`;
+                }
+
+                case 'kruskal-wallis': {
+                    const statistic = typeof results.rawStatistic === 'number' ? results.rawStatistic : Number(results.statistic);
+                    const groupList = formatReadableList(results.groupLabels || ['the groups']);
+                    const significanceText = results.significant
+                        ? `There is a statistically significant difference among ${groupList},`
+                        : `There is no statistically significant difference among ${groupList},`;
+
+                    return `<p style="margin: 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${significanceText}</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${formatStatisticReference('H', results.df, statistic)}, <em>p</em> = ${pValueText}.</p>`;
+                }
+
+                case 'friedman': {
+                    const statistic = typeof results.rawStatistic === 'number' ? results.rawStatistic : Number(results.statistic);
+                    const conditionList = formatReadableList(results.conditionLabels || ['the conditions']);
+                    const significanceText = results.significant
+                        ? `There is a statistically significant difference across the repeated-measures conditions ${conditionList},`
+                        : `There is no statistically significant difference across the repeated-measures conditions ${conditionList},`;
+
+                    return `<p style="margin: 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${significanceText}</p>
+                        <p style="margin: 0.4rem 0 0; color: #1f2937; font-size: 1rem; line-height: 1.75;">${formatStatisticReference('χ²', results.df, statistic)}, <em>p</em> = ${pValueText}.</p>`;
+                }
+
+                default:
+                    return '';
+            }
         }
 
         function rankNumericRowsWithAverageTies(rows, valueKey = 'value') {
@@ -4080,6 +4605,34 @@
             const container = document.getElementById('chart-container');
             if (!container) return;
 
+            normalizeVisualizationType();
+
+            if (window.chartInstance) {
+                window.chartInstance.destroy();
+            }
+
+            if (isRepeatedMeasuresVisualizationTest()) {
+                const repeatedMeasuresData = getRepeatedMeasuresVisualizationData();
+
+                if (repeatedMeasuresData.conditionLabels.length === 0 || repeatedMeasuresData.subjectEntries.length === 0) {
+                    container.innerHTML = '<div style="height: 100%; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 0.95rem;">No repeated-measures data are available for visualization.</div>';
+                    return;
+                }
+
+                container.innerHTML = '<canvas></canvas>';
+                const canvas = container.querySelector('canvas');
+                const ctx = canvas.getContext('2d');
+
+                if (currentVisualizationType === 'summary') {
+                    const bounds = getPlotBounds(repeatedMeasuresData.summaryStats, 'descriptive');
+                    window.chartInstance = createRepeatedMeasuresSummaryChart(ctx, repeatedMeasuresData, bounds);
+                } else {
+                    const bounds = getNumericBounds(repeatedMeasuresData.numericValues);
+                    window.chartInstance = createWithinSubjectPlotChart(ctx, repeatedMeasuresData, bounds);
+                }
+                return;
+            }
+
             const currentData = getSummaryVisualizationRows();
             const groups = groupBy(currentData, d => d.group || d.factorA || d.subject || 'All');
             let groupNames = Object.keys(groups);
@@ -4097,11 +4650,6 @@
 
             if (groupNames.length > 0 && groupNames[0] !== 'undefined') {
                 const groupStats = groupNames.map(name => buildGroupStats(name, groups[name]));
-
-                // Destroy existing chart if it exists
-                if (window.chartInstance) {
-                    window.chartInstance.destroy();
-                }
 
                 // Clear container and create canvas
                 container.innerHTML = '<canvas></canvas>';
@@ -4408,6 +4956,33 @@
             };
         }
 
+        function getNumericBounds(values) {
+            const numericValues = values.filter(value => typeof value === 'number' && Number.isFinite(value));
+            if (numericValues.length === 0) {
+                return {
+                    min: 0,
+                    max: 1,
+                    stepSize: 0.1,
+                    precision: 1
+                };
+            }
+
+            let minValue = Math.min(...numericValues);
+            let maxValue = Math.max(...numericValues);
+            const rawRange = maxValue - minValue;
+            const range = rawRange === 0 ? Math.max(Math.abs(maxValue) * 0.1, 0.1) : rawRange;
+            const stepSize = getAxisStepSize(range);
+            const padding = Math.max(range * 0.05, stepSize * 0.1);
+            const precision = getAxisPrecision(stepSize);
+
+            return {
+                min: Number(roundDownToStep(minValue - padding, stepSize).toFixed(precision)),
+                max: Number(roundUpToStep(maxValue + padding, stepSize).toFixed(precision)),
+                stepSize,
+                precision
+            };
+        }
+
         function getBaseChartOptions(groupStats, bounds, titleText, tooltipCallbacks, valueAxisLabel = 'Value') {
             return {
                 responsive: true,
@@ -4595,6 +5170,264 @@
                     }
                 }, valueAxisLabel),
                 plugins: [ciErrorBarsPlugin, medianPlugin]
+            });
+        }
+
+        function createWithinSubjectPlotChart(ctx, repeatedMeasuresData, bounds) {
+            const valueAxisLabel = getValueAxisLabel();
+            const baseColors = [
+                [79, 124, 255],
+                [0, 184, 169],
+                [245, 158, 11],
+                [220, 38, 38],
+                [124, 58, 237],
+                [14, 165, 233],
+                [22, 163, 74],
+                [217, 119, 6]
+            ];
+            const legendDisplay = repeatedMeasuresData.subjectEntries.length <= 8;
+
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: repeatedMeasuresData.conditionLabels,
+                    datasets: repeatedMeasuresData.subjectEntries.map((entry, index) => {
+                        const [red, green, blue] = baseColors[index % baseColors.length];
+                        const borderColor = `rgba(${red}, ${green}, ${blue}, 0.58)`;
+                        return {
+                            label: `Subject ${entry.subject}`,
+                            data: entry.values,
+                            borderColor,
+                            backgroundColor: borderColor,
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: borderColor,
+                            pointBorderWidth: 1.6,
+                            pointRadius: 3.5,
+                            pointHoverRadius: 5,
+                            borderWidth: 1.2,
+                            spanGaps: false,
+                            tension: 0
+                        };
+                    })
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: legendDisplay,
+                            position: 'top',
+                            labels: {
+                                font: { size: 12, family: 'Arial, sans-serif', weight: '500' },
+                                color: '#000000',
+                                usePointStyle: true,
+                                padding: 16
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Within-Subject Plot: Individual Subject Trajectories Across Conditions',
+                            font: { size: 13, family: 'Arial, sans-serif', weight: 'bold' },
+                            color: '#000000',
+                            padding: { top: 10, bottom: 20 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            padding: 12,
+                            titleFont: { size: 12, family: 'Arial, sans-serif', weight: 'bold' },
+                            bodyFont: { size: 11, family: 'Arial, sans-serif' },
+                            borderColor: '#000000',
+                            borderWidth: 1,
+                            callbacks: {
+                                title: function(context) {
+                                    return repeatedMeasuresData.conditionLabels[context[0].dataIndex];
+                                },
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Condition',
+                                font: { size: 12, family: 'Arial, sans-serif', weight: 'bold' },
+                                color: '#000000',
+                                padding: { top: 12 }
+                            },
+                            ticks: {
+                                font: { size: 12, family: 'Arial, sans-serif', weight: '500' },
+                                color: '#000000'
+                            },
+                            grid: {
+                                color: '#E5E5E5',
+                                lineWidth: 1
+                            }
+                        },
+                        y: {
+                            min: bounds.min,
+                            max: bounds.max,
+                            ticks: {
+                                stepSize: bounds.stepSize,
+                                precision: bounds.precision,
+                                font: { size: 11, family: 'Arial, sans-serif' },
+                                color: '#000000'
+                            },
+                            title: {
+                                display: true,
+                                text: valueAxisLabel,
+                                font: { size: 12, family: 'Arial, sans-serif', weight: 'bold' },
+                                color: '#000000',
+                                padding: { bottom: 12 }
+                            },
+                            grid: {
+                                color: '#E5E5E5',
+                                lineWidth: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createRepeatedMeasuresSummaryChart(ctx, repeatedMeasuresData, bounds) {
+            const valueAxisLabel = getValueAxisLabel();
+            const ciErrorBarsPlugin = {
+                id: 'repeatedMeasuresCiErrorBars',
+                afterDatasetsDraw(chart) {
+                    const chartCtx = chart.ctx;
+                    const xScale = chart.scales.x;
+                    const yScale = chart.scales.y;
+
+                    repeatedMeasuresData.summaryStats.forEach((group, idx) => {
+                        const x = xScale.getPixelForValue(idx);
+                        const yUpper = yScale.getPixelForValue(group.ciUpper);
+                        const yLower = yScale.getPixelForValue(group.ciLower);
+
+                        chartCtx.save();
+                        chartCtx.strokeStyle = '#4F7CFF';
+                        chartCtx.lineWidth = 1.5;
+                        chartCtx.beginPath();
+                        chartCtx.moveTo(x, yUpper);
+                        chartCtx.lineTo(x, yLower);
+                        chartCtx.stroke();
+
+                        const capWidth = 8;
+                        chartCtx.beginPath();
+                        chartCtx.moveTo(x - capWidth, yUpper);
+                        chartCtx.lineTo(x + capWidth, yUpper);
+                        chartCtx.stroke();
+                        chartCtx.beginPath();
+                        chartCtx.moveTo(x - capWidth, yLower);
+                        chartCtx.lineTo(x + capWidth, yLower);
+                        chartCtx.stroke();
+                        chartCtx.restore();
+                    });
+                }
+            };
+
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: repeatedMeasuresData.conditionLabels,
+                    datasets: [
+                        {
+                            label: 'Mean Trend',
+                            data: repeatedMeasuresData.summaryStats.map(group => group.mean),
+                            borderColor: '#1d4ed8',
+                            backgroundColor: 'rgba(29, 78, 216, 0.14)',
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#1d4ed8',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 6,
+                            borderWidth: 2.2,
+                            tension: 0.2,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Summary Plot: Condition Means with 95% Confidence Intervals',
+                            font: { size: 13, family: 'Arial, sans-serif', weight: 'bold' },
+                            color: '#000000',
+                            padding: { top: 10, bottom: 20 }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            padding: 12,
+                            titleFont: { size: 12, family: 'Arial, sans-serif', weight: 'bold' },
+                            bodyFont: { size: 11, family: 'Arial, sans-serif' },
+                            borderColor: '#000000',
+                            borderWidth: 1,
+                            callbacks: {
+                                title: function(context) {
+                                    return repeatedMeasuresData.conditionLabels[context[0].dataIndex];
+                                },
+                                label: function(context) {
+                                    const group = repeatedMeasuresData.summaryStats[context.dataIndex];
+                                    return [
+                                        `Mean: ${group.mean.toFixed(2)}`,
+                                        `95% CI: [${group.ciLower.toFixed(2)}, ${group.ciUpper.toFixed(2)}]`,
+                                        `Median: ${group.median.toFixed(2)}`,
+                                        `n = ${group.n}, SD = ${group.sd.toFixed(2)}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Condition',
+                                font: { size: 12, family: 'Arial, sans-serif', weight: 'bold' },
+                                color: '#000000',
+                                padding: { top: 12 }
+                            },
+                            ticks: {
+                                font: { size: 12, family: 'Arial, sans-serif', weight: '500' },
+                                color: '#000000'
+                            },
+                            grid: {
+                                color: '#E5E5E5',
+                                lineWidth: 1
+                            }
+                        },
+                        y: {
+                            min: bounds.min,
+                            max: bounds.max,
+                            ticks: {
+                                stepSize: bounds.stepSize,
+                                precision: bounds.precision,
+                                font: { size: 11, family: 'Arial, sans-serif' },
+                                color: '#000000'
+                            },
+                            title: {
+                                display: true,
+                                text: valueAxisLabel,
+                                font: { size: 12, family: 'Arial, sans-serif', weight: 'bold' },
+                                color: '#000000',
+                                padding: { bottom: 12 }
+                            },
+                            grid: {
+                                color: '#E5E5E5',
+                                lineWidth: 1
+                            }
+                        }
+                    }
+                },
+                plugins: [ciErrorBarsPlugin]
             });
         }
 
