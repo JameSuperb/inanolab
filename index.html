@@ -1908,6 +1908,25 @@
                             </div>
                         </div>
                     </article>
+                    <article class="extra-service extra-tool">
+                        <a class="extra-preview" href="trendline.html" aria-label="Open Trendline and Correlation">
+                            <img src="Images/trendline.png" alt="Trendline and Correlation preview" loading="lazy">
+                        </a>
+                        <div class="extra-body">
+                            <h3 class="extra-title">Trendline and Correlation</h3>
+                            <p class="extra-desc">A browser-based tool for exploring relationships between variables using scatter plots, fitted trendlines, and correlation analysis. It helps researchers inspect patterns in data quickly and interpret linear relationships directly in the browser.</p>
+                            <div class="extra-tags" aria-label="Trendline and Correlation tags">
+                                <span class="extra-tag">Statistics</span>
+                                <span class="extra-tag">Trendline</span>
+                                <span class="extra-tag">Correlation</span>
+                                <span class="extra-tag">Browser-based</span>
+                            </div>
+                            <div class="extra-actions">
+                                <a class="btn-primary" href="trendline.html">Open Trendline and Correlation</a>
+                                <button class="btn-subtle" type="button" data-open-modal="trendline" aria-haspopup="dialog">Learn more</button>
+                            </div>
+                        </div>
+                    </article>
                         <article class="extra-service extra-tool">
                             <a class="extra-preview" href="statistics.html" aria-label="Open Statistics Test for Differences">
                                 <img src="Images/statisticstest.png" alt="Statistics Test for Differences preview" loading="lazy">
@@ -2354,6 +2373,65 @@
 
                 <div class="modal-footer">
                     <a class="btn-subtle" href="roughness.html">Open Roughness Visualizer</a>
+                    <button class="btn-primary" type="button" data-close-modal>Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extras: Learn More Modal (Trendline and Correlation) -->
+    <div id="modal-trendline" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-trendline-title" aria-hidden="true">
+        <div class="modal" role="document">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-trendline-title" class="modal-title">Trendline and Correlation — Documentation</h3>
+                    <p class="modal-subtitle">Overview of the tool, common analyses, and basic workflow.</p>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-content">
+                <div class="modal-grid">
+                    <div>
+                        <div class="modal-media">
+                            <img src="Images/trendline.png" alt="Trendline and Correlation preview" loading="lazy">
+                        </div>
+                        <p class="modal-caption">Tip: Use paired numeric datasets for clearer scatter plots and correlation results.</p>
+                    </div>
+
+                    <div class="modal-panel">
+                        <h4>About</h4>
+                        <p>
+                            <strong>Website:</strong> <a href="https://www.inanolab.com/trendline.html" target="_blank" rel="noopener">https://www.inanolab.com/trendline.html</a><br>
+                            <strong>Developer / Programmer:</strong> Dr. James Salveo Olarve<br>
+                            <strong>Affiliation:</strong> i-Nano Research Facility, De La Salle University Manila
+                        </p>
+
+                        <h4>What It Does</h4>
+                        <ul>
+                            <li>Creates <strong>scatter plots</strong> to visualize relationships between two variables.</li>
+                            <li>Helps inspect fitted <strong>trendlines</strong> for basic linear pattern analysis.</li>
+                            <li>Supports <strong>correlation analysis</strong> to evaluate the strength and direction of association.</li>
+                            <li>Provides a quick browser-based workflow for research, classwork, and data exploration.</li>
+                        </ul>
+
+                        <h4>Typical Use Cases</h4>
+                        <ul>
+                            <li>Explore whether two measured variables rise or fall together.</li>
+                            <li>Check if experimental data suggests a linear relationship.</li>
+                            <li>Support interpretation of small research datasets with simple visual and statistical summaries.</li>
+                        </ul>
+
+                        <h4>Quick Start</h4>
+                        <ul>
+                            <li>Open the tool and enter or load paired data values.</li>
+                            <li>Generate the scatter plot and inspect the fitted trendline.</li>
+                            <li>Review the correlation output together with the graph before drawing conclusions.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a class="btn-subtle" href="trendline.html">Open Trendline and Correlation</a>
                     <button class="btn-primary" type="button" data-close-modal>Close</button>
                 </div>
             </div>

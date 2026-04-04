@@ -1,0 +1,3054 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trendline and Correlation</title>
+    <link rel="icon" type="image/svg+xml" href="assets/correlation-analyzer-icon.svg">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Montserrat:wght@600;700&family=Open+Sans:wght@400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, #eef7ff 0%, #f5f0ff 100%);
+            overflow: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .nav-item:hover {
+            transform: translateX(4px);
+            background-color: rgba(77, 168, 218, 0.1);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #4DA8DA, #9B5DE5);
+            color: white;
+            box-shadow: 0 4px 15px rgba(77, 168, 218, 0.3);
+        }
+
+        .card {
+            border-radius: 20px;
+            padding: 24px;
+            background: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn {
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4DA8DA, #2E8FB0);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #43D9A3, #2BB88d);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #F94144, #D63238);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #9B5DE5, #7B3FBF);
+            color: white;
+        }
+
+        .btn-highlight {
+            background: linear-gradient(135deg, #F9C74F, #F4B84D);
+            color: #333;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-group-item {
+            padding: 0.6rem 1rem;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .btn-group-item:hover {
+            border-color: #4DA8DA;
+            transform: translateY(-2px);
+        }
+
+        .btn-group-item.active {
+            background: linear-gradient(135deg, #4DA8DA, #2E8FB0);
+            color: white;
+            border-color: #4DA8DA;
+            box-shadow: 0 0 20px rgba(77, 168, 218, 0.4);
+        }
+
+        .input-field {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #4DA8DA;
+            box-shadow: 0 0 12px rgba(77, 168, 218, 0.2);
+        }
+
+        .accordion-header {
+            background: linear-gradient(135deg, rgba(77, 168, 218, 0.1), rgba(155, 93, 229, 0.1));
+            padding: 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .accordion-header:hover {
+            background: linear-gradient(135deg, rgba(77, 168, 218, 0.15), rgba(155, 93, 229, 0.15));
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 1rem;
+            animation: slideDown 0.3s ease;
+        }
+
+        .accordion-content.active {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(77, 168, 218, 0.15), rgba(155, 93, 229, 0.15));
+            border-left: 4px solid #4DA8DA;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .data-panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 251, 255, 0.98));
+            border: 1px solid #e9eef7;
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 10px 25px rgba(31, 41, 55, 0.06);
+        }
+
+        .column-setup-title {
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1f2937;
+            font-size: 1.15rem;
+        }
+
+        .data-helper-text {
+            color: #5f6c7b;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+
+        .column-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .column-input-group {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .column-input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .column-input-group input {
+            width: 100%;
+        }
+
+        .demo-data-panel {
+            border-style: dashed;
+        }
+
+        .data-entry-table-wrap {
+            overflow-x: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 20px;
+            background: white;
+        }
+
+        .data-entry-table {
+            width: 100%;
+            min-width: 560px;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .data-entry-table th {
+            background: linear-gradient(135deg, #f8fbff 0%, #f3f1ff 100%);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.18);
+            padding: 0.95rem 1rem;
+            text-align: left;
+            font-weight: 700;
+            color: #667eea;
+            white-space: nowrap;
+        }
+
+        .data-entry-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle;
+        }
+
+        .data-entry-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-entry-table .input-field {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            border-width: 1px;
+        }
+
+        .data-row-index {
+            width: 72px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .data-table-actions {
+            text-align: center;
+            width: 96px;
+        }
+
+        .data-entry-button-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .demo-data-actions {
+            gap: 0.5rem;
+        }
+
+        .data-file-actions {
+            margin-top: 0.85rem;
+        }
+
+        .data-file-note {
+            margin-top: 0.85rem;
+            color: #5f6c7b;
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .hidden-file-input {
+            display: none;
+        }
+
+        .btn-demo {
+            background: #ffffff;
+            color: #1f2937;
+            border: 1px solid #d1d5db;
+            padding: 0.55rem 0.85rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 10px;
+            box-shadow: none;
+        }
+
+        .btn-demo:hover {
+            background: #f8fafc;
+            border-color: #9ca3af;
+            transform: translateY(-1px);
+        }
+
+        .btn-demo:active {
+            transform: translateY(0);
+        }
+
+        .data-section-note {
+            color: #666;
+            font-size: 0.92rem;
+            font-style: italic;
+            margin-top: 1rem;
+        }
+
+        .graph-feedback {
+            display: none;
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.25rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(77, 168, 218, 0.08), rgba(155, 93, 229, 0.08));
+            border-left: 4px solid #4DA8DA;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        .graph-meta {
+            display: none;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .graph-meta-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.6rem 0.85rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(77, 168, 218, 0.1), rgba(155, 93, 229, 0.1));
+            border: 1px solid rgba(77, 168, 218, 0.18);
+            color: #374151;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .graph-meta-label {
+            font-weight: 700;
+            color: #4DA8DA;
+        }
+
+        .results-model-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .results-status {
+            margin-bottom: 1rem;
+            padding: 0.9rem 1rem;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(77, 168, 218, 0.08), rgba(155, 93, 229, 0.08));
+            border-left: 4px solid #4DA8DA;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        .results-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-bottom: 0.85rem;
+            padding: 0.45rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(67, 217, 163, 0.12);
+            color: #16805e;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, #eef7ff, #f5f0ff);
+            border: 2px solid #4DA8DA;
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            animation: slideInUp 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .recommendation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(77, 168, 218, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(77, 168, 218, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(77, 168, 218, 0.8);
+            }
+        }
+
+        .glow-active {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        .insight-box {
+            background: linear-gradient(135deg, rgba(77, 168, 218, 0.05), rgba(155, 93, 229, 0.05));
+            border-left: 4px solid #9B5DE5;
+            border-radius: 12px;
+            padding: 1rem;
+            font-style: italic;
+            color: #333;
+        }
+
+        .reflection-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .reflection-card:hover {
+            border-color: #4DA8DA;
+            box-shadow: 0 4px 15px rgba(77, 168, 218, 0.2);
+        }
+
+        .reflection-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .graph-container {
+            position: relative;
+            height: 400px;
+            margin: 1rem 0;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.6), transparent);
+            animation: rippleEffect 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes rippleEffect {
+            from {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            to {
+                width: 100px;
+                height: 100px;
+                opacity: 0;
+            }
+        }
+
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            animation: fall 2s ease-in forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 28px;
+            background: #ccc;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .switch.active {
+            background: #43D9A3;
+        }
+
+        .switch::after {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s ease;
+        }
+
+        .switch.active::after {
+            left: 24px;
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4DA8DA, #9B5DE5);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .header-title {
+            min-width: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .app-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .app-icon {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(49, 65, 120, 0.2);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0;
+        }
+
+        .header p {
+            font-size: 0.95rem;
+            opacity: 0.95;
+        }
+
+        .mobile-menu-button {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.18);
+            color: white;
+            font-size: 1.4rem;
+            line-height: 1;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .mobile-menu-button:hover {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .mobile-menu-button:active {
+            transform: scale(0.96);
+        }
+
+        .mobile-menu-button:focus-visible {
+            outline: 2px solid white;
+            outline-offset: 3px;
+        }
+
+        .doc-icon-button,
+        .doc-close-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.18);
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .doc-icon-button:hover,
+        .doc-close-button:hover {
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .doc-icon-button:active,
+        .doc-close-button:active {
+            transform: scale(0.96);
+        }
+
+        .doc-icon-button:focus-visible,
+        .doc-close-button:focus-visible {
+            outline: 2px solid white;
+            outline-offset: 3px;
+        }
+
+        .doc-icon-button svg,
+        .doc-close-button svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2.2;
+        }
+
+        .sidebar-overlay {
+            display: none;
+        }
+
+        body.doc-modal-open {
+            overflow: hidden;
+        }
+
+        .doc-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.28s ease;
+            z-index: 1100;
+        }
+
+        .doc-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .doc-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: min(920px, calc(100vw - 2rem));
+            max-height: min(86vh, 920px);
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 18%);
+            border: 1px solid rgba(77, 168, 218, 0.16);
+            border-radius: 26px;
+            box-shadow: 0 26px 70px rgba(15, 23, 42, 0.24);
+            transform: translate(-50%, -46%) scale(0.98);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.28s ease, transform 0.28s ease;
+            z-index: 1101;
+            overflow: hidden;
+        }
+
+        .doc-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .doc-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.5rem 1.5rem 1.25rem;
+            background: linear-gradient(135deg, #4DA8DA, #9B5DE5);
+            color: white;
+        }
+
+        .doc-modal-heading {
+            min-width: 0;
+        }
+
+        .doc-modal-heading h2 {
+            margin: 0 0 0.35rem;
+            color: white;
+            font-size: 1.55rem;
+        }
+
+        .doc-modal-heading p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.92);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .doc-modal-content {
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: grid;
+            gap: 1rem;
+            background:
+                radial-gradient(circle at top right, rgba(77, 168, 218, 0.12), transparent 30%),
+                radial-gradient(circle at bottom left, rgba(155, 93, 229, 0.10), transparent 34%),
+                #ffffff;
+        }
+
+        .doc-app-meta {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr);
+            gap: 1rem;
+            padding: 1.1rem 1.25rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(77, 168, 218, 0.12), rgba(155, 93, 229, 0.10));
+            border: 1px solid rgba(77, 168, 218, 0.16);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        }
+
+        .doc-app-meta-title {
+            min-width: 0;
+        }
+
+        .doc-app-meta-title h3 {
+            margin: 0 0 0.35rem;
+            color: #1f3d5f;
+            font-size: 1.08rem;
+        }
+
+        .doc-app-meta-title p {
+            margin: 0;
+            color: #4b5563;
+            font-size: 0.92rem;
+            line-height: 1.65;
+        }
+
+        .doc-app-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        .doc-app-meta-item {
+            padding: 0.85rem 0.95rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.75);
+        }
+
+        .doc-app-meta-label {
+            display: block;
+            margin-bottom: 0.3rem;
+            color: #4DA8DA;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .doc-app-meta-value {
+            display: block;
+            color: #1f2937;
+            font-size: 0.92rem;
+            line-height: 1.55;
+            word-break: break-word;
+        }
+
+        .doc-app-meta-value a {
+            color: #2e8fb0;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .doc-app-meta-value a:hover {
+            text-decoration: underline;
+        }
+
+        .doc-overview-card {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            align-items: stretch;
+        }
+
+        .doc-surface {
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(77, 168, 218, 0.12);
+            border-radius: 20px;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+            padding: 1.25rem;
+        }
+
+        .doc-surface h3 {
+            color: #2e8fb0;
+            margin-bottom: 0.75rem;
+            font-size: 1.05rem;
+        }
+
+        .doc-surface p {
+            color: #4b5563;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .doc-formula {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 0.05rem;
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-style: italic;
+            color: #1f2937;
+            white-space: nowrap;
+        }
+
+        .doc-formula sup {
+            font-size: 0.72em;
+            line-height: 1;
+            font-style: normal;
+        }
+
+        .doc-quick-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .doc-quick-card {
+            background: linear-gradient(180deg, rgba(77, 168, 218, 0.08), rgba(155, 93, 229, 0.05));
+            border-radius: 16px;
+            padding: 0.9rem;
+            border: 1px solid rgba(77, 168, 218, 0.12);
+        }
+
+        .doc-quick-card strong {
+            display: block;
+            color: #1f2937;
+            margin-bottom: 0.35rem;
+            font-size: 0.9rem;
+        }
+
+        .doc-quick-card span {
+            display: block;
+            color: #5b6472;
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+
+        .doc-section-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .doc-section-card {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 20px;
+            border: 1px solid rgba(224, 231, 255, 0.9);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+            padding: 1.25rem;
+        }
+
+        .doc-section-card h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: #25344f;
+            margin-bottom: 0.75rem;
+            font-size: 1.02rem;
+        }
+
+        .doc-section-card p {
+            color: #525c6a;
+            line-height: 1.68;
+            font-size: 0.94rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .doc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 0.6rem;
+        }
+
+        .doc-list li {
+            color: #4b5563;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .doc-list li::before {
+            content: '';
+            position: absolute;
+            top: 0.72rem;
+            left: 0;
+            width: 0.42rem;
+            height: 0.42rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #4DA8DA, #9B5DE5);
+        }
+
+        .doc-flow {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        .doc-flow-step {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(77, 168, 218, 0.14);
+            border-radius: 18px;
+            padding: 1rem;
+        }
+
+        .doc-flow-step strong {
+            display: block;
+            color: #1f2937;
+            margin-bottom: 0.45rem;
+            font-size: 0.94rem;
+        }
+
+        .doc-flow-step span {
+            display: block;
+            color: #5b6472;
+            line-height: 1.55;
+            font-size: 0.88rem;
+        }
+
+        .doc-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .doc-stat-card {
+            padding: 1.1rem;
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(77, 168, 218, 0.07), rgba(255, 255, 255, 0.96));
+            border: 1px solid rgba(77, 168, 218, 0.14);
+        }
+
+        .doc-stat-card h4 {
+            color: #1f2937;
+            margin-bottom: 0.55rem;
+            font-size: 0.96rem;
+        }
+
+        .doc-stat-card p {
+            color: #4b5563;
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.65;
+        }
+
+        .doc-note {
+            padding: 1rem 1.1rem;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(249, 199, 79, 0.16), rgba(255, 255, 255, 0.92));
+            border: 1px solid rgba(249, 199, 79, 0.36);
+            color: #6b5b12;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .doc-citation {
+            padding: 1.2rem 1.3rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(249, 199, 79, 0.12), rgba(77, 168, 218, 0.05), rgba(255, 255, 255, 0.96));
+            border: 1px solid rgba(240, 180, 41, 0.26);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        }
+
+        .doc-citation h3 {
+            margin-bottom: 0.6rem;
+            color: #8a6517;
+            font-size: 1.02rem;
+        }
+
+        .doc-citation p {
+            margin: 0;
+            color: #5d5340;
+            line-height: 1.68;
+            font-size: 0.93rem;
+        }
+
+        .doc-citation-text {
+            margin: 0.8rem 0;
+            padding: 0.95rem 1rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            color: #2f3542;
+            font-size: 0.93rem;
+            line-height: 1.72;
+        }
+
+        .doc-citation-text a {
+            color: #2e8fb0;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .doc-citation-text a:hover {
+            text-decoration: underline;
+        }
+
+        .doc-citation-update {
+            display: inline-block;
+            margin-top: 0.2rem;
+            padding: 0.35rem 0.65rem;
+            border-radius: 999px;
+            background: rgba(240, 180, 41, 0.12);
+            color: #7a5a12;
+            font-size: 0.84rem;
+            font-weight: 600;
+        }
+
+        .doc-disclaimer {
+            padding: 1.2rem 1.3rem;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(248, 113, 113, 0.08), rgba(249, 199, 79, 0.08), rgba(255, 255, 255, 0.96));
+            border: 1px solid rgba(248, 113, 113, 0.18);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+        }
+
+        .doc-disclaimer h3 {
+            margin-bottom: 0.6rem;
+            color: #8f3b2e;
+            font-size: 1.02rem;
+        }
+
+        .doc-disclaimer p {
+            margin: 0;
+            color: #5b4b45;
+            line-height: 1.7;
+            font-size: 0.93rem;
+        }
+
+        .doc-disclaimer p + p {
+            margin-top: 0.7rem;
+        }
+
+        .doc-keyboard {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2rem;
+            padding: 0.2rem 0.45rem;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.08);
+            color: #1f2937;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .main-wrapper {
+            display: flex;
+            height: 100%;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 200px;
+            background: white;
+            padding: 1.5rem 1rem;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                --mobile-header-offset: 92px;
+            }
+
+            .header {
+                padding: 1rem 1rem 1rem 1.25rem;
+            }
+
+            .header h1 {
+                font-size: 1.35rem;
+            }
+
+            .app-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+            }
+
+            .header-actions {
+                gap: 0.5rem;
+            }
+
+            .mobile-menu-button {
+                display: inline-flex;
+                flex-shrink: 0;
+            }
+
+            .doc-icon-button,
+            .doc-close-button {
+                width: 40px;
+                height: 40px;
+                border-radius: 11px;
+            }
+
+            .content-wrapper {
+                position: relative;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: var(--mobile-header-offset);
+                left: 0;
+                width: min(280px, 82vw);
+                height: calc(100dvh - var(--mobile-header-offset));
+                padding: 1rem 0.75rem;
+                border-right: none;
+                border-radius: 0 20px 20px 0;
+                box-shadow: 18px 0 38px rgba(21, 41, 66, 0.2);
+                transform: translateX(-110%);
+                transition: transform 0.28s ease;
+                z-index: 1001;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: var(--mobile-header-offset) 0 0 0;
+                display: block;
+                background: rgba(15, 23, 42, 0.35);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.28s ease;
+                z-index: 1000;
+            }
+
+            .sidebar-overlay.active {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .sidebar-nav {
+                gap: 0.35rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .nav-item {
+                padding: 0.75rem 0.85rem;
+                font-size: 0.9rem;
+            }
+
+            .card {
+                padding: 1rem;
+                border-radius: 15px;
+            }
+
+            .data-panel {
+                padding: 1rem;
+            }
+
+            .column-input-group {
+                min-width: 100%;
+            }
+
+            .data-entry-table {
+                min-width: 500px;
+            }
+
+            .data-entry-button-group .btn {
+                flex: 1 1 180px;
+                justify-content: center;
+            }
+
+            .doc-modal {
+                width: min(96vw, 720px);
+                max-height: 88vh;
+                border-radius: 22px;
+            }
+
+            .doc-modal-header,
+            .doc-modal-content {
+                padding: 1.1rem;
+            }
+
+            .doc-overview-card,
+            .doc-section-grid,
+            .doc-stat-grid,
+            .doc-flow,
+            .doc-quick-grid,
+            .doc-app-meta,
+            .doc-app-meta-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .doc-modal-heading h2 {
+                font-size: 1.3rem;
+            }
+
+            .doc-modal-heading p {
+                font-size: 0.9rem;
+            }
+
+            .doc-icon-button,
+            .mobile-menu-button,
+            .doc-close-button {
+                width: 38px;
+                height: 38px;
+            }
+
+            .doc-surface,
+            .doc-section-card,
+            .doc-flow-step,
+            .doc-stat-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="main-wrapper"><!-- Header -->
+   <div class="header">
+    <div class="header-title">
+    <div class="app-brand"><img src="assets/correlation-analyzer-icon.svg" alt="Trendline and Correlation icon" class="app-icon">
+     <h1>Trendline and Correlation</h1>
+     </div>
+    </div>
+    <div class="header-actions"><button id="docButton" class="doc-icon-button" type="button" aria-label="Open documentation" aria-controls="docModal" aria-expanded="false" title="Open documentation"><i data-lucide="book-open"></i></button> <button id="mobileMenuToggle" class="mobile-menu-button" type="button" aria-label="Open navigation" aria-controls="sidebar" aria-expanded="false">☰</button>
+    </div>
+   </div>
+   <div class="content-wrapper"><!-- Sidebar Navigation -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+    <div id="sidebar" class="sidebar">
+     <div class="sidebar-nav">
+      <div class="nav-item active" data-section="explore"><span>🧠</span> <span>Explore</span>
+      </div>
+      <div class="nav-item" data-section="learn"><span>📘</span> <span>Learn</span>
+      </div>
+      <div class="nav-item" data-section="data"><span>📊</span> <span>Data</span>
+      </div>
+        <div class="nav-item" data-section="graph"><span>📈</span> <span>Visualization</span>
+      </div>
+      <div class="nav-item" data-section="analyze"><span>🤖</span> <span>Analyze</span>
+      </div>
+      <div class="nav-item" data-section="results"><span>🧾</span> <span>Results</span>
+      </div>
+     </div>
+    </div><!-- Main Content -->
+    <div class="main-content"><!-- EXPLORE SECTION -->
+     <div id="explore" class="content-section active">
+      <div class="card">
+       <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;"><span style="font-size: 2.5rem;">💡</span>
+        <div>
+         <h2 style="color: #4DA8DA; margin-bottom: 0.25rem;">Essential Question</h2>
+         <p style="color: #666; font-size: 1.1rem;">How can we discover relationships between variables?</p>
+        </div>
+       </div>
+       <div class="highlight-box">
+        <h3 style="color: #4DA8DA; margin-bottom: 0.75rem; font-size: 1rem;">🎯 What You'll Learn</h3>
+        <ul style="list-style: none; padding: 0; font-size: 0.95rem; color: #555; line-height: 1.8;">
+         <li>✅ Input experimental data and visualize relationships</li>
+         <li>✅ Understand different types of mathematical relationships</li>
+         <li>✅ Calculate correlation metrics (R² values)</li>
+         <li>✅ Find the best-fit model for your data</li>
+         <li>✅ Interpret results scientifically</li>
+        </ul>
+       </div>
+       <p style="color: #666; font-size: 0.95rem; line-height: 1.6; margin-top: 1rem;">This app guides you through discovering hidden patterns in data. Whether studying physics, biology, or economics, you'll learn how to find mathematical relationships that explain real-world phenomena. Ready to explore? Let's get started! 🚀</p>
+      </div>
+     </div><!-- LEARN SECTION -->
+     <div id="learn" class="content-section">
+      <div class="card">
+       <h2 style="color: #4DA8DA; margin-bottom: 1.5rem; font-size: 1.6rem;">📘 Scientific Background</h2>
+       <div style="margin-bottom: 1rem;">
+        <div class="accordion-header" onclick="toggleAccordion(this)"><span>📈 What are Variables?</span> <span style="font-size: 1.2rem;">▼</span>
+        </div>
+        <div class="accordion-content">
+         <p style="color: #555; line-height: 1.7; font-size: 0.95rem;"><strong>Independent Variable (X):</strong> The variable you control or change. For example, temperature, time, or concentration.<br><br><strong>Dependent Variable (Y):</strong> The variable you measure or observe. It depends on the independent variable. For example, reaction rate or plant height.</p>
+        </div>
+       </div>
+       <div style="margin-bottom: 1rem;">
+        <div class="accordion-header" onclick="toggleAccordion(this)"><span>🔗 Correlation vs Causation</span> <span style="font-size: 1.2rem;">▼</span>
+        </div>
+        <div class="accordion-content">
+         <p style="color: #555; line-height: 1.7; font-size: 0.95rem;"><strong>Correlation:</strong> Two variables move together in a predictable pattern.<br><strong>Causation:</strong> One variable directly causes changes in another.<br><br>
+           💡 <em>Important:</em> Just because variables correlate doesn't mean one causes the other! Always think critically about the science.</p>
+        </div>
+       </div>
+       <div style="margin-bottom: 1rem;">
+        <div class="accordion-header" onclick="toggleAccordion(this)"><span>🌊 Types of Relationships</span> <span style="font-size: 1.2rem;">▼</span>
+        </div>
+        <div class="accordion-content">
+         <p style="color: #555; line-height: 1.7; font-size: 0.95rem;"><strong>📊 Linear:</strong> y = mx + b (straight line)<br><strong>🧩 Quadratic:</strong> y = ax² + bx + c (parabola)<br><strong>📈 Exponential:</strong> y = ae^(bx) (rapid growth)<br><strong>🌲 Logarithmic:</strong> y = a·ln(x) + b (slow growth)</p>
+        </div>
+       </div>
+       <div style="margin-bottom: 1rem;">
+        <div class="accordion-header" onclick="toggleAccordion(this)"><span>📊 R² (Coefficient of Determination)</span> <span style="font-size: 1.2rem;">▼</span>
+        </div>
+        <div class="accordion-content">
+         <p style="color: #555; line-height: 1.7; font-size: 0.95rem;"><strong>R²</strong> tells you how well a model fits your data (0 to 1):<br>
+           • R² = 1: Perfect fit<br>
+           • R² = 0.8-0.99: Excellent fit ⭐<br>
+           • R² = 0.5-0.79: Good fit ✅<br>
+           • R² &lt; 0.5: Poor fit ⚠️</p>
+        </div>
+       </div>
+      </div>
+     </div><!-- DATA SECTION -->
+     <div id="data" class="content-section">
+      <div class="card">
+             <h2 style="color: #4DA8DA; margin-bottom: 1.5rem; font-size: 1.6rem;">📊 Data Input</h2>
+             <div class="data-panel">
+                <h3 class="column-setup-title">📝 Set Up Column Headers</h3>
+                <p class="data-helper-text">Rename your two variables here, then click Apply Headers to use those titles in the data table and graph.</p>
+                <div class="column-inputs">
+                 <div class="column-input-group"><label for="xHeaderInput">Independent Variable</label> <input id="xHeaderInput" class="input-field" type="text" value="X (Independent)" maxlength="40"></div>
+                 <div class="column-input-group"><label for="yHeaderInput">Dependent Variable</label> <input id="yHeaderInput" class="input-field" type="text" value="Y (Dependent)" maxlength="40"></div>
+                </div><button class="btn btn-secondary" onclick="applyTableHeaders()">📋 Apply Headers</button>
+             </div>
+             <div class="data-panel demo-data-panel">
+                <h3 class="column-setup-title">📦 Demo Data</h3>
+                     <p class="data-helper-text">Use a sample dataset if you want to explore the analyzer first. Demo datasets now include realistic noise so they behave more like measured data.</p>
+                     <div class="data-entry-button-group demo-data-actions"><button class="btn btn-demo" onclick="loadSampleLinear()">📥 Linear Data</button> <button class="btn btn-demo" onclick="loadSampleQuadratic()">📥 Quadratic</button> <button class="btn btn-demo" onclick="loadSampleExponential()">📥 Exponential</button> <button class="btn btn-demo" onclick="generateRandomData()">🎲 Random</button>
+                </div>
+             </div>
+                 <div class="data-panel">
+                     <h3 class="column-setup-title">📁 CSV Import and Template</h3>
+                     <p class="data-helper-text">Use these file tools to bring in a two-column CSV dataset or download a starter template for data collection.</p>
+                     <div class="data-entry-button-group demo-data-actions data-file-actions"><button class="btn btn-demo" onclick="triggerCsvUpload()">📂 Upload CSV</button> <button class="btn btn-demo" onclick="downloadCSVTemplate()">📄 Download Template</button>
+                     </div>
+                     <p class="data-file-note">If the first row contains text labels, the app will use them automatically as the X and Y headers.</p><input id="csvUploadInput" class="hidden-file-input" type="file" accept=".csv,text/csv" onchange="handleCSVUpload(event)">
+                 </div>
+             <div class="data-panel">
+                <div class="data-entry-table-wrap">
+                 <table class="data-entry-table">
+                    <thead>
+                     <tr>
+                        <th>#</th>
+                        <th id="xHeaderDisplay">X (Independent)</th>
+                        <th id="yHeaderDisplay">Y (Dependent)</th>
+                        <th>Action</th>
+                     </tr>
+                    </thead>
+                    <tbody id="dataTable"></tbody>
+                 </table>
+                </div>
+                <div class="data-entry-button-group"><button class="btn btn-success" onclick="addRow()">➕ Add Row</button> <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All</button>
+                </div>
+             </div>
+             <p class="data-section-note">💡 Tip: Start with sample data to see how the analyzer works, then try your own measurements in the table below.</p>
+      </div>
+     </div><!-- GRAPH SECTION -->
+     <div id="graph" class="content-section">
+      <div class="card">
+       <h2 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.6rem;">📈 Visualization</h2>
+             <div id="graphFeedback" class="graph-feedback"></div>
+       <div style="margin-bottom: 1.5rem;"><label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: #333;"> 🎛️ Select Trendline: </label>
+        <div class="btn-group"><button class="btn-group-item active" data-model="linear" onclick="selectModel('linear')"> 📊 Linear </button> <button class="btn-group-item" data-model="quadratic" onclick="selectModel('quadratic')"> 🧩 Quadratic </button> <button class="btn-group-item" data-model="exponential" onclick="selectModel('exponential')"> 📈 Exponential </button> <button class="btn-group-item" data-model="logarithmic" onclick="selectModel('logarithmic')"> 🌲 Logarithmic </button>
+        </div>
+       </div>
+       <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" id="showEquation" checked onchange="updateGraph()"> <label for="showEquation" style="cursor: pointer; user-select: none;">Show Equation</label>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" id="showR2" checked onchange="updateGraph()"> <label for="showR2" style="cursor: pointer; user-select: none;">Show R²</label>
+        </div>
+      <div id="showPearsonToggleWrap" style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" id="showPearson" checked onchange="updateGraph()"> <label for="showPearson" style="cursor: pointer; user-select: none;">Show Pearson r</label>
+      </div>
+       </div>
+             <div id="graphMeta" class="graph-meta"></div>
+       <div class="graph-container">
+        <canvas id="mainChart"></canvas>
+       </div><!-- Residual Plot -->
+       <div id="residualContainer" style="display: none; margin-top: 2rem;">
+        <h3 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.2rem;">📉 Residual Analysis</h3>
+        <div class="graph-container">
+         <canvas id="residualChart"></canvas>
+        </div>
+        <p style="color: #666; font-size: 0.9rem; margin-top: 1rem;">💡 Residuals show the difference between actual and predicted values. A good fit has randomly scattered residuals near zero.</p>
+       </div>
+      </div>
+     </div><!-- ANALYZE SECTION -->
+     <div id="analyze" class="content-section">
+      <div class="card">
+       <h2 style="color: #4DA8DA; margin-bottom: 0.75rem; font-size: 1.6rem;">🤖 Analysis</h2>
+             <p style="color: #666; margin-bottom: 1.5rem; line-height: 1.6;">Model comparison updates automatically once at least 4 valid data points are available.</p>
+       <div id="analysisResults"></div><!-- Mathematical Framework -->
+       <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(77, 168, 218, 0.05), rgba(155, 93, 229, 0.05)); border-radius: 15px; border-left: 4px solid #4DA8DA;">
+        <h3 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.1rem;">📐 Mathematical Framework</h3>
+        <div style="margin-bottom: 1rem;">
+         <p style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Pearson Correlation Coefficient:</p>
+         <p style="background: white; padding: 0.75rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; overflow-x: auto;">r = Σ((x - x̄)(y - ȳ)) / √[Σ(x - x̄)² × Σ(y - ȳ)²]</p>
+        </div>
+        <div style="margin-bottom: 1rem;">
+         <p style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Coefficient of Determination:</p>
+         <p style="background: white; padding: 0.75rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem;">R² = 1 - (SS_res / SS_tot)</p>
+        </div>
+        <div>
+         <p style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Model Forms:</p>
+         <ul style="list-style: none; padding: 0; font-size: 0.9rem; color: #555; font-family: monospace;">
+          <li style="margin-bottom: 0.5rem;">Linear: y = mx + b</li>
+          <li style="margin-bottom: 0.5rem;">Quadratic: y = ax² + bx + c</li>
+          <li style="margin-bottom: 0.5rem;">Exponential: y = a·e^(bx)</li>
+          <li>Logarithmic: y = a·ln(x) + b</li>
+         </ul>
+        </div>
+       </div>
+      </div>
+     </div><!-- RESULTS SECTION -->
+     <div id="results" class="content-section">
+      <div class="card">
+             <h2 style="color: #4DA8DA; margin-bottom: 0.75rem; font-size: 1.6rem;">🧾 Results &amp; Interpretation</h2>
+             <p style="color: #666; margin-bottom: 1rem; line-height: 1.6;">Switch between the four trendline options to review each equation, fit quality, and model-specific interpretation.</p>
+             <div class="btn-group results-model-group"><button class="btn-group-item results-model-button active" data-results-model="linear" onclick="selectResultsModel('linear')">📊 Linear</button> <button class="btn-group-item results-model-button" data-results-model="quadratic" onclick="selectResultsModel('quadratic')">🧩 Quadratic</button> <button class="btn-group-item results-model-button" data-results-model="exponential" onclick="selectResultsModel('exponential')">📈 Exponential</button> <button class="btn-group-item results-model-button" data-results-model="logarithmic" onclick="selectResultsModel('logarithmic')">🌲 Logarithmic</button>
+             </div>
+             <div id="resultsStatus" class="results-status"></div><!-- Recommended Model Card -->
+       <div id="recommendationContainer"></div><!-- Interpretation -->
+       <div id="interpretationContainer" style="margin-top: 2rem;"></div><!-- Reflection Questions -->
+       <div style="margin-top: 2rem;">
+        <h3 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.2rem;">🎓 Reflection Questions</h3>
+        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+         <div class="reflection-card">
+          <div class="reflection-icon">
+           🧐
+          </div>
+          <h4 style="color: #333; margin-bottom: 0.5rem; font-weight: 600;">Think</h4>
+          <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">Which model best represents your data and why? What does the shape tell you about the relationship?</p>
+         </div>
+         <div class="reflection-card">
+          <div class="reflection-icon">
+           💬
+          </div>
+          <h4 style="color: #333; margin-bottom: 0.5rem; font-weight: 600;">Discuss</h4>
+          <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">How does the R² value help in choosing the best trendline? What would a low R² suggest?</p>
+         </div>
+         <div class="reflection-card">
+          <div class="reflection-icon">
+           ✍️
+          </div>
+          <h4 style="color: #333; margin-bottom: 0.5rem; font-weight: 600;">Answer</h4>
+          <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">Can you predict what would happen if you extended this relationship beyond your data range?</p>
+         </div>
+        </div>
+       </div><!-- Export & Download -->
+       <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;"><button class="btn btn-primary" onclick="exportGraphAsImage()"> 📥 Export Graph </button> <button class="btn btn-secondary" onclick="downloadCSV()"> 📊 Download CSV </button> <button class="btn btn-highlight" onclick="copyEquation()"> ➗ Copy Equation </button>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+     <div id="docOverlay" class="doc-overlay"></div>
+     <div id="docModal" class="doc-modal" role="dialog" aria-modal="true" aria-labelledby="docModalTitle" aria-hidden="true" tabindex="-1">
+        <div class="doc-modal-header">
+         <div class="doc-modal-heading">
+            <h2 id="docModalTitle">Trendline and Correlation Documentation</h2>
+            <p>Use this guide to understand the app layout, the meaning of each control, and how the statistical outputs should be interpreted.</p>
+         </div><button id="docCloseButton" class="doc-close-button" type="button" aria-label="Close documentation" title="Close documentation"><i data-lucide="x"></i></button>
+        </div>
+        <div class="doc-modal-content">
+            <div class="doc-app-meta">
+                <div class="doc-app-meta-title">
+                 <h3>App Information</h3>
+                 <p>This release summary identifies the current version, official web location, and the development context behind this tool.</p>
+                </div>
+                <div class="doc-app-meta-grid">
+                 <div class="doc-app-meta-item"><span class="doc-app-meta-label">Title</span> <span class="doc-app-meta-value">Trendline and Correlation</span>
+                 </div>
+                 <div class="doc-app-meta-item"><span class="doc-app-meta-label">Version</span> <span class="doc-app-meta-value">1.1</span>
+                 </div>
+                 <div class="doc-app-meta-item"><span class="doc-app-meta-label">Website</span> <span class="doc-app-meta-value"><a href="https://www.inanolab.com/trendline.html" target="_blank" rel="noopener noreferrer">www.inanolab.com/trendline.html</a></span>
+                 </div>
+                 <div class="doc-app-meta-item"><span class="doc-app-meta-label">Developer / Programmer</span> <span class="doc-app-meta-value">Dr. James Salveo Olarve</span>
+                 </div>
+                 <div class="doc-app-meta-item"><span class="doc-app-meta-label">Affiliation</span> <span class="doc-app-meta-value">i-Nano Research Facility, De La Salle University Manila</span>
+                 </div>
+                </div>
+            </div>
+         <div class="doc-overview-card">
+            <div class="doc-surface">
+             <h3>What This App Does</h3>
+             <p>The Trendline and Correlation app helps you study how one measured variable changes with another. You can enter your own paired data, test four common mathematical models, compare their goodness of fit, inspect residuals, and read a guided interpretation of the results.</p>
+             <p>The app is designed as a workflow. Start with data, move to visualization, review the automated analysis, then compare the result cards to decide which model best represents the pattern in your measurements.</p>
+             <div class="doc-quick-grid">
+                <div class="doc-quick-card"><strong>Minimum data requirement</strong><span>You need at least 4 valid paired points before the app generates graphs and analysis.</span>
+                </div>
+                <div class="doc-quick-card"><strong>Supported models</strong><span>Linear, quadratic, exponential, and logarithmic trendlines are all evaluated from the same dataset.</span>
+                </div>
+                <div class="doc-quick-card"><strong>Automatic updates</strong><span>Graphs, residuals, and analysis refresh automatically as soon as your valid data changes.</span>
+                </div>
+                <div class="doc-quick-card"><strong>Exports</strong><span>You can export the graph as an image, download the dataset as CSV, and copy the active equation.</span>
+                </div>
+             </div>
+            </div>
+            <div class="doc-surface">
+             <h3>Fast Workflow</h3>
+             <div class="doc-flow">
+                <div class="doc-flow-step"><strong>1. Name variables</strong><span>Set the X and Y column headers to match your experiment or dataset.</span>
+                </div>
+                <div class="doc-flow-step"><strong>2. Enter data</strong><span>Type paired values manually or load a noisy demo dataset to explore quickly.</span>
+                </div>
+                <div class="doc-flow-step"><strong>3. Inspect plots</strong><span>Switch models in Visualization to compare equations, <span class="doc-formula">R<sup>2</sup></span>, Pearson's <span class="doc-formula">r</span>, and residual structure.</span>
+                </div>
+                <div class="doc-flow-step"><strong>4. Interpret results</strong><span>Review the four model cards in Results and decide which explanation best matches the science.</span>
+                </div>
+             </div>
+             <div class="doc-note" style="margin-top: 1rem;">Press <span class="doc-keyboard">Esc</span> or click outside the modal to close this guide at any time.</div>
+            </div>
+         </div>
+         <div class="doc-section-grid">
+            <div class="doc-section-card">
+             <h3>🧭 Layout and Navigation</h3>
+             <p>The app uses a left-side navigation rail on desktop and a slide-out menu on mobile. Each section is focused on one stage of analysis so the interface stays readable while you work.</p>
+             <ul class="doc-list">
+                <li><strong>Explore</strong> introduces the purpose of the app and the core question behind correlation studies.</li>
+                <li><strong>Learn</strong> explains background concepts such as variables, correlation, model types, and <span class="doc-formula">R<sup>2</sup></span>.</li>
+                <li><strong>Data</strong> is where you name variables, enter measurements, and load sample datasets.</li>
+                <li><strong>Visualization</strong> renders the scatter plot, selected trendline, metadata pills, and residual analysis.</li>
+                <li><strong>Analyze</strong> summarizes the fit quality across all available models after 4 valid points are present.</li>
+                <li><strong>Results</strong> lets you inspect each model one by one with an equation, fit score, and interpretation.</li>
+             </ul>
+            </div>
+            <div class="doc-section-card">
+             <h3>🧪 Data Section Controls</h3>
+             <p>The Data section is where you define your variables and manage the paired table that drives the rest of the app.</p>
+             <ul class="doc-list">
+                <li><strong>Independent Variable</strong> is the X-axis quantity, usually the one you control or choose.</li>
+                <li><strong>Dependent Variable</strong> is the Y-axis quantity, the one that responds to changes in X.</li>
+                <li><strong>Apply Headers</strong> updates the table labels and the graph axis titles to match your chosen names.</li>
+                <li><strong>Add Row</strong> appends a new empty pair so you can keep typing without rebuilding the table.</li>
+                <li><strong>Clear All</strong> removes current entries and resets the table to a clean starting state.</li>
+             </ul>
+            </div>
+            <div class="doc-section-card">
+             <h3>📦 Demo Data Buttons</h3>
+             <p>The demo buttons load example datasets that imitate common experimental patterns. These samples include realistic noise so the app behaves more like a real laboratory or field dataset.</p>
+             <ul class="doc-list">
+                <li><strong>Linear Data</strong> gives a near-straight-line relationship with small deviations around the line.</li>
+                <li><strong>Quadratic</strong> creates a curved, parabola-like trend that is useful when the response bends.</li>
+                <li><strong>Exponential</strong> shows accelerating growth or decay where equal X changes do not add equal Y changes.</li>
+                <li><strong>Random</strong> produces varied points to test how the app behaves when no strong pattern exists.</li>
+             </ul>
+            </div>
+            <div class="doc-section-card">
+             <h3>📈 Visualization Controls</h3>
+             <p>The Visualization section becomes active once there are at least 4 valid X-Y pairs. Until then, the app shows a feedback panel reminding you to add more data.</p>
+             <ul class="doc-list">
+                <li><strong>Trendline selector</strong> lets you switch between linear, quadratic, exponential, and logarithmic fits.</li>
+                <li><strong>Show Equation</strong> displays the fitted model formula below the plot.</li>
+                <li><strong>Show <span class="doc-formula">R<sup>2</sup></span></strong> displays the coefficient of determination for the currently selected trendline.</li>
+                <li><strong>Show Pearson r</strong> appears only for a linear trendline because Pearson's <span class="doc-formula">r</span> is specifically a linear correlation measure.</li>
+                <li><strong>Residual Analysis</strong> is always shown below the scatter plot when a graph exists so you can inspect model error structure.</li>
+             </ul>
+            </div>
+            <div class="doc-section-card">
+             <h3>🤖 Analyze Section</h3>
+             <p>The Analyze section runs automatically when there are at least 4 valid points. You do not need to click a separate analyze button.</p>
+             <ul class="doc-list">
+                <li>The app calculates each available model from the same cleaned dataset.</li>
+                <li>It compares fit quality using <span class="doc-formula">R<sup>2</sup></span> and summarizes which model currently performs best.</li>
+                <li>It reports Pearson's <span class="doc-formula">r</span> as an additional linear summary, but that value should not be treated as evidence for non-linear models.</li>
+                <li>If your table contains blank or incomplete rows, only rows with both valid X and Y numbers are used.</li>
+             </ul>
+            </div>
+            <div class="doc-section-card">
+             <h3>🧾 Results and Interpretation</h3>
+             <p>The Results section is designed for comparison rather than forcing you to focus only on one best-fit answer. You can switch among all four model options and inspect their individual details.</p>
+             <ul class="doc-list">
+                <li>Each model button opens a dedicated result view with that model's equation and fit quality.</li>
+                <li>The interpretation text explains what the model shape suggests physically or experimentally.</li>
+                <li>Pearson interpretation is shown only for the linear model so the language stays statistically correct.</li>
+                <li>The reflection questions are included to support classroom discussion, reporting, or lab write-ups.</li>
+             </ul>
+            </div>
+            <div class="doc-section-card">
+             <h3>💾 Export and Utility Actions</h3>
+             <p>The bottom action buttons in Results help you take the analysis outside the app for reports or presentations.</p>
+             <ul class="doc-list">
+                <li><strong>Export Graph</strong> saves the current main chart as an image file.</li>
+                <li><strong>Download CSV</strong> exports the table using your current header labels.</li>
+                <li><strong>Copy Equation</strong> copies the equation for the currently selected result model to the clipboard.</li>
+             </ul>
+            </div>
+         </div>
+         <div class="doc-surface">
+            <h3>Statistical Concepts Used By The App</h3>
+            <div class="doc-stat-grid">
+             <div class="doc-stat-card">
+                <h4>Scatter Plot</h4>
+                <p>Each point represents one paired observation. The overall shape of the cloud is the first clue about whether the relationship is straight, curved, rapidly increasing, or weak.</p>
+             </div>
+             <div class="doc-stat-card">
+                <h4>Trendline</h4>
+                <p>A trendline is a fitted mathematical model. The app compares four model families because different physical processes create different curve shapes.</p>
+             </div>
+             <div class="doc-stat-card">
+                <h4><span class="doc-formula">R<sup>2</sup></span></h4>
+                <p><span class="doc-formula">R<sup>2</sup></span> measures how much of the variation in Y is explained by the model. Values closer to 1 indicate the model follows the observed data more closely.</p>
+             </div>
+             <div class="doc-stat-card">
+                <h4>Residuals</h4>
+                <p>Residuals are the differences between observed Y values and the model's predicted Y values. A good model often produces residuals scattered around zero without a strong visible pattern.</p>
+             </div>
+             <div class="doc-stat-card">
+                <h4>Pearson's <span class="doc-formula">r</span></h4>
+                <p>Pearson's <span class="doc-formula">r</span> describes the direction and strength of a linear relationship, from negative to positive. It should not be used as the main interpretation tool for quadratic, exponential, or logarithmic behavior.</p>
+             </div>
+             <div class="doc-stat-card">
+                <h4>Best Fit Versus Best Science</h4>
+                <p>The highest <span class="doc-formula">R<sup>2</sup></span> is useful, but it is not the whole story. Choose the model that fits well and also makes scientific sense for the process you are studying.</p>
+             </div>
+            </div>
+         </div>
+         <div class="doc-surface">
+            <h3>Good Practice When Using This Analyzer</h3>
+            <ul class="doc-list">
+             <li>Use consistent measurement units and make sure every X value is paired with the correct Y value.</li>
+             <li>Look at the scatter plot before trusting the numerical summary. Shape matters.</li>
+             <li>Use residuals to check whether a model is systematically missing part of the pattern.</li>
+             <li>Interpret Pearson's <span class="doc-formula">r</span> only when the relationship is plausibly linear.</li>
+             <li>Do not assume correlation proves causation. Experimental design and scientific reasoning still matter.</li>
+             <li>When reporting results, include the equation, <span class="doc-formula">R<sup>2</sup></span>, a short interpretation, and a note about why the chosen model makes sense.</li>
+            </ul>
+         </div>
+            <div class="doc-citation">
+                <h3>Citation Recommendation</h3>
+                <p>If you use this web application in academic work:</p>
+                <div class="doc-citation-text">Olarve, J. S. L. (2026). <em>Trendline and Correlation</em>. i-Nano Research Facility, De La Salle University Manila. Retrieved from <a href="https://www.inanolab.com/trendline.html" target="_blank" rel="noopener noreferrer">https://www.inanolab.com/trendline.html</a></div>
+                <span class="doc-citation-update">Updated citation will be provided once DOI is assigned.</span>
+            </div>
+            <div class="doc-disclaimer">
+                <h3>Disclaimer</h3>
+                <p>This web application is provided for educational, instructional, and research-support purposes. While reasonable effort has been made to produce correct calculations and clear interpretations, the developer and affiliated institution do not guarantee that the outputs are free from error, complete for every dataset, or appropriate for every scientific, technical, or academic context.</p>
+                <p>Users are responsible for checking their input data, verifying results independently, and applying appropriate statistical judgment and domain expertise. The app should not be used as the sole basis for high-stakes decisions, formal certification, medical conclusions, safety-critical analysis, regulatory submissions, or claims of causation.</p>
+            </div>
+        </div>
+     </div>
+  </div>
+  <script>
+        const defaultHeaders = {
+            x: 'X (Independent)',
+            y: 'Y (Dependent)'
+        };
+
+        let columnHeaders = { ...defaultHeaders };
+        let data = createEmptyDataState();
+
+        let currentModel = 'linear';
+        let currentResultsModel = 'linear';
+        let analysisResults = null;
+        let mainChart = null;
+        let residualChart = null;
+
+        // Initialize SDK
+        if (window.elementSdk && typeof window.elementSdk.init === 'function') {
+            window.elementSdk.init({
+                defaultConfig: {},
+                onConfigChange: async (config) => {},
+                mapToCapabilities: (config) => ({
+                    recolorables: [],
+                    borderables: [],
+                    fontEditable: undefined,
+                    fontSizeable: undefined
+                }),
+                mapToEditPanelValues: (config) => new Map()
+            });
+        }
+
+        // Navigation
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const docButton = document.getElementById('docButton');
+        const docOverlay = document.getElementById('docOverlay');
+        const docModal = document.getElementById('docModal');
+        const docCloseButton = document.getElementById('docCloseButton');
+        let lastFocusedElement = null;
+
+        function isMobileLayout() {
+            return window.innerWidth <= 768;
+        }
+
+        function setMobileSidebar(isOpen) {
+            if (!sidebar || !sidebarOverlay || !mobileMenuToggle) {
+                return;
+            }
+
+            sidebar.classList.toggle('open', isOpen);
+            sidebarOverlay.classList.toggle('active', isOpen);
+            mobileMenuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            mobileMenuToggle.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+            mobileMenuToggle.textContent = isOpen ? '✕' : '☰';
+        }
+
+        function toggleMobileSidebar() {
+            if (!isMobileLayout()) {
+                return;
+            }
+
+            setMobileSidebar(!sidebar.classList.contains('open'));
+        }
+
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', toggleMobileSidebar);
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => setMobileSidebar(false));
+        }
+
+        function setDocumentationModal(isOpen) {
+            if (!docModal || !docOverlay || !docButton) {
+                return;
+            }
+
+            docModal.classList.toggle('active', isOpen);
+            docOverlay.classList.toggle('active', isOpen);
+            docModal.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            docButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            document.body.classList.toggle('doc-modal-open', isOpen);
+
+            if (isOpen) {
+                lastFocusedElement = document.activeElement;
+                setMobileSidebar(false);
+                window.setTimeout(() => {
+                    if (docCloseButton) {
+                        docCloseButton.focus();
+                    } else {
+                        docModal.focus();
+                    }
+                }, 0);
+            } else if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+                lastFocusedElement.focus();
+                lastFocusedElement = null;
+            }
+        }
+
+        function trapDocumentationFocus(event) {
+            if (!docModal || !docModal.classList.contains('active') || event.key !== 'Tab') {
+                return;
+            }
+
+            const focusable = docModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+
+            if (!focusable.length) {
+                event.preventDefault();
+                docModal.focus();
+                return;
+            }
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+
+        if (docButton) {
+            docButton.addEventListener('click', () => setDocumentationModal(true));
+        }
+
+        if (docOverlay) {
+            docOverlay.addEventListener('click', () => setDocumentationModal(false));
+        }
+
+        if (docCloseButton) {
+            docCloseButton.addEventListener('click', () => setDocumentationModal(false));
+        }
+
+        window.addEventListener('resize', () => {
+            if (!isMobileLayout()) {
+                setMobileSidebar(false);
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                setDocumentationModal(false);
+                if (isMobileLayout()) {
+                    setMobileSidebar(false);
+                }
+            }
+
+            trapDocumentationFocus(event);
+        });
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const section = e.currentTarget.dataset.section;
+                switchSection(section);
+                if (isMobileLayout()) {
+                    setMobileSidebar(false);
+                }
+            });
+        });
+
+        function switchSection(sectionName) {
+            document.querySelectorAll('.content-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(sectionName).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+        }
+
+        // Accordion
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            content.classList.toggle('active');
+            const arrow = header.querySelector('span:last-child');
+            arrow.textContent = content.classList.contains('active') ? '▲' : '▼';
+        }
+
+        // Data Management
+        function createEmptyDataState() {
+            return {
+                x: [''],
+                y: ['']
+            };
+        }
+
+        function ensureMinimumRowCount() {
+            if (data.x.length === 0) {
+                data.x.push('');
+                data.y.push('');
+            }
+        }
+
+        function getValidData() {
+            const validX = [];
+            const validY = [];
+
+            for (let i = 0; i < data.x.length; i++) {
+                const xValue = parseFloat(data.x[i]);
+                const yValue = parseFloat(data.y[i]);
+
+                if (Number.isFinite(xValue) && Number.isFinite(yValue)) {
+                    validX.push(xValue);
+                    validY.push(yValue);
+                }
+            }
+
+            return { x: validX, y: validY };
+        }
+
+        function updateTableHeaders() {
+            document.getElementById('xHeaderDisplay').textContent = columnHeaders.x;
+            document.getElementById('yHeaderDisplay').textContent = columnHeaders.y;
+        }
+
+        function applyTableHeaders() {
+            const xHeaderInput = document.getElementById('xHeaderInput');
+            const yHeaderInput = document.getElementById('yHeaderInput');
+
+            columnHeaders.x = xHeaderInput.value.trim() || defaultHeaders.x;
+            columnHeaders.y = yHeaderInput.value.trim() || defaultHeaders.y;
+
+            xHeaderInput.value = columnHeaders.x;
+            yHeaderInput.value = columnHeaders.y;
+
+            updateTableHeaders();
+            renderDataTable();
+            updateGraph();
+        }
+
+        function clearDerivedOutput() {
+            analysisResults = null;
+            document.getElementById('analysisResults').innerHTML = '';
+            document.getElementById('resultsStatus').innerHTML = '';
+            document.getElementById('recommendationContainer').innerHTML = '';
+            document.getElementById('interpretationContainer').innerHTML = '';
+        }
+
+        function clearCharts() {
+            if (mainChart) {
+                mainChart.destroy();
+                mainChart = null;
+            }
+
+            if (residualChart) {
+                residualChart.destroy();
+                residualChart = null;
+            }
+
+            document.getElementById('residualContainer').style.display = 'none';
+            const mainCanvas = document.getElementById('mainChart');
+            mainCanvas.getContext('2d').clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+        }
+
+        function showGraphFeedback(message) {
+            const feedback = document.getElementById('graphFeedback');
+            const chartCanvas = document.getElementById('mainChart');
+            feedback.textContent = message;
+            feedback.style.display = 'block';
+            clearGraphMeta();
+            chartCanvas.parentElement.style.display = 'none';
+            document.getElementById('residualContainer').style.display = 'none';
+        }
+
+        function hideGraphFeedback() {
+            const feedback = document.getElementById('graphFeedback');
+            const chartCanvas = document.getElementById('mainChart');
+            feedback.textContent = '';
+            feedback.style.display = 'none';
+            chartCanvas.parentElement.style.display = 'block';
+        }
+
+        function renderGraphMeta(model, r2) {
+            const graphMeta = document.getElementById('graphMeta');
+            const metaItems = [];
+            const validData = getValidData();
+
+            if (document.getElementById('showEquation').checked) {
+                metaItems.push(`<div class="graph-meta-pill"><span class="graph-meta-label">Equation</span><span>${model.equation}</span></div>`);
+            }
+
+            if (document.getElementById('showR2').checked) {
+                metaItems.push(`<div class="graph-meta-pill"><span class="graph-meta-label">R²</span><span>${r2.toFixed(4)}</span></div>`);
+            }
+
+            if (currentModel === 'linear' && document.getElementById('showPearson').checked) {
+                const pearsonR = calculatePearsonR(validData.x, validData.y);
+                metaItems.push(`<div class="graph-meta-pill"><span class="graph-meta-label">Pearson r</span><span>${pearsonR === null ? 'N/A' : pearsonR.toFixed(4)}</span></div>`);
+            }
+
+            if (metaItems.length === 0) {
+                clearGraphMeta();
+                return;
+            }
+
+            graphMeta.innerHTML = metaItems.join('');
+            graphMeta.style.display = 'flex';
+        }
+
+        function clearGraphMeta() {
+            const graphMeta = document.getElementById('graphMeta');
+            graphMeta.innerHTML = '';
+            graphMeta.style.display = 'none';
+        }
+
+        function updatePearsonToggleVisibility() {
+            const pearsonToggleWrap = document.getElementById('showPearsonToggleWrap');
+            pearsonToggleWrap.style.display = currentModel === 'linear' ? 'flex' : 'none';
+        }
+
+        function getMinimumPointsForModel(modelName) {
+            if (modelName === 'quadratic') {
+                return 3;
+            }
+
+            return 2;
+        }
+
+        function getModelDetails(modelName) {
+            const labels = {
+                linear: 'Linear',
+                quadratic: 'Quadratic',
+                exponential: 'Exponential',
+                logarithmic: 'Logarithmic'
+            };
+
+            const descriptions = {
+                linear: 'a constant linear relationship',
+                quadratic: 'an accelerating or decelerating relationship',
+                exponential: 'rapid exponential growth or decay',
+                logarithmic: 'a rapidly declining rate of growth'
+            };
+
+            return {
+                label: labels[modelName],
+                description: descriptions[modelName]
+            };
+        }
+
+        function getModelResult(modelName) {
+            const validData = getValidData();
+            if (validData.x.length < 4) {
+                return null;
+            }
+
+            const calculators = {
+                linear: calculateLinear,
+                quadratic: calculateQuadratic,
+                exponential: calculateExponential,
+                logarithmic: calculateLogarithmic
+            };
+
+            const model = calculators[modelName]();
+            if (!model) {
+                return null;
+            }
+
+            const predictedY = getPredictedY(model, modelName, validData.x);
+            const r2 = calculateR2(validData.y, predictedY);
+            const details = getModelDetails(modelName);
+            const pearsonR = modelName === 'linear' ? calculatePearsonR(validData.x, validData.y) : null;
+            const correlationDirection = modelName === 'linear' ? getCorrelationDirection(pearsonR) : null;
+
+            return {
+                name: modelName,
+                label: details.label,
+                description: details.description,
+                model,
+                predictedY,
+                r2,
+                pearsonR,
+                correlationDirection
+            };
+        }
+
+        function renderDataOnlyChart(validData, helperText) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+
+            if (mainChart) {
+                mainChart.destroy();
+            }
+
+            mainChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Data Points',
+                            data: validData.x.map((xValue, index) => ({ x: xValue, y: validData.y[index] })),
+                            backgroundColor: '#4DA8DA',
+                            borderColor: '#2E8FB0',
+                            borderWidth: 2,
+                            pointStyle: 'circle',
+                            radius: 6,
+                            hoverRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: { size: 12 },
+                                usePointStyle: true,
+                                boxWidth: 10,
+                                boxHeight: 10
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: helperText,
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: columnHeaders.x },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        },
+                        y: {
+                            title: { display: true, text: columnHeaders.y },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDataTable() {
+            ensureMinimumRowCount();
+            updateTableHeaders();
+
+            const table = document.getElementById('dataTable');
+            table.innerHTML = '';
+
+            for (let i = 0; i < data.x.length; i++) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="data-row-index">${i + 1}</td>
+                    <td><input type="number" class="input-field" value="${data.x[i]}" oninput="updateData(${i}, 'x', this.value)"></td>
+                    <td><input type="number" class="input-field" value="${data.y[i]}" oninput="updateData(${i}, 'y', this.value)"></td>
+                    <td class="data-table-actions"><button class="btn btn-danger" style="padding: 0.5rem 0.75rem;" onclick="deleteRow(${i})">✕</button></td>
+                `;
+                table.appendChild(row);
+            }
+        }
+
+        function updateData(index, variable, value) {
+            data[variable][index] = value;
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function addRow() {
+            data.x.push('');
+            data.y.push('');
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function deleteRow(index) {
+            data.x.splice(index, 1);
+            data.y.splice(index, 1);
+            ensureMinimumRowCount();
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function deleteLastRow() {
+            if (data.x.length > 0) {
+                data.x.pop();
+                data.y.pop();
+                ensureMinimumRowCount();
+                renderDataTable();
+                clearDerivedOutput();
+                updateGraph();
+            }
+        }
+
+        function clearAllData() {
+            data = createEmptyDataState();
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function parseCSVLine(line) {
+            const values = [];
+            let currentValue = '';
+            let inQuotes = false;
+
+            for (let index = 0; index < line.length; index++) {
+                const character = line[index];
+                const nextCharacter = line[index + 1];
+
+                if (character === '"') {
+                    if (inQuotes && nextCharacter === '"') {
+                        currentValue += '"';
+                        index++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (character === ',' && !inQuotes) {
+                    values.push(currentValue.trim());
+                    currentValue = '';
+                } else {
+                    currentValue += character;
+                }
+            }
+
+            values.push(currentValue.trim());
+            return values;
+        }
+
+        function triggerCsvUpload() {
+            const csvUploadInput = document.getElementById('csvUploadInput');
+            if (csvUploadInput) {
+                csvUploadInput.click();
+            }
+        }
+
+        function applyImportedHeaders(xHeader, yHeader) {
+            columnHeaders.x = xHeader || defaultHeaders.x;
+            columnHeaders.y = yHeader || defaultHeaders.y;
+
+            const xHeaderInput = document.getElementById('xHeaderInput');
+            const yHeaderInput = document.getElementById('yHeaderInput');
+
+            if (xHeaderInput) {
+                xHeaderInput.value = columnHeaders.x;
+            }
+
+            if (yHeaderInput) {
+                yHeaderInput.value = columnHeaders.y;
+            }
+
+            updateTableHeaders();
+        }
+
+        function handleCSVUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = () => {
+                try {
+                    const text = String(reader.result || '');
+                    const rows = text
+                        .split(/\r?\n/)
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0);
+
+                    if (!rows.length) {
+                        alert('The selected CSV file is empty.');
+                        return;
+                    }
+
+                    let startIndex = 0;
+                    const firstRow = parseCSVLine(rows[0]);
+                    const hasHeaderRow = firstRow.length >= 2 && (!Number.isFinite(parseFloat(firstRow[0])) || !Number.isFinite(parseFloat(firstRow[1])));
+
+                    if (hasHeaderRow) {
+                        applyImportedHeaders(firstRow[0], firstRow[1]);
+                        startIndex = 1;
+                    }
+
+                    const importedX = [];
+                    const importedY = [];
+
+                    for (let index = startIndex; index < rows.length; index++) {
+                        const columns = parseCSVLine(rows[index]);
+                        if (columns.length < 2) {
+                            continue;
+                        }
+
+                        const xValue = columns[0].replace(/^"|"$/g, '').trim();
+                        const yValue = columns[1].replace(/^"|"$/g, '').trim();
+
+                        if (!xValue && !yValue) {
+                            continue;
+                        }
+
+                        importedX.push(xValue);
+                        importedY.push(yValue);
+                    }
+
+                    if (!importedX.length) {
+                        alert('No usable data rows were found in the CSV file. Provide at least two columns of values.');
+                        return;
+                    }
+
+                    data = { x: importedX, y: importedY };
+                    renderDataTable();
+                    clearDerivedOutput();
+                    updateGraph();
+                } catch (error) {
+                    alert('The CSV file could not be read. Please check the file format and try again.');
+                } finally {
+                    event.target.value = '';
+                }
+            };
+
+            reader.onerror = () => {
+                alert('The CSV file could not be read. Please try again.');
+                event.target.value = '';
+            };
+
+            reader.readAsText(file);
+        }
+
+        function downloadCSVTemplate() {
+            const templateRows = [
+                `${columnHeaders.x},${columnHeaders.y}`,
+                ',',
+                ',',
+                ',',
+                ','
+            ];
+
+            const blob = new Blob([templateRows.join('\n')], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'trendline_template.csv';
+            link.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function loadSampleLinear() {
+            data = {
+                x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                y: [2.1, 3.9, 6.2, 8.1, 9.8, 12.1, 14.0, 15.9, 18.0, 20.2]
+            };
+            addNoise();
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function loadSampleQuadratic() {
+            data = {
+                x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                y: [1.2, 4.8, 10.5, 18.1, 27.0, 38.2, 50.9, 65.8, 82.0, 100.5]
+            };
+            addNoise();
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function loadSampleExponential() {
+            data = {
+                x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                y: [2.7, 5.2, 9.5, 18.2, 35.4, 68.1, 130.8, 250.5, 480.2, 920.3]
+            };
+            addNoise();
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function generateRandomData() {
+            data = { x: [], y: [] };
+            for (let i = 1; i <= 10; i++) {
+                data.x.push(i);
+                data.y.push(Math.random() * 100);
+            }
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function addNoise() {
+            for (let i = 0; i < data.y.length; i++) {
+                const noise = (Math.random() - 0.5) * data.y[i] * 0.1;
+                data.y[i] += noise;
+            }
+        }
+
+        // Mathematical Calculations
+        function calculateLinear() {
+            const validData = getValidData();
+            if (validData.x.length < 2) return null;
+
+            const n = validData.x.length;
+            const sumX = validData.x.reduce((a, b) => a + b, 0);
+            const sumY = validData.y.reduce((a, b) => a + b, 0);
+            const sumXY = validData.x.reduce((sum, x, i) => sum + x * validData.y[i], 0);
+            const sumX2 = validData.x.reduce((sum, x) => sum + x * x, 0);
+
+            const m = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const b = (sumY - m * sumX) / n;
+
+            return { m, b, equation: `y = ${m.toFixed(3)}x + ${b.toFixed(3)}` };
+        }
+
+        function calculateQuadratic() {
+            const validData = getValidData();
+            if (validData.x.length < 3) return null;
+
+            const n = validData.x.length;
+            let sumX = 0, sumX2 = 0, sumX3 = 0, sumX4 = 0, sumY = 0, sumXY = 0, sumX2Y = 0;
+
+            for (let i = 0; i < n; i++) {
+                const x = validData.x[i];
+                const y = validData.y[i];
+                sumX += x;
+                sumX2 += x * x;
+                sumX3 += x * x * x;
+                sumX4 += x * x * x * x;
+                sumY += y;
+                sumXY += x * y;
+                sumX2Y += x * x * y;
+            }
+
+            const matrix = [
+                [n, sumX, sumX2, sumY],
+                [sumX, sumX2, sumX3, sumXY],
+                [sumX2, sumX3, sumX4, sumX2Y]
+            ];
+
+            const c = solveQuadratic(matrix);
+            if (!c) return null;
+
+            return {
+                a: c[2],
+                b: c[1],
+                c: c[0],
+                equation: `y = ${c[2].toFixed(3)}x² + ${c[1].toFixed(3)}x + ${c[0].toFixed(3)}`
+            };
+        }
+
+        function solveQuadratic(matrix) {
+            const m = [[matrix[0][0], matrix[0][1], matrix[0][2]], [matrix[1][0], matrix[1][1], matrix[1][2]], [matrix[2][0], matrix[2][1], matrix[2][2]]];
+            const b = [matrix[0][3], matrix[1][3], matrix[2][3]];
+
+            let det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+
+            if (Math.abs(det) < 1e-10) return null;
+
+            const x0 = b[0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (b[1] * m[2][2] - m[1][2] * b[2]) + m[0][2] * (b[1] * m[2][1] - m[1][1] * b[2]);
+            const x1 = m[0][0] * (b[1] * m[2][2] - m[1][2] * b[2]) - b[0] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * b[2] - b[1] * m[2][0]);
+            const x2 = m[0][0] * (m[1][1] * b[2] - b[1] * m[2][1]) - m[0][1] * (m[1][0] * b[2] - b[1] * m[2][0]) + b[0] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+
+            return [x0 / det, x1 / det, x2 / det];
+        }
+
+        function calculateExponential() {
+            const sourceData = getValidData();
+            if (sourceData.x.length < 2) return null;
+
+            const validData = sourceData.x.map((x, i) => sourceData.y[i] > 0 ? { x, y: Math.log(sourceData.y[i]) } : null).filter(d => d !== null);
+            if (validData.length < 2) return null;
+
+            const linear = calculateLinearFromData(validData.map(d => d.x), validData.map(d => d.y));
+            if (!linear) return null;
+
+            const a = Math.exp(linear.b);
+            const b = linear.m;
+
+            return {
+                a,
+                b,
+                equation: `y = ${a.toFixed(3)}·e^(${b.toFixed(3)}x)`
+            };
+        }
+
+        function calculateLogarithmic() {
+            const sourceData = getValidData();
+            if (sourceData.x.length < 2) return null;
+
+            const validData = sourceData.x.map((x, i) => x > 0 ? { x: Math.log(x), y: sourceData.y[i] } : null).filter(d => d !== null);
+            if (validData.length < 2) return null;
+
+            const linear = calculateLinearFromData(validData.map(d => d.x), validData.map(d => d.y));
+            if (!linear) return null;
+
+            return {
+                a: linear.m,
+                b: linear.b,
+                equation: `y = ${linear.m.toFixed(3)}·ln(x) + ${linear.b.toFixed(3)}`
+            };
+        }
+
+        function calculateLinearFromData(xs, ys) {
+            const n = xs.length;
+            const sumX = xs.reduce((a, b) => a + b, 0);
+            const sumY = ys.reduce((a, b) => a + b, 0);
+            const sumXY = xs.reduce((sum, x, i) => sum + x * ys[i], 0);
+            const sumX2 = xs.reduce((sum, x) => sum + x * x, 0);
+
+            const denom = n * sumX2 - sumX * sumX;
+            if (Math.abs(denom) < 1e-10) return null;
+
+            const m = (n * sumXY - sumX * sumY) / denom;
+            const b = (sumY - m * sumX) / n;
+
+            return { m, b };
+        }
+
+        function calculateR2(actualY, predictedY) {
+            if (actualY.length === 0) return 0;
+
+            const meanY = actualY.reduce((a, b) => a + b, 0) / actualY.length;
+            const ssTotal = actualY.reduce((sum, y) => sum + (y - meanY) ** 2, 0);
+            const ssRes = actualY.reduce((sum, y, i) => sum + (y - predictedY[i]) ** 2, 0);
+
+            return ssTotal === 0 ? 0 : 1 - ssRes / ssTotal;
+        }
+
+        function calculatePearsonR(xs, ys) {
+            if (xs.length !== ys.length || xs.length < 2) return null;
+
+            const n = xs.length;
+            const meanX = xs.reduce((sum, value) => sum + value, 0) / n;
+            const meanY = ys.reduce((sum, value) => sum + value, 0) / n;
+
+            let numerator = 0;
+            let sumSqX = 0;
+            let sumSqY = 0;
+
+            for (let i = 0; i < n; i++) {
+                const dx = xs[i] - meanX;
+                const dy = ys[i] - meanY;
+                numerator += dx * dy;
+                sumSqX += dx * dx;
+                sumSqY += dy * dy;
+            }
+
+            const denominator = Math.sqrt(sumSqX * sumSqY);
+            if (denominator === 0) return null;
+
+            return numerator / denominator;
+        }
+
+        function getCorrelationDirection(r) {
+            if (r === null) {
+                return {
+                    label: 'undefined',
+                    meaning: 'there is not enough variation to describe a linear correlation direction.'
+                };
+            }
+
+            if (r > 0.05) {
+                return {
+                    label: 'positive',
+                    meaning: 'as the independent variable increases, the dependent variable tends to increase as well.'
+                };
+            }
+
+            if (r < -0.05) {
+                return {
+                    label: 'negative',
+                    meaning: 'as the independent variable increases, the dependent variable tends to decrease.'
+                };
+            }
+
+            return {
+                label: 'near-zero',
+                meaning: 'there is very little linear relationship between the two variables.'
+            };
+        }
+
+        function getPredictedY(coefficients, model, xs) {
+            return xs.map(x => {
+                if (model === 'linear') {
+                    return coefficients.m * x + coefficients.b;
+                } else if (model === 'quadratic') {
+                    return coefficients.a * x * x + coefficients.b * x + coefficients.c;
+                } else if (model === 'exponential') {
+                    return coefficients.a * Math.exp(coefficients.b * x);
+                } else if (model === 'logarithmic') {
+                    return x > 0 ? coefficients.a * Math.log(x) + coefficients.b : null;
+                }
+            }).filter(y => y !== null);
+        }
+
+        // Graph Update
+        function updateGraph() {
+            const validData = getValidData();
+
+            if (validData.x.length < 4) {
+                analysisResults = null;
+                clearCharts();
+                showGraphFeedback('Add at least 4 valid data points in the Data tab to generate the graph and trendline.');
+                analyzeData();
+                renderResultsSection();
+                return;
+            }
+
+            hideGraphFeedback();
+
+            let model = null;
+            if (currentModel === 'linear') model = calculateLinear();
+            else if (currentModel === 'quadratic') model = calculateQuadratic();
+            else if (currentModel === 'exponential') model = calculateExponential();
+            else if (currentModel === 'logarithmic') model = calculateLogarithmic();
+
+            if (!model) {
+                analysisResults = null;
+                clearCharts();
+                showGraphFeedback(`The ${currentModel} model needs valid values that can be fitted. Check your data and try again.`);
+                analyzeData();
+                renderResultsSection();
+                return;
+            }
+
+            const predictedY = getPredictedY(model, currentModel, validData.x);
+            const r2 = calculateR2(validData.y, predictedY);
+
+            const sortedIndices = validData.x.map((_, i) => i).sort((a, b) => validData.x[a] - validData.x[b]);
+            const sortedX = sortedIndices.map(i => validData.x[i]);
+            const sortedPredictedY = sortedIndices.map(i => predictedY[i]);
+
+            const ctx = document.getElementById('mainChart').getContext('2d');
+
+            if (mainChart) mainChart.destroy();
+
+            mainChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Data Points',
+                            data: validData.x.map((x, i) => ({ x, y: validData.y[i] })),
+                            backgroundColor: '#4DA8DA',
+                            borderColor: '#2E8FB0',
+                            borderWidth: 2,
+                            pointStyle: 'circle',
+                            radius: 6,
+                            hoverRadius: 8
+                        },
+                        {
+                            label: 'Trendline',
+                            type: 'line',
+                            data: sortedX.map((x, i) => ({ x, y: sortedPredictedY[i] })),
+                            borderColor: '#9B5DE5',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4,
+                            pointStyle: 'line',
+                            pointRadius: 0,
+                            pointHoverRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: { size: 12 },
+                                usePointStyle: true,
+                                boxWidth: 10,
+                                boxHeight: 10
+                            }
+                        },
+                        title: {
+                            display: false,
+                            text: '',
+                            font: { size: 14, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: columnHeaders.x },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        },
+                        y: {
+                            title: { display: true, text: columnHeaders.y },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        }
+                    }
+                }
+            });
+
+            analysisResults = { model, r2, predictedY, xValues: validData.x, yValues: validData.y };
+            renderGraphMeta(model, r2);
+
+            document.getElementById('residualContainer').style.display = 'block';
+            drawResidualPlot();
+
+            analyzeData();
+            renderResultsSection();
+        }
+
+        function selectModel(modelName) {
+            currentModel = modelName;
+            document.querySelectorAll('#graph [data-model]').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`#graph [data-model="${modelName}"]`).classList.add('active');
+            updatePearsonToggleVisibility();
+            updateGraph();
+        }
+
+        function selectResultsModel(modelName) {
+            currentResultsModel = modelName;
+            renderResultsSection();
+        }
+
+        function drawResidualPlot() {
+            if (!analysisResults) return;
+
+            const residuals = analysisResults.yValues.map((y, i) => y - analysisResults.predictedY[i]);
+
+            const ctx = document.getElementById('residualChart').getContext('2d');
+            if (residualChart) residualChart.destroy();
+
+            residualChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Residuals',
+                            data: analysisResults.xValues.map((x, i) => ({ x, y: residuals[i] })),
+                            backgroundColor: '#F94144',
+                            borderColor: '#D63238',
+                            borderWidth: 2,
+                            pointStyle: 'circle',
+                            radius: 5
+                        },
+                        {
+                            label: 'Zero Line',
+                            type: 'line',
+                            data: [{ x: Math.min(...analysisResults.xValues), y: 0 }, { x: Math.max(...analysisResults.xValues), y: 0 }],
+                            borderColor: '#999',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointStyle: 'dash',
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 10,
+                                boxHeight: 10
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: columnHeaders.x } },
+                        y: { title: { display: true, text: 'Residuals' } }
+                    }
+                }
+            });
+        }
+
+        // Analysis
+        function analyzeData() {
+            const validData = getValidData();
+
+            if (validData.x.length < 4) {
+                document.getElementById('analysisResults').innerHTML = '<p style="color: #666; font-weight: 600;">📋 Enter at least 4 valid data points to view the automatic model comparison.</p>';
+                return;
+            }
+
+            const pearsonR = calculatePearsonR(validData.x, validData.y);
+            const correlationDirection = getCorrelationDirection(pearsonR);
+
+            const models = {
+                linear: calculateLinear(),
+                quadratic: calculateQuadratic(),
+                exponential: calculateExponential(),
+                logarithmic: calculateLogarithmic()
+            };
+
+            const r2Values = {};
+            for (const [modelName, model] of Object.entries(models)) {
+                if (model) {
+                    const predicted = getPredictedY(model, modelName, validData.x);
+                    r2Values[modelName] = calculateR2(validData.y, predicted);
+                } else {
+                    r2Values[modelName] = -1;
+                }
+            }
+
+            let html = '<h3 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.1rem;">📊 Correlation Summary</h3>';
+            html += `<div style="background: #f8fbff; padding: 1rem; border-radius: 12px; border-left: 4px solid #4DA8DA; margin-bottom: 1rem;">
+                <p style="font-weight: 700; color: #333; margin-bottom: 0.35rem;">Pearson r = <span style="color: #4DA8DA;">${pearsonR === null ? 'N/A' : pearsonR.toFixed(4)}</span></p>
+                <p style="color: #555; line-height: 1.6; margin: 0;">This indicates a <strong>${correlationDirection.label}</strong> linear correlation, meaning ${correlationDirection.meaning}</p>
+            </div>`;
+            html += '<h3 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.1rem;">📊 Model Comparison</h3>';
+            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">';
+
+            for (const [modelName, r2] of Object.entries(r2Values)) {
+                const modelLabel = modelName.charAt(0).toUpperCase() + modelName.slice(1);
+                const bgColor = r2 < 0 ? '#FFF3CD' : r2 > 0.8 ? '#D4EDDA' : '#E2E3E5';
+                const textColor = r2 < 0 ? '#856404' : r2 > 0.8 ? '#155724' : '#383D41';
+                const status = r2 < 0 ? '❌ N/A' : r2 > 0.8 ? '⭐ Excellent' : '✅ Good';
+
+                html += `<div style="background: ${bgColor}; padding: 1rem; border-radius: 12px; text-align: center; border-left: 4px solid ${textColor};">
+                    <p style="font-weight: 600; color: ${textColor}; margin-bottom: 0.5rem;">${modelLabel}</p>
+                    <p style="color: ${textColor}; font-size: 1.3rem; font-weight: 700;">${r2 < 0 ? 'N/A' : r2.toFixed(4)}</p>
+                    <p style="color: ${textColor}; font-size: 0.85rem;">${status}</p>
+                </div>`;
+            }
+
+            html += '</div>';
+            document.getElementById('analysisResults').innerHTML = html;
+        }
+
+        // Recommendations
+        function findBestModel() {
+            const validData = getValidData();
+            if (validData.x.length < 2) return null;
+
+            const models = {
+                linear: calculateLinear(),
+                quadratic: calculateQuadratic(),
+                exponential: calculateExponential(),
+                logarithmic: calculateLogarithmic()
+            };
+
+            let bestModel = null;
+            let bestR2 = -1;
+            let bestName = '';
+
+            for (const [modelName, model] of Object.entries(models)) {
+                if (model) {
+                    const predicted = getPredictedY(model, modelName, validData.x);
+                    const r2 = calculateR2(validData.y, predicted);
+                    if (r2 > bestR2) {
+                        bestR2 = r2;
+                        bestModel = model;
+                        bestName = modelName;
+                    }
+                }
+            }
+
+            return { model: bestModel, r2: bestR2, name: bestName };
+        }
+
+        function getStrengthDescription(r2) {
+            if (r2 > 0.95) return { strength: 'Perfect', emoji: '🎯', color: '#43D9A3' };
+            if (r2 > 0.8) return { strength: 'Strong', emoji: '⭐', color: '#43D9A3' };
+            if (r2 > 0.6) return { strength: 'Moderate', emoji: '✅', color: '#F9C74F' };
+            if (r2 > 0.3) return { strength: 'Weak', emoji: '⚠️', color: '#F94144' };
+            return { strength: 'Very Weak', emoji: '❌', color: '#F94144' };
+        }
+
+        function renderResultsSection() {
+            const validData = getValidData();
+            const resultsStatus = document.getElementById('resultsStatus');
+            const recommendationContainer = document.getElementById('recommendationContainer');
+            const interpretationContainer = document.getElementById('interpretationContainer');
+
+            document.querySelectorAll('.results-model-button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.resultsModel === currentResultsModel);
+            });
+
+            if (validData.x.length < 4) {
+                resultsStatus.innerHTML = 'Add at least 4 valid data points in the Data tab to review the model results and interpretation.';
+                recommendationContainer.innerHTML = '';
+                interpretationContainer.innerHTML = '';
+                return;
+            }
+
+            const best = findBestModel();
+            const selectedResult = getModelResult(currentResultsModel);
+
+            if (!selectedResult) {
+                resultsStatus.innerHTML = `The ${getModelDetails(currentResultsModel).label.toLowerCase()} model cannot be fitted to the current data. Try another model option or adjust the values in the Data tab.`;
+                recommendationContainer.innerHTML = '';
+                interpretationContainer.innerHTML = '';
+                return;
+            }
+
+            resultsStatus.innerHTML = best && best.name === currentResultsModel
+                ? 'This selected model is currently the best overall fit for the available data.'
+                : `You are viewing the ${selectedResult.label.toLowerCase()} model. Compare it against the other options to judge which fit is most meaningful for your data.`;
+
+            const strength = getStrengthDescription(selectedResult.r2);
+            let cardHtml = `<div class="recommendation-card">`;
+
+            if (best && best.name === currentResultsModel) {
+                cardHtml += `<div class="results-badge">🎯 Best Overall Fit</div>`;
+            }
+
+            cardHtml += `
+                <h3 style="font-size: 1.3rem; color: #333; margin-bottom: 0.5rem;">Selected Model</h3>
+                <p style="font-size: 1.1rem; color: #666; margin-bottom: 1rem;"><strong>${selectedResult.label}</strong></p>
+                <div style="background: white; padding: 1rem; border-radius: 10px; margin-bottom: 1rem;">
+                    <p style="font-family: monospace; font-size: 1rem; color: #4DA8DA; font-weight: 600;">${selectedResult.model.equation}</p>
+                    <p style="color: #666; margin-top: 0.5rem;">R² = <strong>${selectedResult.r2.toFixed(4)}</strong> (${strength.strength})</p>
+                    ${selectedResult.name === 'linear' ? `<p style="color: #666; margin-top: 0.35rem;">Pearson r = <strong>${selectedResult.pearsonR === null ? 'N/A' : selectedResult.pearsonR.toFixed(4)}</strong> (${selectedResult.correlationDirection.label})</p>` : ''}
+                </div>
+            </div>`;
+
+            recommendationContainer.innerHTML = cardHtml;
+
+            interpretationContainer.innerHTML = `<div class="insight-box">
+                <p style="margin: 0;">🤖 <strong>AI Insight:</strong></p>
+                <p style="margin-top: 0.5rem; line-height: 1.6;">Your data under the <strong>${selectedResult.label.toLowerCase()}</strong> model gives an R² of <strong>${selectedResult.r2.toFixed(3)}</strong>, indicating a <strong>${strength.strength.toLowerCase()}</strong> fit.${selectedResult.name === 'linear' ? ` The Pearson correlation coefficient is <strong>${selectedResult.pearsonR === null ? 'N/A' : selectedResult.pearsonR.toFixed(3)}</strong>, which suggests a <strong>${selectedResult.correlationDirection.label}</strong> correlation. In practical terms, ${selectedResult.correlationDirection.meaning}` : ''} This suggests that the dependent variable follows ${selectedResult.description} as the independent variable changes, so this model ${selectedResult.r2 > 0.8 ? 'captures the observed pattern very well' : selectedResult.r2 > 0.5 ? 'offers a reasonable summary of the trend' : 'may not describe the pattern strongly and should be interpreted with caution'}.</p>
+            </div>`;
+        }
+
+        function downloadCSV() {
+            const validData = getValidData();
+
+            if (validData.x.length === 0) {
+                alert('No data to download');
+                return;
+            }
+
+            let csv = `${columnHeaders.x},${columnHeaders.y}\n`;
+            for (let i = 0; i < validData.x.length; i++) {
+                csv += `${validData.x[i]},${validData.y[i]}\n`;
+            }
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'correlation_data.csv';
+            a.click();
+        }
+
+        function exportGraphAsImage() {
+            if (!mainChart) {
+                alert('Please create a graph first');
+                return;
+            }
+            const url = mainChart.toBase64Image();
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'correlation_graph.png';
+            a.click();
+        }
+
+        function copyEquation() {
+            const selectedResult = getModelResult(currentResultsModel) || findBestModel();
+            if (!selectedResult) return;
+            navigator.clipboard.writeText(selectedResult.model.equation);
+            alert('✅ Equation copied to clipboard!');
+        }
+
+        // Initialize
+        renderDataTable();
+        updatePearsonToggleVisibility();
+        updateGraph();
+
+        // Update results when switching to results section
+        const originalSwitchSection = switchSection;
+        switchSection = function(sectionName) {
+            originalSwitchSection(sectionName);
+            if (sectionName === 'graph') {
+                updateGraph();
+            }
+            if (sectionName === 'analyze') {
+                analyzeData();
+            }
+            if (sectionName === 'results') {
+                renderResultsSection();
+            }
+        };
+
+        if (window.lucide && typeof lucide.createIcons === 'function') {
+            lucide.createIcons();
+        }
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e6cd9d337aeb48f',t:'MTc3NTI2OTQwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
