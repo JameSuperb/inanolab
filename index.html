@@ -3654,14 +3654,31 @@
 
         
         // Page navigation functionality
-        function showPage(pageId) {
+        function updateSectionHash(pageId) {
+            const nextHash = '#' + pageId;
+            if (window.location.hash === nextHash) {
+                return;
+            }
+
+            history.replaceState(null, '', nextHash);
+        }
+
+        function showPage(pageId, options = {}) {
+            const { updateUrl = false } = options;
+            const availablePages = Array.from(document.querySelectorAll('.nav-button')).map(button => button.dataset.section);
+            const resolvedPageId = availablePages.includes(pageId) ? pageId : 'about';
+
+            if (updateUrl) {
+                updateSectionHash(resolvedPageId);
+            }
+
             // Hide all pages
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
             });
             
             // Show selected page
-            const targetPage = document.getElementById(pageId + '-page');
+            const targetPage = document.getElementById(resolvedPageId + '-page');
             if (targetPage) {
                 targetPage.classList.add('active');
             }
@@ -3671,13 +3688,13 @@
                 button.classList.remove('active');
             });
             
-            const activeButton = document.querySelector(`[data-section="${pageId}"]`);
+            const activeButton = document.querySelector(`[data-section="${resolvedPageId}"]`);
             if (activeButton) {
                 activeButton.classList.add('active');
             }
 
             // If navigating to Request page, ensure promo banner is visible if eligible
-            if (pageId === 'request') {
+            if (resolvedPageId === 'request') {
                 if (typeof ensurePromoBannerVisibleIfEligible === 'function') {
                     ensurePromoBannerVisibleIfEligible();
                 }
@@ -3689,7 +3706,7 @@
             // Toggle footer visibility (only show on About page)
             const siteFooter = document.querySelector('footer.footer');
             if (siteFooter) {
-                if (pageId === 'about') {
+                if (resolvedPageId === 'about') {
                     siteFooter.style.display = 'block';
                 } else {
                     siteFooter.style.display = 'none';
@@ -3697,12 +3714,21 @@
             }
         }
 
+        function getInitialPageFromUrl() {
+            const availablePages = Array.from(document.querySelectorAll('.nav-button')).map(button => button.dataset.section);
+            const queryPage = new URLSearchParams(window.location.search).get('section');
+            const hashPage = window.location.hash.replace(/^#/, '');
+            const requestedPage = (hashPage || queryPage || 'about').toLowerCase();
+
+            return availablePages.includes(requestedPage) ? requestedPage : 'about';
+        }
+
         // Navigation button click handlers
         document.querySelectorAll('.nav-button').forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
                 const pageId = this.dataset.section;
-                showPage(pageId);
+                showPage(pageId, { updateUrl: true });
             });
         });
 
@@ -3712,13 +3738,17 @@
         if (ctaButton) {
             ctaButton.addEventListener('click', function(e) {
                 e.preventDefault();
-                showPage('request');
+                showPage('request', { updateUrl: true });
             });
         }
 
+        window.addEventListener('hashchange', function() {
+            showPage(getInitialPageFromUrl());
+        });
+
         // Initialize with about page active
         window.addEventListener('load', function() {
-            showPage('about');
+            showPage(getInitialPageFromUrl());
         });
         
         // Google Identity: initialize Sign-In button when the library is ready
