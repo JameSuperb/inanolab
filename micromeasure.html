@@ -17,7 +17,10 @@
       });
     }
 
+    const tiffDecoderReady = loadOptionalScript('https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.min.js');
+
     Promise.all([
+      tiffDecoderReady,
       loadOptionalScript('./_sdk/element_sdk.js'),
       loadOptionalScript('./_sdk/data_sdk.js')
     ]);
@@ -451,7 +454,7 @@
     <div class="lg:w-2/3 flex flex-col gap-3 min-h-0 flex-1"><!-- Image Controls -->
      <div class="tool-card p-3 flex flex-wrap items-center gap-4"><label class="btn-primary px-4 py-2 rounded-lg cursor-pointer text-sm font-medium flex items-center gap-2">
        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-       </svg> Load Image <input type="file" id="imageInput" accept="image/*" class="hidden"> </label>
+      </svg> Load Image <input type="file" id="imageInput" accept="image/*,.tif,.tiff" class="hidden"> </label>
       <div class="flex items-center gap-3 bg-slate-900/30 rounded-lg px-3 py-2 border border-slate-700/50"><span class="text-xs text-slate-400">Zoom:</span>
       <div class="bg-slate-800 rounded px-3 py-1.5 flex items-center gap-2"><input type="range" id="zoomSlider" min="50" max="500" value="100" class="w-32"> <span id="zoomValue" class="text-xs mono w-10">100%</span>
        </div>
@@ -487,7 +490,7 @@
         <svg class="w-16 h-16 mx-auto text-slate-600 mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
         <p class="text-slate-500 text-sm">Load an image to begin analysis</p>
-        <p class="text-slate-600 text-xs mt-1">Supports PNG, JPG, TIFF formats</p>
+        <p class="text-slate-600 text-xs mt-1">Supports TIFF (first page), PNG, JPG, WebP, and other browser-supported image formats</p>
         <p class="text-slate-500 text-xs mt-3">↓ Drag &amp; drop an image here</p>
        </div>
        <canvas id="mainCanvas" class="hidden"></canvas>
@@ -1380,6 +1383,25 @@
     }
     
     // ========== IMAGE LOADING ==========
+    const TIFF_MIME_TYPES = new Set(['image/tiff', 'image/tif', 'image/x-tiff', 'application/tiff']);
+
+    function isTiffFile(file) {
+      if (!file) return false;
+      const fileType = (file.type || '').toLowerCase();
+      return TIFF_MIME_TYPES.has(fileType) || /\.(tif|tiff)$/i.test(file.name || '');
+    }
+
+    function isSupportedImageFile(file) {
+      if (!file) return false;
+      const fileType = (file.type || '').toLowerCase();
+      return fileType.startsWith('image/') || isTiffFile(file);
+    }
+
+    function showImageLoadError(message) {
+      hideProcessingModal();
+      window.alert(message);
+    }
+
     function applyLoadedImage(img) {
       state.image = img;
       state.imageData = null;
@@ -1424,14 +1446,91 @@
       });
     }
 
-    function loadImage(file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
+    function loadBrowserImage(file) {
+      return new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
         const img = new Image();
-        img.onload = () => applyLoadedImage(img);
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
+
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(img);
+        };
+
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('The selected image could not be decoded by this browser.'));
+        };
+
+        img.src = objectUrl;
+      });
+    }
+
+    async function loadTiffImage(file) {
+      showProcessingModal('Loading TIFF Image');
+      updateProgress('Loading TIFF decoder...', 15);
+
+      try {
+        const decoderLoaded = await tiffDecoderReady;
+        if (!decoderLoaded || !window.UTIF) {
+          throw new Error('TIFF support is unavailable because the TIFF decoder could not be loaded.');
+        }
+
+        updateProgress('Decoding TIFF pixels...', 45);
+        const buffer = await file.arrayBuffer();
+        const ifds = window.UTIF.decode(buffer);
+        if (!ifds.length) {
+          throw new Error('This TIFF file does not contain a readable image.');
+        }
+
+        const ifd = ifds[0];
+        window.UTIF.decodeImage(buffer, ifd);
+        const rgba = window.UTIF.toRGBA8(ifd);
+        const width = ifd.width;
+        const height = ifd.height;
+
+        if (!width || !height || !rgba || !rgba.length) {
+          throw new Error('The TIFF image was decoded, but no pixel data was produced.');
+        }
+
+        updateProgress('Rendering TIFF image...', 80);
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          throw new Error('Canvas rendering is unavailable in this browser.');
+        }
+
+        const imageData = new ImageData(new Uint8ClampedArray(rgba), width, height);
+        ctx.putImageData(imageData, 0, 0);
+
+        updateProgress('Finalizing TIFF import...', 100, 0);
+        return canvas;
+      } finally {
+        hideProcessingModal();
+      }
+    }
+
+    async function loadImage(file) {
+      if (!isSupportedImageFile(file)) {
+        showImageLoadError('Unsupported file type. Please choose a TIFF, PNG, JPG, WebP, or another browser-supported image format.');
+        return;
+      }
+
+      try {
+        const imageSource = isTiffFile(file)
+          ? await loadTiffImage(file)
+          : await loadBrowserImage(file);
+
+        applyLoadedImage(imageSource);
+      } catch (error) {
+        console.error('Image load failed:', error);
+        const fallbackMessage = isTiffFile(file)
+          ? 'The TIFF file could not be loaded. If it is multi-page, only the first page is supported.'
+          : 'The selected image could not be loaded.';
+        showImageLoadError(error && error.message ? error.message : fallbackMessage);
+      }
     }
 
     function loadDemoImage() {
@@ -4239,6 +4338,7 @@
     // ========== EVENT LISTENERS ==========
     elements.imageInput.addEventListener('change', (e) => {
       if (e.target.files[0]) loadImage(e.target.files[0]);
+      e.target.value = '';
     });
     
     elements.zoomSlider.addEventListener('input', (e) => {
@@ -5175,7 +5275,7 @@
       elements.canvasWrapper.classList.remove('drag-over');
       
       const files = e.dataTransfer.files;
-      if (files.length > 0 && files[0].type.startsWith('image/')) {
+      if (files.length > 0) {
         loadImage(files[0]);
       }
     });
