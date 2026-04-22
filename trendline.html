@@ -508,6 +508,215 @@
             margin: 1rem 0;
         }
 
+        .publication-panel {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .publication-empty {
+            padding: 2rem 1.5rem;
+            border: 2px dashed rgba(77, 168, 218, 0.28);
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(248, 251, 255, 0.94), rgba(245, 240, 255, 0.92));
+            color: #5f6c7b;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .publication-chart-shell {
+            display: none;
+            gap: 0.85rem;
+        }
+
+        .publication-chart-frame {
+            background: white;
+            border: 2px solid rgba(31, 41, 55, 0.38);
+            border-radius: 6px;
+            padding: 0.6rem;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        .publication-chart-wrap {
+            position: relative;
+            height: 500px;
+        }
+
+        .publication-chart-note {
+            min-height: 1.4rem;
+            color: #5f6c7b;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .publication-action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.15rem;
+        }
+
+        .publication-action-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1rem;
+            border: 1px solid rgba(31, 41, 55, 0.16);
+            border-radius: 12px;
+            background: linear-gradient(135deg, #4DA8DA, #2E8FB0);
+            color: #ffffff;
+            font-size: 0.92rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .publication-action-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(46, 143, 176, 0.22);
+        }
+
+        .publication-action-button:active {
+            transform: translateY(0);
+        }
+
+        .publication-action-button:focus-visible {
+            outline: 2px solid rgba(77, 168, 218, 0.45);
+            outline-offset: 3px;
+        }
+
+        .publication-action-button svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2.2;
+        }
+
+        .publication-correlation-section {
+            display: grid;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .publication-correlation-title {
+            color: #1f2937;
+            font-size: 1.08rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .publication-correlation-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .publication-correlation-card {
+            border: 2px solid #1f2937;
+            border-radius: 4px;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .publication-correlation-block {
+            display: grid;
+            gap: 0.65rem;
+        }
+
+        .publication-correlation-header {
+            padding: 0.8rem 1rem;
+            border-bottom: 2px solid #1f2937;
+            text-align: center;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #111827;
+            background: #ffffff;
+        }
+
+        .publication-correlation-body {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(220px, 1.1fr);
+            align-items: stretch;
+        }
+
+        .publication-correlation-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .publication-correlation-table td {
+            border-right: 2px solid #1f2937;
+            border-bottom: 2px solid #1f2937;
+            padding: 0.7rem 0.95rem;
+            font-size: 0.98rem;
+            color: #111827;
+            background: #ffffff;
+        }
+
+        .publication-correlation-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .publication-correlation-label {
+            width: 67%;
+            font-weight: 500;
+        }
+
+        .publication-correlation-value {
+            width: 33%;
+            text-align: right;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        .publication-correlation-value.is-significant {
+            color: #dc2626;
+        }
+
+        .publication-correlation-summary {
+            display: grid;
+            align-content: center;
+            gap: 0.85rem;
+            padding: 1rem 1.15rem;
+            background: #ffffff;
+        }
+
+        .publication-correlation-summary-line {
+            color: #111827;
+            font-size: 0.98rem;
+            line-height: 1.45;
+            font-style: italic;
+        }
+
+        .publication-correlation-empty {
+            padding: 1rem 1.1rem;
+            border: 1px dashed rgba(31, 41, 55, 0.28);
+            border-radius: 12px;
+            color: #5f6c7b;
+            background: #f8fbff;
+            line-height: 1.65;
+        }
+
+        .publication-correlation-footnote {
+            color: #5f6c7b;
+            font-size: 0.86rem;
+            line-height: 1.6;
+        }
+
+        .publication-correlation-actions {
+            display: flex;
+            justify-content: flex-start;
+            padding: 0;
+            margin-top: 0;
+        }
+
+        .publication-correlation-actions .publication-action-button {
+            background: linear-gradient(135deg, #9B5DE5, #7B3FBF);
+            box-shadow: none;
+        }
+
+        .publication-correlation-actions .publication-action-button:hover {
+            box-shadow: 0 10px 22px rgba(123, 63, 191, 0.18);
+        }
+
         .ripple {
             position: absolute;
             border-radius: 50%;
@@ -1377,7 +1586,9 @@
       </div>
       <div class="nav-item" data-section="analyze"><span>🤖</span> <span>Analyze</span>
       </div>
-      <div class="nav-item" data-section="results"><span>🧾</span> <span>Results</span>
+    <div class="nav-item" data-section="results"><span>🧾</span> <span>Results</span>
+    </div>
+    <div class="nav-item" data-section="publication"><span>📰</span> <span>Publication</span>
       </div>
      </div>
     </div><!-- Main Content -->
@@ -1579,6 +1790,33 @@
        <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;"><button class="btn btn-primary" onclick="exportGraphAsImage()"> 📥 Export Graph </button> <button class="btn btn-secondary" onclick="downloadCSV()"> 📊 Download CSV </button> <button class="btn btn-highlight" onclick="copyEquation()"> ➗ Copy Equation </button>
        </div>
       </div>
+         </div><!-- PUBLICATION SECTION -->
+            <div id="publication" class="content-section">
+                <div class="card">
+                 <h2 style="color: #4DA8DA; margin-bottom: 0.35rem; font-size: 1.6rem;">📰 Publication</h2>
+                 <h3 style="color: #1f2937; margin-bottom: 0.85rem; font-size: 1.18rem; font-weight: 700;">Linear Regression Analysis</h3>
+                 <div class="highlight-box" style="margin-top: 0; margin-bottom: 1.25rem;">
+                  <p style="color: #4b5563; line-height: 1.7; margin: 0;">This publication panel shows a <strong>linear regression analysis</strong> of the current dataset. The graph uses the entered X and Y values, plots the points in a publication-style format, adds the best-fit linear line, and displays the regression equation together with <strong>R²</strong> in the upper-right corner. This view always focuses on the <strong>linear model</strong> so the output is clear and ready for reporting.</p>
+                 </div>
+             <div class="publication-panel">
+                <div id="publicationEmptyState" class="publication-empty">Enter valid paired data to generate a publication-ready graph.</div>
+                <div id="publicationChartShell" class="publication-chart-shell">
+                 <div class="publication-chart-frame">
+                    <div class="publication-chart-wrap">
+                     <canvas id="publicationChart"></canvas>
+                    </div>
+                 </div>
+                 <p id="publicationChartNote" class="publication-chart-note"></p>
+                      <div class="publication-action-row"><button class="publication-action-button" type="button" onclick="exportPublicationGraph()"><i data-lucide="image-down"></i><span>Export Graph</span></button>
+                      </div>
+                </div>
+                     <div class="publication-correlation-section">
+                      <p class="publication-correlation-title">Correlation Analysis</p>
+                      <div id="publicationCorrelationGrid" class="publication-correlation-grid"></div>
+                      <p class="publication-correlation-footnote">* P-values are reported as two-tailed significance estimates. Spearman's rho uses an approximate significance calculation suitable for summary reporting.</p>
+                     </div>
+             </div>
+            </div>
      </div>
     </div>
    </div>
@@ -1783,6 +2021,48 @@
         let analysisResults = null;
         let mainChart = null;
         let residualChart = null;
+        let publicationChart = null;
+
+        const publicationChartTextPlugin = {
+            id: 'publicationChartText',
+            afterDraw(chart, args, options) {
+                if (!options || !Array.isArray(options.lines) || options.lines.length === 0) {
+                    return;
+                }
+
+                const { ctx, chartArea } = chart;
+                if (!chartArea) {
+                    return;
+                }
+
+                const lines = options.lines.filter(Boolean);
+                if (!lines.length) {
+                    return;
+                }
+
+                const fontSize = options.fontSize || 14;
+                const lineHeight = options.lineHeight || Math.round(fontSize * 1.35);
+                const topOffset = options.topOffset || 8;
+
+                ctx.save();
+                ctx.fillStyle = options.color || '#111827';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'top';
+                ctx.font = `700 ${fontSize}px "Open Sans", sans-serif`;
+
+                let textY = chartArea.top + topOffset;
+                lines.forEach((line) => {
+                    ctx.fillText(line, chartArea.right, textY);
+                    textY += lineHeight;
+                });
+
+                ctx.restore();
+            }
+        };
+
+        if (window.Chart) {
+            Chart.register(publicationChartTextPlugin);
+        }
 
         // Initialize SDK
         if (window.elementSdk && typeof window.elementSdk.init === 'function') {
@@ -2026,6 +2306,582 @@
             document.getElementById('residualContainer').style.display = 'none';
             const mainCanvas = document.getElementById('mainChart');
             mainCanvas.getContext('2d').clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+        }
+
+        function clearPublicationChart() {
+            if (publicationChart) {
+                publicationChart.destroy();
+                publicationChart = null;
+            }
+        }
+
+        function formatPublicationEquation(modelName, model) {
+            if (!model) {
+                return '';
+            }
+
+            if (modelName === 'linear') {
+                return `y = ${model.m.toFixed(4)}x + ${model.b.toFixed(4)}`;
+            }
+
+            if (modelName === 'quadratic') {
+                return `y = ${model.a.toFixed(4)}x² + ${model.b.toFixed(4)}x + ${model.c.toFixed(4)}`;
+            }
+
+            if (modelName === 'exponential') {
+                return `y = ${model.a.toFixed(4)}e^(${model.b.toFixed(4)}x)`;
+            }
+
+            if (modelName === 'logarithmic') {
+                return `y = ${model.a.toFixed(4)}ln(x) + ${model.b.toFixed(4)}`;
+            }
+
+            return '';
+        }
+
+        function setPublicationState(hasChart, message, note) {
+            const emptyState = document.getElementById('publicationEmptyState');
+            const chartShell = document.getElementById('publicationChartShell');
+            const chartNote = document.getElementById('publicationChartNote');
+
+            if (!emptyState || !chartShell || !chartNote) {
+                return;
+            }
+
+            emptyState.style.display = hasChart ? 'none' : 'block';
+            chartShell.style.display = hasChart ? 'grid' : 'none';
+            emptyState.textContent = hasChart ? '' : message;
+            chartNote.textContent = note || '';
+        }
+
+        function triggerDownload(url, fileName) {
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = fileName;
+            downloadLink.click();
+        }
+
+        function downloadTextFile(content, fileName, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = window.URL.createObjectURL(blob);
+            triggerDownload(url, fileName);
+            window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
+        }
+
+        function exportPublicationGraph() {
+            if (!publicationChart) {
+                alert('No publication graph is available to export yet.');
+                return;
+            }
+
+            const url = publicationChart.toBase64Image('image/png', 1);
+            triggerDownload(url, 'linear_regression_analysis.png');
+        }
+
+        function getAverageRanks(values) {
+            const sorted = values
+                .map((value, index) => ({ value, index }))
+                .sort((left, right) => left.value - right.value);
+
+            const ranks = new Array(values.length);
+            let position = 0;
+
+            while (position < sorted.length) {
+                let tieEnd = position;
+
+                while (tieEnd + 1 < sorted.length && sorted[tieEnd + 1].value === sorted[position].value) {
+                    tieEnd++;
+                }
+
+                const averageRank = (position + tieEnd + 2) / 2;
+                for (let tieIndex = position; tieIndex <= tieEnd; tieIndex++) {
+                    ranks[sorted[tieIndex].index] = averageRank;
+                }
+
+                position = tieEnd + 1;
+            }
+
+            return ranks;
+        }
+
+        function calculateSpearmanRho(xs, ys) {
+            if (xs.length !== ys.length || xs.length < 2) {
+                return null;
+            }
+
+            const rankedX = getAverageRanks(xs);
+            const rankedY = getAverageRanks(ys);
+
+            return calculatePearsonR(rankedX, rankedY);
+        }
+
+        function logGamma(value) {
+            const coefficients = [
+                676.5203681218851,
+                -1259.1392167224028,
+                771.3234287776531,
+                -176.6150291621406,
+                12.507343278686905,
+                -0.13857109526572012,
+                0.000009984369578019572,
+                0.00000015056327351493116
+            ];
+
+            if (value < 0.5) {
+                return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * value)) - logGamma(1 - value);
+            }
+
+            let adjustedValue = value - 1;
+            let accumulator = 0.9999999999998099;
+
+            for (let index = 0; index < coefficients.length; index++) {
+                accumulator += coefficients[index] / (adjustedValue + index + 1);
+            }
+
+            const temp = adjustedValue + coefficients.length - 0.5;
+            return 0.9189385332046727 + (adjustedValue + 0.5) * Math.log(temp) - temp + Math.log(accumulator);
+        }
+
+        function betaContinuedFraction(a, b, x) {
+            const maxIterations = 200;
+            const epsilon = 3e-7;
+            const minimum = 1e-30;
+
+            let qab = a + b;
+            let qap = a + 1;
+            let qam = a - 1;
+            let c = 1;
+            let d = 1 - qab * x / qap;
+
+            if (Math.abs(d) < minimum) {
+                d = minimum;
+            }
+
+            d = 1 / d;
+            let fraction = d;
+
+            for (let iteration = 1; iteration <= maxIterations; iteration++) {
+                const evenStep = iteration * (b - iteration) * x / ((qam + 2 * iteration) * (a + 2 * iteration));
+                d = 1 + evenStep * d;
+                if (Math.abs(d) < minimum) {
+                    d = minimum;
+                }
+                c = 1 + evenStep / c;
+                if (Math.abs(c) < minimum) {
+                    c = minimum;
+                }
+                d = 1 / d;
+                fraction *= d * c;
+
+                const oddStep = -(a + iteration) * (qab + iteration) * x / ((a + 2 * iteration) * (qap + 2 * iteration));
+                d = 1 + oddStep * d;
+                if (Math.abs(d) < minimum) {
+                    d = minimum;
+                }
+                c = 1 + oddStep / c;
+                if (Math.abs(c) < minimum) {
+                    c = minimum;
+                }
+                d = 1 / d;
+                const delta = d * c;
+                fraction *= delta;
+
+                if (Math.abs(delta - 1) < epsilon) {
+                    break;
+                }
+            }
+
+            return fraction;
+        }
+
+        function regularizedIncompleteBeta(x, a, b) {
+            if (x <= 0) {
+                return 0;
+            }
+
+            if (x >= 1) {
+                return 1;
+            }
+
+            const logBetaTerm = logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x);
+            const betaTerm = Math.exp(logBetaTerm);
+
+            if (x < (a + 1) / (a + b + 2)) {
+                return betaTerm * betaContinuedFraction(a, b, x) / a;
+            }
+
+            return 1 - betaTerm * betaContinuedFraction(b, a, 1 - x) / b;
+        }
+
+        function studentTCdf(tValue, degreesOfFreedom) {
+            if (!Number.isFinite(tValue) || !Number.isFinite(degreesOfFreedom) || degreesOfFreedom <= 0) {
+                return null;
+            }
+
+            if (tValue === 0) {
+                return 0.5;
+            }
+
+            const x = degreesOfFreedom / (degreesOfFreedom + tValue * tValue);
+            const incompleteBeta = regularizedIncompleteBeta(x, degreesOfFreedom / 2, 0.5);
+
+            return tValue > 0 ? 1 - 0.5 * incompleteBeta : 0.5 * incompleteBeta;
+        }
+
+        function calculateCorrelationPValue(correlationValue, sampleSize) {
+            if (correlationValue === null || sampleSize < 3) {
+                return null;
+            }
+
+            const safeCorrelation = Math.max(-0.9999999999, Math.min(0.9999999999, correlationValue));
+            const degreesOfFreedom = sampleSize - 2;
+            const tStatistic = Math.abs(safeCorrelation) * Math.sqrt(degreesOfFreedom / (1 - safeCorrelation * safeCorrelation));
+            const cumulativeProbability = studentTCdf(tStatistic, degreesOfFreedom);
+
+            if (cumulativeProbability === null) {
+                return null;
+            }
+
+            return Math.max(0, Math.min(1, 2 * (1 - cumulativeProbability)));
+        }
+
+        function getCorrelationDescription(correlationValue) {
+            if (correlationValue === null) {
+                return 'Correlation cannot be determined';
+            }
+
+            const absoluteCorrelation = Math.abs(correlationValue);
+            const direction = correlationValue > 0.05
+                ? 'Direct, or positive, correlation'
+                : correlationValue < -0.05
+                    ? 'Inverse, or negative, correlation'
+                    : 'Little to no monotonic correlation';
+
+            let strength = 'negligible';
+            if (absoluteCorrelation >= 0.9) {
+                strength = 'very strong';
+            } else if (absoluteCorrelation >= 0.7) {
+                strength = 'strong';
+            } else if (absoluteCorrelation >= 0.5) {
+                strength = 'moderate';
+            } else if (absoluteCorrelation >= 0.3) {
+                strength = 'weak';
+            }
+
+            if (direction === 'Little to no monotonic correlation') {
+                return direction;
+            }
+
+            return `${direction} with ${strength} association`;
+        }
+
+        function getSignificanceDescription(pValue) {
+            if (pValue === null) {
+                return 'P-value is unavailable for the current sample size';
+            }
+
+            if (pValue < 0.01) {
+                return 'Evidence of correlation with strong statistical significance';
+            }
+
+            if (pValue < 0.05) {
+                return 'Evidence of correlation with statistical significance';
+            }
+
+            return 'No evidence of correlation with statistical significance';
+        }
+
+        function formatCorrelationValue(value, digits) {
+            return value === null ? '&mdash;' : value.toFixed(digits);
+        }
+
+        function formatPValuePercent(pValue) {
+            return pValue === null ? '&mdash;' : `${(pValue * 100).toFixed(3)}%`;
+        }
+
+        function getCorrelationExportRows(type) {
+            const validData = getValidData();
+            if (validData.x.length < 2) {
+                return null;
+            }
+
+            const isPearson = type === 'pearson';
+            const title = isPearson ? 'Parametric Correlation' : 'Non-Parametric Correlation';
+            const metricLabel = isPearson ? "Pearson's r" : "Spearman's Rho";
+            const correlationValue = isPearson
+                ? calculatePearsonR(validData.x, validData.y)
+                : calculateSpearmanRho(validData.x, validData.y);
+            const degreesOfFreedom = validData.x.length >= 2 ? validData.x.length - 2 : null;
+            const pValue = calculateCorrelationPValue(correlationValue, validData.x.length);
+
+            return {
+                title,
+                rows: [
+                    ['Metric', 'Value'],
+                    [metricLabel, correlationValue === null ? 'N/A' : correlationValue.toFixed(6)],
+                    ['Degrees of Freedom', degreesOfFreedom === null ? 'N/A' : degreesOfFreedom.toFixed(2)],
+                    ['P-Value', pValue === null ? 'N/A' : `${(pValue * 100).toFixed(3)}%`],
+                    ['Interpretation', getCorrelationDescription(correlationValue)],
+                    ['Significance', getSignificanceDescription(pValue)]
+                ]
+            };
+        }
+
+        function exportCorrelationTable(type) {
+            const exportPayload = getCorrelationExportRows(type);
+            if (!exportPayload) {
+                alert('No correlation table is available to export yet.');
+                return;
+            }
+
+            const csvContent = exportPayload.rows
+                .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(','))
+                .join('\n');
+
+            const fileName = type === 'pearson'
+                ? 'parametric_correlation_table.csv'
+                : 'non_parametric_correlation_table.csv';
+
+            downloadTextFile(csvContent, fileName, 'text/csv');
+        }
+
+        function renderCorrelationCard(title, metricLabel, correlationValue, sampleSize) {
+            const exportType = metricLabel === "Pearson's r" ? 'pearson' : 'spearman';
+            const degreesOfFreedom = sampleSize >= 2 ? sampleSize - 2 : null;
+            const pValue = calculateCorrelationPValue(correlationValue, sampleSize);
+            const significanceClass = pValue !== null && pValue < 0.05 ? 'is-significant' : '';
+
+            return `
+                <section class="publication-correlation-block">
+                    <div class="publication-correlation-card">
+                        <div class="publication-correlation-header">${title}</div>
+                        <div class="publication-correlation-body">
+                            <table class="publication-correlation-table" aria-label="${title}">
+                                <tbody>
+                                    <tr>
+                                        <td class="publication-correlation-label">${metricLabel} *</td>
+                                        <td class="publication-correlation-value">${formatCorrelationValue(correlationValue, 6)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="publication-correlation-label">Degrees of Freedom</td>
+                                        <td class="publication-correlation-value">${degreesOfFreedom === null ? '&mdash;' : degreesOfFreedom.toFixed(2)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="publication-correlation-label">P-Value *</td>
+                                        <td class="publication-correlation-value ${significanceClass}">${formatPValuePercent(pValue)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="publication-correlation-summary">
+                                <p class="publication-correlation-summary-line">${getCorrelationDescription(correlationValue)}</p>
+                                <p class="publication-correlation-summary-line">${getSignificanceDescription(pValue)}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="publication-correlation-actions"><button class="publication-action-button" type="button" onclick="exportCorrelationTable('${exportType}')"><i data-lucide="table-properties"></i><span>Export Table</span></button>
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderPublicationCorrelationTables() {
+            const correlationGrid = document.getElementById('publicationCorrelationGrid');
+            if (!correlationGrid) {
+                return;
+            }
+
+            const validData = getValidData();
+            if (validData.x.length < 2) {
+                correlationGrid.innerHTML = '<div class="publication-correlation-empty">Add at least two valid paired data points to generate the Pearson and Spearman correlation tables.</div>';
+                return;
+            }
+
+            const pearsonR = calculatePearsonR(validData.x, validData.y);
+            const spearmanRho = calculateSpearmanRho(validData.x, validData.y);
+
+            correlationGrid.innerHTML = [
+                renderCorrelationCard('Parametric Correlation', "Pearson's r", pearsonR, validData.x.length),
+                renderCorrelationCard('Non-Parametric Correlation', "Spearman's Rho", spearmanRho, validData.x.length)
+            ].join('');
+
+            if (window.lucide && typeof lucide.createIcons === 'function') {
+                lucide.createIcons();
+            }
+        }
+
+        function renderPublicationGraph() {
+            const publicationCanvas = document.getElementById('publicationChart');
+            if (!publicationCanvas) {
+                return;
+            }
+
+            const validData = getValidData();
+            if (validData.x.length === 0) {
+                clearPublicationChart();
+                setPublicationState(false, 'Enter valid paired data to generate a publication-ready graph.', '');
+                renderPublicationCorrelationTables();
+                return;
+            }
+
+            const selectedModel = calculateLinear();
+            const hasTrendline = !!selectedModel;
+
+            let sortedTrendlineData = [];
+            let equationLine = '';
+            let r2Line = '';
+            let publicationNote = '';
+
+            if (hasTrendline) {
+                const linearPredictedY = getPredictedY(selectedModel, 'linear', validData.x);
+
+                if (linearPredictedY.length === validData.y.length) {
+                    const sortedIndices = validData.x.map((_, index) => index).sort((left, right) => validData.x[left] - validData.x[right]);
+                    sortedTrendlineData = sortedIndices.map((index) => ({ x: validData.x[index], y: linearPredictedY[index] }));
+                    equationLine = formatPublicationEquation('linear', selectedModel);
+                    r2Line = `R² = ${calculateR2(validData.y, linearPredictedY).toFixed(4)}`;
+                } else {
+                    publicationNote = 'The current dataset does not provide enough valid values to display the linear regression line, so only the data markers are shown.';
+                }
+            } else {
+                publicationNote = 'The current dataset does not yet support a linear regression fit.';
+            }
+
+            clearPublicationChart();
+
+            const publicationTitle = `${columnHeaders.y} vs ${columnHeaders.x}`;
+            publicationChart = new Chart(publicationCanvas.getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Data Points',
+                            data: validData.x.map((xValue, index) => ({ x: xValue, y: validData.y[index] })),
+                            backgroundColor: '#5b84c4',
+                            borderColor: '#5b84c4',
+                            borderWidth: 1.5,
+                            pointStyle: 'rectRot',
+                            pointRadius: 6,
+                            pointHoverRadius: 7
+                        },
+                        {
+                            label: 'Trendline',
+                            type: 'line',
+                            data: sortedTrendlineData,
+                            borderColor: '#6d95d8',
+                            borderWidth: 2,
+                            borderDash: [2, 3],
+                            fill: false,
+                            tension: 0,
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            hidden: sortedTrendlineData.length === 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 10,
+                            right: 12,
+                            bottom: 6,
+                            left: 6
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            align: 'start',
+                            text: publicationTitle,
+                            color: '#111827',
+                            padding: {
+                                bottom: 20
+                            },
+                            font: {
+                                family: 'Open Sans',
+                                size: 16,
+                                weight: '700'
+                            }
+                        },
+                        publicationChartText: {
+                            lines: equationLine && r2Line ? [equationLine, r2Line] : [],
+                            color: '#111827',
+                            fontSize: 13,
+                            lineHeight: 18,
+                            topOffset: 2
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: columnHeaders.x,
+                                color: '#111827',
+                                padding: 10,
+                                font: {
+                                    family: 'Open Sans',
+                                    size: 13,
+                                    weight: '700'
+                                }
+                            },
+                            ticks: {
+                                color: '#374151',
+                                padding: 8,
+                                font: {
+                                    family: 'Open Sans',
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            },
+                            grid: {
+                                display: false,
+                                drawBorder: true
+                            },
+                            border: {
+                                color: '#9ca3af',
+                                width: 1.6
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: columnHeaders.y,
+                                color: '#111827',
+                                padding: 10,
+                                font: {
+                                    family: 'Open Sans',
+                                    size: 13,
+                                    weight: '700'
+                                }
+                            },
+                            ticks: {
+                                color: '#374151',
+                                padding: 8,
+                                font: {
+                                    family: 'Open Sans',
+                                    size: 12,
+                                    weight: '600'
+                                }
+                            },
+                            grid: {
+                                display: false,
+                                drawBorder: true
+                            },
+                            border: {
+                                color: '#9ca3af',
+                                width: 1.6
+                            }
+                        }
+                    }
+                }
+            });
+
+            setPublicationState(true, '', publicationNote);
+            renderPublicationCorrelationTables();
         }
 
         function showGraphFeedback(message) {
@@ -2669,6 +3525,7 @@
                 showGraphFeedback('Add at least 4 valid data points in the Data tab to generate the graph and trendline.');
                 analyzeData();
                 renderResultsSection();
+                renderPublicationGraph();
                 return;
             }
 
@@ -2686,6 +3543,7 @@
                 showGraphFeedback(`The ${currentModel} model needs valid values that can be fitted. Check your data and try again.`);
                 analyzeData();
                 renderResultsSection();
+                renderPublicationGraph();
                 return;
             }
 
@@ -2768,6 +3626,7 @@
 
             analyzeData();
             renderResultsSection();
+            renderPublicationGraph();
         }
 
         function selectModel(modelName) {
@@ -3043,6 +3902,9 @@
             }
             if (sectionName === 'results') {
                 renderResultsSection();
+            }
+            if (sectionName === 'publication') {
+                renderPublicationGraph();
             }
         };
 
