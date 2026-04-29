@@ -418,10 +418,12 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            gap: 0.5rem;
+            gap: 0.75rem;
         }
 
         .service-brochure-link {
+            appearance: none;
+            -webkit-appearance: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -433,10 +435,20 @@
             background: linear-gradient(135deg, #f7fbff 0%, #eaf4ff 100%);
             color: #1f5f99;
             text-decoration: none;
+            font-family: inherit;
+            font-size: 1rem;
             font-weight: 700;
+            line-height: 1.2;
             letter-spacing: 0.01em;
+            text-align: left;
+            cursor: pointer;
             box-shadow: 0 10px 20px rgba(52, 152, 219, 0.12);
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .service-brochure-link > span:not(.service-brochure-icon) {
+            font: inherit;
+            line-height: 1.2;
         }
 
         .service-brochure-link:hover {
@@ -463,6 +475,47 @@
             box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.12);
             font-size: 0.95rem;
             line-height: 1;
+        }
+
+        .service-resource-link {
+            min-width: 290px;
+        }
+
+        .specs-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .specs-list li {
+            display: grid;
+            grid-template-columns: minmax(140px, 190px) 1fr;
+            gap: 0.65rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eef2f6;
+            color: #495057;
+            line-height: 1.55;
+        }
+
+        .specs-list li:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .specs-label {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        @media (max-width: 640px) {
+            .service-resource-link {
+                min-width: 100%;
+            }
+
+            .specs-list li {
+                grid-template-columns: 1fr;
+                gap: 0.2rem;
+            }
         }
 
         .price {
@@ -1200,6 +1253,34 @@
             flex-wrap: wrap;
             margin-top: 1rem;
         }
+
+        .brochure-modal {
+            width: min(1080px, 96vw);
+        }
+
+        .brochure-modal .modal-content {
+            padding: 0;
+            background: #f4f8fc;
+        }
+
+        .brochure-frame-wrap {
+            padding: 1rem 1rem 0;
+        }
+
+        .brochure-frame {
+            display: block;
+            width: 100%;
+            height: min(72vh, 880px);
+            border: none;
+            background: #ffffff;
+        }
+
+        .brochure-modal .modal-footer {
+            padding: 1rem 1.2rem 1.2rem;
+            margin-top: 0;
+            border-top: 1px solid #e9ecef;
+            background: #ffffff;
+        }
         @media (max-width: 860px) {
             .modal-grid { grid-template-columns: 1fr; }
             .modal-content { padding: 1rem; }
@@ -1711,10 +1792,18 @@
                         <h3>SEM</h3>
                         <p class="service-card-meta">Scanning Electron Microscopy: Surface Morphology</p>
                         <div class="service-card-actions">
-                            <a class="service-brochure-link" href="data/inanolab%20brochure.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open SEM and EDS/EDX brochure PDF in a new tab">
+                            <button class="service-brochure-link service-resource-link" type="button" data-open-modal="brochure" aria-haspopup="dialog" aria-label="Open SEM and EDS/EDX brochure in a dialog window">
                                 <span class="service-brochure-icon" aria-hidden="true">PDF</span>
                                 <span>Open Brochure</span>
+                            </button>
+                            <a class="service-brochure-link service-resource-link" href="https://drive.google.com/drive/folders/1Z2xSd-d935kg6bFXfIpvtg8A_0EWd5Td?usp=sharing" target="_blank" rel="noopener noreferrer" aria-label="Download sample Basic SEM raw data from Google Drive">
+                                <span class="service-brochure-icon" aria-hidden="true">↓</span>
+                                <span>Download Sample Raw Data</span>
                             </a>
+                            <button class="service-brochure-link service-resource-link" type="button" data-open-modal="equipment-specs" aria-haspopup="dialog" aria-label="View equipment specifications for SEM and EDS/EDX">
+                                <span class="service-brochure-icon" aria-hidden="true">i</span>
+                                <span>Equipment Specifications</span>
+                            </button>
                         </div>
                     </div>
                     <div class="pricing-card service-card">
@@ -1722,10 +1811,18 @@
                         <h3>EDS/EDX</h3>
                         <p class="service-card-meta">Energy Dispersive X-ray Spectroscopy: Elemental Composition</p>
                         <div class="service-card-actions">
-                            <a class="service-brochure-link" href="data/inanolab%20brochure.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open SEM and EDS/EDX brochure PDF in a new tab">
+                            <button class="service-brochure-link service-resource-link" type="button" data-open-modal="brochure" aria-haspopup="dialog" aria-label="Open SEM and EDS/EDX brochure in a dialog window">
                                 <span class="service-brochure-icon" aria-hidden="true">PDF</span>
                                 <span>Open Brochure</span>
+                            </button>
+                            <a class="service-brochure-link service-resource-link" href="https://drive.google.com/drive/folders/1-BvwbL5mJTMVvPRyr5OzUFF2_XMbmAkb?usp=sharing" target="_blank" rel="noopener noreferrer" aria-label="Download sample SEM and EDX raw data from Google Drive">
+                                <span class="service-brochure-icon" aria-hidden="true">↓</span>
+                                <span>Download Sample Raw Data</span>
                             </a>
+                            <button class="service-brochure-link service-resource-link" type="button" data-open-modal="equipment-specs" aria-haspopup="dialog" aria-label="View equipment specifications for SEM and EDS/EDX">
+                                <span class="service-brochure-icon" aria-hidden="true">i</span>
+                                <span>Equipment Specifications</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1814,10 +1911,20 @@
                             <li>Official Certification of Analysis</li>
 
                         </ul>
-                        <a class="btn-primary" href="https://drive.google.com/drive/folders/1Z2xSd-d935kg6bFXfIpvtg8A_0EWd5Td?usp=sharing" target="_blank" rel="noopener noreferrer" style="margin-top: 1rem;"
-                           aria-label="Download sample Basic SEM raw data from Google Drive">
-                            Download Sample Raw Data
-                        </a>
+                        <div class="service-card-actions" style="margin-top: 1rem;">
+                            <button class="service-brochure-link service-resource-link" type="button" data-open-modal="brochure" aria-haspopup="dialog" aria-label="Open SEM and EDS/EDX brochure in a dialog window">
+                                <span class="service-brochure-icon" aria-hidden="true">PDF</span>
+                                <span>Open Brochure</span>
+                            </button>
+                            <a class="service-brochure-link service-resource-link" href="https://drive.google.com/drive/folders/1Z2xSd-d935kg6bFXfIpvtg8A_0EWd5Td?usp=sharing" target="_blank" rel="noopener noreferrer" aria-label="Download sample Basic SEM raw data from Google Drive">
+                                <span class="service-brochure-icon" aria-hidden="true">↓</span>
+                                <span>Download Sample Raw Data</span>
+                            </a>
+                            <button class="service-brochure-link service-resource-link" type="button" data-open-modal="equipment-specs" aria-haspopup="dialog" aria-label="View equipment specifications for SEM and EDS/EDX">
+                                <span class="service-brochure-icon" aria-hidden="true">i</span>
+                                <span>Equipment Specifications</span>
+                            </button>
+                        </div>
                     </div>
                     <div class="pricing-card">
                         <h3>SEM and EDX</h3>
@@ -1836,10 +1943,20 @@
                             <li>Raw data files delivered via email</li>
                             <li>Official Certification of Analysis</li>
                         </ul>
-                        <a class="btn-primary" href="https://drive.google.com/drive/folders/1-BvwbL5mJTMVvPRyr5OzUFF2_XMbmAkb?usp=sharing" target="_blank" rel="noopener noreferrer" style="margin-top: 1rem;"
-                           aria-label="Download sample SEM and EDX raw data from Google Drive">
-                            Download Sample Raw Data
-                        </a>
+                        <div class="service-card-actions" style="margin-top: 1rem;">
+                            <button class="service-brochure-link service-resource-link" type="button" data-open-modal="brochure" aria-haspopup="dialog" aria-label="Open SEM and EDS/EDX brochure in a dialog window">
+                                <span class="service-brochure-icon" aria-hidden="true">PDF</span>
+                                <span>Open Brochure</span>
+                            </button>
+                            <a class="service-brochure-link service-resource-link" href="https://drive.google.com/drive/folders/1-BvwbL5mJTMVvPRyr5OzUFF2_XMbmAkb?usp=sharing" target="_blank" rel="noopener noreferrer" aria-label="Download sample SEM and EDX raw data from Google Drive">
+                                <span class="service-brochure-icon" aria-hidden="true">↓</span>
+                                <span>Download Sample Raw Data</span>
+                            </a>
+                            <button class="service-brochure-link service-resource-link" type="button" data-open-modal="equipment-specs" aria-haspopup="dialog" aria-label="View equipment specifications for SEM and EDS/EDX">
+                                <span class="service-brochure-icon" aria-hidden="true">i</span>
+                                <span>Equipment Specifications</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -2410,6 +2527,63 @@
         <button id="lightbox-prev" class="lightbox-nav lightbox-prev" type="button" aria-label="Previous image">‹</button>
         <img id="lightbox-image" class="lightbox-img" alt="">
         <button id="lightbox-next" class="lightbox-nav lightbox-next" type="button" aria-label="Next image">›</button>
+    </div>
+
+    <div id="modal-brochure" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-brochure-title" aria-hidden="true">
+        <div class="modal brochure-modal" role="document">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-brochure-title" class="modal-title">SEM and EDS/EDX Brochure</h3>
+                    <p class="modal-subtitle">Preview the brochure here, or open it in a separate tab if your browser handles PDF viewing better externally.</p>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-content">
+                <div class="brochure-frame-wrap">
+                    <iframe class="brochure-frame" src="data/inanolab%20brochure.pdf" title="SEM and EDS/EDX brochure PDF preview"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn-subtle" href="data/inanolab%20brochure.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open SEM and EDS/EDX brochure in a new browser tab">
+                        Open in New Tab
+                    </a>
+                    <button class="btn-subtle" type="button" data-close-modal>
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-equipment-specs" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-equipment-specs-title" aria-hidden="true">
+        <div class="modal" role="document" style="width: min(760px, 94vw);">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-equipment-specs-title" class="modal-title">Equipment Specifications</h3>
+                    <p class="modal-subtitle">SEM and EDS/EDX analyses are performed using the following platform.</p>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-content">
+                <div class="modal-panel">
+                    <ul class="specs-list">
+                        <li><span class="specs-label">Manufacturer</span><span>Thermo Fisher Scientific</span></li>
+                        <li><span class="specs-label">Model</span><span>Phenom XL</span></li>
+                        <li><span class="specs-label">Type</span><span>Benchtop SEM with EDX analysis</span></li>
+                        <li><span class="specs-label">Imaging Modes</span><span>Secondary Electron Detector (SED), Backscattered Electron Detector (BSD)</span></li>
+                        <li><span class="specs-label">Magnification Range</span><span>300x to 100,000x</span></li>
+                        <li><span class="specs-label">Effective Magnification</span><span>300x to 20,000x</span></li>
+                        <li><span class="specs-label">Sample Chamber</span><span>100 mm in diameter and 50 mm in height</span></li>
+                        <li><span class="specs-label">Ideal Sample Size</span><span>1cm x 1cm in dimensions with a few millimeters in thickness</span></li>
+                        <li><span class="specs-label">Ideal Sample Weight</span><span>around 5mg</span></li>
+                        <li><span class="specs-label">Voltage Modes</span><span>5kV, 10kV, and 15kV</span></li>
+                        <li><span class="specs-label">Detector Modes</span><span>Low Intensity, Image, Point, Map</span></li>
+                        <li><span class="specs-label">Software</span><span>Phenom XL software for control and image analysis</span></li>
+                        <li><span class="specs-label">Features</span><span>Automated stage, EDX analysis, optical view, SEM view, live image preview, intuitive user interface</span></li>
+                        <li><span class="specs-label">Applications</span><span>Materials science, life sciences, electronics, quality control</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Extras: Learn More Modal (MicroMeasure) -->
