@@ -289,6 +289,9 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             border: 2px solid transparent;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
@@ -319,6 +322,46 @@
             color: #6c757d;
             font-weight: 500;
             margin-top: 0.15rem;
+        }
+
+        .team-card-actions {
+            margin-top: auto;
+            padding-top: 1rem;
+            width: 100%;
+        }
+
+        .team-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            width: 100%;
+            min-height: 44px;
+            padding: 0.75rem 1rem;
+            border-radius: 999px;
+            border: 1px solid #cfe2f3;
+            background: #f8fbff;
+            color: #1f5f99;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .team-link:hover {
+            background: #edf6ff;
+            border-color: #9fc5e8;
+            color: #184d7a;
+            transform: translateY(-1px);
+        }
+
+        .team-link:focus {
+            outline: 3px solid rgba(52, 152, 219, 0.25);
+            outline-offset: 3px;
+        }
+
+        .team-link-icon {
+            font-size: 1rem;
+            line-height: 1;
         }
 
         /* Cost Analysis Section */
@@ -358,6 +401,70 @@
             margin-bottom: 1rem;
         }
 
+        .service-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .service-card-meta {
+            color: #6c757d;
+            font-size: 0.95rem;
+            margin: -0.25rem 0 0.75rem;
+        }
+
+        .service-card-actions {
+            margin-top: auto;
+            padding-top: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .service-brochure-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            min-height: 48px;
+            padding: 0.85rem 1.2rem;
+            border-radius: 14px;
+            border: 1px solid #d8e7f7;
+            background: linear-gradient(135deg, #f7fbff 0%, #eaf4ff 100%);
+            color: #1f5f99;
+            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        .service-brochure-link:hover {
+            transform: translateY(-2px);
+            border-color: #a9cbeb;
+            color: #184d7a;
+            box-shadow: 0 14px 28px rgba(52, 152, 219, 0.18);
+        }
+
+        .service-brochure-link:focus {
+            outline: 3px solid rgba(52, 152, 219, 0.28);
+            outline-offset: 3px;
+        }
+
+        .service-brochure-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            color: #3498db;
+            box-shadow: inset 0 0 0 1px rgba(52, 152, 219, 0.12);
+            font-size: 0.95rem;
+            line-height: 1;
+        }
+
         .price {
             font-size: 2rem;
             font-weight: 700;
@@ -368,6 +475,15 @@
         .pricing-features {
             list-style: none;
             padding: 0;
+        }
+
+        .pricing-features-title {
+            margin: 0.5rem 0 0.65rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: #2c3e50;
+            text-transform: uppercase;
         }
 
         .pricing-features li {
@@ -1553,16 +1669,34 @@
                                 <img class="team-photo" src="Images/noni.png" alt="Portrait of Dr. Gil Nonato Santos, Lab Head" loading="lazy" decoding="async" width="112" height="112" onerror="this.onerror=null; this.src='Images/blankprofile.png';">
                                 <div class="team-name">Dr. Gil Nonato Santos</div>
                                 <div class="team-role">Lab Head</div>
+                                <div class="team-card-actions">
+                                    <a class="team-link" href="https://scholar.google.com/citations?user=kGqUIiAAAAAJ&hl=en" target="_blank" rel="noopener noreferrer" aria-label="Open Google Scholar profile for Dr. Gil Nonato Santos">
+                                        <span class="team-link-icon" aria-hidden="true">↗</span>
+                                        <span>Google Scholar</span>
+                                    </a>
+                                </div>
                             </div>
                             <div class="team-card" role="listitem">
                                 <img class="team-photo" src="Images/olarve.png" alt="Portrait of Dr. James Salveo Olarve, Lab Coordinator" loading="lazy" decoding="async" width="112" height="112" onerror="this.onerror=null; this.src='Images/blankprofile.png';">
                                 <div class="team-name">Dr. James Salveo Olarve</div>
                                 <div class="team-role">Lab Coordinator</div>
+                                <div class="team-card-actions">
+                                    <a class="team-link" href="https://scholar.google.com/citations?user=IIuslx0AAAAJ&hl=en" target="_blank" rel="noopener noreferrer" aria-label="Open Google Scholar profile for Dr. James Salveo Olarve">
+                                        <span class="team-link-icon" aria-hidden="true">↗</span>
+                                        <span>Google Scholar</span>
+                                    </a>
+                                </div>
                             </div>
                             <div class="team-card" role="listitem">
                                 <img class="team-photo" src="Images/gerard.png" alt="Portrait of Mr. Anthony Gerard Santos, Lab Specialist" loading="lazy" decoding="async" width="112" height="112" onerror="this.onerror=null; this.src='Images/blankprofile.png';">
                                 <div class="team-name">Mr. Anthony Gerard Santos</div>
                                 <div class="team-role">Lab Specialist</div>
+                                <div class="team-card-actions">
+                                    <a class="team-link" href="https://scholar.google.com/citations?hl=en&user=2iD8T14AAAAJ" target="_blank" rel="noopener noreferrer" aria-label="Open Google Scholar profile for Mr. Anthony Gerard Santos">
+                                        <span class="team-link-icon" aria-hidden="true">↗</span>
+                                        <span>Google Scholar</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1575,12 +1709,24 @@
                     <div class="pricing-card service-card">
                         <img class="service-header" src="Images/headerSEM.png" alt="Basic SEM service header" loading="lazy" decoding="async" onerror="this.onerror=null; this.style.display='none';">
                         <h3>SEM</h3>
-                        <p style="font-size: 0.95rem; color: #6c757d; margin: -0.25rem 0 0.75rem;">Scanning Electron Microscopy: Surface Morphology</p>
+                        <p class="service-card-meta">Scanning Electron Microscopy: Surface Morphology</p>
+                        <div class="service-card-actions">
+                            <a class="service-brochure-link" href="data/inanolab%20brochure.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open SEM and EDS/EDX brochure PDF in a new tab">
+                                <span class="service-brochure-icon" aria-hidden="true">PDF</span>
+                                <span>Open Brochure</span>
+                            </a>
+                        </div>
                     </div>
                     <div class="pricing-card service-card">
                         <img class="service-header" src="Images/headerSEMEDX.png" alt="SEM and EDX service header" loading="lazy" decoding="async" onerror="this.onerror=null; this.style.display='none';">
                         <h3>EDS/EDX</h3>
-                        <p style="font-size: 0.95rem; color: #6c757d; margin: -0.25rem 0 0.75rem;">Energy Dispersive X-ray Spectroscopy: Elemental Composition</p>
+                        <p class="service-card-meta">Energy Dispersive X-ray Spectroscopy: Elemental Composition</p>
+                        <div class="service-card-actions">
+                            <a class="service-brochure-link" href="data/inanolab%20brochure.pdf" target="_blank" rel="noopener noreferrer" aria-label="Open SEM and EDS/EDX brochure PDF in a new tab">
+                                <span class="service-brochure-icon" aria-hidden="true">PDF</span>
+                                <span>Open Brochure</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <!-- Sample Images Gallery -->
@@ -1657,6 +1803,7 @@
                         <h3>Basic SEM</h3>
                         <img class="service-header" src="Images/basicsem.png" alt="Basic SEM illustrative micrograph" loading="lazy" decoding="async" onerror="this.onerror=null; this.style.display='none';">
                         <p style="font-size: 0.95rem; color: #6c757d; margin: -0.25rem 0 0.75rem;">Scanning Electron Microscopy: Surface Morphology</p>
+                        <p class="pricing-features-title">Inclusions</p>
                         <ul class="pricing-features">
                             <li>High-quality images</li>
                             <li>Imaging of up to 3 areas on the sample</li>
@@ -1679,6 +1826,7 @@
                             Scanning Electron Microscopy: Surface Morphology<br>
                             Energy Dispersive X-ray Spectroscopy: Elemental Composition
                         </p>
+                        <p class="pricing-features-title">Inclusions</p>
                         <ul class="pricing-features">
                             <li>Same with Basic SEM plus the folowing</li>
                             <li>Elemental analysis (EDX) of 3 different areas on the sample</li>
