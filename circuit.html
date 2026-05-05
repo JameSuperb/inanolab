@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circuit Schematic Builder</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/lucide@0.263.0/dist/umd/lucide.min.js';"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; overflow: hidden; font-family: 'IBM Plex Sans', sans-serif; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+.canvas-grid {
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+.component-item { cursor: grab; user-select: none; }
+.component-item:active { cursor: grabbing; }
+.terminal { cursor: crosshair; }
+.terminal:hover .terminal-dot { fill: #e53e3e; }
+.selected-component { outline: 2px dashed #3182ce; outline-offset: 4px; }
+.wire-path { stroke: #000; stroke-width: 2; fill: none; cursor: pointer; }
+.wire-path:hover { stroke: #3182ce; stroke-width: 3; }
+.wire-preview { stroke: #2563eb; stroke-width: 2; fill: none; stroke-dasharray: 6 4; pointer-events: none; }
+.junction-dot { fill: #000; }
+.toolbar-btn { transition: all 0.15s; }
+.toolbar-btn:hover { background: #e2e8f0; }
+.toolbar-btn.active { background: #1a202c; color: white; }
+.ghost-component { opacity: 0.5; pointer-events: none; position: absolute; z-index: 1000; }
+.prop-input { font-family: 'JetBrains Mono', monospace; }
+#canvas-svg { cursor: default; }
+#canvas-svg.mode-wire { cursor: crosshair; }
+#canvas-svg.mode-select { cursor: default; }
+.toast { animation: slideIn 0.3s ease; }
+@keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-gray-100">
+  <div id="app" class="h-full flex flex-col"><!-- Top Toolbar -->
+   <header class="bg-white border-b border-gray-200 px-4 py-2 flex items-center gap-2 shrink-0">
+    <h1 id="app-title" class="mono font-bold text-lg mr-4">Circuit Schematic Builder</h1>
+    <div class="h-6 w-px bg-gray-300"></div><button class="toolbar-btn px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1" onclick="resetWorkspace()"> <i data-lucide="refresh-cw" style="width:16px;height:16px"></i> Reset </button>
+    <button class="toolbar-btn px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1" onclick="undoAction()"> <i data-lucide="undo" style="width:16px;height:16px"></i> Undo </button> <button class="toolbar-btn px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1" onclick="redoAction()"> <i data-lucide="redo" style="width:16px;height:16px"></i> Redo </button>
+    <div class="h-6 w-px bg-gray-300"></div><button class="toolbar-btn px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1" onclick="saveProject()"> <i data-lucide="save" style="width:16px;height:16px"></i> Save </button> <button class="toolbar-btn px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1" onclick="loadProject()"> <i data-lucide="folder-open" style="width:16px;height:16px"></i> Load </button>
+    <div class="flex-1"></div>
+    <div class="relative"><button class="toolbar-btn px-3 py-1.5 rounded text-sm font-medium flex items-center gap-1" onclick="toggleExportMenu()"> <i data-lucide="download" style="width:16px;height:16px"></i> Export </button>
+     <div id="export-menu" class="hidden absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 w-44"><button class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50" onclick="exportPNG()">Download PNG</button> <button class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50" onclick="exportSVG()">Download SVG</button> <button class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50" onclick="exportPDF()">Download PDF</button> <button class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50" onclick="copyAsImage()">Copy as Image</button>
+     </div>
+    </div>
+   </header>
+   <div class="flex flex-1 overflow-hidden"><!-- Left Sidebar - Component Library -->
+    <aside class="w-56 bg-white border-r border-gray-200 overflow-y-auto shrink-0 p-3">
+     <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Components</h2>
+     <div class="space-y-1" id="component-library">
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="resistor">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="10" x2="6" y2="10" stroke="#000" stroke-width="1.5" /><path d="M6,10 L8,6 L12,14 L16,6 L20,14 L24,6 L26,10" fill="none" stroke="#000" stroke-width="1.5" stroke-linejoin="miter" /><line x1="26" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5" />
+       </svg><span class="text-sm">Resistor</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="capacitor">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="10" x2="13" y2="10" stroke="#000" stroke-width="1.5" /><line x1="13" y1="2" x2="13" y2="18" stroke="#000" stroke-width="2" /><line x1="19" y1="2" x2="19" y2="18" stroke="#000" stroke-width="2" /><line x1="19" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5" />
+       </svg><span class="text-sm">Capacitor</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="polarized_capacitor">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="10" x2="10" y2="10" stroke="#000" stroke-width="1.5" /><line x1="10" y1="2" x2="10" y2="18" stroke="#000" stroke-width="2" /><line x1="16" y1="5" x2="16" y2="15" stroke="#000" stroke-width="2" /><line x1="16" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5" /><text x="6" y="3" font-size="7" text-anchor="middle" fill="#000">
+         +
+        </text>
+       </svg><span class="text-sm">Polarized Capacitor</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="inductor">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="10" x2="5" y2="10" stroke="#000" stroke-width="1.5" /><path d="M5,10 C5,6 8,6 8,10 C8,6 11,6 11,10 C11,6 14,6 14,10 C14,6 17,6 17,10 C17,6 20,6 20,10 C20,6 23,6 23,10 C23,6 26,6 26,10" fill="none" stroke="#000" stroke-width="1.5" /><line x1="26" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5" />
+       </svg><span class="text-sm">Inductor</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="diode">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="10" x2="8" y2="10" stroke="#000" stroke-width="1.5" /><polygon points="8,4 8,16 20,10" fill="none" stroke="#000" stroke-width="1.5" /><line x1="20" y1="4" x2="20" y2="16" stroke="#000" stroke-width="2" /><line x1="20" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5" />
+       </svg><span class="text-sm">Diode</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="led">
+       <svg width="32" height="20" viewBox="0 0 32 20">
+        <line x1="0" y1="10" x2="8" y2="10" stroke="#000" stroke-width="1.5"/><polygon points="8,4 8,16 20,10" fill="none" stroke="#000" stroke-width="1.5"/><line x1="20" y1="4" x2="20" y2="16" stroke="#000" stroke-width="2"/><line x1="20" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5"/><line x1="11" y1="8" x2="16" y2="2" stroke="#000" stroke-width="1"/><polygon points="16,2 12,4 14,7" fill="#000"/><line x1="15" y1="7" x2="20" y2="1" stroke="#000" stroke-width="1"/><polygon points="20,1 16,3 18,6" fill="#000"/>
+       </svg><span class="text-sm">LED</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="npn_transistor">
+       <svg width="22" height="28" viewBox="0 0 80 90">
+        <g fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="42" cy="45" r="28"/><line x1="5" y1="45" x2="30" y2="45"/><line x1="30" y1="28" x2="30" y2="62"/><line x1="42" y1="0" x2="42" y2="18"/><line x1="42" y1="18" x2="30" y2="35"/><line x1="30" y1="55" x2="42" y2="72"/><line x1="42" y1="72" x2="42" y2="90"/><polygon points="39,68 34,63 37,60" fill="#000"/></g>
+       </svg><span class="text-sm">NPN Transistor</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="pnp_transistor">
+       <svg width="22" height="28" viewBox="0 0 80 90">
+        <g fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="42" cy="45" r="28"/><line x1="5" y1="45" x2="30" y2="45"/><line x1="30" y1="28" x2="30" y2="62"/><line x1="42" y1="0" x2="42" y2="18"/><line x1="42" y1="18" x2="30" y2="35"/><line x1="30" y1="55" x2="42" y2="72"/><line x1="42" y1="72" x2="42" y2="90"/></g><g transform="rotate(-55 36 31)"><polygon points="30,31 40,26 40,36" fill="#000"/></g>
+       </svg><span class="text-sm">PNP Transistor</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="dc_supply">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="10" x2="12" y2="10" stroke="#000" stroke-width="1.5" /><line x1="12" y1="3" x2="12" y2="17" stroke="#000" stroke-width="2" /><line x1="17" y1="6" x2="17" y2="14" stroke="#000" stroke-width="1.5" /><line x1="17" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5" /><text x="11" y="2" font-size="5" text-anchor="middle">
+         +
+        </text>
+       </svg><span class="text-sm">DC Supply</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="ac_supply">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="10" x2="8" y2="10" stroke="#000" stroke-width="1.5" /><circle cx="16" cy="10" r="8" fill="none" stroke="#000" stroke-width="1.5" /><path d="M12,10 C13,7 15,7 16,10 C17,13 19,13 20,10" fill="none" stroke="#000" stroke-width="1.2" /><line x1="24" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5" />
+       </svg><span class="text-sm">AC Supply</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="ammeter">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="10" x2="6" y2="10" stroke="#000" stroke-width="1.5" /><circle cx="16" cy="10" r="8" fill="none" stroke="#000" stroke-width="1.5" /><text x="16" y="13" font-size="9" text-anchor="middle" font-family="serif" font-weight="bold">
+         A
+        </text><line x1="24" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5" />
+       </svg><span class="text-sm">Ammeter</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="voltmeter">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="10" x2="6" y2="10" stroke="#000" stroke-width="1.5" /><circle cx="16" cy="10" r="8" fill="none" stroke="#000" stroke-width="1.5" /><text x="16" y="13" font-size="9" text-anchor="middle" font-family="serif" font-weight="bold">
+         V
+        </text><line x1="24" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5" />
+       </svg><span class="text-sm">Voltmeter</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="ground">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="16" y1="0" x2="16" y2="8" stroke="#000" stroke-width="1.5" /><line x1="8" y1="8" x2="24" y2="8" stroke="#000" stroke-width="1.5" /><line x1="10" y1="12" x2="22" y2="12" stroke="#000" stroke-width="1.5" /><line x1="12" y1="16" x2="20" y2="16" stroke="#000" stroke-width="1.5" />
+       </svg><span class="text-sm">Ground</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="switch">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="12" x2="10" y2="12" stroke="#000" stroke-width="1.5" /><circle cx="11" cy="12" r="2" fill="none" stroke="#000" stroke-width="1.5" /><line x1="13" y1="12" x2="26" y2="5" stroke="#000" stroke-width="1.5" /><circle cx="27" cy="12" r="2" fill="none" stroke="#000" stroke-width="1.5" /><line x1="29" y1="12" x2="32" y2="12" stroke="#000" stroke-width="1.5" />
+       </svg><span class="text-sm">Switch</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="bulb">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <line x1="0" y1="10" x2="6" y2="10" stroke="#000" stroke-width="1.5" /><circle cx="16" cy="10" r="7" fill="none" stroke="#000" stroke-width="1.5" /><line x1="11" y1="5" x2="21" y2="15" stroke="#000" stroke-width="1.2" /><line x1="21" y1="5" x2="11" y2="15" stroke="#000" stroke-width="1.2" /><line x1="23" y1="10" x2="32" y2="10" stroke="#000" stroke-width="1.5" />
+       </svg><span class="text-sm">Bulb / Load</span>
+      </div>
+      <div class="component-item flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50" draggable="true" data-type="junction">
+       <svg width="32" height="20" viewbox="0 0 32 20">
+        <circle cx="16" cy="10" r="4" fill="#000" />
+       </svg><span class="text-sm">Junction Node</span>
+      </div>
+     </div>
+    </aside><!-- Center Canvas -->
+    <main class="flex-1 overflow-hidden relative canvas-grid" id="canvas-container">
+     <svg id="canvas-svg" class="w-full h-full" xmlns="http://www.w3.org/2000/svg"><defs>
+       <marker id="terminal-marker" markerwidth="8" markerheight="8" refx="4" refy="4">
+        <circle cx="4" cy="4" r="3" fill="none" stroke="#666" stroke-width="1" />
+       </marker>
+      </defs> <g id="wires-layer"></g> <g id="preview-layer"></g> <g id="components-layer"></g> <g id="terminals-layer"></g>
+     </svg><!-- Toast notifications -->
+     <div id="toast-container" class="absolute top-4 left-1/2 -translate-x-1/2 z-50"></div>
+    </main><!-- Right Sidebar - Controls + Properties -->
+    <aside class="w-64 bg-white border-l border-gray-200 overflow-y-auto shrink-0 p-4" id="properties-panel">
+     <section class="mb-4 border border-gray-200 rounded-lg p-3 bg-gray-50">
+      <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Canvas Controls</h2>
+      <div class="grid grid-cols-2 gap-2 mb-3">
+       <button id="btn-select" class="toolbar-btn active px-3 py-2 rounded text-sm font-medium border border-gray-300 bg-white" onclick="setMode('select')">Select</button>
+       <button id="btn-wire" class="toolbar-btn px-3 py-2 rounded text-sm font-medium border border-gray-300 bg-white" onclick="setMode('wire')">Wire</button>
+      </div>
+      <div class="mb-3">
+       <div class="flex items-center justify-between mb-1"><span class="text-xs font-medium text-gray-600">Zoom</span><span id="zoom-value" class="mono text-xs text-gray-600">100%</span></div><input id="zoom-slider" type="range" min="35" max="300" step="1" value="100" class="w-full" oninput="setZoomFromSlider(this.value)">
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+       <div></div><button class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white" onclick="panCanvas('up')">Up</button>
+       <div></div><button class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white" onclick="panCanvas('left')">Left</button> <button class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white" onclick="panCanvas('down')">Down</button> <button class="toolbar-btn px-2 py-1.5 rounded text-xs font-medium border border-gray-300 bg-white" onclick="panCanvas('right')">Right</button>
+      </div>
+     </section>
+     <section>
+      <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Properties</h2>
+      <div id="props-content" class="text-sm text-gray-400 italic">
+       Select a component to edit its properties.
+      </div>
+     </section>
+    </aside>
+   </div>
+  </div><!-- Hidden file input for load --> <input type="file" id="file-input" accept=".json" class="hidden" onchange="handleFileLoad(event)">
+  <script>
+// ============ STATE ============
+let components = [];
+let wires = [];
+let selectedId = null;
+let mode = 'select'; // select, wire
+let wireStart = null; // {compId, terminalIdx, x, y}
+let wireCursor = null; // {x, y}
+let nextIds = {};
+let undoStack = [];
+let redoStack = [];
+let dragData = null;
+const camera = {
+  x: 0,
+  y: 0,
+  zoom: 1,
+  minZoom: 0.35,
+  maxZoom: 3,
+  viewWidth: null,
+  viewHeight: null
+};
+const GRID = 20;
+const COMP_W = 80;
+const COMP_H = 40;
+
+function snap(v) { return Math.round(v / GRID) * GRID; }
+
+// ============ COMPONENT DEFINITIONS ============
+const compDefs = {
+  resistor: { label: 'R', defaultValue: '10 Ω', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  capacitor: { label: 'C', defaultValue: '100 µF', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  polarized_capacitor: { label: 'C', defaultValue: '100 µF', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  inductor: { label: 'L', defaultValue: '10 mH', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  dc_supply: { label: 'V', defaultValue: '5 V', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  ac_supply: { label: 'V', defaultValue: '220 V', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  ammeter: { label: 'A', defaultValue: '', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  voltmeter: { label: 'V', defaultValue: '', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  ground: { label: 'GND', defaultValue: '', terminals: [{dx:0,dy:-20}] },
+  switch: { label: 'S', defaultValue: '', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  bulb: { label: 'X', defaultValue: '', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  diode: { label: 'D', defaultValue: '', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  led: { label: 'LED', defaultValue: '', terminals: [{dx:-40,dy:0},{dx:40,dy:0}] },
+  // NPN terminals are ordered as Base, Collector, Emitter.
+  npn_transistor: { label: 'Q', defaultValue: '', terminals: [{dx:-40,dy:0},{dx:0,dy:-40},{dx:0,dy:40}] },
+  // PNP terminals are ordered as Base, Emitter, Collector.
+  pnp_transistor: { label: 'Q', defaultValue: '', terminals: [{dx:-40,dy:0},{dx:0,dy:-40},{dx:0,dy:40}] },
+  transistor: { label: 'Q', defaultValue: '', terminals: [{dx:-40,dy:4},{dx:-40,dy:-4},{dx:40,dy:0}] },
+  junction: { label: 'J', defaultValue: '', terminals: [{dx:0,dy:0}] }
+};
+
+function getNextLabel(type) {
+  const def = compDefs[type];
+  if (!nextIds[type]) nextIds[type] = 1;
+  return def.label + (nextIds[type]++);
+}
+
+// ============ UNDO/REDO ============
+function saveState() {
+  undoStack.push(JSON.stringify({ components, wires }));
+  if (undoStack.length > 50) undoStack.shift();
+  redoStack = [];
+}
+function undoAction() {
+  if (!undoStack.length) return;
+  redoStack.push(JSON.stringify({ components, wires }));
+  const state = JSON.parse(undoStack.pop());
+  components = state.components; wires = state.wires;
+  selectedId = null; render();
+}
+function redoAction() {
+  if (!redoStack.length) return;
+  undoStack.push(JSON.stringify({ components, wires }));
+  const state = JSON.parse(redoStack.pop());
+  components = state.components; wires = state.wires;
+  selectedId = null; render();
+}
+
+// ============ MODE ============
+function setMode(m) {
+  mode = m;
+  wireStart = null;
+  wireCursor = null;
+  const selectBtn = document.getElementById('btn-select');
+  const wireBtn = document.getElementById('btn-wire');
+  if (selectBtn) selectBtn.classList.toggle('active', m === 'select');
+  if (wireBtn) wireBtn.classList.toggle('active', m === 'wire');
+  const svg = document.getElementById('canvas-svg');
+  svg.className.baseVal = 'w-full h-full mode-' + m;
+  render();
+}
+
+function syncZoomUI() {
+  const slider = document.getElementById('zoom-slider');
+  const label = document.getElementById('zoom-value');
+  const percent = Math.round(camera.zoom * 100);
+  if (slider) slider.value = String(percent);
+  if (label) label.textContent = `${percent}%`;
+}
+
+function setCameraZoom(nextZoom, anchorClientX = null, anchorClientY = null) {
+  const rect = svg.getBoundingClientRect();
+  if (!rect.width || !rect.height || !camera.viewWidth || !camera.viewHeight) return;
+
+  const clampedZoom = Math.max(camera.minZoom, Math.min(camera.maxZoom, nextZoom));
+  if (clampedZoom === camera.zoom) {
+    syncZoomUI();
+    return;
+  }
+
+  const pointerX = anchorClientX == null ? rect.width / 2 : anchorClientX - rect.left;
+  const pointerY = anchorClientY == null ? rect.height / 2 : anchorClientY - rect.top;
+  const worldX = camera.x + (pointerX / rect.width) * camera.viewWidth;
+  const worldY = camera.y + (pointerY / rect.height) * camera.viewHeight;
+
+  camera.zoom = clampedZoom;
+  const nextWidth = rect.width / camera.zoom;
+  const nextHeight = rect.height / camera.zoom;
+  camera.x = worldX - (pointerX / rect.width) * nextWidth;
+  camera.y = worldY - (pointerY / rect.height) * nextHeight;
+  camera.viewWidth = nextWidth;
+  camera.viewHeight = nextHeight;
+  svg.setAttribute('viewBox', `${camera.x} ${camera.y} ${camera.viewWidth} ${camera.viewHeight}`);
+  syncZoomUI();
+}
+
+function setZoomFromSlider(value) {
+  const parsed = parseInt(value, 10);
+  if (Number.isNaN(parsed)) return;
+  setCameraZoom(parsed / 100);
+}
+
+function panCanvas(direction) {
+  if (!camera.viewWidth || !camera.viewHeight) return;
+  const step = 100 / camera.zoom;
+  if (direction === 'up') camera.y -= step;
+  if (direction === 'down') camera.y += step;
+  if (direction === 'left') camera.x -= step;
+  if (direction === 'right') camera.x += step;
+  svg.setAttribute('viewBox', `${camera.x} ${camera.y} ${camera.viewWidth} ${camera.viewHeight}`);
+}
+
+function findNearestTerminal(x, y, maxDistance = 16) {
+  let best = null;
+  components.forEach((comp) => {
+    const terms = getTerminalPositions(comp);
+    terms.forEach((t, idx) => {
+      const dx = t.x - x;
+      const dy = t.y - y;
+      const dist = Math.hypot(dx, dy);
+      if (!best || dist < best.distance) {
+        best = { compId: comp.id, termIdx: idx, x: t.x, y: t.y, distance: dist };
+      }
+    });
+  });
+  if (best && best.distance <= maxDistance) return best;
+  return null;
+}
+
+function getTerminalFromPointer(e, pt) {
+  const termEl = e.target.closest('.terminal');
+  if (termEl) {
+    const compId = termEl.dataset.compId;
+    const termIdx = parseInt(termEl.dataset.termIdx);
+    const comp = components.find(c => c.id === compId);
+    if (!comp) return null;
+    const terms = getTerminalPositions(comp);
+    const term = terms[termIdx];
+    if (!term) return null;
+    return { compId, termIdx, x: term.x, y: term.y };
+  }
+  return findNearestTerminal(pt.x, pt.y, 18);
+}
+
+// ============ RENDERING ============
+function getTerminalPositions(comp) {
+  const def = compDefs[comp.type];
+  const rad = (comp.rotation || 0) * Math.PI / 180;
+  return def.terminals.map(t => {
+    const rx = t.dx * Math.cos(rad) - t.dy * Math.sin(rad);
+    const ry = t.dx * Math.sin(rad) + t.dy * Math.cos(rad);
+    return { x: comp.x + rx, y: comp.y + ry };
+  });
+}
+
+function getLabelPosition(comp) {
+  // Dynamic label positioning based on rotation to avoid overlap
+  const rot = comp.rotation || 0;
+  const offset = 28;
+  
+  let labelX = comp.x;
+  let labelY = comp.y - offset; // default: above
+  let rotation = 0;
+  
+  if (rot === 90) {
+    labelX = comp.x + offset; // right side when vertical
+    labelY = comp.y;
+    rotation = -90;
+  } else if (rot === 180) {
+    labelX = comp.x;
+    labelY = comp.y + offset; // below
+    rotation = 0;
+  } else if (rot === 270) {
+    labelX = comp.x - offset; // left side when vertical
+    labelY = comp.y;
+    rotation = 90;
+  }
+  
+  return { labelX, labelY, rotation };
+}
+
+function renderComponentSVG(comp) {
+  const rot = comp.rotation || 0;
+  let svg = '';
+  const t = `translate(${comp.x},${comp.y}) rotate(${rot})`;
+  
+  switch(comp.type) {
+    case 'resistor':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-20" y2="0" stroke="#000" stroke-width="2"/><path d="M-20,0 L-16,-6 L-8,6 L0,-6 L8,6 L16,-6 L20,0" fill="none" stroke="#000" stroke-width="2" stroke-linejoin="miter"/><line x1="20" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/></g>`;
+      break;
+    case 'capacitor':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-5" y2="0" stroke="#000" stroke-width="2"/><line x1="-5" y1="-12" x2="-5" y2="12" stroke="#000" stroke-width="2.5"/><line x1="5" y1="-12" x2="5" y2="12" stroke="#000" stroke-width="2.5"/><line x1="5" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/></g>`;
+      break;
+    case 'inductor':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-24" y2="0" stroke="#000" stroke-width="2"/><path d="M-24,0 C-24,-8 -16,-8 -16,0 C-16,-8 -8,-8 -8,0 C-8,-8 0,-8 0,0 C0,-8 8,-8 8,0 C8,-8 16,-8 16,0 C16,-8 24,-8 24,0" fill="none" stroke="#000" stroke-width="2"/><line x1="24" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/></g>`;
+      break;
+    case 'dc_supply':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-8" y2="0" stroke="#000" stroke-width="2"/><line x1="-8" y1="-14" x2="-8" y2="14" stroke="#000" stroke-width="3"/><line x1="4" y1="-8" x2="4" y2="8" stroke="#000" stroke-width="2"/><line x1="4" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/><text x="-12" y="-16" font-size="10" text-anchor="middle" fill="#000">+</text></g>`;
+      break;
+    case 'ac_supply':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-18" y2="0" stroke="#000" stroke-width="2"/><circle cx="0" cy="0" r="18" fill="none" stroke="#000" stroke-width="2"/><path d="M-8,0 C-5,-6 -2,-6 0,0 C2,6 5,6 8,0" fill="none" stroke="#000" stroke-width="1.5"/><line x1="18" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/></g>`;
+      break;
+    case 'ammeter':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-16" y2="0" stroke="#000" stroke-width="2"/><circle cx="0" cy="0" r="16" fill="none" stroke="#000" stroke-width="2"/><text x="0" y="5" font-size="14" text-anchor="middle" font-family="serif" font-weight="bold" fill="#000">A</text><line x1="16" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/></g>`;
+      break;
+    case 'voltmeter':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-16" y2="0" stroke="#000" stroke-width="2"/><circle cx="0" cy="0" r="16" fill="none" stroke="#000" stroke-width="2"/><text x="0" y="5" font-size="14" text-anchor="middle" font-family="serif" font-weight="bold" fill="#000">V</text><line x1="16" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/></g>`;
+      break;
+    case 'ground':
+      svg = `<g transform="${t}"><line x1="0" y1="-20" x2="0" y2="-4" stroke="#000" stroke-width="2"/><line x1="-14" y1="-4" x2="14" y2="-4" stroke="#000" stroke-width="2"/><line x1="-9" y1="2" x2="9" y2="2" stroke="#000" stroke-width="2"/><line x1="-4" y1="8" x2="4" y2="8" stroke="#000" stroke-width="2"/></g>`;
+      break;
+    case 'switch':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-14" y2="0" stroke="#000" stroke-width="2"/><circle cx="-12" cy="0" r="3" fill="none" stroke="#000" stroke-width="2"/><line x1="-9" y1="0" x2="9" y2="-12" stroke="#000" stroke-width="2"/><circle cx="12" cy="0" r="3" fill="none" stroke="#000" stroke-width="2"/><line x1="15" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/></g>`;
+      break;
+    case 'bulb':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-14" y2="0" stroke="#000" stroke-width="2"/><circle cx="0" cy="0" r="14" fill="none" stroke="#000" stroke-width="2"/><line x1="-9" y1="-9" x2="9" y2="9" stroke="#000" stroke-width="1.5"/><line x1="9" y1="-9" x2="-9" y2="9" stroke="#000" stroke-width="1.5"/><line x1="14" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/></g>`;
+      break;
+    case 'polarized_capacitor':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-5" y2="0" stroke="#000" stroke-width="2"/><line x1="-5" y1="-12" x2="-5" y2="12" stroke="#000" stroke-width="2.5"/><line x1="5" y1="-12" x2="5" y2="12" stroke="#000" stroke-width="2.5"/><line x1="5" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/><text x="-9" y="-14" font-size="10" text-anchor="middle" fill="#000">+</text></g>`;
+      break;
+    case 'diode':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-8" y2="0" stroke="#000" stroke-width="2"/><polygon points="-8,-10 -8,10 8,0" fill="none" stroke="#000" stroke-width="2" stroke-linejoin="miter"/><line x1="8" y1="-10" x2="8" y2="10" stroke="#000" stroke-width="2.5"/><line x1="8" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/></g>`;
+      break;
+    case 'led':
+      svg = `<g transform="${t}"><line x1="-40" y1="0" x2="-8" y2="0" stroke="#000" stroke-width="2"/><polygon points="-8,-10 -8,10 8,0" fill="none" stroke="#000" stroke-width="2" stroke-linejoin="miter"/><line x1="8" y1="-10" x2="8" y2="10" stroke="#000" stroke-width="2.5"/><line x1="8" y1="0" x2="40" y2="0" stroke="#000" stroke-width="2"/><line x1="0" y1="-12" x2="10" y2="-22" stroke="#000" stroke-width="1.5"/><polygon points="10,-22 4,-20 8,-16" fill="#000"/><line x1="6" y1="-8" x2="16" y2="-18" stroke="#000" stroke-width="1.5"/><polygon points="16,-18 10,-16 14,-12" fill="#000"/></g>`;
+      break;
+    case 'transistor':
+      svg = `<g transform="${t}"><line x1="-40" y1="4" x2="-12" y2="4" stroke="#000" stroke-width="2"/><line x1="-12" y1="4" x2="-12" y2="-8" stroke="#000" stroke-width="2"/><line x1="-12" y1="-8" x2="-12" y2="16" stroke="#000" stroke-width="2"/><circle cx="0" cy="0" r="12" fill="none" stroke="#000" stroke-width="2"/><line x1="-40" y1="-4" x2="0" y2="-8" stroke="#000" stroke-width="2"/><line x1="-40" y1="-4" x2="-20" y2="-4" stroke="#000" stroke-width="2"/><line x1="8" y1="-5" x2="40" y2="-8" stroke="#000" stroke-width="2"/><line x1="8" y1="5" x2="40" y2="8" stroke="#000" stroke-width="2"/><line x1="0" y1="12" x2="0" y2="20" stroke="#000" stroke-width="1.5"/></g>`;
+      break;
+    case 'npn_transistor':
+      svg = `<g transform="${t}"><circle cx="0" cy="0" r="28" fill="none" stroke="#000" stroke-width="2"/><line x1="-40" y1="0" x2="-12" y2="0" stroke="#000" stroke-width="2"/><line x1="-12" y1="-17" x2="-12" y2="17" stroke="#000" stroke-width="2"/><line x1="0" y1="-40" x2="0" y2="-28" stroke="#000" stroke-width="2"/><line x1="0" y1="-28" x2="-12" y2="-10" stroke="#000" stroke-width="2"/><line x1="-12" y1="10" x2="0" y2="28" stroke="#000" stroke-width="2"/><line x1="0" y1="28" x2="0" y2="40" stroke="#000" stroke-width="2"/><polygon points="-3,23 -8,18 -5,15" fill="#000" stroke="#fff" stroke-width="0.5"/></g>`;
+      break;
+    case 'pnp_transistor':
+      svg = `<g transform="${t}"><circle cx="0" cy="0" r="28" fill="none" stroke="#000" stroke-width="2"/><line x1="-40" y1="0" x2="-12" y2="0" stroke="#000" stroke-width="2"/><line x1="-12" y1="-17" x2="-12" y2="17" stroke="#000" stroke-width="2"/><line x1="0" y1="-40" x2="0" y2="-27" stroke="#000" stroke-width="2"/><line x1="0" y1="-27" x2="-12" y2="-10" stroke="#000" stroke-width="2"/><line x1="-12" y1="10" x2="0" y2="27" stroke="#000" stroke-width="2"/><line x1="0" y1="27" x2="0" y2="40" stroke="#000" stroke-width="2"/><polygon points="-9,-9 -8,-20 0,-14" fill="#000" stroke="#fff" stroke-width="0.5"/></g>`;
+      break;
+    case 'junction':
+      svg = `<g transform="${t}"><circle cx="0" cy="0" r="5" fill="#000"/></g>`;
+      break;
+  }
+  return svg;
+}
+
+function render() {
+  const wiresLayer = document.getElementById('wires-layer');
+  const previewLayer = document.getElementById('preview-layer');
+  const compsLayer = document.getElementById('components-layer');
+  const termsLayer = document.getElementById('terminals-layer');
+  
+  // Wires
+  let wHtml = '';
+  wires.forEach((w, i) => {
+    wHtml += `<path class="wire-path" d="M${w.x1},${w.y1} L${w.x2},${w.y2}" data-wire-idx="${i}"/>`;
+  });
+  
+  // Junction dots where wires meet
+  const junctions = findJunctions();
+  junctions.forEach(j => {
+    wHtml += `<circle class="junction-dot" cx="${j.x}" cy="${j.y}" r="4"/>`;
+  });
+  wiresLayer.innerHTML = wHtml;
+
+  if (previewLayer) {
+    if (mode === 'wire' && wireStart && wireCursor) {
+      if (wireStart.x === wireCursor.x || wireStart.y === wireCursor.y) {
+        previewLayer.innerHTML = `<path class="wire-preview" d="M${wireStart.x},${wireStart.y} L${wireCursor.x},${wireCursor.y}"/>`;
+      } else {
+        previewLayer.innerHTML = `<path class="wire-preview" d="M${wireStart.x},${wireStart.y} L${wireCursor.x},${wireStart.y} L${wireCursor.x},${wireCursor.y}"/>`;
+      }
+    } else {
+      previewLayer.innerHTML = '';
+    }
+  }
+
+  // Components
+  let cHtml = '';
+  components.forEach(comp => {
+    const sel = comp.id === selectedId ? ' selected-component' : '';
+    const rot = comp.rotation || 0;
+    cHtml += `<g class="comp-group${sel}" data-comp-id="${comp.id}">`;
+    // Transparent hit-area so clicks anywhere on the component body register
+    cHtml += `<g transform="translate(${comp.x},${comp.y}) rotate(${rot})"><rect x="-44" y="-44" width="88" height="88" fill="transparent" stroke="none" style="pointer-events:all"/></g>`;
+    cHtml += renderComponentSVG(comp);
+    // Dynamic label positioning based on rotation
+    const labelPos = getLabelPosition(comp);
+    cHtml += `<g transform="translate(${labelPos.labelX},${labelPos.labelY}) rotate(${labelPos.rotation})">`;
+    cHtml += `<text x="0" y="0" text-anchor="middle" dominant-baseline="middle" font-size="11" font-family="JetBrains Mono, monospace" fill="#333">${comp.name}</text>`;
+    if (comp.value) {
+      cHtml += `<text x="0" y="13" text-anchor="middle" dominant-baseline="middle" font-size="10" font-family="JetBrains Mono, monospace" fill="#666">${comp.value}</text>`;
+    }
+    cHtml += '</g>';
+    cHtml += '</g>';
+  });
+  compsLayer.innerHTML = cHtml;
+
+  // Terminals (shown in wire mode as red circles)
+  let tHtml = '';
+  components.forEach(comp => {
+    const terms = getTerminalPositions(comp);
+    terms.forEach((t, idx) => {
+      tHtml += `<g class="terminal" data-comp-id="${comp.id}" data-term-idx="${idx}" style="${mode === 'wire' ? 'display:block;' : 'display:none;'}"><circle class="terminal-hit" cx="${t.x}" cy="${t.y}" r="14" fill="rgba(239,68,68,0.01)" stroke="none"/><circle class="terminal-dot" cx="${t.x}" cy="${t.y}" r="8" fill="#ef4444" stroke="#dc2626" stroke-width="2"/></g>`;
+    });
+  });
+  termsLayer.innerHTML = tHtml;
+
+  renderProperties();
+}
+
+function findJunctions() {
+  const points = {};
+  wires.forEach(w => {
+    const k1 = `${w.x1},${w.y1}`; const k2 = `${w.x2},${w.y2}`;
+    points[k1] = (points[k1] || 0) + 1;
+    points[k2] = (points[k2] || 0) + 1;
+  });
+  return Object.entries(points).filter(([,c]) => c >= 3).map(([k]) => {
+    const [x,y] = k.split(',').map(Number);
+    return {x,y};
+  });
+}
+
+function autoRouteWire(x1, y1, x2, y2) {
+  // Create L-shaped wire: horizontal first, then vertical
+  wires.push({ x1, y1, x2: x2, y2: y1 });
+  wires.push({ x1: x2, y1: y1, x2: x2, y2: y2 });
+}
+
+// ============ PROPERTIES PANEL ============
+function renderProperties() {
+  const el = document.getElementById('props-content');
+  if (!selectedId) {
+    el.innerHTML = '<p class="text-gray-400 italic">Select a component to edit its properties.</p>';
+    return;
+  }
+  if (selectedId.startsWith('wire_')) {
+    el.innerHTML = `
+      <div class="space-y-3">
+        <div><label class="block text-xs font-medium text-gray-500 mb-1">Type</label><p class="mono text-sm">Wire</p></div>
+        <button class="w-full mt-2 px-3 py-1.5 bg-red-50 text-red-600 rounded text-sm hover:bg-red-100" onclick="deleteSelected()">Delete Wire</button>
+      </div>`;
+    return;
+  }
+  const comp = components.find(c => c.id === selectedId);
+  if (!comp) { el.innerHTML = ''; return; }
+  
+  el.innerHTML = `
+    <div class="space-y-3">
+      <div><label class="block text-xs font-medium text-gray-500 mb-1">Type</label><p class="mono text-sm">${comp.type}</p></div>
+      <div><label class="block text-xs font-medium text-gray-500 mb-1">Label</label><input class="prop-input w-full border border-gray-300 rounded px-2 py-1 text-sm" value="${comp.name}" onchange="updateProp('${comp.id}','name',this.value)"/></div>
+      <div><label class="block text-xs font-medium text-gray-500 mb-1">Value</label><input class="prop-input w-full border border-gray-300 rounded px-2 py-1 text-sm" value="${comp.value || ''}" onchange="updateProp('${comp.id}','value',this.value)" placeholder="e.g. 10 Ω"/></div>
+      <div><label class="block text-xs font-medium text-gray-500 mb-1">Position</label><p class="mono text-xs text-gray-500">(${comp.x}, ${comp.y})</p></div>
+      <div><label class="block text-xs font-medium text-gray-500 mb-1">Rotation</label><p class="mono text-xs text-gray-500 mb-1">${comp.rotation || 0}°</p></div>
+      <button class="w-full px-3 py-1.5 bg-gray-50 text-gray-700 rounded text-sm hover:bg-gray-100 border border-gray-200" onclick="rotateSelected()">↻ Rotate 90°</button>
+      <button class="w-full mt-2 px-3 py-1.5 bg-red-50 text-red-600 rounded text-sm hover:bg-red-100" onclick="deleteSelected()">Delete Component</button>
+    </div>
+  `;
+}
+
+function updateProp(id, prop, val) {
+  saveState();
+  const comp = components.find(c => c.id === id);
+  if (comp) { comp[prop] = val; render(); }
+}
+
+// ============ INTERACTION ============
+const svg = document.getElementById('canvas-svg');
+let dragging = null; let dragOffset = {x:0,y:0};
+
+function updateCameraViewBox(preserveCenter = false) {
+  const rect = svg.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+
+  const nextWidth = rect.width / camera.zoom;
+  const nextHeight = rect.height / camera.zoom;
+
+  if (preserveCenter && camera.viewWidth && camera.viewHeight) {
+    const cx = camera.x + camera.viewWidth / 2;
+    const cy = camera.y + camera.viewHeight / 2;
+    camera.x = cx - nextWidth / 2;
+    camera.y = cy - nextHeight / 2;
+  }
+
+  camera.viewWidth = nextWidth;
+  camera.viewHeight = nextHeight;
+  svg.setAttribute('viewBox', `${camera.x} ${camera.y} ${camera.viewWidth} ${camera.viewHeight}`);
+}
+
+function getSVGPoint(e) {
+  const rect = svg.getBoundingClientRect();
+  if (!rect.width || !rect.height || !camera.viewWidth || !camera.viewHeight) {
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  const sx = (e.clientX - rect.left) / rect.width;
+  const sy = (e.clientY - rect.top) / rect.height;
+  return {
+    x: camera.x + sx * camera.viewWidth,
+    y: camera.y + sy * camera.viewHeight
+  };
+}
+
+svg.addEventListener('wheel', (e) => {
+  e.preventDefault();
+
+  const rect = svg.getBoundingClientRect();
+  if (!rect.width || !rect.height || !camera.viewWidth || !camera.viewHeight) return;
+
+  const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+  setCameraZoom(camera.zoom * factor, e.clientX, e.clientY);
+}, { passive: false });
+
+svg.addEventListener('mousedown', (e) => {
+  const pt = getSVGPoint(e);
+  
+  if (mode === 'wire') {
+    const targetTerm = getTerminalFromPointer(e, pt);
+    if (!targetTerm) {
+      // Check if clicking an existing wire body — select it for deletion
+      const wireEl = e.target.closest('.wire-path');
+      if (wireEl) {
+        wireStart = null;
+        wireCursor = null;
+        const idx = parseInt(wireEl.dataset.wireIdx);
+        selectedId = 'wire_' + idx;
+        render();
+        renderProperties();
+        return;
+      }
+      if (wireStart) {
+        wireStart = null;
+        wireCursor = null;
+        render();
+      }
+      return;
+    }
+
+    if (!wireStart) {
+      wireStart = { compId: targetTerm.compId, termIdx: targetTerm.termIdx, x: targetTerm.x, y: targetTerm.y };
+      wireCursor = { x: targetTerm.x, y: targetTerm.y };
+      render();
+    } else {
+      // Clicking the same terminal cancels the current wire.
+      if (wireStart.compId === targetTerm.compId && wireStart.termIdx === targetTerm.termIdx) {
+        wireStart = null;
+        wireCursor = null;
+        render();
+        return;
+      }
+      saveState();
+      // Auto-route: create L-shaped wire (horizontal then vertical)
+      autoRouteWire(wireStart.x, wireStart.y, targetTerm.x, targetTerm.y);
+      wireStart = null;
+      wireCursor = null;
+      render();
+    }
+    return;
+  }
+  
+  if (mode === 'select') {
+    // Check if clicking a wire
+    const wireEl = e.target.closest('.wire-path');
+    if (wireEl) {
+      const idx = parseInt(wireEl.dataset.wireIdx);
+      selectedId = 'wire_' + idx;
+      renderProperties();
+      return;
+    }
+    // Check component
+    const compEl = e.target.closest('.comp-group');
+    if (compEl) {
+      const id = compEl.dataset.compId;
+      selectedId = id;
+      const comp = components.find(c => c.id === id);
+      dragging = comp;
+      dragOffset = { x: pt.x - comp.x, y: pt.y - comp.y };
+      render();
+    } else {
+      selectedId = null; render();
+    }
+  }
+});
+
+svg.addEventListener('mousemove', (e) => {
+  if (dragging && mode === 'select') {
+    const pt = getSVGPoint(e);
+    const nx = snap(pt.x - dragOffset.x);
+    const ny = snap(pt.y - dragOffset.y);
+    // Move attached wires
+    const oldTerms = getTerminalPositions(dragging);
+    dragging.x = nx; dragging.y = ny;
+    const newTerms = getTerminalPositions(dragging);
+    oldTerms.forEach((ot, i) => {
+      const nt = newTerms[i];
+      wires.forEach(w => {
+        if (Math.abs(w.x1 - ot.x) < 2 && Math.abs(w.y1 - ot.y) < 2) { w.x1 = nt.x; w.y1 = nt.y; }
+        if (Math.abs(w.x2 - ot.x) < 2 && Math.abs(w.y2 - ot.y) < 2) { w.x2 = nt.x; w.y2 = nt.y; }
+      });
+    });
+    render();
+  }
+  
+  // Highlight terminals on hover in wire mode
+  if (mode === 'wire') {
+    const pt = getSVGPoint(e);
+    const hoverTerm = getTerminalFromPointer(e, pt);
+    wireCursor = hoverTerm ? { x: hoverTerm.x, y: hoverTerm.y } : { x: snap(pt.x), y: snap(pt.y) };
+    render();
+
+    if (hoverTerm) {
+      const selector = `.terminal[data-comp-id="${hoverTerm.compId}"][data-term-idx="${hoverTerm.termIdx}"] .terminal-dot`;
+      const dot = document.querySelector(selector);
+      if (dot) {
+        dot.setAttribute('stroke', '#b91c1c');
+        dot.setAttribute('stroke-width', '3');
+        dot.setAttribute('fill', '#f87171');
+      }
+    }
+  }
+});
+
+svg.addEventListener('mouseup', () => {
+  if (dragging) { saveState(); dragging = null; }
+});
+
+// Double-click to cancel wire
+svg.addEventListener('dblclick', () => { wireStart = null; wireCursor = null; render(); });
+
+// ============ DRAG FROM LIBRARY ============
+document.querySelectorAll('.component-item').forEach(item => {
+  item.addEventListener('dragstart', (e) => {
+    dragData = item.dataset.type;
+    e.dataTransfer.setData('text/plain', dragData);
+  });
+});
+
+const container = document.getElementById('canvas-container');
+container.addEventListener('dragover', (e) => { e.preventDefault(); });
+container.addEventListener('drop', (e) => {
+  e.preventDefault();
+  if (!dragData) return;
+  const pt = getSVGPoint(e);
+  const x = snap(pt.x);
+  const y = snap(pt.y);
+  saveState();
+  const comp = {
+    id: 'comp_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+    type: dragData,
+    name: getNextLabel(dragData),
+    value: compDefs[dragData].defaultValue,
+    x, y, rotation: 0
+  };
+  components.push(comp);
+  selectedId = comp.id;
+  dragData = null;
+  render();
+  // Set dragging so you can continue moving the component immediately
+  dragging = comp;
+  dragOffset = { x: 0, y: 0 };
+});
+
+// ============ TOOLBAR ACTIONS ============
+function rotateSelected() {
+  if (!selectedId) return;
+  const comp = components.find(c => c.id === selectedId);
+  if (!comp) return;
+  saveState();
+  const oldTerms = getTerminalPositions(comp);
+  comp.rotation = ((comp.rotation || 0) + 90) % 360;
+  const newTerms = getTerminalPositions(comp);
+  oldTerms.forEach((ot, i) => {
+    const nt = newTerms[i];
+    wires.forEach(w => {
+      if (Math.abs(w.x1 - ot.x) < 2 && Math.abs(w.y1 - ot.y) < 2) { w.x1 = nt.x; w.y1 = nt.y; }
+      if (Math.abs(w.x2 - ot.x) < 2 && Math.abs(w.y2 - ot.y) < 2) { w.x2 = nt.x; w.y2 = nt.y; }
+    });
+  });
+  render();
+}
+
+function deleteSelected() {
+  if (!selectedId) return;
+  saveState();
+  if (selectedId.startsWith('wire_')) {
+    const idx = parseInt(selectedId.split('_')[1]);
+    wires.splice(idx, 1);
+  } else {
+    // Remove wires connected to this component
+    const comp = components.find(c => c.id === selectedId);
+    if (comp) {
+      const terms = getTerminalPositions(comp);
+      wires = wires.filter(w => {
+        return !terms.some(t => (Math.abs(w.x1-t.x)<2 && Math.abs(w.y1-t.y)<2) || (Math.abs(w.x2-t.x)<2 && Math.abs(w.y2-t.y)<2));
+      });
+      components = components.filter(c => c.id !== selectedId);
+    }
+  }
+  selectedId = null; render();
+}
+
+// ============ KEYBOARD ============
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'Delete' || e.key === 'Backspace') deleteSelected();
+  if (e.key === 'r') rotateSelected();
+  if (e.key === 'Escape') { wireStart = null; wireCursor = null; selectedId = null; render(); }
+  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undoAction(); }
+  if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redoAction(); }
+});
+
+// ============ EXPORT ============
+function toggleExportMenu() {
+  document.getElementById('export-menu').classList.toggle('hidden');
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#export-menu') && !e.target.closest('[onclick="toggleExportMenu()"]')) {
+    document.getElementById('export-menu').classList.add('hidden');
+  }
+});
+
+function getExportSVG() {
+  const clone = svg.cloneNode(true);
+  clone.removeAttribute('class');
+  clone.setAttribute('style', 'background:white');
+  clone.querySelectorAll('.terminal').forEach(t => t.remove());
+  clone.querySelectorAll('.selected-component').forEach(el => el.classList.remove('selected-component'));
+  // Get bounding box
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  components.forEach(c => { minX=Math.min(minX,c.x-60); minY=Math.min(minY,c.y-60); maxX=Math.max(maxX,c.x+60); maxY=Math.max(maxY,c.y+60); });
+  wires.forEach(w => { minX=Math.min(minX,w.x1,w.x2); minY=Math.min(minY,w.y1,w.y2); maxX=Math.max(maxX,w.x1,w.x2); maxY=Math.max(maxY,w.y1,w.y2); });
+  if (components.length === 0 && wires.length === 0) { minX=0;minY=0;maxX=400;maxY=300; }
+  const pad = 40;
+  clone.setAttribute('viewBox', `${minX-pad} ${minY-pad} ${maxX-minX+pad*2} ${maxY-minY+pad*2}`);
+  clone.setAttribute('width', maxX-minX+pad*2);
+  clone.setAttribute('height', maxY-minY+pad*2);
+  return new XMLSerializer().serializeToString(clone);
+}
+
+function exportSVG() {
+  const data = getExportSVG();
+  const blob = new Blob([data], {type:'image/svg+xml'});
+  downloadBlob(blob, 'circuit.svg');
+  showToast('SVG downloaded');
+}
+
+function exportPNG() {
+  const data = getExportSVG();
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width * 2; canvas.height = img.height * 2;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'white'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => { downloadBlob(blob, 'circuit.png'); showToast('PNG downloaded'); });
+  };
+  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(data)));
+}
+
+function exportPDF() {
+  // Simple PDF with embedded SVG as PNG
+  exportPNG(); // Fallback - real PDF would need a library
+  showToast('PDF export uses PNG format');
+}
+
+function copyAsImage() {
+  const data = getExportSVG();
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width * 2; canvas.height = img.height * 2;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'white'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(blob => {
+      navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(() => showToast('Copied to clipboard'));
+    });
+  };
+  img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(data)));
+}
+
+function downloadBlob(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+
+function resetWorkspace() {
+  components = [];
+  wires = [];
+  undoStack = [];
+  redoStack = [];
+  selectedId = null;
+  mode = 'select';
+  wireStart = null;
+  wireCursor = null;
+  nextIds = {};
+  camera.x = 0;
+  camera.y = 0;
+  camera.zoom = 1;
+  const selectBtn = document.getElementById('btn-select');
+  const wireBtn = document.getElementById('btn-wire');
+  if (selectBtn) selectBtn.classList.add('active');
+  if (wireBtn) wireBtn.classList.remove('active');
+  svg.className.baseVal = 'w-full h-full mode-select';
+  updateCameraViewBox(false);
+  render();
+  syncZoomUI();
+  showToast('Workspace reset');
+}
+
+// ============ SAVE/LOAD ============
+function saveProject() {
+  const data = JSON.stringify({ components, wires, nextIds }, null, 2);
+  downloadBlob(new Blob([data], {type:'application/json'}), 'circuit-project.json');
+  showToast('Project saved');
+}
+function loadProject() { document.getElementById('file-input').click(); }
+function handleFileLoad(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      saveState();
+      components = data.components || [];
+      wires = data.wires || [];
+      nextIds = data.nextIds || {};
+      selectedId = null; render();
+      showToast('Project loaded');
+    } catch(err) { showToast('Invalid file'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ============ TOAST ============
+function showToast(msg) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast bg-gray-900 text-white px-4 py-2 rounded-lg text-sm shadow-lg';
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+function initToolbarIcons() {
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    try {
+      window.lucide.createIcons();
+    } catch (err) {
+      // Keep going and inject inline fallback icons below.
+    }
+  }
+
+  // Inject inline SVG fallback for any unresolved lucide placeholders.
+  document.querySelectorAll('i[data-lucide]').forEach((icon) => {
+    const name = icon.getAttribute('data-lucide') || '';
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '16');
+    svg.setAttribute('height', '16');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.style.display = 'inline-block';
+    svg.style.verticalAlign = 'middle';
+
+    const path = document.createElementNS(svgNS, 'path');
+    const pathMap = {
+      'mouse-pointer-2': 'M4 3l7 17 2-6 6-2-15-9z',
+      'minus': 'M5 12h14',
+      'refresh-cw': 'M21 12a9 9 0 1 1-3-6.7 M21 3v6h-6',
+      'rotate-cw': 'M21 12a9 9 0 1 1-3-6.7 M21 3v6h-6',
+      'trash-2': 'M3 6h18 M8 6V4h8v2 M6 6l1 14h10l1-14',
+      'undo': 'M9 14L4 9l5-5 M4 9h9a7 7 0 1 1 0 14h-2',
+      'redo': 'M15 14l5-5-5-5 M20 9h-9a7 7 0 1 0 0 14h2',
+      'save': 'M5 4h12l2 2v14H5z M8 4v6h8V4 M9 20v-6h6v6',
+      'folder-open': 'M3 19l2-8h16l-2 8H3 M3 9h6l2 2h10',
+      'download': 'M12 3v12 M7 10l5 5 5-5 M4 21h16'
+    };
+    path.setAttribute('d', pathMap[name] || 'M4 4h16v16H4z');
+    svg.appendChild(path);
+
+    icon.replaceWith(svg);
+  });
+}
+
+// ============ ELEMENT SDK ============
+const defaultConfig = {
+  app_title: 'Circuit Schematic Builder',
+  background_color: '#f7fafc',
+  surface_color: '#ffffff',
+  text_color: '#1a202c',
+  primary_action: '#2d3748',
+  secondary_action: '#718096'
+};
+
+function applyConfig(config) {
+  document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+  document.body.style.backgroundColor = config.background_color || defaultConfig.background_color;
+  document.querySelectorAll('aside, header').forEach(el => el.style.backgroundColor = config.surface_color || defaultConfig.surface_color);
+}
+
+// Init
+render();
+updateCameraViewBox(false);
+syncZoomUI();
+initToolbarIcons();
+
+window.addEventListener('resize', () => {
+  updateCameraViewBox(true);
+});
+
+if (window.elementSdk && typeof window.elementSdk.init === 'function') {
+  window.elementSdk.init({
+    defaultConfig,
+    onConfigChange: async (config) => { applyConfig(config); },
+    mapToCapabilities: (config) => ({
+      recolorables: [
+        { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({background_color:v}); } },
+        { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({surface_color:v}); } },
+        { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({text_color:v}); } },
+        { get: () => config.primary_action || defaultConfig.primary_action, set: (v) => { config.primary_action = v; window.elementSdk.setConfig({primary_action:v}); } },
+        { get: () => config.secondary_action || defaultConfig.secondary_action, set: (v) => { config.secondary_action = v; window.elementSdk.setConfig({secondary_action:v}); } }
+      ],
+      borderables: [],
+      fontEditable: undefined,
+      fontSizeable: undefined
+    }),
+    mapToEditPanelValues: (config) => new Map([
+      ['app_title', config.app_title || defaultConfig.app_title]
+    ])
+  });
+}
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f6e987d07979894',t:'MTc3Nzk3MjA1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
