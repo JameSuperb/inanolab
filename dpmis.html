@@ -1,0 +1,3078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>R&D Proposal Collaborator (DPMISV2 Format)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet"/>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 13px; background: #f3f4f6; margin: 0; }
+
+    /* ── NAVBAR ── */
+    .top-navbar {
+      background: #1a3a6b; color: #fff; height: 65px;
+      display: flex; align-items: center; padding: 0 18px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    }
+    .top-navbar .nav-left { flex: 1; min-width: 0; }
+    .top-navbar .brand { font-weight: 700; font-size: 15px; color: #fff; line-height: 1.25; }
+    .top-navbar .subtitle { font-size: 10px; color: #a8c8f0; line-height: 1.5; margin-top: 1px; }
+    .top-navbar .subtitle .proposal-crumb { color: #7dc8ff; }
+    .nav-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    #save-indicator { font-size: 11px; color: #7dffb3; opacity: 0; transition: opacity 0.4s; margin-right: 4px; }
+    .nav-btn {
+      background: rgba(255,255,255,0.12); color: #fff;
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 5px 13px; font-size: 11px; border-radius: 4px; cursor: pointer;
+      display: flex; align-items: center; gap: 5px; white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.24); }
+
+    /* ── MAIN ── */
+    .main-content { margin-top: 65px; padding: 16px; }
+
+    /* ── PROPOSAL PICKER ── */
+    #picker-view {
+      margin-top: 65px; padding: 36px 28px;
+      max-width: 960px; margin-left: auto; margin-right: auto;
+    }
+    .picker-heading { font-size: 18px; font-weight: 700; color: #1a3a6b; margin-bottom: 4px; }
+    .picker-sub { font-size: 12px; color: #6b7280; margin-bottom: 28px; }
+    #proposal-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 16px; }
+    .p-card {
+      background: #fff; border: 1px solid #d1d5db; border-radius: 8px;
+      padding: 20px 18px; cursor: pointer;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+    .p-card:hover { box-shadow: 0 4px 16px rgba(37,99,235,0.15); border-color: #3b82f6; }
+    .p-card-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+      color: #2563eb; background: #dbeafe; border-radius: 3px; padding: 2px 6px;
+      display: inline-block; margin-bottom: 8px; }
+    .p-card-title { font-weight: 700; font-size: 13px; color: #1a3a6b; margin-bottom: 5px; }
+    .p-card-desc { font-size: 11px; color: #6b7280; line-height: 1.5; }
+    .p-card-add {
+      background: #f0fdf4; border: 2px dashed #86efac; color: #16a34a;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 120px; gap: 6px;
+    }
+    .p-card-add:hover { background: #dcfce7; border-color: #4ade80; }
+    .p-card-add-icon { font-size: 28px; line-height: 1; }
+    .p-card-add-label { font-size: 12px; font-weight: 600; }
+
+    /* ── HISTORY PANEL ── */
+    #history-panel {
+      position: fixed; top: 65px; right: -400px; width: 380px;
+      height: calc(100vh - 65px); background: #fff;
+      border-left: 1px solid #d1d5db; z-index: 900;
+      transition: right 0.28s cubic-bezier(.4,0,.2,1);
+      display: flex; flex-direction: column; box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+    }
+    #history-panel.open { right: 0; }
+    .hp-header {
+      padding: 13px 16px; border-bottom: 1px solid #e5e7eb;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .hp-title { font-weight: 700; font-size: 13px; color: #1a3a6b; }
+    .hp-close { background: none; border: none; font-size: 18px; cursor: pointer; color: #9ca3af; line-height: 1; }
+    .hp-close:hover { color: #374151; }
+    #history-list { flex: 1; overflow-y: auto; padding: 12px; }
+    .h-entry { border-bottom: 1px solid #f3f4f6; padding: 10px 0; }
+    .h-entry:last-child { border-bottom: none; }
+    .h-meta { font-size: 10px; color: #9ca3af; margin-bottom: 4px; }
+    .h-user { color: #2563eb; font-weight: 600; }
+    .h-change { font-size: 11px; color: #374151; margin-bottom: 2px; }
+    .h-field { font-weight: 600; color: #1a3a6b; }
+    .h-from { color: #ef4444; text-decoration: line-through; }
+    .h-to { color: #16a34a; }
+    .h-empty { text-align: center; color: #9ca3af; font-size: 12px; padding: 32px 0; }
+
+    /* ── AUTH OVERLAY ── */
+    #auth-overlay {
+      position: fixed; inset: 0; background: rgba(10,25,60,0.93);
+      z-index: 9999; display: flex; align-items: center; justify-content: center;
+    }
+    .auth-card {
+      background: #fff; border-radius: 12px; padding: 44px 44px;
+      width: 460px; max-width: 96vw; text-align: center;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.4);
+    }
+    .auth-logo { font-size: 36px; margin-bottom: 10px; }
+    .auth-title { font-size: 17px; font-weight: 700; color: #1a3a6b; margin-bottom: 14px; }
+    .auth-sub { font-size: 12px; color: #6b7280; margin-bottom: 28px; line-height: 1.65; text-align: left; }
+    .auth-sub strong { color: #374151; }
+    .google-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 11px 18px;
+      background: #fff; border: 1.5px solid #d1d5db; border-radius: 6px;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .google-btn:hover { background: #f9fafb; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    #auth-error { color: #ef4444; font-size: 11px; margin-top: 12px; display: none; }
+
+    /* ── STEP BAR ── */
+    .step-bar {
+      display: flex; align-items: center; background: #fff;
+      border: 1px solid #d1d5db; border-radius: 6px; padding: 10px 14px;
+      margin-bottom: 14px; overflow-x: auto; gap: 0; flex-wrap: nowrap;
+    }
+    .step-item { display: flex; align-items: center; flex: 1; min-width: 90px; }
+    .step-circle {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #c8d6ea; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: bold; flex-shrink: 0;
+    }
+    .step-circle.active { background: #2563eb; }
+    .step-circle.done   { background: #16a34a; font-size: 10px; }
+    .step-label { margin-left: 6px; font-size: 10px; color: #6b7280; white-space: nowrap; }
+    .step-label.active { color: #2563eb; font-weight: bold; }
+    .step-connector { flex: 1; height: 2px; background: #d1d5db; margin: 0 4px; min-width: 10px; }
+
+    /* ── CARDS ── */
+    .form-card { background: #fff; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 14px; }
+    .form-card-header {
+      background: #bfdbfe; color: #1e3a5f;
+      padding: 8px 16px; font-weight: 600; font-size: 13px;
+      border-radius: 6px 6px 0 0;
+    }
+    .form-card-body { padding: 16px; }
+
+    /* ── LABELS & INPUTS ── */
+    .form-label-bold { font-weight: bold; font-size: 12px; margin-bottom: 4px; display: block; }
+    .required-star { color: #ef4444; }
+    .form-control, .form-select { font-size: 12px; border: 1px solid #9ca3af; border-radius: 4px; min-height: 34px; }
+    .form-control:focus, .form-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.15); outline: none; }
+    select.form-select { padding: 5px 30px 5px 8px; }
+
+    /* ── QUILL ── */
+    .quill-wrap { border: 1px solid #9ca3af; border-radius: 4px; }
+    .quill-wrap .ql-toolbar { border: none; border-bottom: 1px solid #e5e7eb; padding: 4px 6px; }
+    .quill-wrap .ql-container { border: none; font-size: 12px; min-height: 120px; }
+    .ql-editor { padding: 8px 10px; }
+
+    /* ── NOTICE BOX ── */
+    .notice-yellow {
+      background: #fef9c3; border: 1px solid #fbbf24; border-left: 4px solid #f59e0b;
+      color: #78350f; padding: 10px 14px; border-radius: 4px; font-size: 12px;
+      margin-bottom: 12px; position: relative;
+    }
+
+    /* ── 6Ps SUB-SECTION ── */
+    .sixp-section { border: 1px solid #e5e7eb; border-radius: 4px; margin-bottom: 12px; }
+    .sixp-header { background: #dbeafe; padding: 6px 12px; font-weight: 600; font-size: 12px; color: #1e3a5f; }
+    .sixp-body { padding: 12px; }
+    /* grid row: checkbox+label | input */
+    .sixp-g { display: grid; grid-template-columns: 45% 55%; gap: 8px; align-items: start; margin-bottom: 10px; }
+    .sixp-g .lbl { display: flex; align-items: flex-start; gap: 8px; padding-top: 4px; font-size: 12px; color: #374151; }
+    .sixp-g .lbl input[type=checkbox], .sixp-g .lbl input[type=radio] { margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer; }
+    .sixp-g .inp textarea { width: 100%; font-size: 12px; border: 1px solid #9ca3af; border-radius: 4px; padding: 5px 8px; resize: vertical; min-height: 48px; box-sizing: border-box; }
+    .sixp-g .inp input[type=text] { width: 100%; font-size: 12px; border: 1px solid #9ca3af; border-radius: 4px; padding: 5px 8px; box-sizing: border-box; }
+    .trl-lbl em { color: #6b7280; font-style: italic; }
+
+    /* ── TRL RADIO ── */
+    .trl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 6px; margin-top: 6px; }
+    .trl-option { display: flex; align-items: flex-start; gap: 6px; font-size: 11px; }
+    .trl-option input { margin-top: 2px; flex-shrink: 0; }
+
+    /* ── SECTION SUBHEADING ── */
+    .sub-heading { font-weight: bold; font-size: 12px; margin: 12px 0 6px; color: #1e3a5f; }
+
+    /* ── ACTION BAR ── */
+    .action-bar {
+      background: #fff; border: 1px solid #d1d5db; border-radius: 6px;
+      padding: 10px 16px; display: flex; gap: 10px; margin-top: 14px;
+    }
+    .btn-prev { background: #6b7280; color: #fff; border: none; padding: 7px 18px; font-size: 12px; border-radius: 4px; cursor: pointer; }
+    .btn-next { background: #16a34a; color: #fff; border: none; padding: 7px 18px; font-size: 12px; border-radius: 4px; cursor: pointer; }
+
+    /* ── TOM SELECT overrides ── */
+    .ts-wrapper { font-size: 12px; }
+    .ts-control { border: 1px solid #9ca3af !important; border-radius: 4px !important; min-height: 34px; padding: 4px 8px !important; }
+    .ts-control input { font-size: 12px !important; }
+    .ts-dropdown { z-index: 2000 !important; font-size: 12px; border: 1px solid #9ca3af; border-radius: 4px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+    .ts-dropdown .ts-dropdown-content { max-height: 260px; overflow-y: auto; }
+    .ts-dropdown .option { padding: 7px 10px; line-height: 1.4; }
+    .ts-dropdown .option:hover, .ts-dropdown .option.active { background: #dbeafe; color: #1e3a5f; }
+    .ts-dropdown .option.selected { background: #eff6ff; }
+    .ts-wrapper.multi .ts-control .item { background: #dbeafe; color: #1e3a5f; border: 1px solid #93c5fd; border-radius: 3px; font-size: 11px; padding: 2px 6px; margin: 2px; }
+    .ts-wrapper.multi .ts-control .item .remove { color: #3b82f6; margin-left: 4px; }
+
+    /* ── SHARED STEP VIEW ── */
+    .step-view-hidden { display: none; }
+
+    /* ── STEP 3 BUDGET UI ── */
+    .budget-card { background:#fff; border:1px solid #d1d5db; border-radius:6px; margin-bottom:14px; }
+    .budget-card-header { background:#bfdbfe; color:#1e3a5f; padding:8px 16px; font-weight:600; font-size:13px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; border-radius:6px 6px 0 0; }
+    .budget-card-body { padding:0; overflow-x:auto; }
+    .budget-table { width:100%; border-collapse:collapse; font-size:12px; min-width:550px; }
+    .budget-table thead th { background:#bfdbfe; color:#1e3a5f; padding:8px 10px; border:1px solid #93c5fd; font-size:11px; text-align:left; white-space:nowrap; }
+    .budget-table thead th.num { text-align:right; }
+    .budget-table tbody td { padding:7px 10px; border:1px solid #e5e7eb; vertical-align:middle; }
+    .budget-table tbody td.num { text-align:right; font-family:monospace; font-size:12px; white-space:nowrap; }
+    .budget-table .sub-header td { background:#eff6ff; font-weight:700; color:#1e3a5f; padding:6px 10px; font-size:11px; border:1px solid #bfdbfe; }
+    .budget-table .subtotal-row td { background:#f0f7ff; font-weight:600; font-size:11px; }
+    .budget-table .total-row td { background:#bfdbfe; font-weight:700; color:#1e3a5f; }
+    .budget-table tbody tr:not(.sub-header):not(.subtotal-row):not(.total-row):hover { background:#f9fafb; }
+    .year-row td { background:#1d4ed8; color:#fff; padding:8px 10px; border:1px solid #1e40af; font-weight:600; cursor:pointer; }
+    .year-row td input.dost-input { background:#fff; color:#1e3a5f; border:1px solid #93c5fd; border-radius:3px; padding:3px 7px; font-size:12px; width:130px; font-family:monospace; }
+    .year-expand-panel { background:#eff6ff; padding:12px 14px; border-top:3px solid #2563eb; }
+    .btn-add { display:inline-flex; align-items:center; gap:5px; background:#2563eb; color:#fff; border:none; border-radius:20px; padding:4px 12px; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap; }
+    .btn-add:hover { background:#1d4ed8; color:#fff; }
+    .btn-edit { background:#f59e0b; color:#fff; border:none; border-radius:3px; padding:3px 9px; font-size:11px; cursor:pointer; }
+    .btn-edit:hover { background:#d97706; }
+    .btn-del { background:#dc2626; color:#fff; border:none; border-radius:3px; padding:3px 9px; font-size:11px; cursor:pointer; }
+    .btn-del:hover { background:#b91c1c; }
+    .totals-card { background:#fff; border:1px solid #d1d5db; border-radius:6px; padding:14px 18px; margin-bottom:14px; }
+    .totals-card h5 { font-size:13px; font-weight:700; color:#1e3a5f; margin-bottom:10px; padding-bottom:6px; border-bottom:2px solid #bfdbfe; }
+    .t-row { display:flex; justify-content:space-between; padding:5px 0; font-size:12px; border-bottom:1px solid #f3f4f6; }
+    .t-row .t-amt { font-family:monospace; font-weight:600; }
+    .t-grand { background:#1d4ed8; color:#fff; padding:8px 12px; border-radius:4px; margin-top:8px; display:flex; justify-content:space-between; font-weight:700; font-size:13px; }
+    .empty-row td { text-align:center; color:#9ca3af; padding:14px; font-size:11px; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════ NAVBAR ════════════ -->
+<div class="top-navbar">
+  <div class="nav-left">
+    <div class="brand">&#9878; R&amp;D Proposal Collaboratory</div>
+    <div class="subtitle">
+      A team collaboration tool for DOST R&amp;D proposals in DPMISV2 format &nbsp;
+      <span class="proposal-crumb" id="active-proposal-crumb"></span>
+      &nbsp;| Developed by Dr. James Olarve
+    </div>
+  </div>
+  <div class="nav-right">
+    <span id="save-indicator">&#10003; Auto-saved</span>
+    <button class="nav-btn" id="btn-history" onclick="openHistoryPanel()" style="display:none;">&#128196; History</button>
+    <button class="nav-btn" onclick="doLogout()">&#128275; Logout</button>
+  </div>
+</div>
+
+<!-- ════════════ AUTH OVERLAY ════════════ -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-logo">&#9878;</div>
+    <div class="auth-title">R&amp;D Proposal Collaboratory</div>
+    <div class="auth-sub">
+      This web application is an unofficial, independent tool developed to help research teams draft proposals following the DPMIS V2 format. It is not affiliated with, endorsed by, or connected to DOST or any of its agencies, and proposals saved here are <strong>not officially submitted</strong>. Sign in with your Google account to access and collaborate on shared proposal drafts.
+    </div>
+    <button class="google-btn" onclick="doGoogleLogin()">
+      <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908C16.658 14.013 17.64 11.705 17.64 9.2z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+        <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+      </svg>
+      Sign in with Google
+    </button>
+    <div id="auth-error"></div>
+  </div>
+</div>
+
+<!-- ════════════ PROPOSAL PICKER ════════════ -->
+<div id="picker-view" style="display:none;">
+  <div class="picker-heading">Select a Proposal</div>
+  <div class="picker-sub">All proposals are shared. Your edits are visible to all collaborators in real time.</div>
+  <div id="proposal-cards"></div>
+</div>
+
+<!-- ════════════ MAIN ════════════ -->
+<div class="main-content step-view-hidden" id="step2-view">
+
+  <!-- Step Bar -->
+  <div class="step-bar">
+    <div class="step-item"><div class="step-circle done">&#10003;</div><div class="step-label">Step 1<br><strong>Proponent Profile</strong></div></div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle active">2</div><div class="step-label active">Step 2<br><strong>Project Details</strong></div></div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle">3</div><div class="step-label">Step 3<br><strong>Line-Item Budget</strong></div></div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle">4</div><div class="step-label">Step 4<br><strong>Team Members</strong></div></div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle">5</div><div class="step-label">Step 5<br><strong>Supplementary Files</strong></div></div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle">6</div><div class="step-label">Step 6<br><strong>Review &amp; Submit</strong></div></div>
+  </div>
+
+  <!-- ══ SECTION 1: PROJECT PROFILE ══ -->
+  <div class="form-card">
+    <div class="form-card-header">(1) PROJECT PROFILE</div>
+    <div class="form-card-body">
+
+      <div class="mb-3">
+        <label class="form-label-bold">Project Title <span class="required-star">*</span></label>
+        <textarea id="f-project-title" class="form-control" rows="2" required spellcheck="false"></textarea>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label-bold">Start Date: <span class="required-star">*</span></label>
+          <input type="date" id="f-start-date" class="form-control" required/>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label-bold">End Date: <span class="required-star">*</span></label>
+          <input type="date" id="f-end-date" class="form-control" required/>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label-bold">Implementing Agency: <span class="required-star">*</span></label>
+          <select id="f-implementing-agency" placeholder="Select implementing Agency">
+            <option value="">Select implementing Agency</option>
+            <option>Adamson University</option><option>Ateneo de Manila University</option>
+            <option>Batangas State University</option><option>Bicol University</option>
+            <option>Bulacan State University</option><option>Caraga State University</option>
+            <option>Central Luzon State University</option><option>Central Mindanao University</option>
+            <option>Central Philippine University</option><option>Centro Escolar University</option>
+            <option>City College of Calamba</option><option>City of Malabon University</option>
+            <option>Cordillera Career Development College</option>
+            <option>Cotabato Foundation College of Science and Technology</option>
+            <option>Davao del Norte State College</option><option>De La Salle University</option>
+            <option>Eastern Samar State University</option><option>Eastern Visayas State University</option>
+            <option>Far Eastern University</option><option>Feati University</option>
+            <option>Foundation University</option><option>Ifugao State University</option>
+            <option>Iligan Institute of Technology - MSU</option><option>Iloilo Science and Technology University</option>
+            <option>Jose Rizal University</option><option>Laguna State Polytechnic University</option>
+            <option>Leyte Normal University</option><option>Lyceum of the Philippines University</option>
+            <option>Mapua University</option><option>Mariano Marcos State University</option>
+            <option>Mindanao State University</option><option>Miriam College</option>
+            <option>National University</option><option>New Era University</option>
+            <option>Notre Dame of Marbel University</option><option>Palawan State University</option>
+            <option>Pamantasan ng Lungsod ng Maynila</option><option>Pangasinan State University</option>
+            <option>Philippine Normal University</option><option>Philippine Science High School System</option>
+            <option>Polytechnic University of the Philippines</option>
+            <option>Quirino State University</option><option>Ramon Magsaysay Technological University</option>
+            <option>Saint Louis University</option><option>Saint Mary's University</option>
+            <option>Samar State University</option><option>San Pedro College</option>
+            <option>Sorsogon State University</option><option>Southern Leyte State University</option>
+            <option>Southern Philippines Agri-Business and Marine and Aquatic School of Technology</option>
+            <option>Sultan Kudarat State University</option><option>Tarlac Agricultural University</option>
+            <option>Tarlac State University</option><option>The University of Mindanao</option>
+            <option>Technological Institute of the Philippines</option>
+            <option>University of Batangas</option><option>University of Bohol</option>
+            <option>University of Eastern Philippines</option><option>University of Mindanao</option>
+            <option>University of Northern Philippines</option><option>University of Nueva Caceres</option>
+            <option>University of Saint La Salle</option><option>University of San Agustin</option>
+            <option>University of San Carlos</option><option>University of Santo Tomas</option>
+            <option>University of Southeastern Philippines</option>
+            <option>University of Southern Mindanao</option>
+            <option>University of the Philippines Diliman</option>
+            <option>University of the Philippines Los Baños</option>
+            <option>University of the Philippines Manila</option>
+            <option>University of the Philippines Mindanao</option>
+            <option>University of the Philippines Visayas</option>
+            <option>University of the Visayas</option><option>Visayas State University</option>
+            <option>Western Mindanao State University</option><option>Xavier University</option>
+            <option>Zamboanga State College of Marine Sciences and Technology</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label-bold">Region: <span class="required-star">*</span></label>
+          <select id="f-region" class="form-select">
+            <option value="">Loading regions…</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label-bold">Province: <span class="required-star">*</span></label>
+          <select id="f-province" class="form-select"><option value="">Select Province</option></select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label-bold">Municipality: <span class="required-star">*</span></label>
+          <select id="f-municipality" class="form-select"><option value="">Select Municipality</option></select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label-bold">Barangay: <span class="required-star">*</span></label>
+          <select id="f-barangay" class="form-select"><option value="">Select Barangay</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 2: COOPERATING AGENCY/IES ══ -->
+  <div class="form-card">
+    <div class="form-card-header">COOPERATING AGENCY/IES <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <label class="form-label-bold">Co-implementing Agencies:</label>
+      <select id="f-co-agencies" multiple placeholder="Select Co-implementing Agencies">
+        <option>Adamson University</option><option>Ateneo de Manila University</option>
+        <option>De La Salle University</option><option>Mapua University</option>
+        <option>Polytechnic University of the Philippines</option>
+        <option>University of the Philippines Diliman</option>
+        <option>University of the Philippines Los Baños</option>
+        <option>University of Santo Tomas</option><option>Xavier University</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 2b: SITE(S) OF IMPLEMENTATION ══ -->
+  <div class="form-card">
+    <div class="form-card-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>Site(s) of Implementation <span class="required-star">*</span></span>
+      <button type="button" id="btn-add-site" style="display:inline-flex;align-items:center;gap:5px;background:#2563eb;color:#fff;border:none;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:11px;height:11px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Another Site of Implementation
+      </button>
+    </div>
+    <div class="form-card-body">
+      <div id="sites-container">
+        <!-- site rows injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 3: R&D CLASSIFICATION ══ -->
+  <div class="form-card">
+    <div class="form-card-header">R&amp;D PROGRAM / PROPOSAL CLASSIFICATION</div>
+    <div class="form-card-body">
+
+      <div class="mb-3">
+        <label class="form-label-bold">Type of Research: <span class="required-star">*</span></label>
+        <select id="f-research-type" placeholder="Select Research Type">
+          <option value="">-- Select Research Type --</option>
+          <option>Basic</option>
+          <option>Applied</option>
+        </select>
+      </div>
+
+      <div class="sub-heading">R&amp;D Priority Area and Program</div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label-bold">HNRDA: <span class="required-star">*</span></label>
+          <select id="f-hnrda" placeholder="Select HNRDA">
+            <option value="">Select HNRDA</option>
+            <option>National Integrated Basic Research Agenda (NIBRA)</option>
+            <option>Health - National Unified Health Research Agenda (NUHRA)</option>
+            <option>Agriculture, Aquatic and Natural Resources (AANR)</option>
+            <option>Industry, Energy and Emerging Technology</option>
+            <option>Disaster Risk Reduction and Climate Change Adaptation (DRR &amp; CCA)</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label-bold">HNRDA Item: <span class="required-star">*</span></label>
+          <select id="f-hnrda-item" placeholder="Select HNRDA Item">
+            <option value="">Select HNRDA Item</option>
+            <option>Sustainable Communities (SAKLAW)</option>
+            <option>Inclusive Nation Building (ATIN)</option>
+            <option>Health Sufficiency (LIKAS)</option>
+            <option>Water Security (TUBIG)</option>
+            <option>Food and Nutrition Security (SAPAT)</option>
+            <option>Clean Energy (ALERT)</option>
+            <option>Drug Discovery and Development (Tuklas Lunas) Program</option>
+            <option>Diagnostics Program</option>
+            <option>Functional Foods Program</option>
+            <option>Biomedical Engineering and Health Technologies (BEHT) Program</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label-bold">Sustainable Development Goal (SDG) Addressed: <span class="required-star">*</span></label>
+        <select id="f-sdg" multiple placeholder="Select SDG">
+          <option>SDG 1 – No Poverty</option><option>SDG 2 – Zero Hunger</option>
+          <option>SDG 3 – Good Health and Well-Being</option><option>SDG 4 – Quality Education</option>
+          <option>SDG 5 – Gender Equality</option><option>SDG 6 – Clean Water and Sanitation</option>
+          <option>SDG 7 – Affordable and Clean Energy</option><option>SDG 8 – Decent Work and Economic Growth</option>
+          <option>SDG 9 – Industry, Innovation and Infrastructure</option><option>SDG 10 – Reduced Inequalities</option>
+          <option>SDG 11 – Sustainable Cities and Communities</option><option>SDG 12 – Responsible Consumption and Production</option>
+          <option>SDG 13 – Climate Action</option><option>SDG 14 – Life Below Water</option>
+          <option>SDG 15 – Life on Land</option><option>SDG 16 – Peace, Justice and Strong Institutions</option>
+          <option>SDG 17 – Partnerships for the Goals</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label-bold">8-Point Socio-Economic Agenda: <span class="required-star">*</span></label>
+        <select id="f-8point" multiple placeholder="Select Agenda">
+          <option>Reducing agricultural input costs, increasing farmers' and fisherfolk's income</option>
+          <option>Ensuring food security</option>
+          <option>Increasing the competitiveness of businesses</option>
+          <option>Expanding economic opportunities</option>
+          <option>Promoting human development</option>
+          <option>Reducing vulnerability of individuals and communities</option>
+          <option>Addressing climate change</option>
+          <option>Attaining good governance</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label-bold">DOST Portfolio: <span class="required-star">*</span></label>
+        <select id="f-portfolio" placeholder="Select DOST Portfolio">
+          <option value="">Select DOST Portfolio</option>
+          <option>Food and Agriculture</option><option>Health</option>
+          <option>Industry</option><option>Energy</option>
+          <option>Environment and Natural Resources</option><option>Disaster Risk Reduction</option>
+          <option>Information and Communications Technology</option>
+          <option>Defense and Security</option><option>Education and Human Resources</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 4: DOST PILLARS ══ -->
+  <div class="form-card">
+    <div class="form-card-header">DOST PILLARS <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <select id="f-dost-pillars" multiple placeholder="Select DOST PILLARS">
+        <option>Pillar 1: Matatag na Agrikultura at Pangingisda</option>
+        <option>Pillar 2: Affordable and Clean Energy</option>
+        <option>Pillar 3: Digitalization and ICT</option>
+        <option>Pillar 4: Health and Wellness</option>
+        <option>Pillar 5: Resilience and Disaster Risk Reduction</option>
+        <option>Pillar 6: Education, Science, Technology and Innovation</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 5: PRIORITY AREAS ══ -->
+  <div class="form-card">
+    <div class="form-card-header">PRIORITY AREAS <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <select id="f-priority-areas" multiple placeholder="Select PRIORITY AREAS">
+        <option>Food and Agriculture</option><option>Health</option>
+        <option>Industry, Energy and Emerging Technology</option>
+        <option>Environment and Climate Change</option>
+        <option>Disaster Risk Reduction and Management</option>
+        <option>Halal</option><option>Defense and Security</option>
+        <option>Human Capital Development</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 6: EXECUTIVE SUMMARY ══ -->
+  <div class="form-card">
+    <div class="form-card-header">EXECUTIVE SUMMARY <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <div class="quill-wrap"><div id="editor-executive-summary"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 7: INTRODUCTION ══ -->
+  <div class="form-card">
+    <div class="form-card-header">INTRODUCTION</div>
+    <div class="form-card-body">
+
+      <div class="mb-3">
+        <label class="form-label-bold">INTRODUCTION : <span class="required-star">*</span></label>
+        <div class="quill-wrap"><div id="editor-introduction"></div></div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label-bold">SCIENTIFIC BASIS / THEORETICAL FRAMEWORK : <span class="required-star">*</span></label>
+        <div class="quill-wrap"><div id="editor-intro-framework"></div></div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label-bold">GENERAL OBJECTIVES : <span class="required-star">*</span></label>
+        <div class="quill-wrap"><div id="editor-intro-gen-objectives"></div></div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label-bold">SPECIFIC OBJECTIVES : <span class="required-star">*</span></label>
+        <div class="quill-wrap"><div id="editor-intro-spec-objectives"></div></div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label-bold">RATIONALE / SIGNIFICANCE (not to exceed 300 words) : <span class="required-star">*</span></label>
+        <div class="quill-wrap"><div id="editor-intro-rationale"></div></div>
+        <div style="text-align:right;font-size:11px;color:#6b7280;margin-top:4px;">
+          <span id="rationale-word-count">0</span>/300 words
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ SECTION 8: REVIEW OF RELATED LITERATURE ══ -->
+  <div class="form-card">
+    <div class="form-card-header">REVIEW OF RELATED LITERATURE <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <div class="quill-wrap"><div id="editor-rrl"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 9: METHODOLOGY ══ -->
+  <div class="form-card">
+    <div class="form-card-header">METHODOLOGY <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <div class="quill-wrap"><div id="editor-methodology"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 10: POTENTIAL OUTCOMES & IMPACTS ══ -->
+  <div class="form-card">
+    <div class="form-card-header">POTENTIAL OUTCOMES &amp; IMPACTS</div>
+    <div class="form-card-body">
+
+      <div class="mb-3">
+        <label class="form-label-bold">POTENTIAL OUTCOMES : <span class="required-star">*</span></label>
+        <div class="quill-wrap"><div id="editor-outcomes"></div></div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label-bold">SOCIAL IMPACT : <span class="required-star">*</span></label>
+        <div class="quill-wrap"><div id="editor-social-impact"></div></div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label-bold">ECONOMIC IMPACT : <span class="required-star">*</span></label>
+        <div class="quill-wrap"><div id="editor-economic-impact"></div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ SECTION 11: EXPECTED OUTPUTS (6Ps) ══ -->
+  <div class="form-card">
+    <div class="form-card-header">EXPECTED OUTPUTS (6Ps) <span class="required-star">*</span></div>
+    <div class="form-card-body">
+
+      <!-- Publications -->
+      <div class="sixp-section">
+        <div class="sixp-header">Publications</div>
+        <div class="sixp-body">
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pub-isi"><label for="cb-pub-isi">Number of ISI- and/or SCOPUS- indexed publications</label></div>
+            <div class="inp"><textarea id="t-pub-isi"></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pub-impact"><label for="cb-pub-impact">High impact factor journal publication</label></div>
+            <div class="inp"><textarea id="t-pub-impact"></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pub-industry"><label for="cb-pub-industry">Industry Article Citation Impact (i.e., the influence and impact)</label></div>
+            <div class="inp"><textarea id="t-pub-industry"></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Patents -->
+      <div class="sixp-section">
+        <div class="sixp-header">Patents</div>
+        <div class="sixp-body">
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pat-volume"><label for="cb-pat-volume">Total Patent Volume (registered under WIPO/ IPOPHL)</label></div>
+            <div class="inp"><input type="text" id="t-pat-volume"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pat-success"><label for="cb-pat-success">Total Patent Success (i.e., the ratio of patent application to grants over the assessed timeframe)</label></div>
+            <div class="inp"><input type="text" id="t-pat-success"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pat-global"><label for="cb-pat-global">Number of Global Patents (...US, European and Japanese patent offices)</label></div>
+            <div class="inp"><input type="text" id="t-pat-global"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pat-utility"><label for="cb-pat-utility">Number of utility models (filed and granted by WIPO/IPOPHL)</label></div>
+            <div class="inp"><input type="text" id="t-pat-utility"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pat-citations"><label for="cb-pat-citations">Patent Citations (i.e., total number of times a patent has been cited by other patents)</label></div>
+            <div class="inp"><input type="text" id="t-pat-citations"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pat-cited-pct"><label for="cb-pat-cited-pct">Percent of Patents Cited (...cited by other patents one or more times)</label></div>
+            <div class="inp"><input type="text" id="t-pat-cited-pct"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pat-um-filed"><label for="cb-pat-um-filed">Number Utility Models filed</label></div>
+            <div class="inp"><input type="text" id="t-pat-um-filed"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pat-um-granted"><label for="cb-pat-um-granted">Number of Utility Models granted</label></div>
+            <div class="inp"><input type="text" id="t-pat-um-granted"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pat-ip-filed"><label for="cb-pat-ip-filed">Number IP Patents filed</label></div>
+            <div class="inp"><input type="text" id="t-pat-ip-filed"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pat-ip-granted"><label for="cb-pat-ip-granted">Number of Patents granted</label></div>
+            <div class="inp"><input type="text" id="t-pat-ip-granted"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products / Processes -->
+      <div class="sixp-section">
+        <div class="sixp-header">Products/Processes</div>
+        <div class="sixp-body">
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-prod-ideation"><label for="cb-prod-ideation">R&amp;D Ideation informed by industry, consumer, community, or market needs aligned with industry</label></div>
+            <div class="inp"><textarea id="t-prod-ideation"></textarea></div>
+          </div>
+
+          <div class="sub-heading" style="margin-top:12px;">Technology Readiness (select the category that best fits the proposed R&amp;D)</div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="radio" name="trl" value="1" id="trl-1"><label for="trl-1" class="trl-lbl"><strong>TRL 1</strong> — <em>Basic principles and research</em></label></div>
+            <div class="inp"><textarea id="ta-trl-1" placeholder="Describe TRL 1 progress..."></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="radio" name="trl" value="2" id="trl-2"><label for="trl-2" class="trl-lbl"><strong>TRL 2</strong> — <em>Application formulated</em></label></div>
+            <div class="inp"><textarea id="ta-trl-2" placeholder="Describe TRL 2 progress..."></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="radio" name="trl" value="3" id="trl-3"><label for="trl-3" class="trl-lbl"><strong>TRL 3</strong> — <em>Proof of Concept</em></label></div>
+            <div class="inp"><textarea id="ta-trl-3" placeholder="Describe TRL 3 progress..."></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="radio" name="trl" value="4" id="trl-4"><label for="trl-4" class="trl-lbl"><strong>TRL 4</strong> — <em>Components validated in laboratory environment</em></label></div>
+            <div class="inp"><textarea id="ta-trl-4" placeholder="Describe TRL 4 progress..."></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="radio" name="trl" value="5" id="trl-5"><label for="trl-5" class="trl-lbl"><strong>TRL 5</strong> — <em>Integrated components demonstrated in a laboratory environment</em></label></div>
+            <div class="inp"><textarea id="ta-trl-5" placeholder="Describe TRL 5 progress..."></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="radio" name="trl" value="6" id="trl-6"><label for="trl-6" class="trl-lbl"><strong>TRL 6</strong> — <em>Prototype system demonstrated in a relevant environment</em></label></div>
+            <div class="inp"><textarea id="ta-trl-6" placeholder="Describe TRL 6 progress..."></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="radio" name="trl" value="7" id="trl-7"><label for="trl-7" class="trl-lbl"><strong>TRL 7</strong> — <em>Prototype demonstrated in operational environment</em></label></div>
+            <div class="inp"><textarea id="ta-trl-7" placeholder="Describe TRL 7 progress..."></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="radio" name="trl" value="8" id="trl-8"><label for="trl-8" class="trl-lbl"><strong>TRL 8</strong> — <em>Technology proven in operational environment</em></label></div>
+            <div class="inp"><textarea id="ta-trl-8" placeholder="Describe TRL 8 progress..."></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="radio" name="trl" value="9" id="trl-9"><label for="trl-9" class="trl-lbl"><strong>TRL 9</strong> — <em>Technology refined and adopted, and commercialized</em></label></div>
+            <div class="inp"><textarea id="ta-trl-9" placeholder="Describe TRL 9 progress..."></textarea></div>
+          </div>
+
+          <div class="sixp-g" style="margin-top:4px;">
+            <div class="lbl"><input type="checkbox" id="cb-imrl"><label for="cb-imrl">Investment and Market Readiness Level</label></div>
+            <div class="inp"><textarea id="t-imrl"></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-tech-transfer"><label for="cb-tech-transfer">R&amp;D leading to any of the following Tech Transfer to Commercialization Modalities:</label></div>
+            <div class="inp"><textarea id="t-tech-transfer"></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-extension"><label for="cb-extension">R&amp;D leading to Extension <em>(i.e., knowledge diffusion and skills transfer)</em></label></div>
+            <div class="inp"><textarea id="t-extension"></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-market-info"><label for="cb-market-info">Integrated and used market, customer/user, trade, system requirement info in the R&amp;D</label></div>
+            <div class="inp"><textarea id="t-market-info"></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-biz-canvas"><label for="cb-biz-canvas">Business canvas developed</label></div>
+            <div class="inp"><textarea id="t-biz-canvas" style="min-height:34px;"></textarea></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-commercialized"><label for="cb-commercialized">R&amp;D product is commercialized</label></div>
+            <div class="inp"><textarea id="t-commercialized" style="min-height:34px;"></textarea></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- People Services -->
+      <div class="sixp-section">
+        <div class="sixp-header">People Services</div>
+        <div class="sixp-body">
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-ppl-grad"><label for="cb-ppl-grad">Number of faculty provided support for graduate studies (MS/PhD)</label></div>
+            <div class="inp"><input type="text" id="t-ppl-grad"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-ppl-cpd"><label for="cb-ppl-cpd">Number of faculty/ research staff provided support for continuing professional development</label></div>
+            <div class="inp"><input type="text" id="t-ppl-cpd"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-ppl-policies"><label for="cb-ppl-policies">Number of policies, policy recommendations, local and national legislative bills developed, filed, and passed</label></div>
+            <div class="inp"><input type="text" id="t-ppl-policies"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-ppl-msmes"><label for="cb-ppl-msmes">Number of S&amp;T MSMEs assisted through skills transfer + Peso Value of S&amp;T SMEs</label></div>
+            <div class="inp"><input type="text" id="t-ppl-msmes"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-ppl-sti-jobs"><label for="cb-ppl-sti-jobs">Number of STI jobs created</label></div>
+            <div class="inp"><input type="text" id="t-ppl-sti-jobs"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-ppl-startups"><label for="cb-ppl-startups">Number of S&amp;T startups or enterprises created</label></div>
+            <div class="inp"><input type="text" id="t-ppl-startups"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-ppl-extension"><label for="cb-ppl-extension">Number of extension beneficiaries trained, and extension materials produced</label></div>
+            <div class="inp"><input type="text" id="t-ppl-extension"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Places / Partnerships -->
+      <div class="sixp-section">
+        <div class="sixp-header">Places/Partnerships</div>
+        <div class="sixp-body">
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-plc-industry-proj"><label for="cb-plc-industry-proj">Number of projects conducted jointly with industry</label></div>
+            <div class="inp"><input type="text" id="t-plc-industry-proj"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-plc-incubatees"><label for="cb-plc-incubatees">Number of incubatees assisted by Technology Business Incubators</label></div>
+            <div class="inp"><input type="text" id="t-plc-incubatees"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-plc-tbi-invest"><label for="cb-plc-tbi-invest">Total investments or grants received by the startups under the Technology Business incubators</label></div>
+            <div class="inp"><input type="text" id="t-plc-tbi-invest"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-plc-industry-peso"><label for="cb-plc-industry-peso">Total Peso Value of industry-sponsored research expenditures</label></div>
+            <div class="inp"><input type="text" id="t-plc-industry-peso"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-plc-private-entities"><label for="cb-plc-private-entities">Number of individual private sector entities funding research grants and contracts</label></div>
+            <div class="inp"><input type="text" id="t-plc-private-entities"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-plc-industry-collab"><label for="cb-plc-industry-collab">Number of industry collaborators</label></div>
+            <div class="inp"><input type="text" id="t-plc-industry-collab"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-plc-community-collab"><label for="cb-plc-community-collab">Number of community-based collaborators</label></div>
+            <div class="inp"><input type="text" id="t-plc-community-collab"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-plc-private-grants"><label for="cb-plc-private-grants">Number of grants, contracts and sub-agreements from private sector entities</label></div>
+            <div class="inp"><input type="text" id="t-plc-private-grants"/></div>
+          </div>
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-plc-util-commercialized"><label for="cb-plc-util-commercialized">Number of utility models commercialized/adopted by communities, LGUs, independent enterprises</label></div>
+            <div class="inp"><input type="text" id="t-plc-util-commercialized"/></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Policies -->
+      <div class="sixp-section">
+        <div class="sixp-header">Policies</div>
+        <div class="sixp-body">
+          <div class="sixp-g">
+            <div class="lbl"><input type="checkbox" id="cb-pol-policies"><label for="cb-pol-policies">Number of policies, policy recommendations, local and national legislative bills developed, filed, and passed</label></div>
+            <div class="inp"><input type="text" id="t-pol-policies"/></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ SECTION 12: TARGET BENEFICIARIES ══ -->
+  <div class="form-card">
+    <div class="form-card-header">TARGET BENEFICIARIES <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <div class="quill-wrap"><div id="editor-beneficiaries"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 13: SUSTAINABILITY PLAN ══ -->
+  <div class="form-card">
+    <div class="form-card-header">SUSTAINABILITY PLAN <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <div class="quill-wrap"><div id="editor-sustainability"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 14: GAD SCORE ══ -->
+  <div class="form-card">
+    <div class="form-card-header">GENDER AND DEVELOPMENT (GAD) SCORE <span class="required-star">*</span></div>
+    <div class="form-card-body">
+<div class="row g-2 mt-2">
+        <div class="col-md-4">
+          <label class="form-label-bold">GAD Score:</label>
+          <input type="number" id="f-gad-score" class="form-control" min="0" max="100" placeholder="0"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 15: LIMITATIONS ══ -->
+  <div class="form-card">
+    <div class="form-card-header">LIMITATIONS OF THE PROJECT <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <div class="quill-wrap"><div id="editor-limitations"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 16: RISKS & ASSUMPTIONS ══ -->
+  <div class="form-card">
+    <div class="form-card-header">LIST OF RISKS AND ASSUMPTIONS RISK MANAGEMENT PLAN <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <div class="quill-wrap"><div id="editor-risks"></div></div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 17: LITERATURE CITED ══ -->
+  <div class="form-card">
+    <div class="form-card-header">LITERATURE CITED <span class="required-star">*</span></div>
+    <div class="form-card-body">
+      <div class="quill-wrap"><div id="editor-literature"></div></div>
+    </div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <button id="btn-step2-prev" class="btn-prev">&#8592; Previous</button>
+    <button id="btn-step2-next" class="btn-next">Next &#8594;</button>
+  </div>
+
+</div><!-- /main-content -->
+
+<!-- ════════════ STEP 3 VIEW (INLINE) ════════════ -->
+<div class="main-content step-view-hidden" id="step3-view">
+
+  <!-- Step Bar -->
+  <div class="step-bar">
+    <div class="step-item"><div class="step-circle done">&#10003;</div><div class="step-label">Step 1<br><strong>Proponent Profile</strong></div></div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle done">&#10003;</div><div class="step-label">Step 2<br><strong>Project Details</strong></div></div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle active">3</div><div class="step-label active">Step 3<br><strong>Line-Item Budget</strong></div></div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle">4</div><div class="step-label">Step 4<br><strong>Team Members</strong></div></div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle">5</div><div class="step-label">Step 5<br><strong>Supplementary Files</strong></div></div>
+    <div class="step-connector"></div>
+    <div class="step-item"><div class="step-circle">6</div><div class="step-label">Step 6<br><strong>Review &amp; Submit</strong></div></div>
+  </div>
+
+  <h5 style="font-weight:700;color:#1e3a5f;margin-bottom:14px;">Step 3: Line-Item Budget</h5>
+
+  <!-- ══ 1. COUNTERPART ══ -->
+  <div class="budget-card">
+    <div class="budget-card-header">Counterpart</div>
+    <div class="budget-card-body">
+      <table class="budget-table">
+        <thead>
+          <tr>
+            <th style="width:36px;">#</th>
+            <th>YEAR</th>
+            <th class="num">COUNTERPART FUND (₱)</th>
+            <th class="num">DOST FUND (₱)</th>
+            <th class="num">TOTAL (₱)</th>
+            <th style="width:70px;text-align:center;">ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="counterpart-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 2. PERSONNEL SERVICES ══ -->
+  <div class="budget-card">
+    <div class="budget-card-header">
+      Personnel Services
+      <button class="btn-add" onclick="openPersonnelModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:10px;height:10px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Personnel Services
+      </button>
+    </div>
+    <div class="budget-card-body">
+      <table class="budget-table">
+        <thead>
+          <tr>
+            <th style="width:45%;">ITEMS</th>
+            <th class="num">COUNTERPART FUND (₱)</th>
+            <th class="num">DOST FUND (₱)</th>
+            <th class="num">TOTAL (₱)</th>
+            <th style="width:95px;text-align:center;">ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="personnel-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 3. MOOE ══ -->
+  <div class="budget-card">
+    <div class="budget-card-header">
+      Maintenance and Other Operating Expenses
+      <button class="btn-add" onclick="openMOOEModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:10px;height:10px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add MOOE
+      </button>
+    </div>
+    <div class="budget-card-body">
+      <table class="budget-table">
+        <thead>
+          <tr>
+            <th style="width:45%;">ITEMS</th>
+            <th class="num">COUNTERPART FUND (₱)</th>
+            <th class="num">DOST FUND (₱)</th>
+            <th class="num">TOTAL (₱)</th>
+            <th style="width:95px;text-align:center;">ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="mooe-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 4. CAPITAL OUTLAY ══ -->
+  <div class="budget-card">
+    <div class="budget-card-header">
+      Capital Outlay
+      <button class="btn-add" onclick="openCapitalModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:10px;height:10px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Add Capital Outlay
+      </button>
+    </div>
+    <div class="budget-card-body">
+      <table class="budget-table">
+        <thead>
+          <tr>
+            <th style="width:45%;">ITEMS</th>
+            <th class="num">COUNTERPART FUND (₱)</th>
+            <th class="num">DOST FUND (₱)</th>
+            <th class="num">TOTAL (₱)</th>
+            <th style="width:95px;text-align:center;">ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="capital-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 5. BUDGET SUMMARY ══ -->
+  <div class="totals-card">
+    <h5>Budget Summary</h5>
+    <div class="t-row"><span>Personnel Services - Counterpart Fund</span><span class="t-amt" id="t-ps-cf">₱0.00</span></div>
+    <div class="t-row"><span>Personnel Services - DOST Fund</span><span class="t-amt" id="t-ps-df">₱0.00</span></div>
+    <div class="t-row"><span>MOOE - Counterpart Fund</span><span class="t-amt" id="t-mo-cf">₱0.00</span></div>
+    <div class="t-row"><span>MOOE - DOST Fund</span><span class="t-amt" id="t-mo-df">₱0.00</span></div>
+    <div class="t-row"><span>Capital Outlay - Counterpart Fund</span><span class="t-amt" id="t-co-cf">₱0.00</span></div>
+    <div class="t-row"><span>Capital Outlay - DOST Fund</span><span class="t-amt" id="t-co-df">₱0.00</span></div>
+    <div class="t-row" style="font-weight:700;margin-top:6px;"><span>Total Proposed Counterpart Fund</span><span class="t-amt" id="t-tot-cf">₱0.00</span></div>
+    <div class="t-row" style="font-weight:700;"><span>Total Proposed DOST Fund</span><span class="t-amt" id="t-tot-df">₱0.00</span></div>
+    <div class="t-grand"><span>GRAND TOTAL</span><span id="t-grand">₱0.00</span></div>
+  </div>
+
+  <!-- Step 3 Action Bar -->
+  <div class="action-bar">
+    <button id="btn-step3-prev" class="btn-prev">&#8592; Previous</button>
+    <button id="btn-step3-next" class="btn-next">Next &#8594;</button>
+  </div>
+
+</div><!-- /step3-view -->
+
+<!-- ════ MODAL: COUNTERPART AGENCY ════ -->
+<div class="modal fade" id="agencyModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="agencyModalTitle">Add Counterpart Agency</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="am-year"/>
+        <input type="hidden" id="am-id"/>
+        <div class="mb-3">
+          <label class="form-label-bold">Agency Name <span class="required-star">*</span></label>
+          <input type="text" id="am-name" class="form-control form-control-sm" placeholder="e.g., DLSU-Laguna"/>
+        </div>
+        <div class="mb-3">
+          <label class="form-label-bold">Counterpart Amount (₱)</label>
+          <input type="number" id="am-amt" class="form-control form-control-sm" min="0" step="0.01" value="0"/>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-sm btn-primary" onclick="saveAgency()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: PERSONNEL ════ -->
+<div class="modal fade" id="personnelModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="personnelModalTitle">Add/Edit Personnel Services</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="pm-id"/>
+        <style>
+          .pm-row { display:grid; grid-template-columns:200px 1fr; gap:8px; align-items:start; margin-bottom:12px; }
+          .pm-lbl { font-size:12px; font-weight:600; color:#374151; text-align:right; padding-top:6px; }
+        </style>
+
+        <div class="pm-row">
+          <div class="pm-lbl">Cost type <span class="required-star">*</span></div>
+          <select id="pm-cost-type" class="form-select form-select-sm" onchange="pmToggleFields()">
+            <option value="direct">Direct</option>
+            <option value="indirect">Indirect</option>
+          </select>
+        </div>
+
+        <div class="pm-row" id="pm-pstype-row">
+          <div class="pm-lbl">PS type <span class="required-star">*</span></div>
+          <select id="pm-ps-type" class="form-select form-select-sm">
+            <option value="salary">Salary</option>
+            <option value="honoraria">Honoraria</option>
+          </select>
+        </div>
+
+        <div class="pm-row" id="pm-position-row">
+          <div class="pm-lbl">Position/Designation <span class="required-star">*</span></div>
+          <select id="pm-position" class="form-select form-select-sm">
+            <option value="">-- Select Position --</option>
+            <option>Project Leader (2009)</option>
+            <option>Co-Project Leader (2009)</option>
+            <option>Science Research Specialist II</option>
+            <option>Science Research Specialist I</option>
+            <option>Science Research Analyst II</option>
+            <option>Science Research Analyst I</option>
+            <option>Science Research Assistant</option>
+            <option>Research Associate III (2009)</option>
+            <option>Research Associate II (2009)</option>
+            <option>Research Associate I (2009)</option>
+            <option>Laboratory Technician II</option>
+            <option>Laboratory Technician I</option>
+            <option>Project Development Officer II</option>
+            <option>Project Development Officer I</option>
+            <option>S&amp;T Consultant</option>
+            <option>Administrative Officer II</option>
+            <option>Administrative Aide VI</option>
+            <option>Other / Not Listed</option>
+          </select>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-lbl">Number of Position/s <span class="required-star">*</span></div>
+          <input type="number" id="pm-num-pos" class="form-control form-control-sm" min="1" value="1" oninput="pmAutoCalc()"/>
+        </div>
+
+        <div class="pm-row" id="pm-period-row">
+          <div class="pm-lbl">Period of Involvement <span class="required-star">*</span> <small style="font-weight:400;color:#6b7280;">(months)</small></div>
+          <input type="number" id="pm-period" class="form-control form-control-sm" min="1" value="12" oninput="pmAutoCalc()"/>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-lbl">Funding agency <span class="required-star">*</span></div>
+          <select id="pm-funding" class="form-select form-select-sm" onchange="pmToggleFields()">
+            <option value="dost">DOST</option>
+            <option value="counterpart">Counterpart</option>
+          </select>
+        </div>
+
+        <div class="pm-row" id="pm-agency-row">
+          <div class="pm-lbl">Agency where DOST fund will be allocated <span class="required-star">*</span></div>
+          <input type="text" id="pm-agency" class="form-control form-control-sm" placeholder="e.g., De La Salle University - Manila (DLSU-Manila)"/>
+        </div>
+
+        <div class="pm-row" id="pm-pct-row">
+          <div class="pm-lbl">Percent Time Devoted to the Project <span class="required-star">*</span></div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="number" id="pm-pct" class="form-control form-control-sm" min="1" max="100" value="30" oninput="pmAutoCalc()" style="max-width:120px;"/>
+            <span style="font-size:12px;color:#6b7280;">%</span>
+          </div>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-lbl">Monthly Rate (₱)</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" id="pm-rate" class="form-control form-control-sm" min="0" step="0.01" value="0" oninput="pmAutoCalc()" style="max-width:160px;"/>
+            <span style="font-size:11px;color:#6b7280;">Computed Total: <strong id="pm-computed">₱0.00</strong></span>
+          </div>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-lbl">Total Amount (₱) <span class="required-star">*</span></div>
+          <input type="number" id="pm-total-amt" class="form-control form-control-sm" min="0" step="0.01" value="0"/>
+        </div>
+
+        <div class="pm-row">
+          <div class="pm-lbl">Responsibilities <span class="required-star">*</span></div>
+          <textarea id="pm-responsibilities" class="form-control form-control-sm" rows="3" placeholder="Describe responsibilities..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-sm btn-primary" onclick="savePersonnel()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: MOOE ════ -->
+<div class="modal fade" id="mooeModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="mooeModalTitle">Add/Edit MOOE</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="mm-id"/>
+        <style>
+          .mm-row { display:grid; grid-template-columns:190px 1fr; gap:8px; align-items:start; margin-bottom:12px; }
+          .mm-lbl { font-size:12px; font-weight:600; color:#374151; text-align:right; padding-top:6px; }
+        </style>
+
+        <div class="mm-row">
+          <div class="mm-lbl">Cost type <span class="required-star">*</span></div>
+          <select id="mm-cost-type" class="form-select form-select-sm">
+            <option value="direct">Direct</option>
+            <option value="indirect">Indirect</option>
+          </select>
+        </div>
+
+        <div class="mm-row">
+          <div class="mm-lbl">MOOE <span class="required-star">*</span></div>
+          <select id="mm-mooe" class="form-select form-select-sm" onchange="mmCascadeSubcat()">
+            <option value="">Select item</option>
+          </select>
+        </div>
+
+        <div class="mm-row">
+          <div class="mm-lbl">MOOE Subcategories <span class="required-star">*</span></div>
+          <select id="mm-subcat" class="form-select form-select-sm" onchange="mmCascadeItem()">
+            <option value="">Select item</option>
+          </select>
+        </div>
+
+        <div class="mm-row">
+          <div class="mm-lbl">MOOE Item <span class="required-star">*</span></div>
+          <select id="mm-item" class="form-select form-select-sm">
+            <option value="">Select item</option>
+          </select>
+        </div>
+
+        <div class="mm-row">
+          <div class="mm-lbl">MOOE Specification <span class="required-star">*</span></div>
+          <input type="text" id="mm-spec" class="form-control form-control-sm" placeholder="e.g., Laboratory reagents for THz synthesis experiment"/>
+        </div>
+
+        <div class="mm-row">
+          <div class="mm-lbl">Amount <span class="required-star">*</span></div>
+          <input type="number" id="mm-amount" class="form-control form-control-sm" min="0" step="0.01" value="0"/>
+        </div>
+
+        <div class="mm-row">
+          <div class="mm-lbl">Funding agency <span class="required-star">*</span></div>
+          <select id="mm-funding" class="form-select form-select-sm">
+            <option value="DOST">Department of Science and Technology (DOST)</option>
+            <option>De La Salle University - Manila (DLSU-Manila)</option>
+            <option>University of the Philippines (UP)</option>
+            <option>Ateneo de Manila University (ADMU)</option>
+            <option>University of Santo Tomas (UST)</option>
+            <option>Mapua University</option>
+            <option>Polytechnic University of the Philippines (PUP)</option>
+            <option>Central Luzon State University (CLSU)</option>
+            <option>Mindanao State University (MSU)</option>
+            <option>Other Government Agency</option>
+            <option>Other Private Institution</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-sm btn-primary" onclick="saveMOOE()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: CAPITAL OUTLAY ════ -->
+<div class="modal fade" id="capitalModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="capitalModalTitle">Add/Edit Capital Outlay</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="cm-id"/>
+
+        <div class="mm-row">
+          <div class="mm-lbl">Cost type <span class="required-star">*</span></div>
+          <select id="cm-cost-type" class="form-select form-select-sm">
+            <option value="direct">Direct</option>
+            <option value="indirect">Indirect</option>
+          </select>
+        </div>
+
+        <div class="mm-row">
+          <div class="mm-lbl">Quantity <span class="required-star">*</span></div>
+          <input type="number" id="cm-qty" class="form-control form-control-sm" min="1" value="1" oninput="cmAutoCalc()"/>
+        </div>
+
+        <div class="mm-row">
+          <div class="mm-lbl">Description <span class="required-star">*</span></div>
+          <input type="text" id="cm-desc" class="form-control form-control-sm" placeholder="e.g., Power meter for THz system"/>
+        </div>
+
+        <div class="mm-row">
+          <div class="mm-lbl">Amount <span class="required-star">*</span></div>
+          <div>
+            <input type="number" id="cm-amount" class="form-control form-control-sm" min="0" step="0.01" value="0" oninput="cmAutoCalc()"/>
+            <div style="font-size:11px;color:#6b7280;margin-top:3px;">Total: <span id="cm-total-display">₱0.00</span></div>
+          </div>
+        </div>
+
+        <div class="mm-row">
+          <div class="mm-lbl">Funding agency <span class="required-star">*</span></div>
+          <select id="cm-funding" class="form-select form-select-sm" onchange="cmToggleFields()">
+            <option value="DOST">Department of Science and Technology (DOST)</option>
+            <option>De La Salle University - Manila (DLSU-Manila)</option>
+            <option>De La Salle University - Laguna (DLSU-Laguna)</option>
+            <option>University of the Philippines (UP)</option>
+            <option>Ateneo de Manila University (ADMU)</option>
+            <option>University of Santo Tomas (UST)</option>
+            <option>Mapua University</option>
+            <option>Polytechnic University of the Philippines (PUP)</option>
+            <option>Central Luzon State University (CLSU)</option>
+            <option>Mindanao State University (MSU)</option>
+            <option>Other Government Agency</option>
+            <option>Other Private Institution</option>
+          </select>
+        </div>
+
+        <div class="mm-row" id="cm-agency-row" style="display:none;">
+          <div class="mm-lbl">Agency where DOST fund will be allocated <span class="required-star">*</span></div>
+          <select id="cm-agency" class="form-select form-select-sm">
+            <option value="">Select item</option>
+            <option>De La Salle University - Manila (DLSU-Manila)</option>
+            <option>De La Salle University - Laguna (DLSU-Laguna)</option>
+            <option>University of the Philippines (UP)</option>
+            <option>Ateneo de Manila University (ADMU)</option>
+            <option>University of Santo Tomas (UST)</option>
+            <option>Mapua University</option>
+            <option>Polytechnic University of the Philippines (PUP)</option>
+            <option>Central Luzon State University (CLSU)</option>
+            <option>Mindanao State University (MSU)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-sm btn-primary" onclick="saveCapital()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ HISTORY PANEL ════════════ -->
+<div id="history-panel">
+  <div class="hp-header">
+    <span class="hp-title">&#128196; Edit History</span>
+    <button class="hp-close" onclick="closeHistoryPanel()">&times;</button>
+  </div>
+  <div id="history-list"><div class="h-empty">No history yet.</div></div>
+</div>
+
+<!-- ════════════ SCRIPTS ════════════ -->
+<!-- Firebase Compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+  firebase.initializeApp({
+    apiKey:            "AIzaSyDoGAGzN22vmtYqtC6Ad4AS6eUR4JqZw4Y",
+    authDomain:        "dmpis-v2.firebaseapp.com",
+    projectId:         "dmpis-v2",
+    storageBucket:     "dmpis-v2.firebasestorage.app",
+    messagingSenderId: "1025250630173",
+    appId:             "1:1025250630173:web:611cb3d6cac27c04f4"
+  });
+  const db   = firebase.firestore();
+  const auth = firebase.auth();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+const STORAGE_KEY = 'dpmis_step2_draft';
+let saveTimer        = null;
+let siteCounter      = 0;
+let currentProposalId = null;
+let realtimeUnsub     = null;
+
+// ── Country options (matches DPMISV2) ──
+const COUNTRY_OPTIONS = [
+  ['','Select Country'],['3','Afghanistan'],['6','Albania'],['62','Algeria'],['11','American Samoa'],
+  ['1','Andorra'],['8','Angola'],['5','Anguilla'],['9','Antarctica'],['4','Antigua and Barbuda'],
+  ['10','Argentina'],['7','Armenia'],['14','Aruba'],['13','Australia'],['12','Austria'],
+  ['16','Azerbaijan'],['32','Bahamas'],['23','Bahrain'],['19','Bangladesh'],['18','Barbados'],
+  ['36','Belarus'],['20','Belgium'],['37','Belize'],['25','Benin'],['27','Bermuda'],
+  ['33','Bhutan'],['29','Bolivia'],['17','Bosnia and Herzegovina'],['35','Botswana'],
+  ['34','Bouvet Island'],['31','Brazil'],['106','British Indian Ocean Territory'],
+  ['28','Brunei Darussalam'],['22','Bulgaria'],['21','Burkina Faso'],['24','Burundi'],
+  ['117','Cambodia'],['47','Cameroon'],['38','Canada'],['52','Cape Verde'],
+  ['30','Caribbean Netherlands'],['124','Cayman Islands'],['41','Central African Republic'],
+  ['215','Chad'],['46','Chile'],['48','China'],['54','Christmas Island'],
+  ['39','Cocos (Keeling) Islands'],['49','Colombia'],['119','Comoros'],['42','Congo'],
+  ['40','Congo, Democratic Republic of'],['45','Cook Islands'],['50','Costa Rica'],
+  ['44',"Côte d'Ivoire"],['98','Croatia'],['51','Cuba'],['53','Curaçao'],['55','Cyprus'],
+  ['56','Czech Republic'],['59','Denmark'],['58','Djibouti'],['60','Dominica'],
+  ['61','Dominican Republic'],['63','Ecuador'],['65','Egypt'],['210','El Salvador'],
+  ['88','Equatorial Guinea'],['67','Eritrea'],['64','Estonia'],['69','Ethiopia'],
+  ['72','Falkland Islands'],['74','Faroe Islands'],['71','Fiji'],['70','Finland'],
+  ['75','France'],['80','French Guiana'],['175','French Polynesia'],
+  ['216','French Southern Territories'],['76','Gabon'],['85','Gambia'],['79','Georgia'],
+  ['57','Germany'],['82','Ghana'],['83','Gibraltar'],['89','Greece'],['84','Greenland'],
+  ['78','Grenada'],['87','Guadeloupe'],['92','Guam'],['91','Guatemala'],['81','Guernsey'],
+  ['86','Guinea'],['93','Guinea-Bissau'],['94','Guyana'],['99','Haiti'],
+  ['96','Heard and McDonald Islands'],['97','Honduras'],['95','Hong Kong'],['100','Hungary'],
+  ['109','Iceland'],['105','India'],['101','Indonesia'],['108','Iran'],['107','Iraq'],
+  ['102','Ireland'],['104','Isle of Man'],['103','Israel'],['110','Italy'],['112','Jamaica'],
+  ['114','Japan'],['111','Jersey'],['113','Jordan'],['125','Kazakhstan'],['115','Kenya'],
+  ['118','Kiribati'],['123','Kuwait'],['116','Kyrgyzstan'],
+  ['126',"Lao People's Democratic Republic"],['135','Latvia'],['127','Lebanon'],
+  ['132','Lesotho'],['131','Liberia'],['136','Libya'],['129','Liechtenstein'],
+  ['133','Lithuania'],['134','Luxembourg'],['148','Macau'],['144','Macedonia'],
+  ['142','Madagascar'],['156','Malawi'],['158','Malaysia'],['155','Maldives'],['145','Mali'],
+  ['153','Malta'],['143','Marshall Islands'],['150','Martinique'],['151','Mauritania'],
+  ['154','Mauritius'],['246','Mayotte'],['157','Mexico'],
+  ['73','Micronesia, Federated States of'],['139','Moldova'],['138','Monaco'],
+  ['147','Mongolia'],['140','Montenegro'],['152','Montserrat'],['137','Morocco'],
+  ['159','Mozambique'],['146','Myanmar'],['160','Namibia'],['169','Nauru'],['168','Nepal'],
+  ['161','New Caledonia'],['171','New Zealand'],['165','Nicaragua'],['162','Niger'],
+  ['164','Nigeria'],['170','Niue'],['163','Norfolk Island'],['121','North Korea'],
+  ['149','Northern Mariana Islands'],['167','Norway'],['172','Oman'],['178','Pakistan'],
+  ['185','Palau'],['183','Palestine, State of'],['173','Panama'],['176','Papua New Guinea'],
+  ['186','Paraguay'],['174','Peru'],['177','Philippines'],['181','Pitcairn'],['179','Poland'],
+  ['184','Portugal'],['182','Puerto Rico'],['187','Qatar'],['188','Réunion'],['189','Romania'],
+  ['191','Russian Federation'],['192','Rwanda'],['26','Saint Barthélemy'],
+  ['199','Saint Helena'],['120','Saint Kitts and Nevis'],['128','Saint Lucia'],
+  ['237','Saint Vincent and the Grenadines'],['141','Saint-Martin (France)'],['244','Samoa'],
+  ['204','San Marino'],['209','Sao Tome and Principe'],['193','Saudi Arabia'],
+  ['205','Senegal'],['190','Serbia'],['195','Seychelles'],['203','Sierra Leone'],
+  ['198','Singapore'],['211','Sint Maarten (Dutch part)'],['202','Slovakia'],['200','Slovenia'],
+  ['194','Solomon Islands'],['206','Somalia'],['247','South Africa'],
+  ['90','South Georgia and the South Sandwich Islands'],['122','South Korea'],
+  ['208','South Sudan'],['68','Spain'],['130','Sri Lanka'],['180','St. Pierre and Miquelon'],
+  ['196','Sudan'],['207','Suriname'],['201','Svalbard and Jan Mayen Islands'],
+  ['213','Swaziland'],['197','Sweden'],['43','Switzerland'],['212','Syria'],['228','Taiwan'],
+  ['219','Tajikistan'],['229','Tanzania'],['218','Thailand'],['166','The Netherlands'],
+  ['221','Timor-Leste'],['217','Togo'],['220','Tokelau'],['224','Tonga'],
+  ['226','Trinidad and Tobago'],['223','Tunisia'],['225','Turkey'],['222','Turkmenistan'],
+  ['214','Turks and Caicos Islands'],['227','Tuvalu'],['231','Uganda'],['230','Ukraine'],
+  ['2','United Arab Emirates'],['77','United Kingdom'],
+  ['232','United States Minor Outlying Islands'],['233','United States of America'],
+  ['234','Uruguay'],['235','Uzbekistan'],['242','Vanuatu'],['236','Vatican'],
+  ['238','Venezuela'],['241','Vietnam'],['239','Virgin Islands (British)'],
+  ['240','Virgin Islands (U.S.)'],['243','Wallis and Futuna Islands'],['66','Western Sahara'],
+  ['245','Yemen'],['248','Zambia'],['249','Zimbabwe'],['15','Åland Islands']
+];
+
+const REGION_OPTIONS = [
+  ['','Select Region'],
+  ['17','BANGSAMORO AUTONOMOUS REGION IN MUSLIM MINDANAO (BARMM)'],
+  ['2','CORDILLERA ADMINISTRATIVE REGION (CAR)'],
+  ['1','NATIONAL CAPITAL REGION (NCR)'],
+  ['18','NEGROS ISLAND REGION'],
+  ['3','REGION 01 (ILOCOS REGION)'],
+  ['20','REGION 02 (CAGAYAN VALLEY)'],
+  ['5','REGION 03 (CENTRAL LUZON REGION)'],
+  ['6','REGION 04A (CALABARZON REGION)'],
+  ['19','REGION 04B (MIMAROPA REGION)'],
+  ['22','REGION 05 (Bicol Region)'],
+  ['21','REGION 06 (Western Visayas)'],
+  ['10','REGION 07 (CENTRAL VISAYAS REGION)'],
+  ['11','REGION 08 (EASTERN VISAYAS REGION)'],
+  ['12','REGION 09 (ZAMBOANGA PENINSULA REGION)'],
+  ['13','REGION 10 (NORTHERN MINDANAO REGION)'],
+  ['14','REGION 11 (DAVAO REGION)'],
+  ['15','REGION 12 (SOCCSKSARGEN REGION)'],
+  ['16','REGION 13 (CARAGA REGION)']
+];
+
+// ── Philippine Province & Municipality Cascade ──
+const PROVINCE_DATA = {
+  '1' : [['NCR','Metro Manila (NCR — no province level)']],
+  '2' : [['ABR','Abra'],['APA','Apayao'],['BEN','Benguet'],['IFU','Ifugao'],['KAL','Kalinga'],['MTP','Mountain Province']],
+  '3' : [['ILN','Ilocos Norte'],['ILS','Ilocos Sur'],['LAU','La Union'],['PAN','Pangasinan']],
+  '20': [['BAT','Batanes'],['CAG','Cagayan'],['ISA','Isabela'],['NUV','Nueva Vizcaya'],['QUI','Quirino']],
+  '5' : [['AUR','Aurora'],['BTA','Bataan'],['BUL','Bulacan'],['NUE','Nueva Ecija'],['PAM','Pampanga'],['TAR','Tarlac'],['ZBL','Zambales']],
+  '6' : [['BTG','Batangas'],['CAV','Cavite'],['LAG','Laguna'],['QUE','Quezon'],['RIZ','Rizal']],
+  '19': [['MRQ','Marinduque'],['OCM','Occidental Mindoro'],['ORM','Oriental Mindoro'],['PAL','Palawan'],['ROM','Romblon']],
+  '22': [['ALB','Albay'],['CAN','Camarines Norte'],['CAS','Camarines Sur'],['CAT','Catanduanes'],['MAS','Masbate'],['SOR','Sorsogon']],
+  '21': [['AKL','Aklan'],['ANT','Antique'],['CAP','Capiz'],['GUI','Guimaras'],['ILO','Iloilo'],['NOC','Negros Occidental']],
+  '10': [['BOH','Bohol'],['CEB','Cebu'],['NOR','Negros Oriental'],['SIQ','Siquijor']],
+  '11': [['BIL','Biliran'],['EAS','Eastern Samar'],['LEY','Leyte'],['NOS','Northern Samar'],['SAM','Samar'],['SOL','Southern Leyte']],
+  '12': [['ZAN','Zamboanga del Norte'],['ZAS','Zamboanga del Sur'],['ZSI','Zamboanga Sibugay']],
+  '13': [['BUK','Bukidnon'],['CMG','Camiguin'],['LDN','Lanao del Norte'],['MIO','Misamis Occidental'],['MOR','Misamis Oriental']],
+  '14': [['DAO','Davao de Oro'],['DAV','Davao del Norte'],['DAS','Davao del Sur'],['DOC','Davao Occidental'],['DOR','Davao Oriental']],
+  '15': [['NCO','North Cotabato'],['SRG','Sarangani'],['SCO','South Cotabato'],['SKU','Sultan Kudarat']],
+  '16': [['AGN','Agusan del Norte'],['AGS','Agusan del Sur'],['DIN','Dinagat Islands'],['SUN','Surigao del Norte'],['SUS','Surigao del Sur']],
+  '17': [['BAS','Basilan'],['LDS','Lanao del Sur'],['MGN','Maguindanao del Norte'],['MGS','Maguindanao del Sur'],['SUL','Sulu'],['TAW','Tawi-Tawi']],
+  '18': [['NOC','Negros Occidental'],['NOR','Negros Oriental']]
+};
+
+const MUNICIPALITY_DATA = {
+  'NCR':['City of Manila','Quezon City','Caloocan City','Las Piñas City','Makati City','Malabon City','Mandaluyong City','Marikina City','Muntinlupa City','Navotas City','Parañaque City','Pasay City','Pasig City','Pateros','San Juan City','Taguig City','Valenzuela City'],
+  'ABR':['Bangued','Boliney','Bucay','Bucloc','Daguioman','Danglas','Dolores','La Paz','Lacub','Lagangilang','Lagayan','Langiden','Licuan-Baay','Luba','Malibcong','Manabo','Peñarrubia','Pidigan','Pilar','Sallapadan','San Isidro','San Juan','San Quintin','Tayum','Tineg','Tubo','Villaviciosa'],
+  'APA':['Calanasan','Conner','Flora','Kabugao','Luna','Pudtol','Santa Marcela'],
+  'BEN':['Atok','Bakun','Bokod','Buguias','Itogon','Kabayan','Kapangan','Kibungan','La Trinidad','Mankayan','Sablan','Tuba','Tublay'],
+  'IFU':['Aguinaldo','Alfonso Lista','Asipulo','Banaue','Hingyon','Hungduan','Kiangan','Lagawe','Lamut','Mayoyao','Tinoc'],
+  'KAL':['Balbalan','Lubuagan','Pasil','Pinukpuk','Rizal','Tabuk City','Tanudan','Tinglayan'],
+  'MTP':['Barlig','Bauko','Besao','Bontoc','Natonin','Paracelis','Sabangan','Sadanga','Sagada','Tadian'],
+  'ILN':['Adams','Bacarra','Badoc','Bangui','Banna','Batac City','Burgos','Carasi','Currimao','Dingras','Dumalneg','Laoag City','Marcos','Nueva Era','Pagudpud','Paoay','Pasuquin','Piddig','Pinili','San Nicolas','Sarrat','Solsona','Vintar'],
+  'ILS':['Alilem','Banayoyo','Bantay','Burgos','Cabugao','Candon City','Caoayan','Cervantes','Galimuyod','Gregorio del Pilar','Lidlidda','Magsingal','Nagbukel','Narvacan','Quirino','Salcedo','San Emilio','San Esteban','San Ildefonso','San Juan','San Vicente','Santa','Santa Catalina','Santa Cruz','Santa Lucia','Santa Maria','Santiago','Santo Domingo','Sigay','Sinait','Sugpon','Suyo','Tagudin','Vigan City'],
+  'LAU':['Agoo','Aringay','Bacnotan','Bagulin','Balaoan','Bangar','Bauang','Burgos','Caba','Luna','Naguilian','Pugo','Rosario','San Fernando City','San Gabriel','San Juan','Santo Tomas','Santol','Sudipen','Tubao'],
+  'PAN':['Agno','Aguilar','Alaminos City','Alcala','Anda','Asingan','Balungao','Bani','Basista','Bautista','Bayambang','Binalonan','Binmaley','Bolinao','Bugallon','Burgos','Calasiao','Dagupan City','Dasol','Infanta','Labrador','Laoac','Lingayen','Mabini','Malasiqui','Manaoag','Mangaldan','Mangatarem','Mapandan','Natividad','Pozorrubio','Rosales','San Carlos City','San Fabian','San Jacinto','San Manuel','San Nicolas','San Quintin','Santa Barbara','Santa Maria','Santo Tomas','Sison','Sual','Tayug','Umingan','Urbiztondo','Urdaneta City','Villasis'],
+  'BAT':['Basco','Itbayat','Ivana','Mahatao','Sabtang','Uyugan'],
+  'CAG':['Abulug','Alcala','Allacapan','Amulung','Aparri','Baggao','Ballesteros','Buguey','Calayan','Camalaniugan','Claveria','Enrile','Gattaran','Gonzaga','Iguig','Lal-Lo','Lasam','Pamplona','Peñablanca','Piat','Rizal','Sanchez-Mira','Santa Ana','Santa Praxedes','Santa Teresita','Santo Niño','Solana','Tuao','Tuguegarao City'],
+  'ISA':['Alicia','Angadanan','Aurora','Benito Soliven','Burgos','Cabagan','Cabatuan','Cauayan City','Cordon','Delfin Albano','Dinapigue','Divilacan','Echague','Gamu','Ilagan City','Jones','Luna','Maconacon','Mallig','Naguilian','Palanan','Quezon','Quirino','Ramon','Reina Mercedes','Roxas','San Agustin','San Guillermo','San Isidro','San Manuel','San Mariano','San Mateo','San Pablo','Santa Maria','Santiago City','Santo Tomas','Tumauini'],
+  'NUV':['Alfonso Castañeda','Ambaguio','Aritao','Bagabag','Bambang','Bayombong','Diadi','Dupax del Norte','Dupax del Sur','Kasibu','Kayapa','Quezon','Santa Fe','Solano','Villaverde'],
+  'QUI':['Aglipay','Cabarroguis','Diffun','Maddela','Nagtipunan','Saguday'],
+  'AUR':['Baler','Casiguran','Dilasag','Dinalungan','Dingalan','Dipaculao','Maria Aurora','San Luis'],
+  'BTA':['Abucay','Bagac','Balanga City','Dinalupihan','Hermosa','Limay','Mariveles','Morong','Orani','Orion','Pilar','Samal'],
+  'BUL':['Angat','Balagtas','Baliuag','Bocaue','Bulakan','Bustos','Calumpit','Doña Remedios Trinidad','Guiguinto','Hagonoy','Malolos City','Marilao','Meycauayan City','Norzagaray','Obando','Pandi','Paombong','Plaridel','Pulilan','San Ildefonso','San Jose del Monte City','San Miguel','San Rafael','Santa Maria'],
+  'NUE':['Aliaga','Bongabon','Cabanatuan City','Cabiao','Carranglan','Cuyapo','Gabaldon','Gapan City','General Mamerto Natividad','General Tinio','Guimba','Jaen','Laur','Licab','Llanera','Lupao','Muñoz City','Nampicuan','Palayan City','Pantabangan','Peñaranda','Quezon','Rizal','San Antonio','San Isidro','San Jose City','San Leonardo','Santa Rosa','Santo Domingo','Talavera','Talugtug','Zaragoza'],
+  'PAM':['Angeles City','Apalit','Arayat','Bacolor','Candaba','Floridablanca','Guagua','Lubao','Mabalacat City','Macabebe','Magalang','Masantol','Mexico','Minalin','Porac','San Fernando City','San Luis','San Simon','Santa Ana','Santa Rita','Santo Tomas','Sasmuan'],
+  'TAR':['Anao','Bamban','Camiling','Capas','Concepcion','Gerona','La Paz','Mayantoc','Moncada','Paniqui','Pura','Ramos','San Clemente','San Jose','San Manuel','Santa Ignacia','Tarlac City','Victoria'],
+  'ZBL':['Botolan','Cabangan','Candelaria','Castillejos','Iba','Masinloc','Olongapo City','Palauig','San Antonio','San Felipe','San Marcelino','San Narciso','Santa Cruz','Subic'],
+  'BTG':['Agoncillo','Alitagtag','Balayan','Balete','Batangas City','Bauan','Calaca','Calatagan','Cuenca','Ibaan','Laurel','Lemery','Lian','Lipa City','Lobo','Mabini','Malvar','Mataas na Kahoy','Nasugbu','Padre Garcia','Rosario','San Jose','San Juan','San Luis','San Nicolas','San Pascual','Santa Teresita','Santo Tomas','Taal','Talisay','Tanauan City','Taysan','Tingloy','Tuy'],
+  'CAV':['Alfonso','Amadeo','Bacoor City','Carmona','Cavite City','Dasmariñas City','Gen. Emilio Aguinaldo','Gen. Mariano Alvarez','General Trias City','Imus City','Indang','Kawit','Magallanes','Maragondon','Mendez','Naic','Noveleta','Rosario','Silang','Tagaytay City','Tanza','Ternate','Trece Martires City'],
+  'LAG':['Alaminos','Bay','Biñan City','Cabuyao City','Calamba City','Calauan','Cavinti','Famy','Kalayaan','Liliw','Los Baños','Luisiana','Lumban','Mabitac','Magdalena','Majayjay','Nagcarlan','Paete','Pagsanjan','Pakil','Pangil','Pila','Rizal','San Pablo City','San Pedro City','Santa Cruz','Santa Maria','Santa Rosa City','Siniloan','Victoria'],
+  'QUE':['Agdangan','Alabat','Atimonan','Buenavista','Burdeos','Calauag','Candelaria','Catanauan','Dolores','General Luna','General Nakar','Guinayangan','Gumaca','Infanta','Jomalig','Lopez','Lucban','Lucena City','Macalelon','Mauban','Mulanay','Padre Burgos','Pagbilao','Panukulan','Patnanungan','Perez','Pitogo','Plaridel','Polillo','Quezon','Real','Sampaloc','San Andres','San Antonio','San Francisco','San Narciso','Sariaya','Tagkawayan','Tayabas City','Tiaong','Unisan'],
+  'RIZ':['Angono','Antipolo City','Baras','Binangonan','Cainta','Cardona','Jala-Jala','Morong','Pililla','Rodriguez','San Mateo','Tanay','Taytay','Teresa'],
+  'MRQ':['Boac','Buenavista','Gasan','Mogpog','Santa Cruz','Torrijos'],
+  'OCM':['Abra de Ilog','Calintaan','Looc','Lubang','Magsaysay','Mamburao','Paluan','Rizal','Sablayan','San Jose','Santa Cruz'],
+  'ORM':['Baco','Bansud','Bongabong','Bulalacao','Calapan City','Gloria','Mansalay','Naujan','Pinamalayan','Pola','Puerto Galera','Roxas','San Teodoro','Socorro','Victoria'],
+  'PAL':['Aborlan','Agutaya','Araceli','Balabac','Bataraza',"Brooke's Point",'Busuanga','Cagayancillo','Coron','Culion','Cuyo','Dumaran','El Nido','Española','Kalayaan','Linapacan','Magsaysay','Narra','Puerto Princesa City','Quezon','Rizal','Roxas','San Vicente','Taytay'],
+  'ROM':['Alcantara','Banton','Cajidiocan','Calatrava','Concepcion','Corcuera','Ferrol','Looc','Magdiwang','Odiongan','Romblon','San Agustin','San Andres','San Fernando','San Jose','Santa Fe','Santa Maria'],
+  'ALB':['Bacacay','Camalig','Daraga','Guinobatan','Jovellar','Legazpi City','Libon','Ligao City','Malilipot','Malinao','Manito','Oas','Pio Duran','Polangui','Rapu-Rapu','Santo Domingo','Tabaco City','Tiwi'],
+  'CAN':['Basud','Capalonga','Daet','Jose Panganiban','Labo','Mercedes','Paracale','San Lorenzo Ruiz','San Vicente','Santa Elena','Talisay','Vinzons'],
+  'CAS':['Baao','Balatan','Bato','Bombon','Buhi','Bula','Cabusao','Calabanga','Camaligan','Canaman','Caramoan','Del Gallego','Gainza','Garchitorena','Goa','Iriga City','Lagonoy','Libmanan','Lupi','Magarao','Milaor','Minalabac','Nabua','Naga City','Ocampo','Pamplona','Pasacao','Pili','Presentacion','Ragay','Sagñay','San Fernando','San Jose','Sipocot','Siruma','Tigaon','Tinambac'],
+  'CAT':['Bagamanoc','Baras','Bato','Caramoran','Gigmoto','Pandan','Panganiban','San Andres','San Miguel','Viga','Virac'],
+  'MAS':['Aroroy','Baleno','Balud','Batuan','Cataingan','Cawayan','Claveria','Dimasalang','Esperanza','Mandaon','Masbate City','Milagros','Mobo','Monreal','Palanas','Pio V. Corpuz','Placer','San Fernando','San Jacinto','San Pascual','Uson'],
+  'SOR':['Barcelona','Bulan','Bulusan','Casiguran','Castilla','Donsol','Gubat','Irosin','Juban','Magallanes','Matnog','Pilar','Prieto Diaz','Santa Magdalena','Sorsogon City'],
+  'AKL':['Altavas','Balete','Banga','Batan','Buruanga','Ibajay','Kalibo','Lezo','Libacao','Madalag','Malay','Malinao','Nabas','New Washington','Numancia','Tangalan'],
+  'ANT':['Anini-y','Barbaza','Belison','Bugasong','Caluya','Culasi','Hamtic','Laua-an','Libertad','Pandan','Patnongon','San Jose de Buenavista','San Remigio','Sebaste','Sibalom','Tibiao','Tobias Fornier','Valderrama'],
+  'CAP':['Cuartero','Dao','Dumalag','Dumarao','Ivisan','Jamindan','Ma-ayon','Mambusao','Panay','Panitan','Pilar','Pontevedra','President Roxas','Roxas City','Sapi-an','Sigma','Tapaz'],
+  'GUI':['Buenavista','Jordan','Nueva Valencia','San Lorenzo','Sibunag'],
+  'ILO':['Ajuy','Alimodian','Anilao','Badiangan','Balasan','Banate','Barotac Nuevo','Barotac Viejo','Batad','Bingawan','Cabatuan','Calinog','Carles','Concepcion','Dingle','Dueñas','Dumangas','Estancia','Guimbal','Igbaras','Iloilo City','Janiuay','Lambunao','Leganes','Lemery','Leon','Libertad','Maasin','Miagao','Mina','New Lucena','Oton','Passi City','Pavia','Pototan','San Dionisio','San Enrique','San Joaquin','San Miguel','San Rafael','Santa Barbara','Sara','Tigbauan','Tubungan','Zarraga'],
+  'NOC':['Bacolod City','Bago City','Binalbagan','Cadiz City','Calatrava','Candoni','Cauayan','Enrique B. Magalona','Escalante City','Himamaylan City','Hinigaran','Hinoba-an','Ilog','Isabela','Kabankalan City','La Carlota City','La Castellana','Manapla','Moises Padilla','Murcia','Pontevedra','Pulupandan','Sagay City','Salvador Benedicto','San Carlos City','San Enrique','Silay City','Sipalay City','Talisay City','Toboso','Valladolid','Victorias City'],
+  'BOH':['Alburquerque','Alicia','Anda','Antequera','Baclayon','Balilihan','Batuan','Bien Unido','Bilar','Buenavista','Calape','Candijay','Carmen','Catigbian','Clarin','Corella','Cortes','Dagohoy','Danao','Dauis','Dimiao','Duero','Garcia Hernandez','Guindulman','Inabanga','Jagna','Jetafe','Lila','Loay','Loboc','Loon','Mabini','Maribojoc','Panglao','Pilar','Pres. Carlos P. Garcia','Sagbayan','San Isidro','San Miguel','Sevilla','Sierra Bullones','Sikatuna','Tagbilaran City','Talibon','Trinidad','Tubigon','Ubay','Valencia'],
+  'CEB':['Alcantara','Alcoy','Alegria','Aloguinsan','Argao','Asturias','Badian','Balamban','Bantayan','Barili','Bogo City','Boljoon','Borbon','Carcar City','Carmen','Catmon','Cebu City','Compostela','Consolacion','Cordoba','Dalaguete','Danao City','Dumanjug','Ginatilan','Lapu-Lapu City','Liloan','Madridejos','Malabuyoc','Mandaue City','Medellin','Minglanilla','Moalboal','Naga City','Oslob','Pilar','Pinamungahan','Poro','Ronda','Samboan','San Fernando','San Francisco','San Remigio','Santa Fe','Santander','Sibonga','Sogod','Tabogon','Tabuelan','Talisay City','Toledo City','Tuburan','Tudela'],
+  'NOR':['Amlan','Ayungon','Bacong','Bais City','Basay','Bayawan City','Bindoy','Canlaon City','Dauin','Dumaguete City','Guihulngan City','Jimalalud','La Libertad','Mabinay','Manjuyod','Pamplona','San Jose','Santa Catalina','Siaton','Sibulan','Tanjay City','Tayasan','Valencia','Vallehermoso','Zamboanguita'],
+  'SIQ':['Enrique Villanueva','Larena','Lazi','Maria','San Juan','Siquijor'],
+  'BIL':['Almeria','Biliran','Cabucgayan','Caibiran','Culaba','Kawayan','Maripipi','Naval'],
+  'EAS':['Arteche','Balangiga','Balangkayan','Borongan City','Can-avid','Dolores','General MacArthur','Giporlos','Guiuan','Hernani','Jipapad','Lawaan','Llorente','Maslog','Maydolong','Mercedes','Oras','Quinapondan','Salcedo','San Julian','San Policarpo','Sulat','Taft'],
+  'LEY':['Abuyog','Alangalang','Albuera','Babatngon','Barugo','Bato','Baybay City','Burauen','Calubian','Capoocan','Carigara','Dagami','Dulag','Hilongos','Hindang','Inopacan','Isabel','Jaro','Javier','Julita','Kananga','La Paz','Leyte','Liloan','Macarthur','Mahaplag','Matag-ob','Matalom','Mayorga','Merida','Ormoc City','Palo','Palompon','Pastrana','San Isidro','San Miguel','Santa Fe','Tabango','Tabontabon','Tacloban City','Tanauan','Tolosa','Tunga','Villaba'],
+  'NOS':['Allen','Biri','Bobon','Capul','Catarman','Catubig','Gamay','Laoang','Lapinig','Las Navas','Lavezares','Lope de Vega','Mapanas','Mondragon','Palapag','Pambujan','Rosario','San Antonio','San Isidro','San Jose','San Vicente','Silvino Lobos','Victoria','Zumarraga'],
+  'SAM':['Almagro','Basey','Calbayog City','Calbiga','Catbalogan City','Daram','Gandara','Hinabangan','Jiabong','Marabut','Matuguinao','Motiong','Pagsanghan','Paranas','Pinabacdao','San Jorge','San Jose de Buan','San Sebastian','Santa Margarita','Santa Rita','Santo Niño','Tagapul-an','Talalora','Tarangnan','Villareal','Zumarraga'],
+  'SOL':['Anahawan','Bontoc','Hinunangan','Hinundayan','Libagon','Liloan','Limasawa','Maasin City','Macrohon','Padre Burgos','Pintuyan','Saint Bernard','San Francisco','San Juan','San Ricardo','Silago','Sogod','Tomas Oppus'],
+  'ZAN':['Baliguian','Dapitan City','Dipolog City','Godod','Gutalac','Jose Dalman','Kalawit','Katipunan','La Libertad','Labason','Leon B. Postigo','Liloy','Manukan','Mutia','Piñan','Polanco','Pres. Manuel A. Roxas','Rizal','Salug','San Miguel','San Pablo','Sergio Osmeña Sr.','Siayan','Sibuco','Sibutad','Sindangan','Siocon','Sirawai','Tampilisan'],
+  'ZAS':['Aurora','Bayog','Dimataling','Dinas','Dumalinao','Dumingag','Guipos','Josefina','Kumalarang','Labangan','Lapuyan','Mahayag','Margosatubig','Midsalip','Molave','Pagadian City','Pitogo','Ramon Magsaysay','San Miguel','San Pablo','Tabina','Tambulig','Tigbao','Tukuran','Vincenzo A. Sagun','Zamboanga City'],
+  'ZSI':['Alicia','Buug','Diplahan','Imelda','Ipil','Kabasalan','Mabuhay','Malangas','Naga','Olutanga','Payao','Roseller T. Lim','Siay','Talusan','Titay','Tungawan'],
+  'BUK':['Baungon','Cabanglasan','Damulog','Dangcagan','Don Carlos','Impasugong','Kadingilan','Kalilangan','Kibawe','Kitaotao','Lantapan','Libona','Malitbog','Manolo Fortich','Maramag','Pangantucan','Quezon','San Fernando','Sumilao','Talakag','Valencia City'],
+  'CMG':['Catarman','Guinsiliban','Mahinog','Mambajao','Sagay'],
+  'LDN':['Bacolod','Baloi','Baroy','Iligan City','Kapatagan','Kauswagan','Kolambugan','Lala','Linamon','Magsaysay','Maigo','Matungao','Munai','Nunungan','Pantao Ragat','Pantar','Poona Piagapo','Salvador','Sapad','Sultan Naga Dimaporo','Tagoloan','Tangcal','Tubod'],
+  'MIO':['Aloran','Baliangao','Bonifacio','Calamba','Clarin','Concepcion','Don Victoriano Chiongbian','Jimenez','Lopez Jaena','Oroquieta City','Ozamiz City','Plaridel','Panaon','Sapang Dalaga','Sinacaban','Tangub City','Tudela'],
+  'MOR':['Alubijid','Balingasag','Balingoan','Binuangan','Cagayan de Oro City','Claveria','El Salvador City','Gingoog City','Gitagum','Initao','Jasaan','Kinoguitan','Lagonglong','Laguindingan','Libertad','Lugait','Magsaysay','Manticao','Medina','Naawan','Opol','Salay','Sugbongcogon','Tagoloan','Talisayan','Villanueva'],
+  'DAO':['Compostela','Laak','Mabini','Maco','Maragusan','Mawab','Monkayo','Montevista','Nabunturan','New Bataan','Pantukan'],
+  'DAV':['Asuncion','Braulio E. Dujali','Carmen','Island Garden City of Samal','Kapalong','New Corella','Panabo City','San Isidro','Santo Tomas','Tagum City','Talaingod'],
+  'DAS':['Bansalan','Davao City','Digos City','Hagonoy','Kiblawan','Magsaysay','Malalag','Matanao','Padada','Santa Cruz','Sulop'],
+  'DOC':['Don Marcelino','Jose Abad Santos','Malita','Santa Maria','Sarangani'],
+  'DOR':['Baganga','Banaybanay','Boston','Caraga','Cateel','Governor Generoso','Lupon','Mati City','San Isidro','Tarragona'],
+  'NCO':['Alamada','Aleosan','Antipas','Arakan','Banisilan','Carmen','Kabacan','Kidapawan City','Libungan','Magpet','Makilala','Matalam','Midsayap',"M'lang",'Pigcawayan','Pikit','President Roxas','Tulunan'],
+  'SRG':['Alabel','Glan','Kiamba','Maasim','Maitum','Malapatan','Malungon'],
+  'SCO':['Banga','General Santos City','Koronadal City','Lake Sebu','Norala','Polomolok','Santo Niño','Surallah',"T'boli",'Tampakan','Tantangan','Tupi'],
+  'SKU':['Bagumbayan','Columbio','Esperanza','Isulan','Kalamansig','Lambayong','Lebak','Lutayan','Palimbang','President Quirino','Senator Ninoy Aquino','Tacurong City'],
+  'AGN':['Buenavista','Butuan City','Cabadbaran City','Carmen','Jabonga','Kitcharao','Las Nieves','Libertad','Magallanes','Nasipit','Remedios T. Romualdez','Santiago','Tubay'],
+  'AGS':['Bayugan City','Bunawan','Esperanza','La Paz','Loreto','Prosperidad','Rosario','San Francisco','San Luis','Santa Josefa','Sibagat','Talacogon','Trento','Veruela'],
+  'DIN':['Basilisa','Cagdianao','Dinagat','Libjo','Loreto','San Jose','Tubajon'],
+  'SUN':['Alegria','Bacuag','Burgos','Claver','Dapa','Del Carmen','General Luna','Gigaquit','Mainit','Malimono','Pilar','Placer','San Benito','San Francisco','San Isidro','Santa Monica','Sison','Socorro','Surigao City','Tagana-an','Tubod'],
+  'SUS':['Barobo','Bayabas','Bislig City','Cagwait','Cantilan','Carmen','Carrascal','Cortes','Hinatuan','Lanuza','Lianga','Lingig','Madrid','Marihatag','San Agustin','San Miguel','Tagbina','Tago','Tandag City'],
+  'BAS':['Akbar','Al-Barka','Hadji Mohammad Ajul','Hadji Muhtamad','Isabela City','Lamitan City','Lantawan','Maluso','Sumisip','Tipo-Tipo','Tuburan','Ungkaya Pukan'],
+  'LDS':['Bacolod-Kalawi','Balabagan','Balindong','Bayang','Binidayan','Buadiposo-Buntong','Bubong','Bumbaran','Butig','Calanogas','Kapai','Kapatagan','Lumba-Bayabao','Lumbaca-Unayan','Lumbatan','Lumbayanague','Madalum','Madamba','Maguing','Malabang','Marantao','Marawi City','Marogong','Masiu','Molundo','Mulondo','Piagapo','Poona Bayabao','Pualas','Ramain','Saguiaran','Sultan Dumalondong','Sultan Gumander','Tamparan','Taraka','Tubaran','Tugaya','Wao'],
+  'MGN':['Barira','Buldon','Datu Blah T. Sinsuat','Datu Odin Sinsuat','Kabuntalan','Matanog','Northern Kabuntalan','Parang','Sultan Kudarat','Sultan Mastura','Upi'],
+  'MGS':['Buluan','Datu Abdullah Sangki','Datu Anggal Midtimbang','Datu Hoffer Ampatuan','Datu Paglas','Datu Piang','Datu Salibo','Datu Saudi Ampatuan','Datu Unsay','Gen. Sk. Pendatun','Guindulungan','Mamasapano','Mangudadatu','Pagalungan','Paglat','Rajah Buayan','Shariff Aguak','Shariff Saydona Mustapha','South Upi','Sultan sa Barongis','Talayan','Talitay'],
+  'SUL':['Hadji Panglima Tahil','Indanan','Jolo','Kalingalan Caluang','Lugus','Luuk','Maimbung','Old Panamao','Omar','Pandami','Panglima Estino','Pangutaran','Parang','Pata','Patikul','Siasi','Talipao','Tapul','Tongkil'],
+  'TAW':['Bongao','Languyan','Mapun','Panglima Sugala','Sapa-Sapa','Sibutu','Simunul','Sitangkai','South Ubian','Tandubas','Turtle Islands']
+};
+
+function populateProvinces(regionCode, provinceSel) {
+  const list = PROVINCE_DATA[regionCode] || [];
+  provinceSel.innerHTML = '<option value="">— Select Province —</option>';
+  list.forEach(([code, name]) => {
+    const o = document.createElement('option');
+    o.value = code; o.textContent = name;
+    provinceSel.appendChild(o);
+  });
+}
+
+function populateMunicipalities(provCode, muniSel) {
+  const list = MUNICIPALITY_DATA[provCode] || [];
+  muniSel.innerHTML = '<option value="">— Select Municipality/City —</option>';
+  list.forEach(name => {
+    const o = document.createElement('option');
+    o.value = name; o.textContent = name;
+    muniSel.appendChild(o);
+  });
+}
+
+function buildSelectHTML(options) {
+  return options.map(([v,t]) => `<option value="${v}">${t}</option>`).join('');
+}
+
+function createSiteRow(idx, data) {
+  data = data || {};
+  const row = document.createElement('div');
+  row.className = 'site-row';
+  row.dataset.idx = idx;
+  row.style.cssText = 'border:1px solid #e5e7eb;border-radius:6px;padding:12px;margin-bottom:12px;position:relative;';
+  row.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <button type="button" class="btn-remove-site" style="display:inline-flex;align-items:center;gap:5px;background:#dc2626;color:#fff;border:none;border-radius:4px;padding:4px 12px;font-size:11px;cursor:pointer;">
+        &#128465; Remove
+      </button>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-2">
+        <label class="form-label-bold">Country <span class="required-star">*</span></label>
+        <select class="form-select site-country" data-field="country">${buildSelectHTML(COUNTRY_OPTIONS)}</select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label-bold">Region <span class="required-star">*</span></label>
+        <select class="form-select site-region" data-field="region">${buildSelectHTML(REGION_OPTIONS)}</select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label-bold">Province <span class="required-star">*</span></label>
+        <select class="form-select site-province" data-field="province"><option value="">— Select Province —</option></select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-bold">Municipality/City <span class="required-star">*</span></label>
+        <select class="form-select site-municipality" data-field="municipality"><option value="">— Select Municipality —</option></select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label-bold">Barangay <span class="required-star">*</span></label>
+        <input type="text" class="form-control site-barangay" data-field="barangay" placeholder="Type barangay name…"/>
+      </div>
+    </div>
+  `;
+
+  const regionSel   = row.querySelector('.site-region');
+  const provinceSel = row.querySelector('.site-province');
+  const muniSel     = row.querySelector('.site-municipality');
+  const barangayEl  = row.querySelector('.site-barangay');
+
+  // Restore saved values with cascade
+  if (data.country)      row.querySelector('.site-country').value = data.country;
+  if (data.region) {
+    regionSel.value = data.region;
+    populateProvinces(data.region, provinceSel);
+    if (data.province) {
+      provinceSel.value = data.province;
+      populateMunicipalities(data.province, muniSel);
+      if (data.municipality) muniSel.value = data.municipality;
+    }
+  }
+  if (data.barangay) barangayEl.value = data.barangay;
+
+  // Cascade: region → province → municipality
+  regionSel.addEventListener('change', () => {
+    populateProvinces(regionSel.value, provinceSel);
+    muniSel.innerHTML = '<option value="">— Select Municipality —</option>';
+    scheduleSave();
+  });
+  provinceSel.addEventListener('change', () => {
+    populateMunicipalities(provinceSel.value, muniSel);
+    scheduleSave();
+  });
+
+  // Remove button
+  row.querySelector('.btn-remove-site').addEventListener('click', () => {
+    row.remove();
+    scheduleSave();
+  });
+
+  // Change listeners for remaining fields
+  row.querySelectorAll('select, input').forEach(el => el.addEventListener('change', scheduleSave));
+  barangayEl.addEventListener('input', scheduleSave);
+  return row;
+}
+
+function addSiteRow(data) {
+  const container = document.getElementById('sites-container');
+  container.appendChild(createSiteRow(siteCounter++, data));
+}
+
+function collectSites() {
+  const sites = [];
+  document.querySelectorAll('#sites-container .site-row').forEach(row => {
+    const site = {};
+    row.querySelectorAll('[data-field]').forEach(el => { site[el.dataset.field] = el.value; });
+    sites.push(site);
+  });
+  return sites;
+}
+
+function restoreSites(sites) {
+  const container = document.getElementById('sites-container');
+  container.innerHTML = '';
+  siteCounter = 0;
+  if (!sites || !sites.length) { addSiteRow(); return; }
+  sites.forEach(s => addSiteRow(s));
+}
+
+// Add site button
+document.getElementById('btn-add-site').addEventListener('click', () => {
+  addSiteRow();
+  scheduleSave();
+});
+
+// Initialize with one empty site row
+addSiteRow();
+
+// ── Tom Select (searchable dropdowns) ──
+const tsOptions = { create: false, maxOptions: 1000 };
+const tsMultiOptions = { create: false, maxOptions: 1000, plugins: ['remove_button'] };
+
+const tsFields = ['f-implementing-agency','f-research-type','f-hnrda','f-hnrda-item','f-portfolio','f-dost-pillars','f-priority-areas'];
+tsFields.forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isMulti = el.hasAttribute('multiple');
+  new TomSelect('#' + id, isMulti ? tsMultiOptions : tsOptions);
+});
+new TomSelect('#f-co-agencies', tsMultiOptions);
+new TomSelect('#f-sdg', tsMultiOptions);
+new TomSelect('#f-8point', tsMultiOptions);
+
+// ── Quill editors ──
+const editorIds = [
+  'editor-executive-summary',
+  'editor-introduction','editor-intro-framework','editor-intro-gen-objectives',
+  'editor-intro-spec-objectives','editor-intro-rationale',
+  'editor-rrl','editor-methodology','editor-outcomes','editor-social-impact','editor-economic-impact','editor-beneficiaries',
+  'editor-sustainability','editor-limitations','editor-risks','editor-literature'
+];
+const editors = {};
+const toolbar = [
+  [{ header: [1, 2, 3, false] }],
+  ['bold','italic','underline','strike'],
+  [{ list: 'ordered' },{ list: 'bullet' }],
+  [{ indent: '-1' },{ indent: '+1' }],
+  ['link'],['clean']
+];
+editorIds.forEach(id => {
+  editors[id] = new Quill('#' + id, { theme: 'snow', modules: { toolbar }, placeholder: 'Enter text here...' });
+  editors[id].on('text-change', scheduleSave);
+});
+
+// ── Rationale word counter ──
+editors['editor-intro-rationale'].on('text-change', () => {
+  const text = editors['editor-intro-rationale'].getText().trim();
+  const count = text.length ? text.split(/\s+/).length : 0;
+  const el = document.getElementById('rationale-word-count');
+  el.textContent = count;
+  el.style.color = count > 300 ? '#ef4444' : '#6b7280';
+});
+
+// ── Collect all form data ──
+function collectFormData() {
+  const data = {};
+
+  // Text inputs, number inputs, date inputs
+  document.querySelectorAll('input[id], textarea[id], select[id]').forEach(el => {
+    if (el.closest('.ts-wrapper')) return; // handled by Tom Select
+    data['el_' + el.id] = el.value;
+  });
+
+  // Tom Select values
+  ['f-implementing-agency','f-research-type','f-hnrda','f-hnrda-item',
+   'f-portfolio','f-co-agencies','f-sdg','f-8point','f-dost-pillars','f-priority-areas'].forEach(id => {
+    const ts = document.getElementById(id)?._ts_select || document.querySelector('#' + id)?.tomselect;
+    if (ts) data['ts_' + id] = ts.getValue();
+  });
+
+  // Radio buttons
+  const trlSelected = document.querySelector('input[name="trl"]:checked');
+  if (trlSelected) data['radio_trl'] = trlSelected.value;
+
+  // Checkboxes
+  document.querySelectorAll('input[type=checkbox][id]').forEach(el => {
+    data['cb_' + el.id] = el.checked;
+  });
+
+  // Quill editors
+  editorIds.forEach(id => {
+    data['quill_' + id] = editors[id].root.innerHTML;
+  });
+
+  // Sites of implementation
+  data['sites'] = collectSites();
+
+  return data;
+}
+
+// ── Restore form data ──
+const LOCATION_IDS = new Set(['f-region','f-province','f-municipality','f-barangay']);
+
+function restoreFormData(data) {
+  if (!data) return;
+
+  // Text/number/date inputs and native selects (skip location cascade fields)
+  document.querySelectorAll('input[id], textarea[id], select[id]').forEach(el => {
+    if (LOCATION_IDS.has(el.id)) return;
+    const v = data['el_' + el.id];
+    if (v !== undefined) el.value = v;
+  });
+
+  // Restore location fields via async cascade
+  restoreLocationCascade(data);
+
+  // Tom Select
+  ['f-implementing-agency','f-research-type','f-hnrda','f-hnrda-item',
+   'f-portfolio','f-co-agencies','f-sdg','f-8point','f-dost-pillars','f-priority-areas'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || !el.tomselect) return;
+    const v = data['ts_' + id];
+    if (v !== undefined) el.tomselect.setValue(v);
+  });
+
+  // Radios
+  if (data['radio_trl']) {
+    const r = document.querySelector(`input[name="trl"][value="${data['radio_trl']}"]`);
+    if (r) r.checked = true;
+  }
+
+  // Checkboxes
+  document.querySelectorAll('input[type=checkbox][id]').forEach(el => {
+    if (data['cb_' + el.id] !== undefined) el.checked = data['cb_' + el.id];
+  });
+
+  // Quill editors
+  editorIds.forEach(id => {
+    if (data['quill_' + id]) editors[id].root.innerHTML = data['quill_' + id];
+  });
+
+  // Sites of implementation
+  if (data['sites']) restoreSites(data['sites']);
+}
+
+// ── PSGC Philippine location cascade ──
+const PSGC = 'https://psgc.cloud/api';
+
+async function psgcFetch(path) {
+  try {
+    const r = await fetch(PSGC + path);
+    return r.ok ? await r.json() : [];
+  } catch(e) { return []; }
+}
+
+function psgcOptions(arr, placeholder, selCode) {
+  const sorted = [...arr].sort((a, b) => a.name.localeCompare(b.name));
+  return `<option value="">${placeholder}</option>` +
+    sorted.map(i =>
+      `<option value="${i.code}"${String(i.code) === String(selCode) ? ' selected' : ''}>${i.name}</option>`
+    ).join('');
+}
+
+// Populate regions on load
+(async () => {
+  const regions = await psgcFetch('/regions/');
+  if (regions.length) {
+    document.getElementById('f-region').innerHTML = psgcOptions(regions, 'Select Region');
+  }
+})();
+
+// Region → Province
+document.getElementById('f-region').addEventListener('change', async function () {
+  const code = this.value;
+  const pSel = document.getElementById('f-province');
+  const mSel = document.getElementById('f-municipality');
+  const bSel = document.getElementById('f-barangay');
+  pSel.innerHTML = '<option value="">Loading…</option>';
+  mSel.innerHTML = '<option value="">Select City/Municipality</option>';
+  bSel.innerHTML = '<option value="">Select Barangay</option>';
+  if (!code) { pSel.innerHTML = '<option value="">Select Province</option>'; return; }
+  const provs = await psgcFetch(`/regions/${code}/provinces/`);
+  if (provs.length) {
+    pSel.innerHTML = psgcOptions(provs, 'Select Province');
+  } else {
+    // No provinces (e.g. NCR) — load cities directly
+    pSel.innerHTML = '<option value="">N/A</option>';
+    const cities = await psgcFetch(`/regions/${code}/cities-municipalities/`);
+    mSel.innerHTML = psgcOptions(cities, 'Select City/Municipality');
+  }
+});
+
+// Province → City/Municipality
+document.getElementById('f-province').addEventListener('change', async function () {
+  const code = this.value;
+  const mSel = document.getElementById('f-municipality');
+  const bSel = document.getElementById('f-barangay');
+  mSel.innerHTML = '<option value="">Loading…</option>';
+  bSel.innerHTML = '<option value="">Select Barangay</option>';
+  if (!code) { mSel.innerHTML = '<option value="">Select City/Municipality</option>'; return; }
+  const cities = await psgcFetch(`/provinces/${code}/cities-municipalities/`);
+  mSel.innerHTML = psgcOptions(cities, 'Select City/Municipality');
+});
+
+// City/Municipality → Barangay
+document.getElementById('f-municipality').addEventListener('change', async function () {
+  const code = this.value;
+  const bSel = document.getElementById('f-barangay');
+  bSel.innerHTML = '<option value="">Loading…</option>';
+  if (!code) { bSel.innerHTML = '<option value="">Select Barangay</option>'; return; }
+  const bars = await psgcFetch(`/cities-municipalities/${code}/barangays/`);
+  bSel.innerHTML = psgcOptions(bars, 'Select Barangay');
+});
+
+// Restore location from saved Firestore data
+async function restoreLocationCascade(data) {
+  const regCode  = data?.['el_f-region'];
+  const provCode = data?.['el_f-province'];
+  const munCode  = data?.['el_f-municipality'];
+  const barCode  = data?.['el_f-barangay'];
+  if (!regCode) return;
+
+  // Ensure region options are loaded
+  const regSel = document.getElementById('f-region');
+  if (regSel.options.length <= 1) {
+    const regions = await psgcFetch('/regions/');
+    if (regions.length) regSel.innerHTML = psgcOptions(regions, 'Select Region', regCode);
+  }
+  regSel.value = regCode;
+
+  const pSel = document.getElementById('f-province');
+  const mSel = document.getElementById('f-municipality');
+  const bSel = document.getElementById('f-barangay');
+
+  const provs = await psgcFetch(`/regions/${regCode}/provinces/`);
+  if (provs.length) {
+    pSel.innerHTML = psgcOptions(provs, 'Select Province', provCode);
+    if (provCode) {
+      const cities = await psgcFetch(`/provinces/${provCode}/cities-municipalities/`);
+      mSel.innerHTML = psgcOptions(cities, 'Select City/Municipality', munCode);
+    }
+  } else {
+    pSel.innerHTML = '<option value="">N/A</option>';
+    const cities = await psgcFetch(`/regions/${regCode}/cities-municipalities/`);
+    mSel.innerHTML = psgcOptions(cities, 'Select City/Municipality', munCode);
+  }
+
+  if (munCode) {
+    const bars = await psgcFetch(`/cities-municipalities/${munCode}/barangays/`);
+    bSel.innerHTML = psgcOptions(bars, 'Select Barangay', barCode);
+  }
+}
+
+// ── Debounced auto-save ──
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveToFirestore, 800);
+}
+
+function flashSaved() {
+  const el = document.getElementById('save-indicator');
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 2500);
+}
+
+// ── Firebase: Google auth ──
+async function doGoogleLogin() {
+  document.getElementById('auth-error').style.display = 'none';
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+  } catch(e) {
+    const el = document.getElementById('auth-error');
+    el.textContent = e.message;
+    el.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  if (realtimeUnsub) { realtimeUnsub(); realtimeUnsub = null; }
+  currentProposalId = null;
+  auth.signOut();
+}
+
+// ── Firebase: auth state listener ──
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    document.getElementById('auth-overlay').style.display = 'none';
+    await showPickerScreen();
+  } else {
+    document.getElementById('auth-overlay').style.display = 'flex';
+    document.getElementById('picker-view').style.display = 'none';
+    document.getElementById('step2-view').classList.add('step-view-hidden');
+    document.getElementById('step3-view').classList.add('step-view-hidden');
+    document.getElementById('btn-history').style.display = 'none';
+    document.getElementById('active-proposal-crumb').textContent = '';
+  }
+});
+
+// ── Proposal seeding ──
+const SEEDED_PROPOSALS = [
+  { id: 'qsense',    title: 'Q-SENSE',
+    desc: 'Quantum Superconducting Nanowire Sensors for Single-Photon Detection in Advanced Quantum Systems' },
+  { id: 'unawa',     title: 'UNAWA',
+    desc: 'Unified Neuromorphic Architecture for Wave-based Analysis; A Neuromorphic Optical Sensing Program Integrating Photonic Hardware, Optofluidic Processing, and Multimodal Spectroscopic Profiling' },
+  { id: 'aei-spain', title: 'AEI (Spain) & DOST-PCIEERD (Philippines)',
+    desc: 'Pilot Call for Proposals' }
+];
+
+async function seedProposals() {
+  for (const p of SEEDED_PROPOSALS) {
+    const ref = db.collection('proposals').doc(p.id);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      await ref.set({
+        title: p.title, desc: p.desc, isSeeded: true,
+        step2: null, step3: null,
+        meta: {
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedBy: null
+        }
+      });
+    }
+  }
+}
+
+// ── Proposal picker ──
+async function showPickerScreen() {
+  await seedProposals();
+  document.getElementById('picker-view').style.display = 'block';
+  document.getElementById('step2-view').classList.add('step-view-hidden');
+  document.getElementById('step3-view').classList.add('step-view-hidden');
+  document.getElementById('btn-history').style.display = 'none';
+  document.getElementById('active-proposal-crumb').textContent = '';
+
+  const snap = await db.collection('proposals').orderBy('meta.createdAt').get();
+  const container = document.getElementById('proposal-cards');
+  container.innerHTML = '';
+
+  snap.docs.forEach(doc => {
+    const d = doc.data();
+    const card = document.createElement('div');
+    card.className = 'p-card';
+    card.innerHTML =
+      `<div class="p-card-tag">${d.isSeeded ? 'Shared' : 'Custom'}</div>` +
+      `<div class="p-card-title">${d.title}</div>` +
+      `<div class="p-card-desc">${d.desc || ''}</div>`;
+    card.onclick = () => openProposal(doc.id, d.title);
+    container.appendChild(card);
+  });
+
+  const addCard = document.createElement('div');
+  addCard.className = 'p-card p-card-add';
+  addCard.innerHTML =
+    `<div class="p-card-add-icon">&#43;</div>` +
+    `<div class="p-card-add-label">New Proposal</div>`;
+  addCard.onclick = addNewProposal;
+  container.appendChild(addCard);
+}
+
+async function addNewProposal() {
+  const title = prompt('Proposal title:');
+  if (!title || !title.trim()) return;
+  const ref = await db.collection('proposals').add({
+    title: title.trim(), desc: '', isSeeded: false,
+    step2: null, step3: null,
+    meta: {
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy: auth.currentUser?.uid
+    }
+  });
+  openProposal(ref.id, title.trim());
+}
+
+async function openProposal(id, title) {
+  _proposalReady = false;           // block history writes during load
+  currentProposalId = id;
+  document.getElementById('picker-view').style.display = 'none';
+  document.getElementById('active-proposal-crumb').textContent = '| ' + title;
+  document.getElementById('btn-history').style.display = '';
+
+  const doc = await db.collection('proposals').doc(id).get();
+  if (doc.exists) {
+    const data = doc.data();
+    if (data.step2) restoreFormData(data.step2);
+    if (data.step3) { restoreDataStep3(data.step3); renderAllStep3(); }
+  }
+  showWizardStep(2);
+  subscribeRealtime(id, auth.currentUser.uid);
+  // Small delay so any auto-save debounce timers that fired during load are flushed
+  setTimeout(() => { _proposalReady = true; }, 1200);
+}
+
+// ── Firebase: real-time collaboration listener ──
+function subscribeRealtime(proposalId, myUid) {
+  if (realtimeUnsub) realtimeUnsub();
+  realtimeUnsub = db.collection('proposals').doc(proposalId)
+    .onSnapshot(doc => {
+      if (!doc.exists) return;
+      const data = doc.data();
+      if (data.meta?.updatedBy === myUid) return;
+      if (data.step2) restoreFormData(data.step2);
+      if (data.step3) { restoreDataStep3(data.step3); renderAllStep3(); }
+      flashSaved();
+    });
+}
+
+// ── History: ready flag (prevents writes during initial proposal load) ──
+let _proposalReady = false;
+
+// ── History: field label map ──
+const FIELD_LABEL_MAP = {
+  'el_f-project-title':        'Project Title',
+  'el_f-project-duration':     'Project Duration (years)',
+  'el_f-total-budget':         'Total Budget (₱)',
+  'el_f-start-date':           'Start Date',
+  'el_f-end-date':             'End Date',
+  'el_f-funding-type':         'Funding Type',
+  'ts_f-implementing-agency':  'Implementing Agency',
+  'ts_f-research-type':        'Research Type',
+  'ts_f-hnrda':                'HNRDA',
+  'ts_f-hnrda-item':           'HNRDA Item',
+  'ts_f-portfolio':            'Portfolio',
+  'ts_f-sdg':                  'SDG Goals',
+  'ts_f-8point':               '8-Point Agenda',
+  'ts_f-dost-pillars':         'DOST Pillars',
+  'ts_f-priority-areas':       'Priority Areas',
+  'quill_q-executive-summary': 'Executive Summary',
+  'quill_q-significance':      'Significance',
+  'quill_q-objectives':        'Objectives',
+  'quill_q-methodology':       'Methodology',
+  'quill_q-review-of-lit':     'Review of Literature',
+  'quill_q-work-plan':         'Work Plan',
+  'quill_q-gantt':             'Gantt Chart',
+  'quill_q-references':        'References',
+};
+
+function labelForKey(key) {
+  if (FIELD_LABEL_MAP[key]) return FIELD_LABEL_MAP[key];
+  return key.replace(/^(el_|ts_|cb_|quill_)/, '').replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function isEmptyVal(v) {
+  return v === null || v === undefined || v === '' ||
+    (Array.isArray(v) && v.length === 0);
+}
+
+function formatVal(key, val) {
+  if (isEmptyVal(val)) return '(empty)';
+  if (Array.isArray(val)) return val.join(', ');
+  // Quill HTML — strip tags, show plain text
+  if (key && key.startsWith('quill_')) {
+    const plain = String(val).replace(/<[^>]+>/g, '').trim();
+    return plain.length > 80 ? plain.slice(0, 80) + '…' : (plain || '(empty)');
+  }
+  if (typeof val === 'object') return JSON.stringify(val).slice(0, 60) + '…';
+  const s = String(val);
+  return s.length > 80 ? s.slice(0, 80) + '…' : s;
+}
+
+// ── Diff Step 2 form fields (human-readable) ──
+function diffStep2(oldData, newData) {
+  const changes = [];
+  const keys = new Set([...Object.keys(oldData || {}), ...Object.keys(newData || {})]);
+  for (const k of keys) {
+    const ov = oldData?.[k], nv = newData?.[k];
+    if (JSON.stringify(ov) === JSON.stringify(nv)) continue;
+    if (isEmptyVal(ov) && isEmptyVal(nv)) continue; // both empty — skip
+    changes.push({ field: labelForKey(k), from: formatVal(k, ov), to: formatVal(k, nv) });
+  }
+  return changes;
+}
+
+// ── Diff Step 3 budget (human-readable summaries) ──
+function diffBudget(oldB, newB) {
+  const changes = [];
+  const o = oldB || {};
+  const n = newB || {};
+
+  // Personnel sub-categories
+  [['salary','Salary'],['honoraria','Honoraria'],['indirect','Indirect Cost']].forEach(([key, label]) => {
+    const oc = (o.personnel?.[key] || []).length;
+    const nc = (n.personnel?.[key] || []).length;
+    if (oc !== nc)
+      changes.push({ field: `Personnel – ${label} items`, from: String(oc), to: String(nc) });
+  });
+
+  // MOOE
+  const oMooe = (o.mooe || []).length, nMooe = (n.mooe || []).length;
+  if (oMooe !== nMooe)
+    changes.push({ field: 'MOOE items', from: String(oMooe), to: String(nMooe) });
+
+  // Capital Outlay
+  const oCap = (o.capital || []).length, nCap = (n.capital || []).length;
+  if (oCap !== nCap)
+    changes.push({ field: 'Capital Outlay items', from: String(oCap), to: String(nCap) });
+
+  // Counterpart per year
+  (n.counterpart || []).forEach((yr, i) => {
+    const oyr = (o.counterpart || [])[i] || {};
+    const oFund = oyr.dostFund || 0, nFund = yr.dostFund || 0;
+    if (oFund !== nFund)
+      changes.push({ field: `Counterpart Yr ${yr.year} – DOST Fund`,
+        from: `₱${oFund.toLocaleString()}`, to: `₱${nFund.toLocaleString()}` });
+    const oAg = (oyr.agencies || []).length, nAg = (yr.agencies || []).length;
+    if (oAg !== nAg)
+      changes.push({ field: `Counterpart Yr ${yr.year} – Co-funders`,
+        from: String(oAg), to: String(nAg) });
+  });
+
+  return changes;
+}
+
+async function writeHistory(proposalId, changes) {
+  if (!changes.length) return;
+  const user = auth.currentUser;
+  await db.collection('proposals').doc(proposalId)
+    .collection('history').add({
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      userId:    user.uid,
+      userEmail: user.email,
+      userName:  user.displayName || user.email,
+      changes
+    });
+}
+
+// ── saveToFirestore with smart history ──
+async function saveToFirestore() {
+  if (!currentProposalId || !_proposalReady) return;
+  try {
+    const newStep2 = collectFormData();
+    const newStep3 = budget;
+    const existing = await db.collection('proposals').doc(currentProposalId).get();
+    const old = existing.exists ? existing.data() : {};
+
+    // Only diff+write history when the proposal already had saved data
+    // (skips the very first save of a brand-new proposal)
+    const hadData = !!(old.step2 || old.step3);
+    const changes = hadData ? [
+      ...diffStep2(old.step2, newStep2),
+      ...diffBudget(old.step3, newStep3)
+    ] : [];
+
+    await db.collection('proposals').doc(currentProposalId).set({
+      step2: newStep2,
+      step3: newStep3,
+      meta: {
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy: auth.currentUser?.uid
+      }
+    }, { merge: true });
+
+    await writeHistory(currentProposalId, changes);
+    flashSaved();
+  } catch(e) {
+    console.error('Save failed', e);
+  }
+}
+
+// ── History panel ──
+async function openHistoryPanel() {
+  document.getElementById('history-panel').classList.add('open');
+  const list = document.getElementById('history-list');
+  list.innerHTML = '<div class="h-empty">Loading…</div>';
+  const snap = await db.collection('proposals').doc(currentProposalId)
+    .collection('history').orderBy('timestamp', 'desc').limit(50).get();
+  if (snap.empty) {
+    list.innerHTML = '<div class="h-empty">No edits recorded yet.</div>';
+    return;
+  }
+  list.innerHTML = snap.docs.map(doc => {
+    const h = doc.data();
+    const ts = h.timestamp?.toDate
+      ? h.timestamp.toDate().toLocaleString('en-PH', { dateStyle:'medium', timeStyle:'short' })
+      : 'just now';
+    const changesHtml = h.changes.map(c =>
+      `<div class="h-change">
+        <span class="h-field">${c.field}</span>
+        <div style="margin-left:8px;">
+          <span class="h-from">${c.from}</span>
+          <span style="color:#9ca3af;margin:0 4px;">→</span>
+          <span class="h-to">${c.to}</span>
+        </div>
+      </div>`
+    ).join('');
+    return `<div class="h-entry">
+      <div class="h-meta"><span class="h-user">${h.userName}</span> &middot; ${ts}</div>
+      ${changesHtml}
+    </div>`;
+  }).join('');
+}
+
+function closeHistoryPanel() {
+  document.getElementById('history-panel').classList.remove('open');
+}
+
+// ── Attach change listeners ──
+document.querySelectorAll('input[id], textarea[id], select[id]').forEach(el => {
+  el.addEventListener('input', scheduleSave);
+  el.addEventListener('change', scheduleSave);
+});
+document.querySelectorAll('input[type=radio], input[type=checkbox]').forEach(el => {
+  el.addEventListener('change', scheduleSave);
+});
+
+/* ══════════════════════════════════════
+   STEP 2/3 WIZARD NAVIGATION
+══════════════════════════════════════ */
+const step2View = document.getElementById('step2-view');
+const step3View = document.getElementById('step3-view');
+
+function showWizardStep(step) {
+  if (step === 3) {
+    step2View.classList.add('step-view-hidden');
+    step3View.classList.remove('step-view-hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+  step3View.classList.add('step-view-hidden');
+  step2View.classList.remove('step-view-hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.getElementById('btn-step2-next').addEventListener('click', () => {
+  saveToFirestore();
+  showWizardStep(3);
+});
+
+
+document.getElementById('btn-step2-prev').addEventListener('click', () => {
+  if (realtimeUnsub) { realtimeUnsub(); realtimeUnsub = null; }
+  currentProposalId = null;
+  showPickerScreen();
+});
+
+document.getElementById('btn-step3-prev').addEventListener('click', () => {
+  saveNowStep3();
+  showWizardStep(2);
+});
+
+document.getElementById('btn-step3-next').addEventListener('click', () => {
+  saveNowStep3();
+  alert('Step 4 UI is not merged yet in this file.');
+});
+
+/* ══════════════════════════════════════
+   STEP 3: BUDGET LOGIC
+══════════════════════════════════════ */
+const STEP3_STORAGE_KEY = 'dpmis_step3_draft';
+let step3SaveTimer = null;
+let _uid = 1;
+function uid() { return _uid++; }
+
+let budget = {
+  counterpart: [
+    { year: 1, expanded: true, dostFund: 0, agencies: [] },
+    { year: 2, expanded: false, dostFund: 0, agencies: [] },
+    { year: 3, expanded: false, dostFund: 0, agencies: [] }
+  ],
+  personnel: { salary: [], honoraria: [], indirect: [] },
+  mooe: [],
+  capital: []
+};
+
+const modals = {};
+['agencyModal', 'personnelModal', 'mooeModal', 'capitalModal'].forEach(id => {
+  modals[id] = new bootstrap.Modal(document.getElementById(id));
+});
+
+function fmt(n) {
+  return '₱' + (parseFloat(n) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function actBtns(editFn, delFn) {
+  return `<div style="display:flex;gap:4px;justify-content:center;">
+    <button class="btn-edit" onclick="${editFn}">Edit</button>
+    <button class="btn-del" onclick="${delFn}">Del</button>
+  </div>`;
+}
+
+function renderCounterpart() {
+  let html = '';
+  budget.counterpart.forEach(yr => {
+    const cfSum = yr.agencies.reduce((s, a) => s + (parseFloat(a.amt) || 0), 0);
+    const df = parseFloat(yr.dostFund) || 0;
+    const total = cfSum + df;
+    const arrow = yr.expanded ? '&#9650;' : '&#9660;';
+    html += `<tr class="year-row" onclick="toggleYear(${yr.year})" style="cursor:pointer;">
+      <td>${arrow}</td>
+      <td>Year ${yr.year}</td>
+      <td class="num">${fmt(cfSum)}</td>
+      <td class="num">
+        <input type="number" class="dost-input" value="${df}" min="0" step="0.01"
+          onclick="event.stopPropagation()"
+          onchange="setDost(${yr.year},this.value)"
+          title="Enter DOST Fund for Year ${yr.year}"/>
+      </td>
+      <td class="num">${fmt(total)}</td>
+      <td></td>
+    </tr>`;
+
+    if (yr.expanded) {
+      html += `<tr><td colspan="6" style="padding:0;border:none;">
+        <div class="year-expand-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:12px;font-weight:700;color:#1e3a5f;">Counterpart Agency - Year ${yr.year}</span>
+            <button class="btn-add" onclick="openAgencyModal(${yr.year})">
+              <svg xmlns="http://www.w3.org/2000/svg" style="width:10px;height:10px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Add Counterpart
+            </button>
+          </div>
+          <table class="budget-table" style="min-width:300px;">
+            <thead><tr>
+              <th>Agency</th>
+              <th class="num">Amount (₱)</th>
+              <th style="width:90px;text-align:center;">Action</th>
+            </tr></thead>
+            <tbody>`;
+
+      if (!yr.agencies.length) {
+        html += `<tr class="empty-row"><td colspan="3">No counterpart agencies added.</td></tr>`;
+      }
+
+      yr.agencies.forEach(ag => {
+        html += `<tr>
+          <td>${ag.name}</td>
+          <td class="num">${fmt(ag.amt)}</td>
+          <td style="text-align:center;">${actBtns(`editAgency(${yr.year},'${ag.id}')`, `delAgency(${yr.year},'${ag.id}')`)}</td>
+        </tr>`;
+      });
+
+      html += `</tbody></table></div></td></tr>`;
+    }
+  });
+  document.getElementById('counterpart-tbody').innerHTML = html;
+}
+
+function toggleYear(y) {
+  const yr = budget.counterpart.find(x => x.year === y);
+  yr.expanded = !yr.expanded;
+  renderCounterpart();
+}
+
+function setDost(y, val) {
+  budget.counterpart.find(x => x.year === y).dostFund = parseFloat(val) || 0;
+  renderCounterpart();
+  updateTotals();
+  scheduleSaveStep3();
+}
+
+function openAgencyModal(y, id) {
+  document.getElementById('am-year').value = y;
+  document.getElementById('am-id').value = id || '';
+  document.getElementById('am-name').value = '';
+  document.getElementById('am-amt').value = 0;
+  document.getElementById('agencyModalTitle').textContent = id ? 'Edit Counterpart Agency' : 'Add Counterpart Agency';
+  if (id) {
+    const ag = budget.counterpart.find(x => x.year === y).agencies.find(a => a.id == id);
+    if (ag) {
+      document.getElementById('am-name').value = ag.name;
+      document.getElementById('am-amt').value = ag.amt;
+    }
+  }
+  modals.agencyModal.show();
+}
+
+function editAgency(y, id) { openAgencyModal(y, id); }
+
+function saveAgency() {
+  const y = parseInt(document.getElementById('am-year').value, 10);
+  const id = document.getElementById('am-id').value;
+  const name = document.getElementById('am-name').value.trim();
+  const amt = parseFloat(document.getElementById('am-amt').value) || 0;
+  if (!name) { alert('Please enter an agency name.'); return; }
+  const yr = budget.counterpart.find(x => x.year === y);
+  if (id) {
+    const ag = yr.agencies.find(a => a.id == id);
+    if (ag) { ag.name = name; ag.amt = amt; }
+  } else {
+    yr.agencies.push({ id: uid(), name, amt });
+  }
+  modals.agencyModal.hide();
+  renderCounterpart();
+  updateTotals();
+  scheduleSaveStep3();
+}
+
+function delAgency(y, id) {
+  if (!confirm('Remove this agency?')) return;
+  const yr = budget.counterpart.find(x => x.year === y);
+  yr.agencies = yr.agencies.filter(a => a.id != id);
+  renderCounterpart();
+  updateTotals();
+  scheduleSaveStep3();
+}
+
+function pmToggleFields() {
+  const costType = document.getElementById('pm-cost-type').value;
+  const funding = document.getElementById('pm-funding').value;
+  document.getElementById('pm-pstype-row').style.display = costType === 'direct' ? '' : 'none';
+  document.getElementById('pm-position-row').style.display = costType === 'direct' ? '' : 'none';
+  document.getElementById('pm-period-row').style.display = costType === 'direct' ? '' : 'none';
+  document.getElementById('pm-pct-row').style.display = costType === 'direct' ? '' : 'none';
+  document.getElementById('pm-agency-row').style.display = funding === 'dost' ? '' : 'none';
+}
+
+function pmAutoCalc() {
+  const rate = parseFloat(document.getElementById('pm-rate').value) || 0;
+  const num = parseFloat(document.getElementById('pm-num-pos').value) || 1;
+  const period = parseFloat(document.getElementById('pm-period').value) || 0;
+  const pct = parseFloat(document.getElementById('pm-pct').value) || 0;
+  const computed = rate * num * period * (pct / 100);
+  document.getElementById('pm-computed').textContent = fmt(computed);
+  const totalInput = document.getElementById('pm-total-amt');
+  if (totalInput.dataset.manuallySet !== 'true') {
+    totalInput.value = computed.toFixed(2);
+  }
+}
+
+function openPersonnelModal(id) {
+  const fields = ['pm-id', 'pm-cost-type', 'pm-ps-type', 'pm-position', 'pm-num-pos', 'pm-period', 'pm-funding', 'pm-agency', 'pm-pct', 'pm-rate', 'pm-total-amt', 'pm-responsibilities'];
+  const defaults = ['', 'direct', 'salary', '', '1', '12', 'dost', '', '30', '0', '0', ''];
+  fields.forEach((f, i) => {
+    const el = document.getElementById(f);
+    if (el) { el.value = defaults[i]; el.dataset.manuallySet = ''; }
+  });
+  document.getElementById('personnelModalTitle').textContent = id ? 'Edit Personnel Services' : 'Add/Edit Personnel Services';
+  if (id) {
+    const all = [...budget.personnel.salary, ...budget.personnel.honoraria, ...budget.personnel.indirect];
+    const item = all.find(i => i.id == id);
+    if (item) {
+      document.getElementById('pm-id').value = item.id;
+      document.getElementById('pm-cost-type').value = item.costType || 'direct';
+      document.getElementById('pm-ps-type').value = item.psType || 'salary';
+      document.getElementById('pm-position').value = item.position || '';
+      document.getElementById('pm-num-pos').value = item.numPos || 1;
+      document.getElementById('pm-period').value = item.period || 12;
+      document.getElementById('pm-funding').value = item.funding || 'dost';
+      document.getElementById('pm-agency').value = item.agency || '';
+      document.getElementById('pm-pct').value = item.pct || 30;
+      document.getElementById('pm-rate').value = item.rate || 0;
+      document.getElementById('pm-total-amt').value = item.totalAmt || 0;
+      document.getElementById('pm-responsibilities').value = item.responsibilities || '';
+    }
+  }
+  pmToggleFields();
+  pmAutoCalc();
+  modals.personnelModal.show();
+}
+
+document.getElementById('pm-total-amt').addEventListener('input', function() {
+  this.dataset.manuallySet = 'true';
+});
+
+function savePersonnel() {
+  const id = document.getElementById('pm-id').value;
+  const costType = document.getElementById('pm-cost-type').value;
+  const psType = document.getElementById('pm-ps-type').value;
+  const position = document.getElementById('pm-position').value;
+  const numPos = parseFloat(document.getElementById('pm-num-pos').value) || 1;
+  const period = parseFloat(document.getElementById('pm-period').value) || 0;
+  const funding = document.getElementById('pm-funding').value;
+  const agency = document.getElementById('pm-agency').value.trim();
+  const pct = parseFloat(document.getElementById('pm-pct').value) || 0;
+  const rate = parseFloat(document.getElementById('pm-rate').value) || 0;
+  const totalAmt = parseFloat(document.getElementById('pm-total-amt').value) || 0;
+  const resp = document.getElementById('pm-responsibilities').value.trim();
+
+  if (costType === 'direct' && !position) { alert('Please select a Position/Designation.'); return; }
+  if (!resp) { alert('Please enter Responsibilities.'); return; }
+
+  const cf = funding === 'counterpart' ? totalAmt : 0;
+  const df = funding === 'dost' ? totalAmt : 0;
+  const item = {
+    id: id ? parseInt(id, 10) : uid(),
+    costType, psType, position, numPos, period,
+    funding, agency, pct, rate, totalAmt,
+    responsibilities: resp, cf, df
+  };
+
+  budget.personnel.salary = budget.personnel.salary.filter(i => i.id != item.id);
+  budget.personnel.honoraria = budget.personnel.honoraria.filter(i => i.id != item.id);
+  budget.personnel.indirect = budget.personnel.indirect.filter(i => i.id != item.id);
+
+  if (costType === 'indirect') budget.personnel.indirect.push(item);
+  else if (psType === 'salary') budget.personnel.salary.push(item);
+  else budget.personnel.honoraria.push(item);
+
+  modals.personnelModal.hide();
+  renderPersonnel();
+  updateTotals();
+  scheduleSaveStep3();
+}
+
+function delPersonnel(id) {
+  if (!confirm('Remove this item?')) return;
+  budget.personnel.salary = budget.personnel.salary.filter(i => i.id != id);
+  budget.personnel.honoraria = budget.personnel.honoraria.filter(i => i.id != id);
+  budget.personnel.indirect = budget.personnel.indirect.filter(i => i.id != id);
+  renderPersonnel();
+  updateTotals();
+  scheduleSaveStep3();
+}
+
+function renderPersonnel() {
+  let html = '';
+  const sections = [
+    { label: 'Direct Cost - Salary', items: budget.personnel.salary },
+    { label: 'Direct Cost - Honoraria', items: budget.personnel.honoraria },
+    { label: 'Indirect Cost', items: budget.personnel.indirect }
+  ];
+  let grandCF = 0;
+  let grandDF = 0;
+  sections.forEach(sec => {
+    let subCF = 0;
+    let subDF = 0;
+    html += `<tr class="sub-header"><td colspan="5">${sec.label}</td></tr>`;
+    if (!sec.items.length) {
+      html += '<tr class="empty-row"><td colspan="5">No items added.</td></tr>';
+    }
+    sec.items.forEach((item, i) => {
+      const tot = (item.cf || 0) + (item.df || 0);
+      subCF += item.cf || 0;
+      subDF += item.df || 0;
+      const details = item.costType === 'indirect'
+        ? `${item.responsibilities || '-'}`
+        : `${item.position} &nbsp;<span style="color:#9ca3af;">| ${item.numPos} pos. | ${item.period} mos. | ${item.pct}%</span>`;
+      html += `<tr>
+        <td><strong>(${i + 1})</strong> - ${details}<br>
+            <span style="color:#6b7280;font-size:11px;">- ${item.responsibilities || '-'} &nbsp;
+            <span style="color:#3b82f6;">[${item.funding ? item.funding.toUpperCase() : 'DOST'}${item.agency ? ' -> ' + item.agency : ''}]</span></span>
+        </td>
+        <td class="num">${fmt(item.cf)}</td>
+        <td class="num">${fmt(item.df)}</td>
+        <td class="num">${fmt(tot)}</td>
+        <td style="text-align:center;">${actBtns(`openPersonnelModal(${item.id})`, `delPersonnel(${item.id})`)}</td>
+      </tr>`;
+    });
+    grandCF += subCF;
+    grandDF += subDF;
+    html += `<tr class="subtotal-row">
+      <td>Sub-total for ${sec.label}</td>
+      <td class="num">${fmt(subCF)}</td><td class="num">${fmt(subDF)}</td>
+      <td class="num">${fmt(subCF + subDF)}</td><td></td>
+    </tr>`;
+  });
+  html += `<tr class="total-row">
+    <td>Total Personnel Services</td>
+    <td class="num">${fmt(grandCF)}</td><td class="num">${fmt(grandDF)}</td>
+    <td class="num">${fmt(grandCF + grandDF)}</td><td></td>
+  </tr>`;
+  document.getElementById('personnel-tbody').innerHTML = html;
+}
+
+const MOOE_TAXONOMY = {
+  'Supplies and Materials Expenses': {
+    'Office Supplies and Materials Expenses': ['Office Supplies', 'Bond Paper / Stationery', 'Printer Cartridges / Toner', 'Other Office Supplies'],
+    'Medical, Dental and Laboratory Supplies Expenses': ['Laboratory Supplies and Reagents', 'Chemicals and Solvents', 'Glassware and Equipment Accessories', 'Medical / Dental Supplies', 'Other Lab Supplies'],
+    'Accountable Forms Expenses': ['Accountable Forms'],
+    'Fuel, Oil and Lubricants Expenses': ['Fuel and Oil', 'Lubricants', 'Other Fuel-Related Expenses'],
+    'Other Supplies and Materials Expenses': ['ICT Supplies', 'Agricultural Supplies', 'Textbooks and Instructional Materials', 'Other Supplies and Materials']
+  },
+  'Professional Services': {
+    'Legal Services': ['Legal Retainer', 'Legal Consultation', 'Other Legal Services'],
+    'Auditing Services': ['External Audit Services', 'Other Audit Services'],
+    'Consultancy Services': ['Technical Consultancy', 'Management Consultancy', 'Scientific Consultancy', 'Other Consultancy Services'],
+    'Other Professional Services': ['Research and Development Services', 'Characterization and Testing Services', 'Laboratory Analysis Services', 'Calibration Services', 'Other Professional Services']
+  },
+  'Repairs and Maintenance': {
+    'Repairs and Maintenance-Machinery and Equipment': ['Preventive Maintenance', 'Corrective Repairs', 'Calibration', 'Spare Parts', 'Other Equipment Maintenance'],
+    'Repairs and Maintenance-Transportation Equipment': ['Vehicle Maintenance', 'Vehicle Repairs', 'Other Transport Maintenance'],
+    'Repairs and Maintenance-IT Equipment and Software': ['Computer Hardware Repairs', 'Software License Renewal', 'Other IT Maintenance'],
+    'Repairs and Maintenance-Furniture and Fixtures': ['Furniture Repairs', 'Other Fixtures Maintenance']
+  },
+  'Traveling Expenses': {
+    'Traveling Expenses-Local': ['Field Visits and Site Visits', 'Local Conferences and Seminars', 'Project Meetings', 'Field Testing', 'Other Local Travel'],
+    'Traveling Expenses-Foreign': ['International Conferences', 'International Collaboration Visits', 'Training Abroad', 'Other Foreign Travel']
+  },
+  'Communication Expenses': {
+    'Postage and Courier Services': ['Postage Stamps', 'Courier / Delivery Services', 'Other Postage Expenses'],
+    'Telephone Expenses': ['Landline Telephone', 'Mobile Phone / Cellular', 'Other Telephone Expenses'],
+    'Internet Subscription Expenses': ['Internet Subscription', 'Data Services', 'Other Internet Services']
+  },
+  'Utility Expenses': {
+    'Water Expenses': ['Water Consumption'],
+    'Electricity Expenses': ['Electricity Consumption'],
+    'Other Utility Expenses': ['Gas Utility', 'Other Utilities']
+  },
+  'Other Maintenance and Operating Expenses': {
+    'Representation Expenses': ['Meeting and Consultation Expenses', 'Field Testing Expenses', 'Stakeholder Engagement Expenses', 'Other Representation Expenses'],
+    'Rent / Lease Expenses': ['Rent Expenses', 'Equipment Lease', 'Venue Rental', 'Other Rent / Lease Expenses'],
+    'Subscription Expenses': ['Journal Subscriptions', 'Database Subscriptions', 'Software Subscriptions', 'Other Subscriptions'],
+    'Printing and Publication Expenses': ['Research Publication Fees', 'Printing of Reports / Manuals', 'Other Printing Expenses'],
+    'Other General Services': ['Security Services', 'Janitorial Services', 'Other General Services'],
+    'Other MOOE': ['Other Operating Expenses', 'Administration Cost', 'Overhead Expenses']
+  }
+};
+
+function mmPopulateMooe() {
+  const sel = document.getElementById('mm-mooe');
+  sel.innerHTML = '<option value="">Select item</option>';
+  Object.keys(MOOE_TAXONOMY).forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    sel.appendChild(opt);
+  });
+}
+
+function mmCascadeSubcat() {
+  const mooe = document.getElementById('mm-mooe').value;
+  const sub = document.getElementById('mm-subcat');
+  const itm = document.getElementById('mm-item');
+  sub.innerHTML = '<option value="">Select item</option>';
+  itm.innerHTML = '<option value="">Select item</option>';
+  if (!mooe || !MOOE_TAXONOMY[mooe]) return;
+  Object.keys(MOOE_TAXONOMY[mooe]).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    sub.appendChild(opt);
+  });
+}
+
+function mmCascadeItem() {
+  const mooe = document.getElementById('mm-mooe').value;
+  const subcat = document.getElementById('mm-subcat').value;
+  const itm = document.getElementById('mm-item');
+  itm.innerHTML = '<option value="">Select item</option>';
+  if (!mooe || !subcat || !MOOE_TAXONOMY[mooe] || !MOOE_TAXONOMY[mooe][subcat]) return;
+  MOOE_TAXONOMY[mooe][subcat].forEach(i => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = i;
+    itm.appendChild(opt);
+  });
+}
+
+function openMOOEModal(id) {
+  mmPopulateMooe();
+  document.getElementById('mm-id').value = id || '';
+  document.getElementById('mm-cost-type').value = 'direct';
+  document.getElementById('mm-mooe').value = '';
+  document.getElementById('mm-subcat').innerHTML = '<option value="">Select item</option>';
+  document.getElementById('mm-item').innerHTML = '<option value="">Select item</option>';
+  document.getElementById('mm-spec').value = '';
+  document.getElementById('mm-amount').value = 0;
+  document.getElementById('mm-funding').value = 'DOST';
+  document.getElementById('mooeModalTitle').textContent = 'Add/Edit MOOE';
+  if (id) {
+    const item = budget.mooe.find(i => i.id == id);
+    if (item) {
+      document.getElementById('mm-cost-type').value = item.costType || 'direct';
+      document.getElementById('mm-mooe').value = item.mooe || '';
+      mmCascadeSubcat();
+      document.getElementById('mm-subcat').value = item.subcat || '';
+      mmCascadeItem();
+      document.getElementById('mm-item').value = item.item || '';
+      document.getElementById('mm-spec').value = item.spec || item.desc || '';
+      document.getElementById('mm-amount').value = item.amount !== undefined ? item.amount : ((item.cf || 0) + (item.df || 0));
+      document.getElementById('mm-funding').value = item.funding || 'DOST';
+    }
+  }
+  modals.mooeModal.show();
+}
+
+function saveMOOE() {
+  const id = document.getElementById('mm-id').value;
+  const costType = document.getElementById('mm-cost-type').value;
+  const mooe = document.getElementById('mm-mooe').value;
+  const subcat = document.getElementById('mm-subcat').value;
+  const item = document.getElementById('mm-item').value;
+  const spec = document.getElementById('mm-spec').value.trim();
+  const amount = parseFloat(document.getElementById('mm-amount').value) || 0;
+  const funding = document.getElementById('mm-funding').value;
+  if (!mooe) { alert('Please select a MOOE category.'); return; }
+  if (!subcat) { alert('Please select a MOOE subcategory.'); return; }
+  if (!item) { alert('Please select a MOOE item.'); return; }
+  if (!spec) { alert('Please enter a MOOE specification.'); return; }
+
+  const cf = funding === 'DOST' ? 0 : amount;
+  const df = funding === 'DOST' ? amount : 0;
+  const entry = { id: id ? parseInt(id, 10) : uid(), costType, mooe, subcat, item, spec, amount, funding, cf, df };
+
+  if (id) {
+    const existing = budget.mooe.find(i => i.id == entry.id);
+    if (existing) Object.assign(existing, entry);
+  } else {
+    budget.mooe.push(entry);
+  }
+  modals.mooeModal.hide();
+  renderMOOE();
+  updateTotals();
+  scheduleSaveStep3();
+}
+
+function delMOOE(id) {
+  if (!confirm('Remove this item?')) return;
+  budget.mooe = budget.mooe.filter(i => i.id != id);
+  renderMOOE();
+  updateTotals();
+  scheduleSaveStep3();
+}
+
+function renderMOOE() {
+  const tbody = document.getElementById('mooe-tbody');
+  if (!budget.mooe.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No MOOE items added.</td></tr>';
+    return;
+  }
+  const groups = {};
+  budget.mooe.forEach(item => {
+    const key = item.mooe || item.cat || 'Other';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+
+  let html = '';
+  let totCF = 0;
+  let totDF = 0;
+  Object.keys(groups).forEach(cat => {
+    let subCF = 0;
+    let subDF = 0;
+    html += `<tr class="sub-header"><td colspan="5">${cat}</td></tr>`;
+    groups[cat].forEach((item, idx) => {
+      const tot = (item.cf || 0) + (item.df || 0);
+      subCF += item.cf || 0;
+      subDF += item.df || 0;
+      const subcat = item.subcat || '';
+      const itemName = item.item || '';
+      const spec = item.spec || item.desc || '';
+      html += `<tr>
+        <td>
+          <strong>(${idx + 1})</strong>
+          ${subcat ? `<span style="color:#374151;">${subcat}</span> &rarr; ` : ''}
+          <span style="color:#374151;">(${spec})</span>
+          <br><span style="font-size:10px;color:#9ca3af;">
+            ${itemName ? itemName + ' &nbsp;&middot;&nbsp; ' : ''}
+            ${item.costType === 'indirect' ? 'Indirect' : 'Direct'}
+            &nbsp;&middot;&nbsp;
+            <span style="color:#3b82f6;">${item.funding || 'DOST'}</span>
+          </span>
+        </td>
+        <td class="num">${fmt(item.cf)}</td>
+        <td class="num">${fmt(item.df)}</td>
+        <td class="num">${fmt(tot)}</td>
+        <td style="text-align:center;">${actBtns(`openMOOEModal(${item.id})`, `delMOOE(${item.id})`)}</td>
+      </tr>`;
+    });
+    totCF += subCF;
+    totDF += subDF;
+    html += `<tr class="subtotal-row">
+      <td>Subtotal: ${cat}</td>
+      <td class="num">${fmt(subCF)}</td><td class="num">${fmt(subDF)}</td>
+      <td class="num">${fmt(subCF + subDF)}</td><td></td>
+    </tr>`;
+  });
+
+  html += `<tr class="total-row">
+    <td>Total MOOE</td>
+    <td class="num">${fmt(totCF)}</td><td class="num">${fmt(totDF)}</td>
+    <td class="num">${fmt(totCF + totDF)}</td><td></td>
+  </tr>`;
+  tbody.innerHTML = html;
+}
+
+function cmAutoCalc() {
+  const qty = parseFloat(document.getElementById('cm-qty').value) || 0;
+  const amount = parseFloat(document.getElementById('cm-amount').value) || 0;
+  const total = qty * amount;
+  document.getElementById('cm-total-display').textContent = fmt(total);
+}
+
+function cmToggleFields() {
+  const funding = document.getElementById('cm-funding').value;
+  const agencyRow = document.getElementById('cm-agency-row');
+  const agency = document.getElementById('cm-agency');
+  const showAgency = funding === 'DOST';
+  agencyRow.style.display = showAgency ? '' : 'none';
+  agency.required = showAgency;
+  if (!showAgency) {
+    agency.value = '';
+  }
+}
+
+function openCapitalModal(id) {
+  document.getElementById('cm-id').value = id || '';
+  document.getElementById('cm-cost-type').value = 'direct';
+  document.getElementById('cm-qty').value = 1;
+  document.getElementById('cm-desc').value = '';
+  document.getElementById('cm-amount').value = 0;
+  document.getElementById('cm-funding').value = 'DOST';
+  document.getElementById('cm-agency').value = '';
+  document.getElementById('cm-total-display').textContent = '₱0.00';
+  document.getElementById('capitalModalTitle').textContent = 'Add/Edit Capital Outlay';
+  if (id) {
+    const item = budget.capital.find(i => i.id == id);
+    if (item) {
+      document.getElementById('cm-cost-type').value = item.costType || 'direct';
+      document.getElementById('cm-qty').value = item.qty || 1;
+      document.getElementById('cm-desc').value = item.desc || item.item || '';
+      document.getElementById('cm-amount').value = item.amount !== undefined ? item.amount : ((item.cf || 0) + (item.df || 0));
+      document.getElementById('cm-funding').value = item.funding || 'DOST';
+      document.getElementById('cm-agency').value = item.agency || '';
+      cmAutoCalc();
+    }
+  }
+  cmToggleFields();
+  modals.capitalModal.show();
+}
+
+function saveCapital() {
+  const id = document.getElementById('cm-id').value;
+  const costType = document.getElementById('cm-cost-type').value;
+  const qty = parseFloat(document.getElementById('cm-qty').value) || 1;
+  const desc = document.getElementById('cm-desc').value.trim();
+  const amount = parseFloat(document.getElementById('cm-amount').value) || 0;
+  const funding = document.getElementById('cm-funding').value;
+  const agency = document.getElementById('cm-agency').value.trim();
+  if (!desc) { alert('Please enter a description.'); return; }
+  if (!amount) { alert('Please enter an amount greater than 0.'); return; }
+  if (funding === 'DOST' && !agency) { alert('Please select an agency for DOST funding.'); return; }
+  const total = qty * amount;
+  const cf = funding === 'DOST' ? 0 : total;
+  const df = funding === 'DOST' ? total : 0;
+  const entry = { id: id ? parseInt(id, 10) : uid(), costType, qty, desc, amount, funding, agency, cf, df };
+  if (id) {
+    const existing = budget.capital.find(i => i.id == entry.id);
+    if (existing) Object.assign(existing, entry);
+  } else {
+    budget.capital.push(entry);
+  }
+  modals.capitalModal.hide();
+  renderCapital();
+  updateTotals();
+  scheduleSaveStep3();
+}
+
+function delCapital(id) {
+  if (!confirm('Remove this item?')) return;
+  budget.capital = budget.capital.filter(i => i.id != id);
+  renderCapital();
+  updateTotals();
+  scheduleSaveStep3();
+}
+
+function renderCapital() {
+  const tbody = document.getElementById('capital-tbody');
+  if (!budget.capital.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No capital outlay items added.</td></tr>';
+    return;
+  }
+  const direct = budget.capital.filter(i => (i.costType || 'direct') === 'direct');
+  const indirect = budget.capital.filter(i => i.costType === 'indirect');
+  let html = '';
+  let totCF = 0;
+  let totDF = 0;
+
+  [{ label: 'Direct Cost', items: direct }, { label: 'Indirect Cost', items: indirect }].forEach(sec => {
+    if (!sec.items.length) return;
+    let subCF = 0;
+    let subDF = 0;
+    html += `<tr class="sub-header"><td colspan="5">${sec.label}</td></tr>`;
+    sec.items.forEach((item, idx) => {
+      const tot = (item.cf || 0) + (item.df || 0);
+      subCF += item.cf || 0;
+      subDF += item.df || 0;
+      const qty = item.qty || 1;
+      const unitAmt = item.amount !== undefined ? item.amount : tot;
+      html += `<tr>
+        <td>
+          <strong>(${idx + 1})</strong> ${item.desc || item.item || '-'}
+          <br><span style="font-size:10px;color:#9ca3af;">
+            Qty: ${qty} &nbsp;&middot;&nbsp; Unit: ${fmt(unitAmt)}
+            &nbsp;&middot;&nbsp; <span style="color:#3b82f6;">${item.funding || 'DOST'}</span>
+            ${item.agency ? '&nbsp;&middot;&nbsp;' + item.agency : ''}
+          </span>
+        </td>
+        <td class="num">${fmt(item.cf)}</td>
+        <td class="num">${fmt(item.df)}</td>
+        <td class="num">${fmt(tot)}</td>
+        <td style="text-align:center;">${actBtns(`openCapitalModal(${item.id})`, `delCapital(${item.id})`)}</td>
+      </tr>`;
+    });
+    totCF += subCF;
+    totDF += subDF;
+    html += `<tr class="subtotal-row">
+      <td>Subtotal: ${sec.label}</td>
+      <td class="num">${fmt(subCF)}</td><td class="num">${fmt(subDF)}</td>
+      <td class="num">${fmt(subCF + subDF)}</td><td></td>
+    </tr>`;
+  });
+
+  html += `<tr class="total-row">
+    <td>Total Capital Outlay</td>
+    <td class="num">${fmt(totCF)}</td><td class="num">${fmt(totDF)}</td>
+    <td class="num">${fmt(totCF + totDF)}</td><td></td>
+  </tr>`;
+  tbody.innerHTML = html;
+}
+
+function updateTotals() {
+  const psAll = [...budget.personnel.salary, ...budget.personnel.honoraria, ...budget.personnel.indirect];
+  const psCF = psAll.reduce((s, i) => s + (i.cf || 0), 0);
+  const psDF = psAll.reduce((s, i) => s + (i.df || 0), 0);
+  const moCF = budget.mooe.reduce((s, i) => s + (i.cf || 0), 0);
+  const moDF = budget.mooe.reduce((s, i) => s + (i.df || 0), 0);
+  const coCF = budget.capital.reduce((s, i) => s + (i.cf || 0), 0);
+  const coDF = budget.capital.reduce((s, i) => s + (i.df || 0), 0);
+  const tCF = psCF + moCF + coCF;
+  const tDF = psDF + moDF + coDF;
+
+  document.getElementById('t-ps-cf').textContent = fmt(psCF);
+  document.getElementById('t-ps-df').textContent = fmt(psDF);
+  document.getElementById('t-mo-cf').textContent = fmt(moCF);
+  document.getElementById('t-mo-df').textContent = fmt(moDF);
+  document.getElementById('t-co-cf').textContent = fmt(coCF);
+  document.getElementById('t-co-df').textContent = fmt(coDF);
+  document.getElementById('t-tot-cf').textContent = fmt(tCF);
+  document.getElementById('t-tot-df').textContent = fmt(tDF);
+  document.getElementById('t-grand').textContent = fmt(tCF + tDF);
+}
+
+function renderAllStep3() {
+  renderCounterpart();
+  renderPersonnel();
+  renderMOOE();
+  renderCapital();
+  updateTotals();
+}
+
+function scheduleSaveStep3() {
+  clearTimeout(step3SaveTimer);
+  step3SaveTimer = setTimeout(saveToFirestore, 800);
+}
+
+function saveNowStep3() { saveToFirestore(); }
+
+function restoreDataStep3(data) {
+  if (!data) return;
+  try {
+    budget = data;
+    budget.personnel.indirect = budget.personnel.indirect || [];
+    const ids = [
+      ...(budget.personnel.salary || []).map(i => i.id),
+      ...(budget.personnel.honoraria || []).map(i => i.id),
+      ...(budget.personnel.indirect || []).map(i => i.id),
+      ...(budget.mooe || []).map(i => i.id),
+      ...(budget.capital || []).map(i => i.id),
+      ...(budget.counterpart || []).flatMap(y => (y.agencies || []).map(a => a.id))
+    ].filter(Number.isFinite);
+    if (ids.length) _uid = Math.max(...ids) + 1;
+  } catch (e) {
+    console.error('Step 3 restore failed', e);
+  }
+}
+
+renderAllStep3();
+</script>
+</body>
+</html>
