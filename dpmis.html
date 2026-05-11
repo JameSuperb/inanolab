@@ -1044,15 +1044,9 @@
   <!-- ══ 5. BUDGET SUMMARY ══ -->
   <div class="totals-card">
     <h5>Budget Summary</h5>
-    <div class="t-row"><span>Personnel Services - Counterpart Fund</span><span class="t-amt" id="t-ps-cf">₱0.00</span></div>
-    <div class="t-row"><span>Personnel Services - DOST Fund</span><span class="t-amt" id="t-ps-df">₱0.00</span></div>
-    <div class="t-row"><span>MOOE - Counterpart Fund</span><span class="t-amt" id="t-mo-cf">₱0.00</span></div>
-    <div class="t-row"><span>MOOE - DOST Fund</span><span class="t-amt" id="t-mo-df">₱0.00</span></div>
-    <div class="t-row"><span>Capital Outlay - Counterpart Fund</span><span class="t-amt" id="t-co-cf">₱0.00</span></div>
-    <div class="t-row"><span>Capital Outlay - DOST Fund</span><span class="t-amt" id="t-co-df">₱0.00</span></div>
-    <div class="t-row" style="font-weight:700;margin-top:6px;"><span>Total Proposed Counterpart Fund</span><span class="t-amt" id="t-tot-cf">₱0.00</span></div>
+    <div class="t-grand"><span>Proposed Budget</span><span id="t-grand">₱0.00</span></div>
+    <div class="t-row" style="font-weight:700;margin-top:10px;"><span>Total Proposed Counterpart Fund</span><span class="t-amt" id="t-tot-cf">₱0.00</span></div>
     <div class="t-row" style="font-weight:700;"><span>Total Proposed DOST Fund</span><span class="t-amt" id="t-tot-df">₱0.00</span></div>
-    <div class="t-grand"><span>GRAND TOTAL</span><span id="t-grand">₱0.00</span></div>
   </div>
 
   <!-- Step 3 Action Bar -->
@@ -1077,10 +1071,6 @@
         <div class="mb-3">
           <label class="form-label-bold">Agency Name <span class="required-star">*</span></label>
           <input type="text" id="am-name" class="form-control form-control-sm" placeholder="e.g., DLSU-Laguna"/>
-        </div>
-        <div class="mb-3">
-          <label class="form-label-bold">Counterpart Amount (₱)</label>
-          <input type="number" id="am-amt" class="form-control form-control-sm" min="0" step="0.01" value="0"/>
         </div>
       </div>
       <div class="modal-footer">
@@ -2268,10 +2258,14 @@ function diffBudget(oldB, newB) {
   // Counterpart per year
   (n.counterpart || []).forEach((yr, i) => {
     const oyr = (o.counterpart || [])[i] || {};
-    const oFund = oyr.dostFund || 0, nFund = yr.dostFund || 0;
-    if (oFund !== nFund)
+    const oCF = oyr.cfFund || 0, nCF = yr.cfFund || 0;
+    if (oCF !== nCF)
+      changes.push({ field: `Counterpart Yr ${yr.year} – Counterpart Fund`,
+        from: `₱${oCF.toLocaleString()}`, to: `₱${nCF.toLocaleString()}` });
+    const oDF = oyr.dostFund || 0, nDF = yr.dostFund || 0;
+    if (oDF !== nDF)
       changes.push({ field: `Counterpart Yr ${yr.year} – DOST Fund`,
-        from: `₱${oFund.toLocaleString()}`, to: `₱${nFund.toLocaleString()}` });
+        from: `₱${oDF.toLocaleString()}`, to: `₱${nDF.toLocaleString()}` });
     const oAg = (oyr.agencies || []).length, nAg = (yr.agencies || []).length;
     if (oAg !== nAg)
       changes.push({ field: `Counterpart Yr ${yr.year} – Co-funders`,
@@ -2423,9 +2417,9 @@ function uid() { return _uid++; }
 
 let budget = {
   counterpart: [
-    { year: 1, expanded: true, dostFund: 0, agencies: [] },
-    { year: 2, expanded: false, dostFund: 0, agencies: [] },
-    { year: 3, expanded: false, dostFund: 0, agencies: [] }
+    { year: 1, expanded: true, cfFund: 0, dostFund: 0, agencies: [] },
+    { year: 2, expanded: false, cfFund: 0, dostFund: 0, agencies: [] },
+    { year: 3, expanded: false, cfFund: 0, dostFund: 0, agencies: [] }
   ],
   personnel: { salary: [], honoraria: [], indirect: [] },
   mooe: [],
@@ -2451,14 +2445,19 @@ function actBtns(editFn, delFn) {
 function renderCounterpart() {
   let html = '';
   budget.counterpart.forEach(yr => {
-    const cfSum = yr.agencies.reduce((s, a) => s + (parseFloat(a.amt) || 0), 0);
+    const cf = parseFloat(yr.cfFund) || 0;
     const df = parseFloat(yr.dostFund) || 0;
-    const total = cfSum + df;
+    const total = cf + df;
     const arrow = yr.expanded ? '&#9650;' : '&#9660;';
     html += `<tr class="year-row" onclick="toggleYear(${yr.year})" style="cursor:pointer;">
       <td>${arrow}</td>
       <td>Year ${yr.year}</td>
-      <td class="num">${fmt(cfSum)}</td>
+      <td class="num">
+        <input type="number" class="dost-input" value="${cf}" min="0" step="0.01"
+          onclick="event.stopPropagation()"
+          onchange="setCf(${yr.year},this.value)"
+          title="Enter Counterpart Fund for Year ${yr.year}"/>
+      </td>
       <td class="num">
         <input type="number" class="dost-input" value="${df}" min="0" step="0.01"
           onclick="event.stopPropagation()"
@@ -2476,25 +2475,23 @@ function renderCounterpart() {
             <span style="font-size:12px;font-weight:700;color:#1e3a5f;">Counterpart Agency - Year ${yr.year}</span>
             <button class="btn-add" onclick="openAgencyModal(${yr.year})">
               <svg xmlns="http://www.w3.org/2000/svg" style="width:10px;height:10px;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-              Add Counterpart
+              Add Counterpart Agency
             </button>
           </div>
           <table class="budget-table" style="min-width:300px;">
             <thead><tr>
-              <th>Agency</th>
-              <th class="num">Amount (₱)</th>
+              <th>Agency Name</th>
               <th style="width:90px;text-align:center;">Action</th>
             </tr></thead>
             <tbody>`;
 
       if (!yr.agencies.length) {
-        html += `<tr class="empty-row"><td colspan="3">No counterpart agencies added.</td></tr>`;
+        html += `<tr class="empty-row"><td colspan="2">No counterpart agencies added.</td></tr>`;
       }
 
       yr.agencies.forEach(ag => {
         html += `<tr>
           <td>${ag.name}</td>
-          <td class="num">${fmt(ag.amt)}</td>
           <td style="text-align:center;">${actBtns(`editAgency(${yr.year},'${ag.id}')`, `delAgency(${yr.year},'${ag.id}')`)}</td>
         </tr>`;
       });
@@ -2511,6 +2508,13 @@ function toggleYear(y) {
   renderCounterpart();
 }
 
+function setCf(y, val) {
+  budget.counterpart.find(x => x.year === y).cfFund = parseFloat(val) || 0;
+  renderCounterpart();
+  updateTotals();
+  scheduleSaveStep3();
+}
+
 function setDost(y, val) {
   budget.counterpart.find(x => x.year === y).dostFund = parseFloat(val) || 0;
   renderCounterpart();
@@ -2522,13 +2526,11 @@ function openAgencyModal(y, id) {
   document.getElementById('am-year').value = y;
   document.getElementById('am-id').value = id || '';
   document.getElementById('am-name').value = '';
-  document.getElementById('am-amt').value = 0;
   document.getElementById('agencyModalTitle').textContent = id ? 'Edit Counterpart Agency' : 'Add Counterpart Agency';
   if (id) {
     const ag = budget.counterpart.find(x => x.year === y).agencies.find(a => a.id == id);
     if (ag) {
       document.getElementById('am-name').value = ag.name;
-      document.getElementById('am-amt').value = ag.amt;
     }
   }
   modals.agencyModal.show();
@@ -2540,14 +2542,13 @@ function saveAgency() {
   const y = parseInt(document.getElementById('am-year').value, 10);
   const id = document.getElementById('am-id').value;
   const name = document.getElementById('am-name').value.trim();
-  const amt = parseFloat(document.getElementById('am-amt').value) || 0;
   if (!name) { alert('Please enter an agency name.'); return; }
   const yr = budget.counterpart.find(x => x.year === y);
   if (id) {
     const ag = yr.agencies.find(a => a.id == id);
-    if (ag) { ag.name = name; ag.amt = amt; }
+    if (ag) { ag.name = name; }
   } else {
-    yr.agencies.push({ id: uid(), name, amt });
+    yr.agencies.push({ id: uid(), name });
   }
   modals.agencyModal.hide();
   renderCounterpart();
@@ -3071,21 +3072,13 @@ function renderCapital() {
 
 function updateTotals() {
   const psAll = [...budget.personnel.salary, ...budget.personnel.honoraria, ...budget.personnel.indirect];
-  const psCF = psAll.reduce((s, i) => s + (i.cf || 0), 0);
-  const psDF = psAll.reduce((s, i) => s + (i.df || 0), 0);
-  const moCF = budget.mooe.reduce((s, i) => s + (i.cf || 0), 0);
-  const moDF = budget.mooe.reduce((s, i) => s + (i.df || 0), 0);
-  const coCF = budget.capital.reduce((s, i) => s + (i.cf || 0), 0);
-  const coDF = budget.capital.reduce((s, i) => s + (i.df || 0), 0);
-  const tCF = psCF + moCF + coCF;
-  const tDF = psDF + moDF + coDF;
+  const tCF = psAll.reduce((s, i) => s + (i.cf || 0), 0)
+            + budget.mooe.reduce((s, i) => s + (i.cf || 0), 0)
+            + budget.capital.reduce((s, i) => s + (i.cf || 0), 0);
+  const tDF = psAll.reduce((s, i) => s + (i.df || 0), 0)
+            + budget.mooe.reduce((s, i) => s + (i.df || 0), 0)
+            + budget.capital.reduce((s, i) => s + (i.df || 0), 0);
 
-  document.getElementById('t-ps-cf').textContent = fmt(psCF);
-  document.getElementById('t-ps-df').textContent = fmt(psDF);
-  document.getElementById('t-mo-cf').textContent = fmt(moCF);
-  document.getElementById('t-mo-df').textContent = fmt(moDF);
-  document.getElementById('t-co-cf').textContent = fmt(coCF);
-  document.getElementById('t-co-df').textContent = fmt(coDF);
   document.getElementById('t-tot-cf').textContent = fmt(tCF);
   document.getElementById('t-tot-df').textContent = fmt(tDF);
   document.getElementById('t-grand').textContent = fmt(tCF + tDF);
