@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "inanolab",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "3000", "--directory", "/d/Google Drive Jolarve/(01) Website/inanolab"],
+      "port": 3000
+    }
+  ]
+}

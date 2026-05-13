@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gas Laws Explorer</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Nunito', sans-serif; }
+    html, body { height: 100%; margin: 0; }
+    .gas-particle {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fbbf24;
+      animation: bounce-particle 2s infinite ease-in-out;
+    }
+    @keyframes bounce-particle {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(10px, -10px); }
+      50% { transform: translate(-5px, 5px); }
+      75% { transform: translate(8px, 8px); }
+    }
+    @keyframes bounce-fast {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(15px, -12px); }
+      40% { transform: translate(-10px, 8px); }
+      60% { transform: translate(12px, -8px); }
+      80% { transform: translate(-8px, -10px); }
+    }
+    @keyframes bubble-rise {
+      0% { transform: translateY(0) translateX(0); opacity: 1; }
+      100% { transform: translateY(-100%) translateX(20px); opacity: 0; }
+    }
+    @keyframes particle-dance {
+      0% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(20px, -15px) scale(1.1); }
+      50% { transform: translate(-15px, 15px) scale(0.9); }
+      75% { transform: translate(15px, 10px) scale(1.1); }
+      100% { transform: translate(0, 0) scale(1); }
+    }
+    @keyframes needle-swing {
+      0% { transform: rotate(-90deg); }
+      100% { transform: rotate(var(--needle-angle, -90deg)); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 5px rgba(59,130,246,0.3); }
+      50% { box-shadow: 0 0 20px rgba(59,130,246,0.6); }
+    }
+    .pulse-glow { animation: pulse-glow 2s infinite; }
+    @keyframes float-up {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .float-anim { animation: float-up 3s infinite ease-in-out; }
+    .tab-active { background: #1e40af; color: white; }
+    .tab-inactive { background: #e2e8f0; color: #334155; }
+    .progress-step { transition: all 0.3s; }
+    .correct-answer { background: #dcfce7; border-color: #16a34a; }
+    .wrong-answer { background: #fee2e2; border-color: #dc2626; }
+    @keyframes flame-flicker {
+      0%, 100% { transform: scaleY(1) scaleX(1); }
+      33% { transform: scaleY(1.15) scaleX(0.85); }
+      66% { transform: scaleY(0.9) scaleX(1.1); }
+    }
+    @keyframes particle-pop-in {
+      0% { transform: scale(0); opacity: 0; }
+      70% { transform: scale(1.35); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-slate-50 overflow-auto">
+  <div id="app" class="w-full min-h-full">
+   <!-- Progress Bar -->
+   <header class="bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white p-4 sticky top-0 z-50 shadow-lg">
+    <div class="max-w-6xl mx-auto flex items-center justify-between flex-wrap gap-2">
+     <h1 id="main-title" class="text-xl md:text-2xl font-extrabold tracking-tight">🧪 Gas Laws Explorer</h1>
+     <div class="flex items-center gap-2">
+      <button onclick="goToSection(0)" class="progress-step w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" id="prog-0">1</button>
+      <div class="w-6 h-0.5 bg-blue-400"></div><button onclick="goToSection(1)" class="progress-step w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" id="prog-1">2</button>
+      <div class="w-6 h-0.5 bg-blue-400"></div><button onclick="goToSection(2)" class="progress-step w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" id="prog-2">3</button>
+     </div>
+    </div>
+   </header><!-- Section 1: Diagnostic Quiz -->
+   <section id="section-0" class="max-w-4xl mx-auto p-4 md:p-8">
+    <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-blue-100">
+     <div class="text-center mb-8">
+      <span class="inline-block bg-blue-100 text-blue-800 px-4 py-1 rounded-full text-sm font-semibold mb-3">Section 1 of 3</span>
+      <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 mb-2">📝 Diagnostic Quiz</h2>
+      <p class="text-slate-500">Test your knowledge of gas laws! Answer all 10 questions.</p>
+     </div>
+     <div id="quiz-container"></div>
+     <div id="quiz-results" class="hidden mt-6"></div>
+     <div class="flex justify-center mt-8 gap-4">
+      <button id="submit-quiz-btn" onclick="submitQuiz()" class="bg-blue-700 hover:bg-blue-800 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition-all transform hover:scale-105">Submit Quiz</button> <button id="proceed-btn" onclick="goToSection(1)" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition-all transform hover:scale-105">Proceed to Gas Laws Explorer →</button>
+     </div>
+    </div>
+   </section><!-- Section 2: Gas Laws Explorer -->
+   <section id="section-1" class="hidden max-w-6xl mx-auto p-4 md:p-8">
+    <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-indigo-100">
+     <div class="text-center mb-6">
+      <span class="inline-block bg-indigo-100 text-indigo-800 px-4 py-1 rounded-full text-sm font-semibold mb-3">Section 2 of 3</span>
+      <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 mb-2">🔬 Gas Laws Explorer</h2>
+      <p class="text-slate-500">Explore each gas law with interactive simulations!</p>
+     </div><!-- Tabs -->
+     <div class="flex flex-wrap gap-2 mb-6 justify-center">
+      <button onclick="showLaw(0)" id="law-tab-0" class="tab-active px-4 py-2 rounded-lg font-semibold text-sm transition-all">Boyle's Law</button> <button onclick="showLaw(1)" id="law-tab-1" class="tab-inactive px-4 py-2 rounded-lg font-semibold text-sm transition-all">Charles's Law</button> <button onclick="showLaw(2)" id="law-tab-2" class="tab-inactive px-4 py-2 rounded-lg font-semibold text-sm transition-all">Gay-Lussac's Law</button> <button onclick="showLaw(3)" id="law-tab-3" class="tab-inactive px-4 py-2 rounded-lg font-semibold text-sm transition-all">Avogadro's Law</button>
+     </div><!-- Law Panels -->
+     <div id="law-panels">
+      <!-- Boyle's Law -->
+      <div id="law-panel-0" class="law-panel">
+       <div class="grid md:grid-cols-2 gap-6">
+        <div>
+         <div class="bg-blue-50 rounded-xl p-5 mb-4 border border-blue-200">
+          <h3 class="text-xl font-bold text-blue-900 mb-2">Boyle's Law</h3>
+          <p class="text-3xl font-bold text-blue-700 mb-3 font-mono">P₁V₁ = P₂V₂</p>
+          <p class="text-slate-700 mb-2"><strong>Statement:</strong> At constant temperature and moles, pressure is inversely proportional to volume.</p>
+          <p class="text-slate-600 text-sm"><strong>Controlled:</strong> Temperature (T), Amount of gas (n)</p>
+          <p class="text-slate-600 text-sm mt-1"><strong>Application:</strong> Syringe — pushing the plunger reduces volume, increasing pressure inside.</p>
+         </div>
+        </div>
+        <div class="flex flex-col items-center">
+         <div class="relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-xl w-full h-52 flex items-end justify-center overflow-hidden border-2 border-slate-300 mb-4">
+          <div class="flex flex-col items-center mb-3" id="boyle-syringe-wrap">
+           <div id="boyle-plunger-rod" class="bg-slate-500 w-2 transition-all duration-300" style="height:20px;"></div>
+           <div id="boyle-plunger-head" class="bg-slate-600 rounded-sm z-10 transition-all duration-300" style="width:88px;height:10px;"></div>
+           <div id="boyle-syringe" class="relative border-4 border-blue-400 rounded-b-lg overflow-hidden transition-all duration-300" style="width:80px;height:100px;background:#dbeafe;">
+            <canvas id="boyle-canvas" style="position:absolute;top:0;left:0;display:block;"></canvas>
+           </div>
+           <div class="bg-blue-400 rounded-b" style="width:16px;height:12px;"></div>
+           <div class="bg-blue-300 rounded-b" style="width:6px;height:8px;"></div>
+          </div>
+          <div id="boyle-pressure-badge" class="absolute top-2 right-2 bg-white/80 rounded-lg px-2 py-1 text-xs font-bold text-blue-800 border border-blue-200">P: 1.00 atm</div>
+         </div>
+         <div class="w-full">
+          <label class="text-sm font-semibold text-slate-700">Volume: <span id="boyle-vol-val">100</span> mL</label> <input type="range" min="20" max="100" value="100" id="boyle-slider" oninput="updateBoyle()" class="w-full accent-blue-600">
+          <div class="mt-3 bg-yellow-50 border border-yellow-300 rounded-lg p-3 text-center">
+           <span class="text-sm text-slate-600">Pressure:</span> <span class="text-2xl font-bold text-blue-800 ml-2" id="boyle-pressure">1.00</span> <span class="text-sm text-slate-600"> atm</span>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div><!-- Charles's Law -->
+      <div id="law-panel-1" class="law-panel hidden">
+       <div class="grid md:grid-cols-2 gap-6">
+        <div>
+         <div class="bg-orange-50 rounded-xl p-5 mb-4 border border-orange-200">
+          <h3 class="text-xl font-bold text-orange-900 mb-2">Charles's Law</h3>
+          <p class="text-3xl font-bold text-orange-700 mb-3 font-mono">V₁/T₁ = V₂/T₂</p>
+          <p class="text-slate-700 mb-2"><strong>Statement:</strong> At constant pressure and moles, volume is directly proportional to temperature.</p>
+          <p class="text-slate-600 text-sm"><strong>Controlled:</strong> Pressure (P), Amount of gas (n)</p>
+          <p class="text-slate-600 text-sm mt-1"><strong>Application:</strong> Hot air balloon — heating air inside increases volume, making the balloon rise.</p>
+         </div>
+        </div>
+        <div class="flex flex-col items-center">
+         <div class="relative bg-gradient-to-b from-sky-100 to-sky-200 rounded-xl w-full h-52 flex items-center justify-center overflow-hidden border-2 border-sky-300 mb-4">
+          <div class="flex flex-col items-center relative z-10">
+           <div id="charles-balloon" class="rounded-full transition-all duration-500 shadow-lg relative overflow-hidden" style="width:60px;height:69px;background:radial-gradient(circle at 35% 35%, hsl(220,80%,75%), hsl(220,70%,45%));">
+            <div id="charles-particles" class="absolute inset-0 overflow-hidden"></div>
+           </div>
+           <div id="charles-knot" class="rounded-full transition-all duration-500" style="width:8px;height:8px;background:hsl(220,70%,40%);margin-top:-2px;"></div>
+           <div class="bg-slate-400" style="width:1px;height:22px;"></div>
+           <div id="charles-flame-wrap" class="flex justify-center gap-1 transition-opacity duration-300" style="opacity:0;">
+            <div style="width:8px;height:16px;background:linear-gradient(to top,#f97316,#fbbf24,transparent);border-radius:50% 50% 30% 30%;animation:flame-flicker 0.55s infinite;"></div>
+            <div style="width:12px;height:22px;background:linear-gradient(to top,#dc2626,#f97316,#fbbf24,transparent);border-radius:50% 50% 30% 30%;animation:flame-flicker 0.4s infinite 0.1s;"></div>
+            <div style="width:8px;height:16px;background:linear-gradient(to top,#f97316,#fbbf24,transparent);border-radius:50% 50% 30% 30%;animation:flame-flicker 0.6s infinite 0.2s;"></div>
+           </div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 h-3 bg-green-700 rounded"></div>
+          <div id="charles-temp-badge" class="absolute top-2 right-2 bg-white/80 rounded-lg px-2 py-1 text-xs font-bold text-orange-800 border border-orange-200">300 K</div>
+         </div>
+         <div class="w-full">
+          <label class="text-sm font-semibold text-slate-700">Temperature: <span id="charles-temp-val">300</span> K</label> <input type="range" min="200" max="500" value="300" id="charles-slider" oninput="updateCharles()" class="w-full accent-orange-500">
+          <div class="mt-3 bg-orange-50 border border-orange-300 rounded-lg p-3 text-center">
+           <span class="text-sm text-slate-600">Volume:</span> <span class="text-2xl font-bold text-orange-800 ml-2" id="charles-volume">1.00</span> <span class="text-sm text-slate-600"> L</span>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div><!-- Gay-Lussac's Law -->
+      <div id="law-panel-2" class="law-panel hidden">
+       <div class="grid md:grid-cols-2 gap-6">
+        <div>
+         <div class="bg-red-50 rounded-xl p-5 mb-4 border border-red-200">
+          <h3 class="text-xl font-bold text-red-900 mb-2">Gay-Lussac's Law</h3>
+          <p class="text-3xl font-bold text-red-700 mb-3 font-mono">P₁/T₁ = P₂/T₂</p>
+          <p class="text-slate-700 mb-2"><strong>Statement:</strong> At constant volume and moles, pressure is directly proportional to temperature.</p>
+          <p class="text-slate-600 text-sm"><strong>Controlled:</strong> Volume (V), Amount of gas (n)</p>
+          <p class="text-slate-600 text-sm mt-1"><strong>Application:</strong> Pressure cooker — heating at constant volume increases pressure, cooking food faster.</p>
+         </div>
+        </div>
+        <div class="flex flex-col items-center">
+         <div class="relative bg-gradient-to-b from-slate-100 to-slate-200 rounded-xl w-full h-52 flex flex-col items-center justify-center overflow-hidden border-2 border-slate-300 mb-4 transition-all duration-300" id="gl-viz">
+          <div class="flex items-center gap-3">
+           <div id="gl-tank" class="relative rounded-lg border-4 border-slate-600 overflow-hidden" style="width:92px;height:112px;background:linear-gradient(180deg,#eff6ff,#dbeafe);">
+            <div id="gl-tank-core" class="absolute inset-2 rounded transition-all duration-300" style="background:radial-gradient(circle at center, rgba(59,130,246,0.35), rgba(30,64,175,0.08));"></div>
+            <div class="absolute bottom-1 left-0 right-0 text-center text-[10px] font-semibold text-slate-700">V constant</div>
+           </div>
+           <div class="rounded-lg border-2 border-slate-400 bg-slate-900/95 p-2" style="width:128px;">
+            <div class="text-[10px] font-semibold text-slate-300 mb-1 tracking-wide">PRESSURE TRANSDUCER</div>
+            <canvas id="gl-waveform" class="rounded border border-slate-600 bg-slate-950" style="width:100%;height:44px;display:block;"></canvas>
+            <div class="mt-1 flex items-baseline justify-between">
+             <span id="gl-pressure-display" class="text-lg font-bold text-red-300">1.00 atm</span>
+             <span class="text-[10px] text-slate-400">LIVE</span>
+            </div>
+            <div class="mt-1 h-2 w-full rounded bg-slate-700 overflow-hidden">
+             <div id="gl-pressure-fill" class="h-full transition-all duration-300" style="width:25%;background:linear-gradient(90deg,#60a5fa,#f59e0b);"></div>
+            </div>
+           </div>
+          </div>
+          <div id="gl-danger-badge" class="text-xs font-bold text-red-600 mt-2 transition-opacity duration-300" style="opacity:0;">HIGH PRESSURE: CHECK SEAL INTEGRITY</div>
+          <div id="gl-temp-badge" class="absolute top-2 right-2 bg-white/80 rounded-lg px-2 py-1 text-xs font-bold text-red-800 border border-red-200">300 K</div>
+         </div>
+         <div class="w-full">
+          <label class="text-sm font-semibold text-slate-700">Temperature: <span id="gl-temp-val">300</span> K</label> <input type="range" min="200" max="600" value="300" id="gl-slider" oninput="updateGL()" class="w-full accent-red-500">
+          <div class="mt-3 bg-red-50 border border-red-300 rounded-lg p-3 text-center">
+           <span class="text-sm text-slate-600">Pressure:</span> <span class="text-2xl font-bold text-red-800 ml-2" id="gl-pressure">1.00</span> <span class="text-sm text-slate-600"> atm</span>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div><!-- Avogadro's Law -->
+      <div id="law-panel-3" class="law-panel hidden">
+       <div class="grid md:grid-cols-2 gap-6">
+        <div>
+         <div class="bg-green-50 rounded-xl p-5 mb-4 border border-green-200">
+          <h3 class="text-xl font-bold text-green-900 mb-2">Avogadro's Law</h3>
+          <p class="text-3xl font-bold text-green-700 mb-3 font-mono">V₁/n₁ = V₂/n₂</p>
+          <p class="text-slate-700 mb-2"><strong>Statement:</strong> At constant temperature and pressure, volume is directly proportional to the number of moles.</p>
+          <p class="text-slate-600 text-sm"><strong>Controlled:</strong> Temperature (T), Pressure (P)</p>
+          <p class="text-slate-600 text-sm mt-1"><strong>Application:</strong> Inflating a balloon — adding more air particles increases the balloon's volume.</p>
+         </div>
+        </div>
+        <div class="flex flex-col items-center">
+         <div class="relative bg-gradient-to-b from-green-50 to-green-100 rounded-xl w-full h-52 flex items-center justify-center overflow-hidden border-2 border-green-300 mb-4">
+          <div class="flex flex-col items-center">
+           <div id="avo-balloon" class="rounded-full transition-all duration-500 shadow-lg relative overflow-hidden" style="width:50px;height:55px;background:radial-gradient(circle at 35% 35%, #4ade80, #0d9488);">
+            <div id="avo-particles" class="absolute inset-0 overflow-hidden"></div>
+           </div>
+           <div class="rounded-full bg-teal-600" style="width:7px;height:7px;margin-top:-2px;"></div>
+           <div class="bg-slate-400" style="width:1px;height:18px;"></div>
+          </div>
+          <div id="avo-mol-badge" class="absolute top-2 right-2 bg-white/80 rounded-lg px-2 py-1 text-xs font-bold text-green-800 border border-green-200">1.0 mol</div>
+         </div>
+         <div class="w-full">
+          <label class="text-sm font-semibold text-slate-700">Moles of gas: <span id="avo-mol-val">1.0</span> mol</label> <input type="range" min="1" max="5" step="0.5" value="1" id="avo-slider" oninput="updateAvo()" class="w-full accent-green-500">
+          <div class="mt-3 bg-green-50 border border-green-300 rounded-lg p-3 text-center">
+           <span class="text-sm text-slate-600">Volume:</span> <span class="text-2xl font-bold text-green-800 ml-2" id="avo-volume">22.4</span> <span class="text-sm text-slate-600"> L</span>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="flex justify-center mt-8">
+      <button onclick="goToSection(2)" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition-all transform hover:scale-105">Proceed to Ideal Gas Law →</button>
+     </div>
+    </div>
+   </section><!-- Section 3: Ideal Gas Law Problem Solver -->
+   <section id="section-2" class="hidden max-w-5xl mx-auto p-4 md:p-8">
+    <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-purple-100">
+     <div class="text-center mb-6">
+      <span class="inline-block bg-purple-100 text-purple-800 px-4 py-1 rounded-full text-sm font-semibold mb-3">Section 3 of 3</span>
+      <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 mb-2">💨 Ideal Gas Law: Combined Variable Change</h2>
+      <p class="text-slate-500 mb-4">Solve a real-world problem where multiple variables change at once.</p>
+     </div><!-- Problem Statement -->
+     <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border-2 border-purple-200 mb-6">
+      <h3 class="font-bold text-lg text-purple-900 mb-3">📋 Problem</h3>
+      <p class="text-slate-700 mb-3">A gas initially occupies a volume of <strong>0.010 m³</strong> at a pressure of <strong>100,000 Pa</strong> and temperature of <strong>300 K</strong>.</p>
+      <p class="text-slate-700 mb-4">The gas is heated to <strong>450 K</strong> while compressed to a volume of <strong>0.008 m³</strong>.</p>
+      <p class="text-lg font-bold text-purple-800">What is the new pressure of the gas?</p>
+      <div class="mt-4 p-4 bg-white rounded-lg border border-purple-200">
+       <p class="text-sm text-slate-600 mb-2"><strong>Hint:</strong> This problem involves changes in all three variables (P, V, T). Use the combined gas law:</p>
+       <p class="text-2xl font-bold text-purple-800 font-mono text-center">(P₁V₁)/T₁ = (P₂V₂)/T₂</p>
+      </div>
+     </div><!-- Input Section -->
+     <div class="bg-slate-50 rounded-xl p-6 border mb-6">
+      <h3 class="font-bold text-lg text-slate-800 mb-4">🔢 Given Data (Initial State)</h3>
+      <div class="grid sm:grid-cols-3 gap-4 mb-6">
+       <div>
+        <label class="text-sm font-semibold text-slate-700">P₁ (Initial Pressure, Pa)</label> <input type="number" id="p1-input" value="100000" class="w-full mt-1 p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-purple-400 focus:outline-none" placeholder="100000">
+       </div>
+       <div>
+        <label class="text-sm font-semibold text-slate-700">V₁ (Initial Volume, m³)</label> <input type="number" id="v1-input" value="0.010" step="0.001" class="w-full mt-1 p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-purple-400 focus:outline-none" placeholder="0.010">
+       </div>
+       <div>
+        <label class="text-sm font-semibold text-slate-700">T₁ (Initial Temperature, K)</label> <input type="number" id="t1-input" value="300" class="w-full mt-1 p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-purple-400 focus:outline-none" placeholder="300">
+       </div>
+      </div>
+      <h3 class="font-bold text-lg text-slate-800 mb-4">🌡️ Final State Data</h3>
+      <div class="grid sm:grid-cols-2 gap-4 mb-6">
+       <div>
+        <label class="text-sm font-semibold text-slate-700">V₂ (Final Volume, m³)</label> <input type="number" id="v2-input" value="0.008" step="0.001" class="w-full mt-1 p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-purple-400 focus:outline-none" placeholder="0.008">
+       </div>
+       <div>
+        <label class="text-sm font-semibold text-slate-700">T₂ (Final Temperature, K)</label> <input type="number" id="t2-input" value="450" class="w-full mt-1 p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-purple-400 focus:outline-none" placeholder="450">
+       </div>
+      </div>
+      <h3 class="font-bold text-lg text-slate-800 mb-4">✏️ Your Answer</h3>
+      <div class="grid sm:grid-cols-2 gap-4 mb-6">
+       <div>
+        <label class="text-sm font-semibold text-slate-700">Your calculated P₂ (Pa)</label> <input type="number" id="user-answer" class="w-full mt-1 p-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-purple-400 focus:outline-none" placeholder="Enter your answer">
+       </div>
+      </div><button onclick="checkAnswer()" class="bg-purple-700 hover:bg-purple-800 text-white font-bold px-6 py-3 rounded-xl shadow transition-all w-full">Check Answer</button>
+     </div><!-- Solution Section -->
+     <div id="combined-result" class="hidden bg-green-50 border border-green-300 rounded-xl p-6 mb-6">
+      <h3 class="font-bold text-lg text-green-900 mb-3">✅ Solution</h3>
+      <div class="space-y-3">
+       <div class="bg-white p-3 rounded-lg border border-green-200">
+        <p class="text-sm text-slate-600"><strong>Combined Gas Law:</strong></p>
+        <p class="font-mono text-center font-bold text-purple-800">(P₁V₁)/T₁ = (P₂V₂)/T₂</p>
+       </div>
+       <div class="bg-white p-3 rounded-lg border border-green-200">
+        <p class="text-sm text-slate-600"><strong>Rearranged for P₂:</strong></p>
+        <p class="font-mono text-center font-bold text-purple-800">P₂ = (P₁V₁T₂)/(T₁V₂)</p>
+       </div>
+       <div class="bg-white p-3 rounded-lg border border-green-200">
+        <p class="text-sm text-slate-600"><strong>Substitution:</strong></p>
+        <p class="font-mono text-center text-sm" id="substitution-text"></p>
+       </div>
+       <div class="bg-purple-100 p-4 rounded-lg border-2 border-purple-300 text-center">
+        <p class="text-sm text-slate-600 mb-1">Final Pressure:</p>
+        <p class="text-3xl font-bold text-purple-800" id="final-pressure"></p>
+       </div>
+      </div>
+      <div class="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+       <p class="text-sm text-slate-700"><strong>Analysis:</strong> <span id="analysis-text"></span></p>
+      </div>
+     </div><!-- Reflection -->
+     <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200 mt-6">
+      <h3 class="font-bold text-lg text-indigo-900 mb-2">💭 Reflection</h3>
+      <p class="text-slate-700 text-lg" id="reflection-text">How do the four gas laws help us understand the Ideal Gas Law?</p><textarea class="w-full mt-3 p-3 rounded-lg border border-indigo-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-y" rows="3" placeholder="Type your reflection here..."></textarea>
+     </div>
+    </div>
+   </section>
+  </div>
+  <script>
+    // Config
+    const defaultConfig = {
+      app_title: 'Gas Laws Explorer',
+      reflection_question: 'How do the four gas laws help us understand the Ideal Gas Law?',
+      background_color: '#f8fafc',
+      surface_color: '#ffffff',
+      text_color: '#1e293b',
+      primary_action: '#1e40af',
+      secondary_action: '#4f46e5',
+      font_family: 'Nunito',
+      font_size: 16
+    };
+
+    if (window.elementSdk) window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => {
+        const font = config.font_family || defaultConfig.font_family;
+        const size = config.font_size || defaultConfig.font_size;
+        document.body.style.fontFamily = `${font}, sans-serif`;
+        document.body.style.fontSize = `${size}px`;
+        document.body.style.backgroundColor = config.background_color || defaultConfig.background_color;
+        document.body.style.color = config.text_color || defaultConfig.text_color;
+        document.getElementById('main-title').textContent = '🧪 ' + (config.app_title || defaultConfig.app_title);
+        document.getElementById('reflection-text').textContent = config.reflection_question || defaultConfig.reflection_question;
+      },
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+          { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+          { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+          { get: () => config.primary_action || defaultConfig.primary_action, set: (v) => { config.primary_action = v; window.elementSdk.setConfig({ primary_action: v }); } },
+          { get: () => config.secondary_action || defaultConfig.secondary_action, set: (v) => { config.secondary_action = v; window.elementSdk.setConfig({ secondary_action: v }); } }
+        ],
+        borderables: [],
+        fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+        fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ['app_title', config.app_title || defaultConfig.app_title],
+        ['reflection_question', config.reflection_question || defaultConfig.reflection_question]
+      ])
+    });
+
+    // Quiz Data - 20 questions to randomly select 10 from
+    const allQuestions = [
+      { q: "What happens to the pressure of a gas when its volume decreases at constant temperature?", opts: ["Pressure decreases", "Pressure remains constant", "Pressure increases", "Pressure becomes zero"], ans: 2, exp: "Boyle's Law: Pressure is inversely proportional to volume. When volume decreases, pressure increases." },
+      { q: "Boyle's Law describes the relationship between which two variables?", opts: ["Pressure and temperature", "Volume and temperature", "Pressure and volume", "Volume and moles"], ans: 2, exp: "Boyle's Law specifically relates pressure and volume at constant temperature." },
+      { q: "In Boyle's Law, which variable remains constant?", opts: ["Pressure", "Temperature", "Volume", "Number of particles only"], ans: 1, exp: "Boyle's Law applies when temperature and the amount of gas (n) remain constant." },
+      { q: "If the volume of a gas doubles at constant temperature, the pressure will:", opts: ["Double", "Triple", "Be halved", "Remain the same"], ans: 2, exp: "Boyle's Law (P₁V₁ = P₂V₂): If V doubles, P is halved to maintain the product." },
+      { q: "Boyle's Law is an example of:", opts: ["Direct relationship", "Inverse relationship", "Exponential relationship", "Linear increase only"], ans: 1, exp: "Boyle's Law shows an inverse relationship: as one variable increases, the other decreases." },
+      { q: "What happens to the volume of a gas when temperature increases at constant pressure?", opts: ["Volume decreases", "Volume increases", "Volume remains constant", "Volume becomes zero"], ans: 1, exp: "Charles's Law: Volume is directly proportional to temperature at constant pressure." },
+      { q: "Which variable remains constant in Charles's Law?", opts: ["Pressure", "Temperature", "Volume", "Number of moles"], ans: 0, exp: "Charles's Law applies when pressure and the amount of gas remain constant." },
+      { q: "Why must temperature be measured in Kelvin in gas laws?", opts: ["Kelvin has no negative values", "Celsius is too large", "Kelvin measures pressure directly", "Kelvin measures volume directly"], ans: 0, exp: "Kelvin has no negative values, which is necessary for direct proportionality relationships in gas laws." },
+      { q: "A balloon placed inside a freezer usually becomes smaller because:", opts: ["Pressure increases", "Gas particles disappear", "Temperature decreases causing volume to decrease", "The balloon loses mass"], ans: 2, exp: "Charles's Law: When temperature decreases at constant pressure, volume decreases." },
+      { q: "Charles's Law shows a:", opts: ["Direct relationship between volume and temperature", "Direct relationship between pressure and volume", "Inverse relationship between pressure and temperature", "No relationship between variables"], ans: 0, exp: "Charles's Law demonstrates V/T = constant, a direct proportional relationship." },
+      { q: "What happens to gas pressure when temperature increases at constant volume?", opts: ["Pressure decreases", "Pressure increases", "Pressure remains constant", "Pressure becomes negative"], ans: 1, exp: "Gay-Lussac's Law: Pressure is directly proportional to temperature at constant volume." },
+      { q: "Which variable is constant in Gay-Lussac's Law?", opts: ["Pressure", "Temperature", "Volume", "Number of moles"], ans: 2, exp: "Gay-Lussac's Law applies when volume and the amount of gas remain constant." },
+      { q: "Why can heated aerosol cans become dangerous?", opts: ["Their volume decreases", "Gas escapes immediately", "Pressure inside increases", "The gas freezes"], ans: 2, exp: "Gay-Lussac's Law: Heating a sealed can increases pressure, creating danger." },
+      { q: "If the temperature of a confined gas decreases, its pressure will:", opts: ["Increase", "Decrease", "Remain constant", "Double automatically"], ans: 1, exp: "Gay-Lussac's Law: Pressure is directly proportional to temperature at constant volume." },
+      { q: "Gay-Lussac's Law describes the relationship between:", opts: ["Volume and moles", "Pressure and temperature", "Pressure and volume", "Volume and temperature"], ans: 1, exp: "Gay-Lussac's Law relates pressure and temperature: P/T = constant." },
+      { q: "What happens to gas volume when more gas particles are added at constant temperature and pressure?", opts: ["Volume decreases", "Volume increases", "Volume remains constant", "Pressure becomes zero"], ans: 1, exp: "Avogadro's Law: Volume is directly proportional to the number of moles at constant T and P." },
+      { q: "Which variables are constant in Avogadro's Law?", opts: ["Pressure and temperature", "Volume and temperature", "Pressure and volume", "Pressure and moles"], ans: 0, exp: "Avogadro's Law applies when pressure and temperature remain constant." },
+      { q: "Inflating a balloon demonstrates which gas law most directly?", opts: ["Boyle's Law", "Charles's Law", "Gay-Lussac's Law", "Avogadro's Law"], ans: 3, exp: "Avogadro's Law: Adding more air (moles) increases the balloon's volume at constant T and P." },
+      { q: "Which equation represents the Ideal Gas Law?", opts: ["F=ma", "PV=nRT", "V=IR", "P=mv"], ans: 1, exp: "The Ideal Gas Law is PV = nRT, combining all four gas laws." },
+      { q: "Real gases behave most like ideal gases under which conditions?", opts: ["High pressure and low temperature", "Low pressure and high temperature", "High pressure and high temperature", "Low pressure and low temperature"], ans: 1, exp: "Real gases approximate ideal behavior at low pressure and high temperature." }
+    ];
+
+    // Randomly select 10 questions
+    function getRandomQuestions(questions, count) {
+      const shuffled = [...questions].sort(() => Math.random() - 0.5);
+      return shuffled.slice(0, count);
+    }
+
+    const quizData = getRandomQuestions(allQuestions, 10);
+
+    let currentSection = 0;
+    let quizSubmitted = false;
+
+    function goToSection(idx) {
+      document.querySelectorAll('[id^="section-"]').forEach((s, i) => {
+        s.classList.toggle('hidden', i !== idx);
+      });
+      currentSection = idx;
+      updateProgress();
+      window.scrollTo(0, 0);
+      if (idx === 1) setTimeout(initBoyleCanvas, 50);
+    }
+
+    function updateProgress() {
+      for (let i = 0; i < 3; i++) {
+        const el = document.getElementById(`prog-${i}`);
+        if (i === currentSection) { el.className = 'progress-step w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-yellow-400 text-slate-900'; }
+        else if (i < currentSection) { el.className = 'progress-step w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-green-400 text-white'; }
+        else { el.className = 'progress-step w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-blue-400/30 text-blue-200'; }
+      }
+    }
+
+    // Build Quiz
+    function buildQuiz() {
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = quizData.map((item, i) => `
+        <div class="mb-5 p-4 rounded-xl border border-slate-200 bg-slate-50" id="q-card-${i}">
+          <p class="font-semibold text-slate-800 mb-2">${i + 1}. ${item.q}</p>
+          <div class="grid sm:grid-cols-2 gap-2">
+            ${item.opts.map((opt, j) => `
+              <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-200 bg-white cursor-pointer hover:bg-blue-50 transition-all">
+                <input type="radio" name="q${i}" value="${j}" class="accent-blue-600">
+                <span class="text-sm">${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+          <p class="hidden mt-2 text-sm p-2 rounded-lg" id="q-exp-${i}"></p>
+        </div>
+      `).join('');
+    }
+
+    function submitQuiz() {
+      if (quizSubmitted) return;
+      let score = 0;
+      quizData.forEach((item, i) => {
+        const selected = document.querySelector(`input[name="q${i}"]:checked`);
+        const card = document.getElementById(`q-card-${i}`);
+        const exp = document.getElementById(`q-exp-${i}`);
+        const isCorrect = selected && parseInt(selected.value) === item.ans;
+        if (isCorrect) score++;
+        card.classList.add(isCorrect ? 'correct-answer' : 'wrong-answer');
+        card.classList.add('border-2');
+        exp.classList.remove('hidden');
+        exp.className = `mt-2 text-sm p-2 rounded-lg ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+        exp.innerHTML = `${isCorrect ? '✅ Correct!' : `❌ Correct answer: ${item.opts[item.ans]}`} — ${item.exp}`;
+      });
+      const results = document.getElementById('quiz-results');
+      results.classList.remove('hidden');
+      results.innerHTML = `<div class="text-center p-4 rounded-xl ${score >= 7 ? 'bg-green-100 border-green-300' : 'bg-yellow-100 border-yellow-300'} border">
+        <p class="text-2xl font-bold">${score >= 7 ? '🎉' : '📚'} Score: ${score}/10</p>
+        <p class="text-slate-600 mt-1">${score >= 7 ? 'Great job! You have a solid understanding.' : 'Keep learning! Review the Gas Laws Explorer section.'}</p>
+      </div>`;
+      document.getElementById('submit-quiz-btn').classList.add('hidden');
+      document.getElementById('proceed-btn').classList.remove('hidden');
+      quizSubmitted = true;
+    }
+
+    // Gas Laws Explorer
+    function showLaw(idx) {
+      document.querySelectorAll('.law-panel').forEach((p, i) => p.classList.toggle('hidden', i !== idx));
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`law-tab-${i}`).className = i === idx ? 'tab-active px-4 py-2 rounded-lg font-semibold text-sm transition-all' : 'tab-inactive px-4 py-2 rounded-lg font-semibold text-sm transition-all';
+      }
+    }
+
+    // Boyle's Law — canvas physics simulation
+    let _bPtcls = [], _bAnimId = null;
+
+    function initBoyleCanvas() {
+      const canvas = document.getElementById('boyle-canvas');
+      if (!canvas) return;
+      const syringe = document.getElementById('boyle-syringe');
+      const w = Math.max(1, (syringe.offsetWidth || 80) - 8);
+      const h = Math.max(1, (syringe.offsetHeight || 100) - 8);
+      canvas.width = w; canvas.height = h;
+      _bPtcls = Array.from({length: 12}, () => {
+        const a = Math.random() * Math.PI * 2, spd = 1.5 + Math.random();
+        return { x: 5 + Math.random() * (w - 10), y: 5 + Math.random() * (h - 10), vx: Math.cos(a) * spd, vy: Math.sin(a) * spd };
+      });
+      if (_bAnimId) cancelAnimationFrame(_bAnimId);
+      _bLoop();
+    }
+
+    function _bLoop() {
+      const canvas = document.getElementById('boyle-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const vol = parseInt(document.getElementById('boyle-slider').value);
+      const pressure = 100 / vol;
+      const spd = 1.2 + (pressure - 1) * 1.1;
+      const r = 5, w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      _bPtcls.forEach(p => {
+        const mag = Math.hypot(p.vx, p.vy);
+        if (mag > 0.01) { p.vx = p.vx / mag * spd; p.vy = p.vy / mag * spd; }
+        else { const a = Math.random() * Math.PI * 2; p.vx = Math.cos(a) * spd; p.vy = Math.sin(a) * spd; }
+        p.x += p.vx; p.y += p.vy;
+        if (p.x - r < 0) { p.x = r; p.vx = Math.abs(p.vx); }
+        if (p.x + r > w) { p.x = w - r; p.vx = -Math.abs(p.vx); }
+        if (p.y - r < 0) { p.y = r; p.vy = Math.abs(p.vy); }
+        if (p.y + r > h) { p.y = h - r; p.vy = -Math.abs(p.vy); }
+        const hue = Math.max(0, 210 - (pressure - 1) * 65);
+        const g = ctx.createRadialGradient(p.x - 1.5, p.y - 1.5, 1, p.x, p.y, r);
+        g.addColorStop(0, `hsla(${hue},90%,78%,1)`);
+        g.addColorStop(1, `hsla(${hue},70%,45%,0.85)`);
+        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = g; ctx.fill();
+      });
+      _bAnimId = requestAnimationFrame(_bLoop);
+    }
+
+    function updateBoyle() {
+      const vol = parseInt(document.getElementById('boyle-slider').value);
+      document.getElementById('boyle-vol-val').textContent = vol;
+      const pressure = (100 / vol).toFixed(2);
+      document.getElementById('boyle-pressure').textContent = pressure;
+      document.getElementById('boyle-pressure-badge').textContent = `P: ${pressure} atm`;
+      const syringe = document.getElementById('boyle-syringe');
+      const newH = vol;
+      const fixedW = parseFloat(syringe.dataset.fixedWidth || '') || syringe.getBoundingClientRect().width || 80;
+      syringe.dataset.fixedWidth = String(fixedW);
+      syringe.style.height = `${newH}px`; syringe.style.width = `${fixedW}px`;
+      const ph = document.getElementById('boyle-plunger-head');
+      if (ph) ph.style.width = `${fixedW + 8}px`;
+      const pr = document.getElementById('boyle-plunger-rod');
+      if (pr) pr.style.height = `${Math.max(4, (100 - vol) * 0.5)}px`;
+      const canvas = document.getElementById('boyle-canvas');
+      if (canvas) { canvas.width = Math.max(1, fixedW - 8); canvas.height = Math.max(1, newH - 8); }
+      const pf = parseFloat(pressure);
+      syringe.style.borderColor = pf >= 3.5 ? '#dc2626' : '#60a5fa';
+      syringe.style.boxShadow = pf >= 3.5 ? `inset 0 0 ${Math.round((pf - 3.5) * 12)}px rgba(220,38,38,0.3)` : '';
+    }
+
+    // Charles's Law
+    function _buildCharlesParticles(temp) {
+      const pc = document.getElementById('charles-particles');
+      if (!pc) return;
+      pc.innerHTML = '';
+      const spd = Math.max(0.5, 2.8 - (500 - temp) * 0.006);
+      const hue = Math.max(0, 220 - Math.round(((temp - 200) / 300) * 220));
+      for (let i = 0; i < 6; i++) {
+        const p = document.createElement('div');
+        p.style.cssText = `position:absolute;width:5px;height:5px;border-radius:50%;background:hsla(${hue},85%,78%,0.9);top:${15+Math.random()*65}%;left:${10+Math.random()*75}%;animation:bounce-particle ${spd}s infinite ease-in-out;animation-delay:${(Math.random()*spd).toFixed(2)}s;`;
+        pc.appendChild(p);
+      }
+    }
+
+    function updateCharles() {
+      const temp = parseInt(document.getElementById('charles-slider').value);
+      document.getElementById('charles-temp-val').textContent = temp;
+      document.getElementById('charles-temp-badge').textContent = `${temp} K`;
+      const vol = (temp / 300).toFixed(2);
+      document.getElementById('charles-volume').textContent = vol;
+      const balloon = document.getElementById('charles-balloon');
+      const size = 60 + (temp - 200) * 0.3;
+      balloon.style.width = `${size}px`; balloon.style.height = `${size * 1.15}px`;
+      const t = Math.max(0, Math.min(1, (temp - 200) / 300));
+      const hue = Math.round(220 - t * 220), sat = 70 + t * 20;
+      balloon.style.background = `radial-gradient(circle at 35% 35%, hsl(${hue+20},${sat}%,78%), hsl(${hue},${sat}%,48%))`;
+      const knot = document.getElementById('charles-knot');
+      if (knot) knot.style.background = `hsl(${hue},${sat}%,38%)`;
+      balloon.style.animation = `float-up ${Math.max(1.5, 4 - (temp-200)*0.008)}s infinite ease-in-out`;
+      const fw = document.getElementById('charles-flame-wrap');
+      if (fw) fw.style.opacity = temp > 340 ? Math.min(1, (temp - 340) / 160) : 0;
+      _buildCharlesParticles(temp);
+    }
+
+    // Gay-Lussac's Law — transducer waveform readout
+    let _glAnimId = null;
+    const _glState = { temp: 300, phase: 0 };
+
+    function _startGLAnimation() {
+      const canvas = document.getElementById('gl-waveform');
+      if (!canvas) return;
+      if (_glAnimId) cancelAnimationFrame(_glAnimId);
+
+      const draw = () => {
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        if (!w || !h) {
+          _glAnimId = requestAnimationFrame(draw);
+          return;
+        }
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          _glAnimId = requestAnimationFrame(draw);
+          return;
+        }
+
+        const cx = w * 0.5;
+        const cy = h * 1.05;
+        const r = Math.min(w, h) * 0.65;
+        const t = (_glState.temp - 200) / 400;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Draw gauge background and scale
+        ctx.fillStyle = 'rgba(15,23,42,0.7)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, Math.PI, Math.PI * 2, false);
+        ctx.fill();
+
+        // Draw color zones: blue (low), amber (medium), red (high)
+        const startAngle = Math.PI;
+        const endAngle = Math.PI * 2;
+        const zoneRange = endAngle - startAngle;
+
+        // Blue zone (0-0.4)
+        ctx.fillStyle = 'rgba(96,165,250,0.5)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, startAngle, startAngle + zoneRange * 0.4, false);
+        ctx.fill();
+
+        // Amber zone (0.4-0.7)
+        ctx.fillStyle = 'rgba(251,191,36,0.5)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, startAngle + zoneRange * 0.4, startAngle + zoneRange * 0.7, false);
+        ctx.fill();
+
+        // Red zone (0.7-1.0)
+        ctx.fillStyle = 'rgba(239,68,68,0.5)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, startAngle + zoneRange * 0.7, endAngle, false);
+        ctx.fill();
+
+        // Draw tick marks and labels
+        ctx.strokeStyle = 'rgba(148,163,184,0.6)';
+        ctx.lineWidth = 1;
+        ctx.fillStyle = 'rgba(203,213,225,0.8)';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+
+        for (let i = 0; i <= 5; i++) {
+          const angle = startAngle + (endAngle - startAngle) * (i / 5);
+          const x1 = cx + r * 0.9 * Math.cos(angle);
+          const y1 = cy + r * 0.9 * Math.sin(angle);
+          const x2 = cx + r * 1.05 * Math.cos(angle);
+          const y2 = cy + r * 1.05 * Math.sin(angle);
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+
+          const label = (i * 0.4).toFixed(1);
+          const lx = cx + r * 1.25 * Math.cos(angle);
+          const ly = cy + r * 1.25 * Math.sin(angle);
+          ctx.fillText(label, lx, ly - 4);
+        }
+
+        // Draw needle pointing to current pressure
+        const needleAngle = startAngle + (endAngle - startAngle) * Math.min(1, t);
+        const nx = cx + r * 0.7 * Math.cos(needleAngle);
+        const ny = cy + r * 0.7 * Math.sin(needleAngle);
+
+        // Draw needle shadow
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 2;
+        ctx.strokeStyle = 'rgba(30,41,59,0.4)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx + 1, cy + 1);
+        ctx.lineTo(nx + 1, ny + 1);
+        ctx.stroke();
+        ctx.shadowColor = 'transparent';
+
+        // Draw needle
+        ctx.strokeStyle = t < 0.45 ? '#60a5fa' : t < 0.75 ? '#f59e0b' : '#f87171';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(nx, ny);
+        ctx.stroke();
+
+        // Draw center pivot
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#64748b';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        _glAnimId = requestAnimationFrame(draw);
+      };
+
+      _glAnimId = requestAnimationFrame(draw);
+    }
+
+    function updateGL() {
+      const temp = parseInt(document.getElementById('gl-slider').value);
+      _glState.temp = temp;
+      document.getElementById('gl-temp-val').textContent = temp;
+      const pressure = (temp / 300).toFixed(2);
+      document.getElementById('gl-pressure').textContent = pressure;
+      document.getElementById('gl-pressure-display').textContent = `${pressure} atm`;
+      const tempBadge = document.getElementById('gl-temp-badge');
+      if (tempBadge) tempBadge.textContent = `${temp} K`;
+      const t = (temp - 200) / 400;
+      const fill = document.getElementById('gl-pressure-fill');
+      if (fill) {
+        fill.style.width = `${Math.round(20 + t * 80)}%`;
+        fill.style.background = t < 0.45
+          ? 'linear-gradient(90deg,#60a5fa,#22d3ee)'
+          : t < 0.75
+            ? 'linear-gradient(90deg,#fbbf24,#f97316)'
+            : 'linear-gradient(90deg,#fb7185,#dc2626)';
+      }
+      const core = document.getElementById('gl-tank-core');
+      if (core) {
+        core.style.background = t < 0.45
+          ? 'radial-gradient(circle at center, rgba(59,130,246,0.35), rgba(30,64,175,0.08))'
+          : t < 0.75
+            ? 'radial-gradient(circle at center, rgba(245,158,11,0.45), rgba(180,83,9,0.10))'
+            : 'radial-gradient(circle at center, rgba(239,68,68,0.55), rgba(127,29,29,0.14))';
+      }
+      const badge = document.getElementById('gl-danger-badge');
+      if (badge) badge.style.opacity = t > 0.75 ? '1' : '0';
+      const viz = document.getElementById('gl-viz');
+      if (viz) {
+        viz.style.borderColor = t > 0.75 ? '#dc2626' : '#cbd5e1';
+        viz.style.boxShadow = t > 0.75 ? `0 0 ${Math.round((t - 0.75) * 60)}px rgba(220,38,38,0.35)` : '';
+      }
+    }
+
+    // Avogadro's Law — pop-in particles
+    const _avoColors = [
+      ['#86efac','#15803d'],['#93c5fd','#1d4ed8'],['#fdba74','#92400e'],
+      ['#f9a8d4','#9d174d'],['#c4b5fd','#5b21b6']
+    ];
+
+    function updateAvo() {
+      const mol = parseFloat(document.getElementById('avo-slider').value);
+      document.getElementById('avo-mol-val').textContent = mol.toFixed(1);
+      document.getElementById('avo-mol-badge').textContent = `${mol.toFixed(1)} mol`;
+      const vol = (mol * 22.4).toFixed(1);
+      document.getElementById('avo-volume').textContent = vol;
+      const balloon = document.getElementById('avo-balloon');
+      const size = 50 + (mol - 1) * 25;
+      balloon.style.width = `${size}px`; balloon.style.height = `${size * 1.1}px`;
+      const pc = document.getElementById('avo-particles');
+      const count = Math.round(mol * 4);
+      while (pc.children.length > count) pc.removeChild(pc.lastChild);
+      while (pc.children.length < count) {
+        const i = pc.children.length;
+        const [c1, c2] = _avoColors[Math.floor(i / 4) % _avoColors.length];
+        const spd = (Math.max(0.8, 2.5 - mol * 0.25)).toFixed(2);
+        const p = document.createElement('div');
+        p.style.cssText = `position:absolute;width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,${c1},${c2});top:${10+Math.random()*75}%;left:${10+Math.random()*75}%;animation:particle-pop-in 0.35s ease-out,bounce-particle ${spd}s ${(0.35+Math.random()*parseFloat(spd)).toFixed(2)}s infinite ease-in-out;`;
+        pc.appendChild(p);
+      }
+    }
+
+    // Combined Gas Law Problem
+    function checkAnswer() {
+      const P1 = parseFloat(document.getElementById('p1-input').value);
+      const V1 = parseFloat(document.getElementById('v1-input').value);
+      const T1 = parseFloat(document.getElementById('t1-input').value);
+      const V2 = parseFloat(document.getElementById('v2-input').value);
+      const T2 = parseFloat(document.getElementById('t2-input').value);
+      const userAnswer = parseFloat(document.getElementById('user-answer').value);
+
+      // Validate inputs
+      if (isNaN(P1) || isNaN(V1) || isNaN(T1) || isNaN(V2) || isNaN(T2) || P1 <= 0 || V1 <= 0 || T1 <= 0 || V2 <= 0 || T2 <= 0) {
+        const res = document.getElementById('combined-result');
+        res.classList.remove('hidden');
+        res.className = 'bg-red-50 border border-red-300 rounded-xl p-6 mb-6';
+        res.innerHTML = '<p class="text-red-700 font-semibold">⚠️ Please enter valid positive numbers for all given fields.</p>';
+        return;
+      }
+
+      if (isNaN(userAnswer)) {
+        const res = document.getElementById('combined-result');
+        res.classList.remove('hidden');
+        res.className = 'bg-red-50 border border-red-300 rounded-xl p-6 mb-6';
+        res.innerHTML = '<p class="text-red-700 font-semibold">⚠️ Please enter your answer for P₂.</p>';
+        return;
+      }
+
+      // Calculate correct P2 using combined gas law: (P1*V1)/T1 = (P2*V2)/T2
+      // Rearranged: P2 = (P1*V1*T2)/(T1*V2)
+      const P2 = (P1 * V1 * T2) / (T1 * V2);
+
+      // Check if answer is within 1% tolerance
+      const tolerance = P2 * 0.01;
+      const isCorrect = Math.abs(userAnswer - P2) <= tolerance;
+
+      // Create detailed solution display
+      const substitution = `P₂ = (${P1.toLocaleString()} × ${V1} × ${T2}) / (${T1} × ${V2})`;
+      
+      // Determine analysis
+      let analysis = '';
+      const pressureChange = ((P2 - P1) / P1 * 100).toFixed(1);
+      if (P2 > P1) {
+        analysis = `The pressure increased by ${Math.abs(pressureChange)}%. Even though the volume decreased (which increases pressure), the temperature increase had a dominant effect, causing an overall pressure increase.`;
+      } else if (P2 < P1) {
+        analysis = `The pressure decreased by ${Math.abs(pressureChange)}%. The volume decrease would normally increase pressure, but the temperature decrease was the dominant effect.`;
+      } else {
+        analysis = `The pressure remained constant. The combined effects of volume and temperature changes exactly balanced.`;
+      }
+
+      const res = document.getElementById('combined-result');
+      res.classList.remove('hidden');
+      
+      if (isCorrect) {
+        res.className = 'bg-green-50 border border-green-300 rounded-xl p-6 mb-6';
+        res.innerHTML = `
+          <h3 class="font-bold text-lg text-green-900 mb-3">✅ Correct!</h3>
+          <div class="space-y-3">
+            <div class="bg-white p-3 rounded-lg border border-green-200">
+              <p class="text-sm text-slate-600"><strong>Combined Gas Law:</strong></p>
+              <p class="font-mono text-center font-bold text-purple-800">(P₁V₁)/T₁ = (P₂V₂)/T₂</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-green-200">
+              <p class="text-sm text-slate-600"><strong>Rearranged for P₂:</strong></p>
+              <p class="font-mono text-center font-bold text-purple-800">P₂ = (P₁V₁T₂)/(T₁V₂)</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-green-200">
+              <p class="text-sm text-slate-600"><strong>Substitution:</strong></p>
+              <p class="font-mono text-center text-sm">${substitution}</p>
+            </div>
+            <div class="bg-purple-100 p-4 rounded-lg border-2 border-purple-300 text-center">
+              <p class="text-sm text-slate-600 mb-1">Final Pressure:</p>
+              <p class="text-3xl font-bold text-purple-800">${P2.toFixed(0)} Pa</p>
+            </div>
+          </div>
+          <div class="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <p class="text-sm text-slate-700"><strong>Analysis:</strong> ${analysis}</p>
+          </div>
+        `;
+      } else {
+        res.className = 'bg-red-50 border border-red-300 rounded-xl p-6 mb-6';
+        res.innerHTML = `
+          <h3 class="font-bold text-lg text-red-900 mb-3">❌ Not quite right</h3>
+          <div class="space-y-3">
+            <div class="bg-white p-3 rounded-lg border border-red-200">
+              <p class="text-sm text-slate-600"><strong>Your Answer:</strong></p>
+              <p class="font-mono text-center font-bold text-red-800">${userAnswer.toFixed(0)} Pa</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-red-200">
+              <p class="text-sm text-slate-600"><strong>Correct Answer:</strong></p>
+              <p class="font-mono text-center font-bold text-green-800">${P2.toFixed(0)} Pa</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-red-200">
+              <p class="text-sm text-slate-600"><strong>Combined Gas Law:</strong></p>
+              <p class="font-mono text-center font-bold text-purple-800">(P₁V₁)/T₁ = (P₂V₂)/T₂</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-red-200">
+              <p class="text-sm text-slate-600"><strong>Rearranged for P₂:</strong></p>
+              <p class="font-mono text-center font-bold text-purple-800">P₂ = (P₁V₁T₂)/(T₁V₂)</p>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-red-200">
+              <p class="text-sm text-slate-600"><strong>Substitution:</strong></p>
+              <p class="font-mono text-center text-sm">${substitution}</p>
+            </div>
+          </div>
+          <div class="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <p class="text-sm text-slate-700"><strong>Analysis:</strong> ${analysis}</p>
+          </div>
+          <div class="mt-3 p-3 rounded-lg bg-yellow-100 border border-yellow-300">
+            <p class="text-sm text-yellow-900"><strong>💡 Tip:</strong> Double-check your formula and make sure you're substituting all values correctly. Remember to keep units consistent!</p>
+          </div>
+        `;
+      }
+    }
+
+    // Init
+    buildQuiz();
+    updateProgress();
+    updateBoyle();
+    updateCharles();
+    _startGLAnimation();
+    updateGL();
+    updateAvo();
+    lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9faa15c660befee7',t:'MTc3ODU5NTg0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
