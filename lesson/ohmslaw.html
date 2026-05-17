@@ -1,0 +1,1119 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resistors &amp; Ohm's Law</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+html,body{height:100%;margin:0;font-family:'DM Sans',sans-serif}
+*{box-sizing:border-box}
+:root{--bg:#0f172a;--surface:#1e293b;--surface2:#334155;--text:#e2e8f0;--accent:#38bdf8;--accent2:#818cf8;--accent3:#f472b6;--green:#34d399;--yellow:#fbbf24;--red:#f87171}
+body{background:var(--bg);color:var(--text)}
+.tab-btn{transition:all .3s}
+.tab-btn.active{background:var(--accent);color:#0f172a;font-weight:600}
+.card{background:var(--surface);border-radius:16px;padding:24px;box-shadow:0 4px 24px rgba(0,0,0,.3)}
+.card2{background:var(--surface2);border-radius:12px;padding:16px}
+input[type=range]{-webkit-appearance:none;height:6px;border-radius:3px;background:var(--surface2);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer}
+.electron{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .4s ease}
+.formula{font-family:'JetBrains Mono',monospace;background:linear-gradient(135deg,rgba(56,189,248,.15),rgba(129,140,248,.15));border:1px solid rgba(56,189,248,.3);border-radius:12px;padding:16px 24px;font-size:1.25rem;text-align:center}
+.quiz-opt{cursor:pointer;border:2px solid var(--surface2);border-radius:10px;padding:10px 16px;transition:all .2s}
+.quiz-opt:hover{border-color:var(--accent)}
+.quiz-opt.correct{border-color:var(--green);background:rgba(52,211,153,.15)}
+.quiz-opt.wrong{border-color:var(--red);background:rgba(248,113,113,.15)}
+.solution-box{background:rgba(56,189,248,.08);border-left:4px solid var(--accent);border-radius:0 12px 12px 0;padding:16px;margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:.9rem;line-height:1.8}
+.resistor-band{width:18px;height:60px;border-radius:2px;transition:background .3s}
+select{background:var(--surface2);color:var(--text);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;font-family:'DM Sans';font-size:.9rem}
+select:focus{outline:none;border-color:var(--accent)}
+.probe-line{transition:all .7s cubic-bezier(.2,.75,.2,1)}
+.ohm-display{font-family:'JetBrains Mono',monospace;font-size:1.75rem;letter-spacing:.04em;color:var(--green);text-shadow:0 0 10px rgba(52,211,153,.55)}
+
+/* Digital multimeter visual upgrade (graphics only) */
+.multimeter-shell{width:100%;max-width:330px;border-radius:22px;padding:14px;background:linear-gradient(165deg,#2f3e55,#0f172a);box-shadow:0 16px 28px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.09)}
+.multimeter-bezel{border-radius:16px;padding:14px;background:linear-gradient(180deg,#1b283d,#0b1220);border:1px solid rgba(148,163,184,.26);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+.meter-label{font-size:.63rem;letter-spacing:.14em;color:#b8c4d8;opacity:.9}
+.meter-sub{font-size:.63rem;color:#91a2bf;opacity:.8}
+.meter-status{display:flex;justify-content:space-between;align-items:center;margin:7px 0 10px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#34d399;box-shadow:0 0 8px rgba(52,211,153,.6)}
+.lcd-screen{position:relative;border-radius:10px;padding:16px 12px;background:linear-gradient(180deg,#0f2a1f,#0b2018);border:1px solid rgba(52,211,153,.34);box-shadow:inset 0 0 18px rgba(0,0,0,.45),0 0 14px rgba(52,211,153,.1)}
+.lcd-screen::after{content:'';position:absolute;top:6px;left:8px;right:8px;height:35%;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.17),rgba(255,255,255,0));pointer-events:none}
+.meter-ports{display:flex;justify-content:center;gap:28px;margin-top:8px;font-size:.62rem;color:#8ea1bf}
+.port-jack{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;border:1px solid rgba(255,255,255,.3)}
+.jack-red{background:#ef4444}
+.jack-black{background:#111827}
+.probe-board{width:100%;max-width:320px;margin-top:10px;padding:10px;border-radius:14px;background:linear-gradient(180deg,rgba(15,23,42,.7),rgba(15,23,42,.35));border:1px solid rgba(148,163,184,.18)}
+</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full overflow-auto">
+  <div id="app" class="w-full min-h-full" style="background:var(--bg)"><!-- Header -->
+   <header class="sticky top-0 z-50" style="background:rgba(15,23,42,.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)">
+    <div class="max-w-6xl mx-auto px-4 py-3">
+     <h1 id="pageTitle" class="text-lg font-bold" style="color:var(--accent)">⚡ Resistors &amp; Ohm's Law</h1>
+     <div class="flex gap-2 mt-2 overflow-x-auto pb-1" id="tabBar"><button class="tab-btn active text-sm px-4 py-2 rounded-full whitespace-nowrap" onclick="switchTab(0)" style="background:var(--surface2);color:var(--text)">🎨 Color Coding</button> <button class="tab-btn text-sm px-4 py-2 rounded-full whitespace-nowrap" onclick="switchTab(1)" style="background:var(--surface2);color:var(--text)">⚡ Ohm's Law</button> <button class="tab-btn text-sm px-4 py-2 rounded-full whitespace-nowrap" onclick="switchTab(2)" style="background:var(--surface2);color:var(--text)">🔗 Series</button> <button class="tab-btn text-sm px-4 py-2 rounded-full whitespace-nowrap" onclick="switchTab(3)" style="background:var(--surface2);color:var(--text)">🔀 Parallel</button> <button class="tab-btn text-sm px-4 py-2 rounded-full whitespace-nowrap" onclick="switchTab(4)" style="background:var(--surface2);color:var(--text)">📝 Practice</button>
+     </div>
+    </div>
+   </header>
+   <main class="max-w-6xl mx-auto px-4 py-6"><!-- ==================== SECTION 1: COLOR CODING ==================== -->
+    <section id="sec0" class="fade-in space-y-6">
+     <div class="card">
+      <h2 id="sec1Title" class="text-2xl font-bold mb-3" style="color:var(--accent)">🎨 Resistors &amp; Color Coding</h2>
+      <p class="leading-relaxed" style="color:var(--text);opacity:.85">A <strong>resistor</strong> is an electronic component that opposes the flow of electric current. It's measured in <strong>Ohms (Ω)</strong>. Resistors use colored bands to indicate their resistance value — each color represents a specific number.</p>
+     </div><!-- Resistor Illustration + Controls -->
+     <div class="grid md:grid-cols-2 gap-6">
+      <div class="card flex flex-col items-center">
+       <h3 class="text-lg font-semibold mb-4">Resistor Color Bands</h3><!-- SVG Resistor -->
+       <svg viewbox="0 0 400 120" class="w-full max-w-md mb-4"><!-- Wires --> <line x1="0" y1="60" x2="80" y2="60" stroke="#94a3b8" stroke-width="4" /> <line x1="320" y1="60" x2="400" y2="60" stroke="#94a3b8" stroke-width="4" /> <!-- Body --> <rect x="80" y="25" width="240" height="70" rx="35" fill="#d4a574" /> <rect x="80" y="25" width="240" height="70" rx="35" fill="url(#resistorGrad)" opacity=".3" /> <defs>
+         <lineargradient id="resistorGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fff" stop-opacity=".4" />
+          <stop offset="100%" stop-color="#000" stop-opacity=".2" />
+         </lineargradient>
+        </defs> <!-- Bands --> <rect id="band1" x="115" y="25" width="18" height="70" rx="2" fill="#a52a2a" /> <rect id="band2" x="150" y="25" width="18" height="70" rx="2" fill="#000" /> <rect id="band3" x="185" y="25" width="18" height="70" rx="2" fill="#ff0000" /> <rect id="band4" x="260" y="25" width="18" height="70" rx="2" fill="#d4af37" />
+       </svg>
+       <div id="colorResult" class="text-xl font-bold mt-2" style="font-family:'JetBrains Mono';color:var(--accent)">
+        1000 Ω (1 kΩ) ±5%
+       </div>
+       <button onclick="document.getElementById('colorTableModal').classList.remove('hidden')" class="mt-3 text-xs px-3 py-1.5 rounded-lg font-medium" style="background:var(--surface2);color:var(--accent);border:1px solid var(--accent)">📋 Show Resistor Color Code Table</button><!-- Dropdowns -->
+       <div class="grid grid-cols-3 gap-3 mt-4 w-full">
+        <div><label class="text-xs opacity-70 block mb-1">1st Band (Digit)</label> <select id="sel1" onchange="updateResistor()"> <option value="0" style="color:#000">Black (0)</option> <option value="1" selected style="color:#a52a2a">Brown (1)</option> <option value="2" style="color:#f00">Red (2)</option> <option value="3" style="color:#ffa500">Orange (3)</option> <option value="4" style="color:#ff0">Yellow (4)</option> <option value="5" style="color:#0f0">Green (5)</option> <option value="6" style="color:#00f">Blue (6)</option> <option value="7" style="color:#800080">Violet (7)</option> <option value="8" style="color:#808080">Gray (8)</option> <option value="9" style="color:#fff">White (9)</option> </select>
+        </div>
+        <div><label class="text-xs opacity-70 block mb-1">2nd Band (Digit)</label> <select id="sel2" onchange="updateResistor()"> <option value="0" selected style="color:#000">Black (0)</option> <option value="1" style="color:#a52a2a">Brown (1)</option> <option value="2" style="color:#f00">Red (2)</option> <option value="3" style="color:#ffa500">Orange (3)</option> <option value="4" style="color:#ff0">Yellow (4)</option> <option value="5" style="color:#0f0">Green (5)</option> <option value="6" style="color:#00f">Blue (6)</option> <option value="7" style="color:#800080">Violet (7)</option> <option value="8" style="color:#808080">Gray (8)</option> <option value="9" style="color:#fff">White (9)</option> </select>
+        </div>
+        <div><label class="text-xs opacity-70 block mb-1">Multiplier</label> <select id="sel3" onchange="updateResistor()"> <option value="1" style="color:#000000">Black (×1)</option> <option value="10" style="color:#a52a2a">Brown (×10)</option> <option value="100" selected style="color:#ff0000">Red (×100)</option> <option value="1000" style="color:#ff8c00">Orange (×1k)</option> <option value="10000" style="color:#ffd700">Yellow (×10k)</option> <option value="100000" style="color:#228b22">Green (×100k)</option> <option value="1000000" style="color:#0000ff">Blue (×1M)</option> <option value="0.1" style="color:#d4af37">Gold (×0.1)</option> <option value="0.01" style="color:#c0c0c0">Silver (×0.01)</option> </select>
+        </div>
+       </div>
+       <div class="grid grid-cols-1 gap-3 mt-3 w-full">
+        <div><label class="text-xs opacity-70 block mb-1">Tolerance</label> <select id="sel4" onchange="updateResistor()"> <option value="1">Brown (±1%)</option> <option value="2">Red (±2%)</option> <option value="5" selected>Gold (±5%)</option> <option value="10">Silver (±10%)</option> <option value="20">None (±20%)</option> </select>
+        </div>
+       </div>
+      </div><!-- Ohmmeter -->
+      <div class="card flex flex-col items-center">
+       <h3 class="text-lg font-semibold mb-4">Digital Ohmmeter</h3>
+       <div class="multimeter-shell">
+        <div class="multimeter-bezel text-center">
+         <div class="meter-label">DIGITAL MULTIMETER</div>
+         <div class="meter-status">
+          <span class="meter-sub">AUTO • Ω MODE</span>
+          <span class="status-dot"></span>
+         </div>
+         <div class="lcd-screen">
+          <div id="ohmDisplay" class="ohm-display">
+           --- Ω
+          </div>
+         </div>
+         <div class="meter-ports">
+          <span><span class="port-jack jack-red"></span>VΩ</span>
+          <span><span class="port-jack jack-black"></span>COM</span>
+         </div>
+        </div>
+       </div>
+       <div class="probe-board">
+        <svg viewbox="0 0 260 110" class="w-full"><defs>
+          <lineargradient id="probeMetal" x1="0" y1="0" x2="1" y2="1">
+           <stop offset="0%" stop-color="#f8fafc" />
+           <stop offset="100%" stop-color="#94a3b8" />
+          </lineargradient>
+          <lineargradient id="smallResBody" x1="0" y1="0" x2="0" y2="1">
+           <stop offset="0%" stop-color="#ebc89c" />
+           <stop offset="100%" stop-color="#c79661" />
+          </lineargradient>
+         </defs> <!-- Left probe group: translateX(-26px) = away, translateX(0) = touching --> <g id="probeGroupL" style="transform:translateX(-26px);transition:transform .7s cubic-bezier(.2,.75,.2,1)"> <line id="probeL" x1="30" y1="94" x2="104" y2="54" stroke="#ef4444" stroke-width="4" stroke-linecap="round" /> <rect x="19" y="90" width="22" height="8" rx="4" fill="#b91c1c" opacity=".95" /> <circle id="probeTipL" cx="104" cy="54" r="5.5" fill="#ef4444" /> </g> <!-- Right probe group: translateX(26px) = away, translateX(0) = touching --> <g id="probeGroupR" style="transform:translateX(26px);transition:transform .7s cubic-bezier(.2,.75,.2,1)"> <line id="probeR" x1="230" y1="94" x2="156" y2="54" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round" /> <rect x="219" y="90" width="22" height="8" rx="4" fill="#0f172a" opacity=".95" /> <circle id="probeTipR" cx="156" cy="54" r="5.5" fill="#111111" /> </g> <!-- Small resistor --> <line x1="94" y1="54" x2="104" y2="54" stroke="#cbd5e1" stroke-width="2.2" /> <line x1="156" y1="54" x2="166" y2="54" stroke="#cbd5e1" stroke-width="2.2" /> <rect x="104" y="45" width="52" height="18" rx="8" fill="url(#smallResBody)" /> <rect x="104" y="45" width="52" height="18" rx="8" fill="#ffffff" opacity=".08" /> <rect id="mBand1" x="114" y="45" width="4" height="18" rx="1" fill="#a52a2a" /> <rect id="mBand2" x="122" y="45" width="4" height="18" rx="1" fill="#000" /> <rect id="mBand3" x="130" y="45" width="4" height="18" rx="1" fill="#ff0000" /> <rect id="mBand4" x="145" y="45" width="3" height="18" rx="1" fill="#d4af37" />
+        </svg>
+       </div><button onclick="measureResistance()" class="mt-4 px-6 py-3 rounded-xl font-semibold text-sm transition-all hover:scale-105" style="background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0f172a"> <i data-lucide="zap" style="width:16px;height:16px;display:inline;vertical-align:middle"></i> Measure Resistance </button>
+       <div id="measureResult" class="mt-3 text-sm text-center" style="min-height:60px"></div>
+      </div>
+     </div>
+     <div class="card" style="border-left:4px solid var(--yellow)">
+      <p class="text-sm leading-relaxed" style="opacity:.85">💡 <strong>Note:</strong> Real resistors may vary within their tolerance range. A 1000Ω resistor with ±5% tolerance can actually measure anywhere from 950Ω to 1050Ω. This is perfectly normal in electronics!</p>
+     </div>
+    </section><!-- ==================== SECTION 2: OHM'S LAW ==================== -->
+    <section id="sec1" class="fade-in space-y-6" style="display:none">
+     <div class="card">
+      <h2 id="sec2Title" class="text-2xl font-bold mb-3" style="color:var(--accent2)">⚡ Ohm's Law</h2>
+      <p class="leading-relaxed" style="opacity:.85">Ohm's Law describes the relationship between <strong>Voltage (V)</strong>, <strong>Current (I)</strong>, and <strong>Resistance (R)</strong> in an electrical circuit. It was discovered by Georg Simon Ohm in 1827.</p>
+     </div>
+     <div class="formula">
+      V = I × R &nbsp;&nbsp;→&nbsp;&nbsp; I = V / R &nbsp;&nbsp;→&nbsp;&nbsp; R = V / I
+     </div>
+     <!-- Ohm's Law Triangle -->
+     <div class="card flex flex-col items-center gap-4">
+      <p class="text-sm opacity-60">Hover over each quantity to see how to calculate it.</p>
+      <div class="flex flex-col sm:flex-row items-center gap-8">
+       <!-- Triangle SVG — matches reference: filled sections, thick black border -->
+       <svg viewBox="0 0 220 196" width="220" height="196" style="flex-shrink:0;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))">
+        <!-- V cell: top triangle -->
+        <polygon id="tri-v" points="110,6 57,98 163,98" fill="#fffbe6" style="cursor:pointer;transition:filter .2s"
+          onmouseenter="triHover('v')" onmouseleave="triHover(null)" ontouchstart="triHover('v')" ontouchend="triHover(null)"/>
+        <!-- I cell: bottom-left -->
+        <polygon id="tri-i" points="57,98 6,190 110,190 110,98" fill="#ffe4e6" style="cursor:pointer;transition:filter .2s"
+          onmouseenter="triHover('i')" onmouseleave="triHover(null)" ontouchstart="triHover('i')" ontouchend="triHover(null)"/>
+        <!-- R cell: bottom-right -->
+        <polygon id="tri-r" points="110,98 110,190 214,190 163,98" fill="#ede9fe" style="cursor:pointer;transition:filter .2s"
+          onmouseenter="triHover('r')" onmouseleave="triHover(null)" ontouchstart="triHover('r')" ontouchend="triHover(null)"/>
+        <!-- Outer triangle border -->
+        <polygon points="110,6 6,190 214,190" fill="none" stroke="#111" stroke-width="3.5" stroke-linejoin="round"/>
+        <!-- Horizontal divider -->
+        <line x1="57" y1="98" x2="163" y2="98" stroke="#111" stroke-width="3"/>
+        <!-- Vertical divider (bottom half only) -->
+        <line x1="110" y1="98" x2="110" y2="190" stroke="#111" stroke-width="3"/>
+        <!-- Labels -->
+        <text x="110" y="72" text-anchor="middle" dominant-baseline="middle" font-size="34" font-weight="900" fill="#1a1a1a" font-family="Arial,sans-serif">V</text>
+        <text x="68"  y="148" text-anchor="middle" dominant-baseline="middle" font-size="34" font-weight="900" fill="#1a1a1a" font-family="Arial,sans-serif">I</text>
+        <text x="152" y="148" text-anchor="middle" dominant-baseline="middle" font-size="34" font-weight="900" fill="#1a1a1a" font-family="Arial,sans-serif">R</text>
+       </svg>
+       <!-- Formula hint panel -->
+       <div id="triHint" class="rounded-xl px-6 py-5 text-center" style="background:var(--surface2);min-width:190px;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+        <div id="triHintLabel" class="text-xs opacity-60">Select a quantity</div>
+        <div id="triHintFormula" class="text-2xl font-bold" style="font-family:'JetBrains Mono',monospace;color:var(--text)">?</div>
+        <div id="triHintDesc" class="text-xs opacity-70"></div>
+       </div>
+      </div>
+      <p class="text-xs opacity-40 text-center">Hover a quantity to reveal its formula. V = voltage · I = current · R = resistance.</p>
+     </div>
+     <div class="grid md:grid-cols-2 gap-6"><!-- Sliders & Calculation -->
+      <div class="card space-y-5">
+       <h3 class="font-semibold text-lg">Interactive Calculator</h3>
+       <div><label class="flex justify-between text-sm mb-1"><span>Voltage (V)</span><span id="vVal" class="font-mono" style="color:var(--accent)">12 V</span></label> <input type="range" id="vSlider" min="1" max="48" value="12" class="w-full" oninput="updateOhm()">
+       </div>
+       <div><label class="flex justify-between text-sm mb-1"><span>Resistance (R)</span><span id="rVal" class="font-mono" style="color:var(--accent2)">100 Ω</span></label> <input type="range" id="rSlider" min="10" max="1000" value="100" step="10" class="w-full" oninput="updateOhm()">
+       </div>
+       <div class="card2 text-center">
+        <div class="text-sm opacity-60 mb-1">
+         Current (I = V/R)
+        </div>
+        <div id="iResult" class="text-3xl font-bold" style="font-family:'JetBrains Mono';color:var(--green)">
+         120.0 mA
+        </div>
+       </div>
+       <div class="card2 text-center">
+        <div class="text-sm opacity-60 mb-1">
+         Power (P = V×I)
+        </div>
+        <div id="pResult" class="text-xl font-bold" style="font-family:'JetBrains Mono';color:var(--yellow)">
+         1.44 W
+        </div>
+       </div>
+      </div><!-- Animated Circuit -->
+      <div class="card">
+       <h3 class="font-semibold text-lg mb-3">Animated Circuit</h3>
+       <div style="position:relative;width:100%;padding-bottom:75%;background:var(--surface2);border-radius:12px;overflow:hidden" id="circuitBox">
+        <svg viewbox="0 0 300 225" style="position:absolute;top:0;left:0;width:100%;height:100%"><!-- Wires --> <polyline points="60,40 240,40 240,80" fill="none" stroke="#64748b" stroke-width="3" /> <polyline points="240,130 240,185 60,185" fill="none" stroke="#64748b" stroke-width="3" /> <polyline points="60,185 60,40" fill="none" stroke="#64748b" stroke-width="3" /> <!-- Battery --> <rect x="35" y="85" width="50" height="40" rx="6" fill="none" stroke="#fbbf24" stroke-width="2" /> <line x1="50" y1="95" x2="50" y2="115" stroke="#fbbf24" stroke-width="3" /> <line x1="70" y1="100" x2="70" y2="110" stroke="#fbbf24" stroke-width="3" /> <text x="60" y="80" text-anchor="middle" fill="#fbbf24" font-size="11" font-family="DM Sans">
+          Battery
+         </text> <text x="60" y="140" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="JetBrains Mono" id="battLabel">
+          12V
+         </text> <!-- Resistor symbol --> <rect x="210" y="80" width="60" height="50" rx="8" fill="#334155" stroke="#818cf8" stroke-width="2" /> <text x="240" y="109" text-anchor="middle" fill="#818cf8" font-size="12" font-family="JetBrains Mono" id="resLabel">
+          100Ω
+         </text> <text x="240" y="75" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="DM Sans">
+          Resistor
+         </text> <!-- Current arrow --> <text x="150" y="32" text-anchor="middle" fill="var(--green)" font-size="10" font-family="DM Sans" id="curLabel">
+          I = 120 mA →
+         </text>
+        </svg>
+        <div id="electrons" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none"></div>
+       </div>
+       <p class="text-xs mt-2 opacity-60 text-center">Electrons move faster when current increases!</p>
+      </div>
+     </div><!-- Quiz -->
+     <div class="card">
+      <h3 class="font-semibold text-lg mb-4">🧠 Quick Quiz</h3>
+      <div class="space-y-6" id="quizArea">
+       <div class="card2">
+        <p class="font-medium mb-3">1. A 12V battery is connected to a 400Ω resistor. What is the current?</p>
+        <div class="grid grid-cols-2 gap-2" id="q1">
+         <div class="quiz-opt" onclick="checkQuiz(this,'q1',false)">3 mA</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q1',true)">30 mA</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q1',false)">0.48 A</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q1',false)">48 mA</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">2. If the current through a 50Ω resistor is 0.2A, what is the voltage?</p>
+        <div class="grid grid-cols-2 gap-2" id="q2">
+         <div class="quiz-opt" onclick="checkQuiz(this,'q2',true)">10 V</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q2',false)">25 V</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q2',false)">100 V</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q2',false)">0.25 V</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">3. A resistor has a resistance of 100Ω and a current of 0.5A. What is the voltage across it?</p>
+        <div class="grid grid-cols-2 gap-2" id="q3">
+         <div class="quiz-opt" onclick="checkQuiz(this,'q3',false)">5 V</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q3',true)">50 V</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q3',false)">200 V</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q3',false)">0.05 V</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">4. If voltage is kept constant and resistance increases, what happens to the current?</p>
+        <div class="grid grid-cols-1 gap-2" id="q4">
+         <div class="quiz-opt" onclick="checkQuiz(this,'q4',false)">Current increases</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q4',true)">Current decreases</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q4',false)">Current stays the same</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q4',false)">Current becomes zero immediately</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">5. A 24V source is connected to an 800Ω resistor. What is the current?</p>
+        <div class="grid grid-cols-2 gap-2" id="q5">
+         <div class="quiz-opt" onclick="checkQuiz(this,'q5',false)">3 A</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q5',true)">30 mA</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q5',false)">0.3 A</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q5',false)">300 mA</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">6. If a circuit has a current of 2A and a voltage of 18V, what is the resistance?</p>
+        <div class="grid grid-cols-2 gap-2" id="q6">
+         <div class="quiz-opt" onclick="checkQuiz(this,'q6',true)">9 Ω</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q6',false)">36 Ω</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q6',false)">20 Ω</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q6',false)">0.11 Ω</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">7. Which formula correctly represents Ohm's Law?</p>
+        <div class="grid grid-cols-2 gap-2" id="q7">
+         <div class="quiz-opt" onclick="checkQuiz(this,'q7',false)">P = IV</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q7',true)">V = IR</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q7',false)">R = IV</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q7',false)">I = VR</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">8. Doubling the voltage while keeping resistance constant will:</p>
+        <div class="grid grid-cols-1 gap-2" id="q8">
+         <div class="quiz-opt" onclick="checkQuiz(this,'q8',false)">Halve the current</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q8',true)">Double the current</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q8',false)">Keep the current the same</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q8',false)">Remove resistance</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">9. A 6V battery produces a current of 0.03A. What is the resistance?</p>
+        <div class="grid grid-cols-2 gap-2" id="q9">
+         <div class="quiz-opt" onclick="checkQuiz(this,'q9',false)">0.18 Ω</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q9',true)">200 Ω</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q9',false)">180 Ω</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q9',false)">20 Ω</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">10. Which quantity is measured in ohms (Ω)?</p>
+        <div class="grid grid-cols-2 gap-2" id="q10">
+         <div class="quiz-opt" onclick="checkQuiz(this,'q10',false)">Voltage</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q10',false)">Current</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q10',false)">Power</div>
+         <div class="quiz-opt" onclick="checkQuiz(this,'q10',true)">Resistance</div>
+        </div>
+       </div>
+      </div>
+      <div id="quizSummary" class="card2 mt-4" style="display:none">
+       <div class="text-sm opacity-60 mb-1">Quiz Summary</div>
+       <div id="quizScore" class="text-2xl font-bold" style="color:var(--accent)">0 / 0</div>
+       <div id="quizPercent" class="text-sm mt-1" style="color:var(--text)">0%</div>
+       <div id="quizFeedback" class="text-sm mt-2"></div>
+      </div>
+     </div>
+    </section><!-- ==================== SECTION 3: SERIES ==================== -->
+    <section id="sec2" class="fade-in space-y-6" style="display:none">
+     <div class="card">
+      <h2 class="text-2xl font-bold mb-3" style="color:var(--green)">🔗 Series Connection</h2>
+      <p class="leading-relaxed" style="opacity:.85">In a <strong>series circuit</strong>, resistors are connected one after another in a single path. The same current flows through each resistor, but the voltage is divided among them proportionally to their resistance.</p>
+     </div>
+     <div class="formula">
+      R<sub>total</sub> = R₁ + R₂ + R₃
+     </div><!-- Circuit Diagram -->
+     <div class="card">
+      <h3 class="font-semibold mb-3">Series Circuit Diagram</h3>
+      <svg viewbox="0 0 500 160" class="w-full max-w-2xl mx-auto"><polyline points="40,30 460,30 460,130 40,130 40,30" fill="none" stroke="#64748b" stroke-width="2.5" /> <!-- Battery --> <rect x="15" y="55" width="50" height="50" rx="8" fill="none" stroke="#fbbf24" stroke-width="2" /> <text x="40" y="83" text-anchor="middle" fill="#fbbf24" font-size="11" font-family="JetBrains Mono" id="serBatt">
+        12V
+       </text> <!-- R1 --> <rect x="120" y="15" width="80" height="30" rx="6" fill="#334155" stroke="#34d399" stroke-width="2" /> <text x="160" y="35" text-anchor="middle" fill="#34d399" font-size="11" font-family="JetBrains Mono" id="serR1L">
+        R₁
+       </text> <!-- R2 --> <rect x="230" y="15" width="80" height="30" rx="6" fill="#334155" stroke="#38bdf8" stroke-width="2" /> <text x="270" y="35" text-anchor="middle" fill="#38bdf8" font-size="11" font-family="JetBrains Mono" id="serR2L">
+        R₂
+       </text> <!-- R3 --> <rect x="340" y="15" width="80" height="30" rx="6" fill="#334155" stroke="#818cf8" stroke-width="2" /> <text x="380" y="35" text-anchor="middle" fill="#818cf8" font-size="11" font-family="JetBrains Mono" id="serR3L">
+        R₃
+       </text> <!-- Arrow --> <text x="250" y="155" text-anchor="middle" fill="#64748b" font-size="10">
+        → Current flows through R₁, R₂, R₃ in sequence →
+       </text>
+      </svg>
+     </div>
+     <div class="grid md:grid-cols-2 gap-6">
+      <div class="card space-y-4">
+       <h3 class="font-semibold">Adjust Resistors</h3>
+       <div><label class="flex justify-between text-sm mb-1"><span>R₁</span><span id="sR1V" class="font-mono" style="color:var(--green)">100 Ω</span></label> <input type="range" id="sR1" min="10" max="1000" value="100" step="10" class="w-full" oninput="updateSeries()">
+       </div>
+       <div><label class="flex justify-between text-sm mb-1"><span>R₂</span><span id="sR2V" class="font-mono" style="color:var(--accent)">200 Ω</span></label> <input type="range" id="sR2" min="10" max="1000" value="200" step="10" class="w-full" oninput="updateSeries()">
+       </div>
+       <div><label class="flex justify-between text-sm mb-1"><span>R₃</span><span id="sR3V" class="font-mono" style="color:var(--accent2)">300 Ω</span></label> <input type="range" id="sR3" min="10" max="1000" value="300" step="10" class="w-full" oninput="updateSeries()">
+       </div>
+       <div><label class="flex justify-between text-sm mb-1"><span>Voltage</span><span id="sVV" class="font-mono" style="color:var(--yellow)">12 V</span></label> <input type="range" id="sV" min="1" max="48" value="12" class="w-full" oninput="updateSeries()">
+       </div>
+      </div>
+      <div class="card space-y-3">
+       <h3 class="font-semibold">Results</h3>
+       <div class="card2 text-center">
+        <div class="text-sm opacity-60">
+         Total Resistance
+        </div>
+        <div id="sRt" class="text-2xl font-bold font-mono" style="color:var(--green)">
+         600 Ω
+        </div>
+       </div>
+       <div class="card2 text-center">
+        <div class="text-sm opacity-60">
+         Total Current (same through all)
+        </div>
+        <div id="sIt" class="text-2xl font-bold font-mono" style="color:var(--accent)">
+         20.0 mA
+        </div>
+       </div>
+       <div class="card2">
+        <div class="text-sm opacity-60 mb-2">
+         Voltage Drops
+        </div>
+        <div class="space-y-1 text-sm font-mono">
+         <div id="sV1" style="color:var(--green)">
+          V₁ = 2.00 V
+         </div>
+         <div id="sV2" style="color:var(--accent)">
+          V₂ = 4.00 V
+         </div>
+         <div id="sV3" style="color:var(--accent2)">
+          V₃ = 6.00 V
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="card" style="border-left:4px solid var(--green)">
+      <p class="text-sm leading-relaxed" style="opacity:.85">🔑 <strong>Key Point:</strong> In series, current is <strong>the same</strong> everywhere, but voltage <strong>divides</strong> proportionally. The total of all voltage drops equals the source voltage (Kirchhoff's Voltage Law).</p>
+     </div>
+    </section><!-- ==================== SECTION 4: PARALLEL ==================== -->
+    <section id="sec3" class="fade-in space-y-6" style="display:none">
+     <div class="card">
+      <h2 class="text-2xl font-bold mb-3" style="color:var(--accent3)">🔀 Parallel Connection</h2>
+      <p class="leading-relaxed" style="opacity:.85">In a <strong>parallel circuit</strong>, resistors are connected in separate branches. Each branch has the same voltage across it, but the current divides among the branches — more current flows through lower-resistance paths.</p>
+     </div>
+     <div class="formula">
+      1/R<sub>total</sub> = 1/R₁ + 1/R₂ + 1/R₃
+     </div><!-- Circuit Diagram -->
+     <div class="card">
+      <h3 class="font-semibold mb-3">Parallel Circuit Diagram</h3>
+      <svg viewBox="0 0 540 240" class="w-full max-w-2xl mx-auto">
+       <!-- Top horizontal rail (battery to R3) -->
+       <line x1="60" y1="45" x2="430" y2="45" stroke="#64748b" stroke-width="2.5"/>
+       <!-- Bottom horizontal rail (battery to R3) -->
+       <line x1="60" y1="195" x2="430" y2="195" stroke="#64748b" stroke-width="2.5"/>
+       <!-- Left battery branch wires -->
+       <line x1="60" y1="45" x2="60" y2="88" stroke="#64748b" stroke-width="2.5"/>
+       <line x1="60" y1="152" x2="60" y2="195" stroke="#64748b" stroke-width="2.5"/>
+       <!-- Battery symbol -->
+       <rect x="38" y="88" width="44" height="64" rx="7" fill="none" stroke="#fbbf24" stroke-width="2"/>
+       <text x="60" y="116" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="JetBrains Mono">V1</text>
+       <text x="60" y="130" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="JetBrains Mono" id="parBatt">12V</text>
+       <text x="49" y="97" fill="#fbbf24" font-size="12" font-weight="bold">+</text>
+       <!-- R1 branch at x=160 -->
+       <line x1="160" y1="45" x2="160" y2="88" stroke="#64748b" stroke-width="2"/>
+       <rect x="145" y="88" width="30" height="64" rx="5" fill="#334155" stroke="#f472b6" stroke-width="2"/>
+       <text x="160" y="122" text-anchor="middle" fill="#f472b6" font-size="10" font-family="JetBrains Mono" id="parR1L">R₁</text>
+       <line x1="160" y1="152" x2="160" y2="195" stroke="#64748b" stroke-width="2"/>
+       <!-- R2 branch at x=280 -->
+       <line x1="280" y1="45" x2="280" y2="88" stroke="#64748b" stroke-width="2"/>
+       <rect x="265" y="88" width="30" height="64" rx="5" fill="#334155" stroke="#38bdf8" stroke-width="2"/>
+       <text x="280" y="122" text-anchor="middle" fill="#38bdf8" font-size="10" font-family="JetBrains Mono" id="parR2L">R₂</text>
+       <line x1="280" y1="152" x2="280" y2="195" stroke="#64748b" stroke-width="2"/>
+       <!-- R3 branch at x=430 (right boundary) -->
+       <line x1="430" y1="45" x2="430" y2="88" stroke="#64748b" stroke-width="2"/>
+       <rect x="415" y="88" width="30" height="64" rx="5" fill="#334155" stroke="#34d399" stroke-width="2"/>
+       <text x="430" y="122" text-anchor="middle" fill="#34d399" font-size="10" font-family="JetBrains Mono" id="parR3L">R₃</text>
+       <line x1="430" y1="152" x2="430" y2="195" stroke="#64748b" stroke-width="2"/>
+       <!-- Junction dots — top rail -->
+       <circle cx="60"  cy="45" r="5" fill="#94a3b8"/>
+       <circle cx="160" cy="45" r="5" fill="#94a3b8"/>
+       <circle cx="280" cy="45" r="5" fill="#94a3b8"/>
+       <circle cx="430" cy="45" r="5" fill="#94a3b8"/>
+       <!-- Junction dots — bottom rail -->
+       <circle cx="60"  cy="195" r="5" fill="#94a3b8"/>
+       <circle cx="160" cy="195" r="5" fill="#94a3b8"/>
+       <circle cx="280" cy="195" r="5" fill="#94a3b8"/>
+       <circle cx="430" cy="195" r="5" fill="#94a3b8"/>
+      </svg>
+     </div>
+     <div class="grid md:grid-cols-2 gap-6">
+      <div class="card space-y-4">
+       <h3 class="font-semibold">Adjust Resistors</h3>
+       <div><label class="flex justify-between text-sm mb-1"><span>R₁</span><span id="pR1V" class="font-mono" style="color:var(--accent3)">100 Ω</span></label> <input type="range" id="pR1" min="10" max="1000" value="100" step="10" class="w-full" oninput="updateParallel()">
+       </div>
+       <div><label class="flex justify-between text-sm mb-1"><span>R₂</span><span id="pR2V" class="font-mono" style="color:var(--accent)">200 Ω</span></label> <input type="range" id="pR2" min="10" max="1000" value="200" step="10" class="w-full" oninput="updateParallel()">
+       </div>
+       <div><label class="flex justify-between text-sm mb-1"><span>R₃</span><span id="pR3V" class="font-mono" style="color:var(--green)">300 Ω</span></label> <input type="range" id="pR3" min="10" max="1000" value="300" step="10" class="w-full" oninput="updateParallel()">
+       </div>
+       <div><label class="flex justify-between text-sm mb-1"><span>Voltage</span><span id="pVV" class="font-mono" style="color:var(--yellow)">12 V</span></label> <input type="range" id="pV" min="1" max="48" value="12" class="w-full" oninput="updateParallel()">
+       </div>
+      </div>
+      <div class="card space-y-3">
+       <h3 class="font-semibold">Results</h3>
+       <div class="card2 text-center">
+        <div class="text-sm opacity-60">
+         Equivalent Resistance
+        </div>
+        <div id="pRt" class="text-2xl font-bold font-mono" style="color:var(--accent3)">
+         54.5 Ω
+        </div>
+       </div>
+       <div class="card2">
+        <div class="text-sm opacity-60 mb-2">
+         Branch Currents
+        </div>
+        <div class="space-y-1 text-sm font-mono">
+         <div id="pI1" style="color:var(--accent3)">
+          I₁ = 120.0 mA
+         </div>
+         <div id="pI2" style="color:var(--accent)">
+          I₂ = 60.0 mA
+         </div>
+         <div id="pI3" style="color:var(--green)">
+          I₃ = 40.0 mA
+         </div>
+        </div>
+       </div>
+       <div class="card2 text-center">
+        <div class="text-sm opacity-60">
+         Total Current
+        </div>
+        <div id="pIt" class="text-2xl font-bold font-mono" style="color:var(--yellow)">
+         220.0 mA
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="card" style="border-left:4px solid var(--accent3)">
+      <p class="text-sm leading-relaxed" style="opacity:.85">🔑 <strong>Key Point:</strong> In parallel, voltage is <strong>the same</strong> across all branches, but current <strong>divides</strong>. The total equivalent resistance is always <strong>less than the smallest</strong> individual resistor. (Kirchhoff's Current Law: total current = sum of branch currents.)</p>
+     </div>
+    </section><!-- ==================== SECTION 5: PRACTICE ==================== -->
+    <section id="sec4" class="fade-in space-y-6" style="display:none">
+     <div class="card">
+      <h2 class="text-2xl font-bold mb-3" style="color:var(--yellow)">📝 Practice Problems</h2>
+      <p style="opacity:.85">Solve each problem and type your answer below. Click "Check Answer" for instant feedback.</p>
+     </div>
+     <!-- Problem 1 -->
+     <div class="card">
+      <div class="flex items-start gap-3">
+       <span class="px-3 py-1 rounded-full text-xs font-bold" style="background:var(--accent2);color:#0f172a">Ohm's Law</span>
+       <div class="flex-1">
+        <p class="font-medium mb-3">Problem 1: A light bulb has a resistance of 240Ω and is connected to a 120V supply. What current flows through it?</p>
+        <div class="flex gap-2 items-end">
+         <div class="flex-1">
+          <label class="text-xs opacity-60 block mb-1">Your answer:</label>
+          <input type="text" id="ans1" placeholder="e.g., 0.5 A" class="w-full px-3 py-2 rounded-lg" style="background:var(--surface2);border:1px solid var(--surface2);color:var(--text)">
+         </div>
+         <button onclick="checkPractice(1,'0.5')" class="px-4 py-2 rounded-lg font-medium" style="background:var(--accent2);color:#0f172a">Check Answer</button>
+        </div>
+        <div id="fb1" class="mt-2 text-sm"></div>
+        <button onclick="toggleSol('sol1')" class="text-sm px-3 py-1 rounded-lg mt-3" style="background:var(--surface2);color:var(--accent2)">Show Solution</button>
+        <div id="sol1" class="solution-box mt-2" style="display:none;background:var(--surface2);padding:12px;border-radius:8px;font-size:0.9rem;line-height:1.6">
+         Given: V = 120 V, R = 240 Ω<br>
+         Find: I = ?<br><br>
+         Using Ohm's Law: I = V / R<br>
+         I = 120 / 240<br><strong style="color:var(--green)">I = 0.5 A (500 mA)</strong>
+        </div>
+       </div>
+      </div>
+     </div>
+     <!-- Problem 2 -->
+     <div class="card">
+      <div class="flex items-start gap-3">
+       <span class="px-3 py-1 rounded-full text-xs font-bold" style="background:var(--accent2);color:#0f172a">Ohm's Law</span>
+       <div class="flex-1">
+        <p class="font-medium mb-3">Problem 2: A 2A current flows through a 15Ω resistor. What voltage is across the resistor?</p>
+        <div class="flex gap-2 items-end">
+         <div class="flex-1">
+          <label class="text-xs opacity-60 block mb-1">Your answer:</label>
+          <input type="text" id="ans2" placeholder="e.g., 30 V" class="w-full px-3 py-2 rounded-lg" style="background:var(--surface2);border:1px solid var(--surface2);color:var(--text)">
+         </div>
+         <button onclick="checkPractice(2,'30')" class="px-4 py-2 rounded-lg font-medium" style="background:var(--accent2);color:#0f172a">Check Answer</button>
+        </div>
+        <div id="fb2" class="mt-2 text-sm"></div>
+        <button onclick="toggleSol('sol2')" class="text-sm px-3 py-1 rounded-lg mt-3" style="background:var(--surface2);color:var(--accent2)">Show Solution</button>
+        <div id="sol2" class="solution-box mt-2" style="display:none;background:var(--surface2);padding:12px;border-radius:8px;font-size:0.9rem;line-height:1.6">
+         Given: I = 2 A, R = 15 Ω<br>
+         Find: V = ?<br><br>
+         V = I × R = 2 × 15<br><strong style="color:var(--green)">V = 30 V</strong>
+        </div>
+       </div>
+      </div>
+     </div>
+     <!-- Problem 3 -->
+     <div class="card">
+      <div class="flex items-start gap-3">
+       <span class="px-3 py-1 rounded-full text-xs font-bold" style="background:var(--green);color:#0f172a">Series</span>
+       <div class="flex-1">
+        <p class="font-medium mb-3">Problem 3: Three resistors (47Ω, 100Ω, 220Ω) are in series with a 24V battery. Find the total resistance.</p>
+        <div class="flex gap-2 items-end">
+         <div class="flex-1">
+          <label class="text-xs opacity-60 block mb-1">Your answer:</label>
+          <input type="text" id="ans3" placeholder="e.g., 367 Ω" class="w-full px-3 py-2 rounded-lg" style="background:var(--surface2);border:1px solid var(--surface2);color:var(--text)">
+         </div>
+         <button onclick="checkPractice(3,'367')" class="px-4 py-2 rounded-lg font-medium" style="background:var(--green);color:#0f172a">Check Answer</button>
+        </div>
+        <div id="fb3" class="mt-2 text-sm"></div>
+        <button onclick="toggleSol('sol3')" class="text-sm px-3 py-1 rounded-lg mt-3" style="background:var(--surface2);color:var(--green)">Show Solution</button>
+        <div id="sol3" class="solution-box mt-2" style="display:none;background:var(--surface2);padding:12px;border-radius:8px;font-size:0.9rem;line-height:1.6">
+         Given: R₁ = 47Ω, R₂ = 100Ω, R₃ = 220Ω, V = 24V<br><br>
+         R_total = R₁ + R₂ + R₃<br>
+         R_total = 47 + 100 + 220<br><strong style="color:var(--green)">R_total = 367 Ω</strong>
+        </div>
+       </div>
+      </div>
+     </div>
+     <!-- Problem 4 -->
+     <div class="card">
+      <div class="flex items-start gap-3">
+       <span class="px-3 py-1 rounded-full text-xs font-bold" style="background:var(--green);color:#0f172a">Series</span>
+       <div class="flex-1">
+        <p class="font-medium mb-3">Problem 4: Two resistors in series have a total resistance of 500Ω. If R₁ = 180Ω, find R₂.</p>
+        <div class="flex gap-2 items-end">
+         <div class="flex-1">
+          <label class="text-xs opacity-60 block mb-1">Your answer:</label>
+          <input type="text" id="ans4" placeholder="e.g., 320 Ω" class="w-full px-3 py-2 rounded-lg" style="background:var(--surface2);border:1px solid var(--surface2);color:var(--text)">
+         </div>
+         <button onclick="checkPractice(4,'320')" class="px-4 py-2 rounded-lg font-medium" style="background:var(--green);color:#0f172a">Check Answer</button>
+        </div>
+        <div id="fb4" class="mt-2 text-sm"></div>
+        <button onclick="toggleSol('sol4')" class="text-sm px-3 py-1 rounded-lg mt-3" style="background:var(--surface2);color:var(--green)">Show Solution</button>
+        <div id="sol4" class="solution-box mt-2" style="display:none;background:var(--surface2);padding:12px;border-radius:8px;font-size:0.9rem;line-height:1.6">
+         Given: R_total = 500Ω, R₁ = 180Ω<br><br>
+         R₂ = R_total − R₁ = 500 − 180<br><strong style="color:var(--green)">R₂ = 320 Ω</strong>
+        </div>
+       </div>
+      </div>
+     </div>
+     <!-- Problem 5 -->
+     <div class="card">
+      <div class="flex items-start gap-3">
+       <span class="px-3 py-1 rounded-full text-xs font-bold" style="background:var(--accent3);color:#0f172a">Parallel</span>
+       <div class="flex-1">
+        <p class="font-medium mb-3">Problem 5: Two resistors (100Ω and 200Ω) are connected in parallel to a 10V supply. Find the equivalent resistance.</p>
+        <div class="flex gap-2 items-end">
+         <div class="flex-1">
+          <label class="text-xs opacity-60 block mb-1">Your answer:</label>
+          <input type="text" id="ans5" placeholder="e.g., 66.7 Ω" class="w-full px-3 py-2 rounded-lg" style="background:var(--surface2);border:1px solid var(--surface2);color:var(--text)">
+         </div>
+         <button onclick="checkPractice(5,'66.7')" class="px-4 py-2 rounded-lg font-medium" style="background:var(--accent3);color:#0f172a">Check Answer</button>
+        </div>
+        <div id="fb5" class="mt-2 text-sm"></div>
+        <button onclick="toggleSol('sol5')" class="text-sm px-3 py-1 rounded-lg mt-3" style="background:var(--surface2);color:var(--accent3)">Show Solution</button>
+        <div id="sol5" class="solution-box mt-2" style="display:none;background:var(--surface2);padding:12px;border-radius:8px;font-size:0.9rem;line-height:1.6">
+         Given: R₁ = 100Ω, R₂ = 200Ω, V = 10V<br><br>
+         1/R_eq = 1/R₁ + 1/R₂<br>
+         1/R_eq = 1/100 + 1/200 = 0.015<br><strong style="color:var(--green)">R_eq = 66.7 Ω</strong>
+        </div>
+       </div>
+      </div>
+     </div>
+     <!-- Problem 6 -->
+     <div class="card">
+      <div class="flex items-start gap-3">
+       <span class="px-3 py-1 rounded-full text-xs font-bold" style="background:var(--accent3);color:#0f172a">Parallel</span>
+       <div class="flex-1">
+        <p class="font-medium mb-3">Problem 6: Three identical 330Ω resistors are connected in parallel. Find the equivalent resistance.</p>
+        <div class="flex gap-2 items-end">
+         <div class="flex-1">
+          <label class="text-xs opacity-60 block mb-1">Your answer:</label>
+          <input type="text" id="ans6" placeholder="e.g., 110 Ω" class="w-full px-3 py-2 rounded-lg" style="background:var(--surface2);border:1px solid var(--surface2);color:var(--text)">
+         </div>
+         <button onclick="checkPractice(6,'110')" class="px-4 py-2 rounded-lg font-medium" style="background:var(--accent3);color:#0f172a">Check Answer</button>
+        </div>
+        <div id="fb6" class="mt-2 text-sm"></div>
+        <button onclick="toggleSol('sol6')" class="text-sm px-3 py-1 rounded-lg mt-3" style="background:var(--surface2);color:var(--accent3)">Show Solution</button>
+        <div id="sol6" class="solution-box mt-2" style="display:none;background:var(--surface2);padding:12px;border-radius:8px;font-size:0.9rem;line-height:1.6">
+         Given: R₁ = R₂ = R₃ = 330Ω<br><br>
+         R_eq = R / n = 330 / 3<br><strong style="color:var(--green)">R_eq = 110 Ω</strong>
+        </div>
+       </div>
+      </div>
+     </div>
+    </section>
+   </main>
+  </div>
+
+  <!-- Color Code Table Modal -->
+  <div id="colorTableModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(0,0,0,.7);backdrop-filter:blur(4px)" onclick="if(event.target===this)this.classList.add('hidden')">
+   <div class="relative w-full max-w-lg rounded-2xl overflow-hidden" style="background:var(--surface);border:1px solid var(--surface2);max-height:90vh;overflow-y:auto">
+    <div class="flex items-center justify-between px-5 py-4" style="border-bottom:1px solid var(--surface2)">
+     <h3 class="font-bold text-base" style="color:var(--accent)">📋 Resistor Color Code Table</h3>
+     <button onclick="document.getElementById('colorTableModal').classList.add('hidden')" class="text-lg leading-none opacity-60 hover:opacity-100" style="color:var(--text)">&times;</button>
+    </div>
+    <div class="p-4">
+     <table class="w-full text-sm" style="border-collapse:collapse">
+      <thead>
+       <tr style="background:var(--surface2);color:var(--text);opacity:.7">
+        <th class="text-left px-3 py-2 rounded-tl-lg">Color</th>
+        <th class="text-center px-3 py-2">Digit</th>
+        <th class="text-center px-3 py-2">Multiplier</th>
+        <th class="text-center px-3 py-2 rounded-tr-lg">Tolerance</th>
+       </tr>
+      </thead>
+      <tbody style="color:var(--text)">
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#000;border:1px solid #555"></span>Black</td>
+        <td class="text-center px-3 py-2">0</td><td class="text-center px-3 py-2">&times;1</td><td class="text-center px-3 py-2">—</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#a52a2a"></span>Brown</td>
+        <td class="text-center px-3 py-2">1</td><td class="text-center px-3 py-2">&times;10</td><td class="text-center px-3 py-2">±1%</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#ff0000"></span>Red</td>
+        <td class="text-center px-3 py-2">2</td><td class="text-center px-3 py-2">&times;100</td><td class="text-center px-3 py-2">±2%</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#ff8c00"></span>Orange</td>
+        <td class="text-center px-3 py-2">3</td><td class="text-center px-3 py-2">&times;1k</td><td class="text-center px-3 py-2">—</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#ffd700"></span>Yellow</td>
+        <td class="text-center px-3 py-2">4</td><td class="text-center px-3 py-2">&times;10k</td><td class="text-center px-3 py-2">—</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#228b22"></span>Green</td>
+        <td class="text-center px-3 py-2">5</td><td class="text-center px-3 py-2">&times;100k</td><td class="text-center px-3 py-2">±0.5%</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#0000ff"></span>Blue</td>
+        <td class="text-center px-3 py-2">6</td><td class="text-center px-3 py-2">&times;1M</td><td class="text-center px-3 py-2">±0.25%</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#8b008b"></span>Violet</td>
+        <td class="text-center px-3 py-2">7</td><td class="text-center px-3 py-2">&times;10M</td><td class="text-center px-3 py-2">±0.1%</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#808080"></span>Gray</td>
+        <td class="text-center px-3 py-2">8</td><td class="text-center px-3 py-2">&times;100M</td><td class="text-center px-3 py-2">±0.05%</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#ffffff;border:1px solid #555"></span>White</td>
+        <td class="text-center px-3 py-2">9</td><td class="text-center px-3 py-2">&times;1G</td><td class="text-center px-3 py-2">—</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#d4af37"></span>Gold</td>
+        <td class="text-center px-3 py-2">—</td><td class="text-center px-3 py-2">&times;0.1</td><td class="text-center px-3 py-2">±5%</td>
+       </tr>
+       <tr style="border-bottom:1px solid var(--surface2)">
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#c0c0c0"></span>Silver</td>
+        <td class="text-center px-3 py-2">—</td><td class="text-center px-3 py-2">&times;0.01</td><td class="text-center px-3 py-2">±10%</td>
+       </tr>
+       <tr>
+        <td class="px-3 py-2 flex items-center gap-2"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:transparent;border:1px solid #555"></span>None</td>
+        <td class="text-center px-3 py-2">—</td><td class="text-center px-3 py-2">—</td><td class="text-center px-3 py-2">±20%</td>
+       </tr>
+      </tbody>
+     </table>
+     <p class="text-xs mt-3 opacity-50 text-center">Click outside or &times; to close</p>
+    </div>
+   </div>
+  </div>
+
+  <script>
+// ===== Color band maps =====
+const bandColors = {
+  0:'#000000',1:'#a52a2a',2:'#ff0000',3:'#ff8c00',4:'#ffd700',5:'#228b22',6:'#0000ff',7:'#8b008b',8:'#808080',9:'#ffffff'
+};
+const multColors = {1:'#000000',10:'#a52a2a',100:'#ff0000',1000:'#ff8c00',10000:'#ffd700',100000:'#228b22',1000000:'#0000ff',0.1:'#d4af37',0.01:'#c0c0c0'};
+const tolColors = {1:'#a52a2a',2:'#ff0000',5:'#d4af37',10:'#c0c0c0',20:'transparent'};
+
+let currentResVal = 1000;
+let currentTol = 5;
+
+function formatR(v){
+  const abs=Math.abs(v);
+  let scaled=v;
+  let unit='Ω';
+  if(abs>=1e6){scaled=v/1e6;unit='MΩ';}
+  else if(abs>=1e3){scaled=v/1e3;unit='kΩ';}
+  const sig4 = scaled===0 ? '0.000' : Number(scaled).toPrecision(4);
+  return sig4+' '+unit;
+}
+
+function updateResistor(){
+  const d1=+document.getElementById('sel1').value;
+  const d2=+document.getElementById('sel2').value;
+  const mult=+document.getElementById('sel3').value;
+  const tol=+document.getElementById('sel4').value;
+  const val=(d1*10+d2)*mult;
+  currentResVal=val; currentTol=tol;
+  document.getElementById('band1').setAttribute('fill',bandColors[d1]);
+  document.getElementById('band2').setAttribute('fill',bandColors[d2]);
+  document.getElementById('band3').setAttribute('fill',multColors[mult]);
+  document.getElementById('band4').setAttribute('fill',tolColors[tol]);
+  document.getElementById('mBand1').setAttribute('fill',bandColors[d1]);
+  document.getElementById('mBand2').setAttribute('fill',bandColors[d2]);
+  document.getElementById('mBand3').setAttribute('fill',multColors[mult]);
+  document.getElementById('mBand4').setAttribute('fill',tolColors[tol]);
+  document.getElementById('colorResult').textContent=formatR(val)+' ±'+tol+'%';
+  document.getElementById('ohmDisplay').textContent='--- Ω';
+  document.getElementById('measureResult').innerHTML='';
+}
+
+let _probeTimers=[];
+function _clearProbeTimers(){_probeTimers.forEach(clearTimeout);_probeTimers=[];}
+
+function setProbeContact(touching){
+  document.getElementById('probeGroupL').style.transform=touching?'translateX(0)':'translateX(-26px)';
+  document.getElementById('probeGroupR').style.transform=touching?'translateX(0)':'translateX(26px)';
+}
+
+function measureResistance(){
+  _clearProbeTimers();
+  const display=document.getElementById('ohmDisplay');
+  const result=document.getElementById('measureResult');
+
+  // Step 1: ensure probes are away (immediate)
+  setProbeContact(false);
+  display.textContent='...';
+  display.style.color='#fbbf24';
+  result.innerHTML='';
+
+  // Step 2: move probes to contact after CSS transition has time to complete going away
+  _probeTimers.push(setTimeout(()=>{
+    setProbeContact(true);
+  },300));
+
+  // Step 3: show reading once probes have fully landed (away→contact transition = 700ms)
+  _probeTimers.push(setTimeout(()=>{
+    const tolerance=currentTol/100;
+    const variation=(Math.random()*2-1)*tolerance;
+    const measured=Math.round(currentResVal*(1+variation));
+    display.textContent=formatR(measured);
+    display.style.color='#34d399';
+    const diff=Math.abs(measured-currentResVal);
+    const pct=currentResVal>0?(diff/currentResVal*100).toFixed(1):'0';
+    const withinTol=parseFloat(pct)<=currentTol;
+    result.innerHTML=`<div class="card2 text-left"><div class="text-xs opacity-60 mb-1">Measurement Analysis</div><div style="color:var(--green)">Measured: <strong>${formatR(measured)}</strong></div><div style="color:var(--accent)">Color code: <strong>${formatR(currentResVal)}</strong></div><div style="color:${withinTol?'var(--green)':'var(--yellow)'}">Deviation: ${pct}% ${withinTol?'✓ Within tolerance':'⚠ Check connections'}</div></div>`;
+  },1100));
+
+  // Step 4: retract probes after reading has settled
+  _probeTimers.push(setTimeout(()=>{
+    setProbeContact(false);
+  },3000));
+}
+
+// ===== OHM'S LAW =====
+let electronEls=[];
+let electronAngle=[];
+let animId;
+
+function updateOhm(){
+  const v=+document.getElementById('vSlider').value;
+  const r=+document.getElementById('rSlider').value;
+  const i=v/r;
+  const p=v*i;
+  document.getElementById('vVal').textContent=v+' V';
+  document.getElementById('rVal').textContent=r+' Ω';
+  const iDisp=i>=1?i.toFixed(2)+' A':(i*1000).toFixed(1)+' mA';
+  document.getElementById('iResult').textContent=iDisp;
+  document.getElementById('pResult').textContent=p>=1?p.toFixed(2)+' W':(p*1000).toFixed(1)+' mW';
+  document.getElementById('battLabel').textContent=v+'V';
+  document.getElementById('resLabel').textContent=r+'Ω';
+  document.getElementById('curLabel').textContent='I = '+(i>=1?i.toFixed(2)+'A':(i*1000).toFixed(1)+'mA')+' →';
+  electronSpeed=i*500;
+}
+
+let electronSpeed=60;
+
+function initElectrons(){
+  const box=document.getElementById('circuitBox');
+  const container=document.getElementById('electrons');
+  container.innerHTML='';
+  electronEls=[];electronAngle=[];
+  const count=10;
+  for(let i=0;i<count;i++){
+    const el=document.createElement('div');
+    el.className='electron';
+    container.appendChild(el);
+    electronEls.push(el);
+    electronAngle.push((i/count)*2*Math.PI);
+  }
+  animateElectrons();
+}
+
+// Path: rectangle around the circuit
+// Points relative to circuitBox (300x225 viewBox mapped to 100% container)
+function getPathPos(t){
+  // Normalize t to 0-1
+  t=((t%(2*Math.PI))+(2*Math.PI))%(2*Math.PI);
+  const frac=t/(2*Math.PI);
+  // Perimeter segments: top(180), right(145), bottom(180), left(145) = 650 total
+  const perim=650;
+  let d=frac*perim;
+  // top: (60,40) to (240,40) = 180
+  if(d<180) return {x:20+(d/180)*60, y:17.8};
+  d-=180;
+  // right: (240,40) to (240,185) = 145
+  if(d<145) return {x:80, y:17.8+(d/145)*64.4};
+  d-=145;
+  // bottom: (240,185) to (60,185) = 180
+  if(d<180) return {x:80-(d/180)*60, y:82.2};
+  d-=180;
+  // left: (60,185) to (60,40) = 145
+  return {x:20, y:82.2-(d/145)*64.4};
+}
+
+function animateElectrons(){
+  const dt=0.016;
+  for(let i=0;i<electronEls.length;i++){
+    electronAngle[i]+=dt*electronSpeed*0.01;
+    const pos=getPathPos(electronAngle[i]);
+    electronEls[i].style.left=pos.x+'%';
+    electronEls[i].style.top=pos.y+'%';
+  }
+  animId=requestAnimationFrame(animateElectrons);
+}
+
+// ===== SERIES =====
+function updateSeries(){
+  const r1=+document.getElementById('sR1').value;
+  const r2=+document.getElementById('sR2').value;
+  const r3=+document.getElementById('sR3').value;
+  const v=+document.getElementById('sV').value;
+  const rt=r1+r2+r3;
+  const i=v/rt;
+  document.getElementById('sR1V').textContent=r1+' Ω';
+  document.getElementById('sR2V').textContent=r2+' Ω';
+  document.getElementById('sR3V').textContent=r3+' Ω';
+  document.getElementById('sVV').textContent=v+' V';
+  document.getElementById('sRt').textContent=formatR(rt);
+  document.getElementById('sIt').textContent=i>=1?i.toFixed(2)+' A':(i*1000).toFixed(1)+' mA';
+  document.getElementById('sV1').textContent='V₁ = '+(i*r1).toFixed(2)+' V';
+  document.getElementById('sV2').textContent='V₂ = '+(i*r2).toFixed(2)+' V';
+  document.getElementById('sV3').textContent='V₃ = '+(i*r3).toFixed(2)+' V';
+  document.getElementById('serR1L').textContent=r1+'Ω';
+  document.getElementById('serR2L').textContent=r2+'Ω';
+  document.getElementById('serR3L').textContent=r3+'Ω';
+  document.getElementById('serBatt').textContent=v+'V';
+}
+
+// ===== PARALLEL =====
+function updateParallel(){
+  const r1=+document.getElementById('pR1').value;
+  const r2=+document.getElementById('pR2').value;
+  const r3=+document.getElementById('pR3').value;
+  const v=+document.getElementById('pV').value;
+  const rt=1/(1/r1+1/r2+1/r3);
+  const i1=v/r1,i2=v/r2,i3=v/r3,it=i1+i2+i3;
+  document.getElementById('pR1V').textContent=r1+' Ω';
+  document.getElementById('pR2V').textContent=r2+' Ω';
+  document.getElementById('pR3V').textContent=r3+' Ω';
+  document.getElementById('pVV').textContent=v+' V';
+  document.getElementById('pRt').textContent=rt.toFixed(1)+' Ω';
+  const fmt=a=>a>=1?a.toFixed(2)+' A':(a*1000).toFixed(1)+' mA';
+  document.getElementById('pI1').textContent='I₁ = '+fmt(i1);
+  document.getElementById('pI2').textContent='I₂ = '+fmt(i2);
+  document.getElementById('pI3').textContent='I₃ = '+fmt(i3);
+  document.getElementById('pIt').textContent=fmt(it);
+  document.getElementById('parR1L').textContent=r1+'Ω';
+  document.getElementById('parR2L').textContent=r2+'Ω';
+  document.getElementById('parR3L').textContent=r3+'Ω';
+  document.getElementById('parBatt').textContent=v+'V';
+}
+
+// ===== TABS =====
+let activeTab=0;
+function switchTab(idx){
+  document.getElementById('sec'+activeTab).style.display='none';
+  document.getElementById('sec'+idx).style.display='';
+  document.getElementById('sec'+idx).classList.remove('fade-in');
+  void document.getElementById('sec'+idx).offsetWidth;
+  document.getElementById('sec'+idx).classList.add('fade-in');
+  const btns=document.querySelectorAll('.tab-btn');
+  btns.forEach((b,i)=>{
+    if(i===idx){b.classList.add('active');b.style.background='';b.style.color='';}
+    else{b.classList.remove('active');b.style.background='var(--surface2)';b.style.color='var(--text)';}
+  });
+  activeTab=idx;
+  if(idx===1 && electronEls.length===0) initElectrons();
+}
+
+// ===== QUIZ =====
+const quizState={answered:0,correct:0,total:0};
+
+function updateQuizSummary(){
+  if(!quizState.total){
+    quizState.total=document.querySelectorAll('#quizArea [id^="q"]').length;
+  }
+  if(quizState.answered<quizState.total) return;
+
+  const pct=Math.round((quizState.correct/quizState.total)*100);
+  const summary=document.getElementById('quizSummary');
+  const score=document.getElementById('quizScore');
+  const percent=document.getElementById('quizPercent');
+  const feedback=document.getElementById('quizFeedback');
+
+  score.textContent=quizState.correct+' / '+quizState.total;
+  percent.textContent=pct+'% correct';
+
+  if(pct>=90){
+    feedback.style.color='var(--green)';
+    feedback.textContent='Excellent mastery of Ohm\'s Law.';
+  }else if(pct>=70){
+    feedback.style.color='var(--accent)';
+    feedback.textContent='Good work. Review a few mixed unit conversions.';
+  }else{
+    feedback.style.color='var(--yellow)';
+    feedback.textContent='Keep practicing. Revisit V = I × R and unit conversions.';
+  }
+
+  summary.style.display='block';
+}
+
+function checkQuiz(el,qId,correct){
+  const container=document.getElementById(qId);
+  if(container.dataset.answered) return;
+  container.dataset.answered='1';
+  quizState.answered++;
+  if(correct) el.classList.add('correct');
+  else{
+    el.classList.add('wrong');
+    container.querySelectorAll('.quiz-opt').forEach(o=>{
+      if(o!==el && o.onclick.toString().includes('true')) o.classList.add('correct');
+    });
+  }
+  if(correct) quizState.correct++;
+  updateQuizSummary();
+}
+
+
+// ===== PRACTICE PROBLEMS =====
+function checkPractice(probNum, expectedVal){
+  const inputEl=document.getElementById('ans'+probNum);
+  const feedbackEl=document.getElementById('fb'+probNum);
+  const userVal=inputEl.value.trim();
+  
+  if(!userVal){
+    feedbackEl.innerHTML='<span style="color:var(--yellow)">Please enter an answer first.</span>';
+    return;
+  }
+  
+  // Normalize: remove spaces, convert to lowercase, extract just the number part
+  const normalize=str=>str.replace(/\s/g,'').toLowerCase();
+  const userNorm=normalize(userVal);
+  const expectedNorm=normalize(expectedVal);
+  
+  // Check if user answer contains expected value as a substring (loose match)
+  const isCorrect=userNorm.includes(expectedNorm) || expectedNorm.includes(userNorm);
+  
+  if(isCorrect){
+    feedbackEl.innerHTML='<span style="color:var(--green)">✓ Correct! Expected: <strong>'+expectedVal+'</strong></span>';
+    inputEl.style.borderColor='var(--green)';
+  }else{
+    feedbackEl.innerHTML='<span style="color:var(--yellow)">Incorrect. Expected: <strong>'+expectedVal+'</strong></span>';
+    inputEl.style.borderColor='var(--red)';
+  }
+  inputEl.style.borderWidth='2px';
+}
+
+function toggleSol(id){
+  const el=document.getElementById(id);
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+
+// ===== ELEMENT SDK =====
+const defaultConfig={
+  page_title:'⚡ Resistors & Ohm\'s Law',
+  section1_title:'🎨 Resistors & Color Coding',
+  section2_title:'⚡ Ohm\'s Law',
+  background_color:'#0f172a',
+  surface_color:'#1e293b',
+  text_color:'#e2e8f0',
+  accent_color:'#38bdf8',
+  secondary_color:'#818cf8',
+  font_family:'DM Sans',
+  font_size:16
+};
+
+function applyConfig(c){
+  const g=k=>c[k]||defaultConfig[k];
+  document.getElementById('pageTitle').textContent=g('page_title');
+  document.getElementById('sec1Title').textContent=g('section1_title');
+  document.getElementById('sec2Title').textContent=g('section2_title');
+
+  document.documentElement.style.setProperty('--bg',g('background_color'));
+  document.documentElement.style.setProperty('--surface',g('surface_color'));
+  document.documentElement.style.setProperty('--text',g('text_color'));
+  document.documentElement.style.setProperty('--accent',g('accent_color'));
+  document.documentElement.style.setProperty('--accent2',g('secondary_color'));
+  document.body.style.fontFamily=g('font_family')+', DM Sans, sans-serif';
+  document.body.style.fontSize=g('font_size')+'px';
+}
+
+if(window.elementSdk){
+  window.elementSdk.init({
+    defaultConfig,
+    onConfigChange:async(config)=>applyConfig(config),
+    mapToCapabilities:(config)=>({
+      recolorables:[
+        {get:()=>config.background_color||defaultConfig.background_color,set:v=>{config.background_color=v;window.elementSdk.setConfig({background_color:v})}},
+        {get:()=>config.surface_color||defaultConfig.surface_color,set:v=>{config.surface_color=v;window.elementSdk.setConfig({surface_color:v})}},
+        {get:()=>config.text_color||defaultConfig.text_color,set:v=>{config.text_color=v;window.elementSdk.setConfig({text_color:v})}},
+        {get:()=>config.accent_color||defaultConfig.accent_color,set:v=>{config.accent_color=v;window.elementSdk.setConfig({accent_color:v})}},
+        {get:()=>config.secondary_color||defaultConfig.secondary_color,set:v=>{config.secondary_color=v;window.elementSdk.setConfig({secondary_color:v})}},
+      ],
+      borderables:[],
+      fontEditable:{get:()=>config.font_family||defaultConfig.font_family,set:v=>{config.font_family=v;window.elementSdk.setConfig({font_family:v})}},
+      fontSizeable:{get:()=>config.font_size||defaultConfig.font_size,set:v=>{config.font_size=v;window.elementSdk.setConfig({font_size:v})}}
+    }),
+    mapToEditPanelValues:(config)=>new Map([
+      ['page_title',config.page_title||defaultConfig.page_title],
+      ['section1_title',config.section1_title||defaultConfig.section1_title],
+      ['section2_title',config.section2_title||defaultConfig.section2_title],
+    ])
+  });
+}
+
+// Init
+updateResistor();
+updateOhm();
+updateSeries();
+updateParallel();
+lucide.createIcons();
+
+// ===== OHM'S LAW TRIANGLE =====
+const _triData={
+  v:{label:'Voltage (V)',formula:'V = I × R',desc:'Volts = Amperes × Ohms',color:'#b45309',cell:'tri-v'},
+  i:{label:'Current (I)',formula:'I = V / R',desc:'Amperes = Volts ÷ Ohms',color:'#be123c',cell:'tri-i'},
+  r:{label:'Resistance (R)',formula:'R = V / I',desc:'Ohms = Volts ÷ Amperes',color:'#6d28d9',cell:'tri-r'}
+};
+function triHover(key){
+  const label=document.getElementById('triHintLabel');
+  const formula=document.getElementById('triHintFormula');
+  const desc=document.getElementById('triHintDesc');
+  ['v','i','r'].forEach(k=>{
+    const el=document.getElementById('tri-'+k);
+    if(el) el.style.filter=key===k?'brightness(0.82)':'';
+  });
+  if(!key){
+    label.textContent='Select a quantity';
+    formula.textContent='?';
+    formula.style.color='var(--text)';
+    desc.textContent='';
+  } else {
+    const d=_triData[key];
+    label.textContent=d.label;
+    formula.textContent=d.formula;
+    formula.style.color=d.color;
+    desc.textContent=d.desc;
+  }
+}
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9fcffaa8b7f304f7',t:'MTc3ODk5MzE5NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
