@@ -1106,7 +1106,7 @@
 
         <div class="pm-row" id="pm-pstype-row">
           <div class="pm-lbl">PS type <span class="required-star">*</span></div>
-          <select id="pm-ps-type" class="form-select form-select-sm">
+          <select id="pm-ps-type" class="form-select form-select-sm" onchange="syncPmPositionOptions()">
             <option value="salary">Salary</option>
             <option value="honoraria">Honoraria</option>
           </select>
@@ -2709,6 +2709,56 @@ function pmToggleFields() {
   document.getElementById('pm-agency-row').style.display = funding === 'dost' ? '' : 'none';
 }
 
+const PM_HONORARIA_POSITIONS = [
+  'Commodity Team Leader/Technical Panel Chairman (2009)',
+  'Commodity Team Member/Technical Panel Member (2009)',
+  'IAC/WG Chairman (Inter-Agency Committee Working Group) (2009)',
+  'IAC/WG Member (Inter-Agency Committee Working Group) (2009)',
+  'IAC/WG Support Staff Level 1 (Inter-Agency Committee Working Group) (2009)',
+  'IAC/WG Support Staff Level 2 (Inter-Agency Committee Working Group) (2009)',
+  'Program Leader (1-2 Projects) (2009)',
+  'Program Leader (3-4 Projects) (2009)',
+  'Program Leader (5 or more Projects) (2009)',
+  'Program/Project Coordinator (1-3 programs/projects) (2009)',
+  'Program/Project Coordinator (4 or more projects) (2009)',
+  'Program/Project Support Staff Level 1 (2009)',
+  'Program/Project Support Staff Level 2 (2009)',
+  'Project Leader (2009)',
+  'S&T Consultant (2009)',
+  'Training Coordinator (2009)',
+  'Training Resource Person (Laboratory) (2009)',
+  'Training Resource Person (Lecture) (2009)',
+  'Training Support Staff Level 1 (2009)',
+  'Training Support Staff Level 2 (2009)',
+  'Project Staff Level 1 - SG 15 (2009)',
+  'Project Staff Level 2 - SG 18 (2009)',
+  'Project Staff Level 3 - SG 24 (2009)'
+];
+
+const PM_SALARY_POSITION_OPTIONS = document.getElementById('pm-position').innerHTML;
+
+function syncPmPositionOptions(selectedValue = null) {
+  const psTypeEl = document.getElementById('pm-ps-type');
+  const positionEl = document.getElementById('pm-position');
+  if (!psTypeEl || !positionEl) return;
+
+  const currentValue = selectedValue !== null ? selectedValue : positionEl.value;
+  if (psTypeEl.value === 'honoraria') {
+    positionEl.innerHTML = '<option value="">Select item</option>';
+    PM_HONORARIA_POSITIONS.forEach(label => {
+      const option = document.createElement('option');
+      option.value = label;
+      option.textContent = label;
+      positionEl.appendChild(option);
+    });
+  } else {
+    positionEl.innerHTML = PM_SALARY_POSITION_OPTIONS;
+  }
+
+  if (currentValue) positionEl.value = currentValue;
+  if (currentValue && positionEl.value !== currentValue) positionEl.value = '';
+}
+
 function pmAutoCalc() {
   const rate = parseFloat(document.getElementById('pm-rate').value) || 0;
   const num = parseFloat(document.getElementById('pm-num-pos').value) || 1;
@@ -2729,6 +2779,7 @@ function openPersonnelModal(id) {
     const el = document.getElementById(f);
     if (el) { el.value = defaults[i]; el.dataset.manuallySet = ''; }
   });
+  syncPmPositionOptions();
   document.getElementById('personnelModalTitle').textContent = id ? 'Edit Personnel Services' : 'Add/Edit Personnel Services';
   if (id) {
     const all = [...budget.personnel.salary, ...budget.personnel.honoraria, ...budget.personnel.indirect];
@@ -2737,7 +2788,7 @@ function openPersonnelModal(id) {
       document.getElementById('pm-id').value = item.id;
       document.getElementById('pm-cost-type').value = item.costType || 'direct';
       document.getElementById('pm-ps-type').value = item.psType || 'salary';
-      document.getElementById('pm-position').value = item.position || '';
+      syncPmPositionOptions(item.position || '');
       document.getElementById('pm-num-pos').value = item.numPos || 1;
       document.getElementById('pm-period').value = item.period || 12;
       document.getElementById('pm-funding').value = item.funding || 'dost';
