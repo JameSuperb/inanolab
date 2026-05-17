@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Charles' Law Interactive Lesson</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Outfit', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .drag-item { cursor: grab; user-select: none; transition: transform 0.15s, box-shadow 0.15s; }
+    .drag-item:active { cursor: grabbing; transform: scale(1.05); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+    .drop-zone { min-height: 60px; transition: background 0.2s, border-color 0.2s; }
+    .drop-zone.drag-over { background: rgba(99,102,241,0.1); border-color: #6366f1; }
+    .nav-dot { transition: all 0.3s; }
+    .nav-dot.active { transform: scale(1.3); }
+    .particle { position: absolute; border-radius: 50%; animation: bounce linear infinite; }
+    @keyframes bounce { 0%,100% { transform: translateY(0) translateX(0); } 25% { transform: translateY(-10px) translateX(5px); } 50% { transform: translateY(0) translateX(10px); } 75% { transform: translateY(10px) translateX(5px); } }
+    .card-flip { perspective: 1000px; }
+    .card-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+    .card-flip.flipped .card-inner { transform: rotateY(180deg); }
+    .card-front, .card-back { backface-visibility: hidden; }
+    .card-back { transform: rotateY(180deg); }
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .sim-container { position: relative; overflow: hidden; border-radius: 12px; }
+
+    /* Desktop readability bump: scales Tailwind rem-based text and layout proportionally. */
+    @media (min-width: 1024px) {
+      html { font-size: 18px; }
+    }
+
+    @media (min-width: 1440px) {
+      html { font-size: 19px; }
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            bg: '#f8fafc',
+            surface: '#ffffff',
+            accent: '#4f46e5',
+            accent2: '#0284c7',
+            text: '#0f172a'
+          }
+        }
+      }
+    }
+  </script>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-bg text-text overflow-auto">
+  <div id="app" class="h-full w-full flex flex-col"><!-- Header -->
+  <header class="px-6 py-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+   <h1 id="main-title" class="text-lg md:text-xl font-bold text-slate-900">Charles' Law Interactive Lesson</h1>
+    <div class="flex items-center gap-2"><span id="score-display" class="mono text-sm text-accent2">Score: 0</span>
+    </div>
+   </header><!-- Navigation -->
+  <nav class="px-6 py-3 border-b border-slate-200 flex items-center gap-3 overflow-x-auto shrink-0"><button onclick="goToSection(0)" class="nav-dot w-3 h-3 rounded-full bg-accent active" data-nav="0"></button> <button onclick="goToSection(1)" class="nav-dot w-3 h-3 rounded-full bg-slate-300" data-nav="1"></button> <button onclick="goToSection(2)" class="nav-dot w-3 h-3 rounded-full bg-slate-300" data-nav="2"></button> <button onclick="goToSection(3)" class="nav-dot w-3 h-3 rounded-full bg-slate-300" data-nav="3"></button> <button onclick="goToSection(4)" class="nav-dot w-3 h-3 rounded-full bg-slate-300" data-nav="4"></button> <button onclick="goToSection(5)" class="nav-dot w-3 h-3 rounded-full bg-slate-300" data-nav="5"></button> <button onclick="goToSection(6)" class="nav-dot w-3 h-3 rounded-full bg-slate-300" data-nav="6"></button> <span id="section-label" class="ml-3 text-sm text-slate-600">Introduction</span>
+   </nav><!-- Content Area -->
+   <main id="content" class="flex-1 overflow-y-auto p-4 md:p-8">
+   </main><!-- Footer Nav -->
+  <footer class="px-6 py-3 border-t border-slate-200 flex justify-between shrink-0"><button id="prev-btn" onclick="prevSection()" class="px-4 py-2 rounded-lg bg-accent text-white hover:bg-indigo-500 transition flex items-center gap-2 disabled:opacity-30" disabled> <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back </button> <button id="next-btn" onclick="nextSection()" class="px-4 py-2 rounded-lg bg-accent text-white hover:bg-indigo-500 transition flex items-center gap-2"> Next <i data-lucide="arrow-right" style="width:16px;height:16px;"></i> </button>
+   </footer>
+  </div>
+  <script>
+    // State
+    let currentSection = 0;
+    let score = 0;
+    const sectionNames = ['Introduction', 'Ideal vs Real Gas', 'Variables & Constants', 'Simulation', 'Concept Check', 'Problem Solving', 'Applications & Score'];
+    const totalSections = 7;
+
+    // Section navigation
+    function goToSection(idx) {
+      currentSection = idx;
+      renderSection();
+      updateNav();
+    }
+    function nextSection() { if (currentSection < totalSections - 1) goToSection(currentSection + 1); }
+    function prevSection() { if (currentSection > 0) goToSection(currentSection - 1); }
+
+    function updateNav() {
+      document.querySelectorAll('.nav-dot').forEach((d, i) => {
+        d.className = `nav-dot w-3 h-3 rounded-full ${i === currentSection ? 'bg-accent active' : 'bg-slate-300'}`;
+      });
+      document.getElementById('section-label').textContent = sectionNames[currentSection];
+      document.getElementById('prev-btn').disabled = currentSection === 0;
+      document.getElementById('next-btn').textContent = currentSection === totalSections - 1 ? 'Finish' : '';
+      document.getElementById('next-btn').innerHTML = currentSection === totalSections - 1
+        ? '<i data-lucide="check" style="width:16px;height:16px;"></i> Finish'
+        : 'Next <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>';
+      lucide.createIcons();
+    }
+
+    function addScore(pts) {
+      score += pts;
+      document.getElementById('score-display').textContent = `Score: ${score}`;
+    }
+
+    // ===== SECTION RENDERERS =====
+    function renderSection() {
+      const content = document.getElementById('content');
+      const renderers = [renderIntro, renderSort, renderVariables, renderSimulation, renderMCQ, renderProblem, renderApplications];
+      content.innerHTML = '';
+      renderers[currentSection]();
+      content.scrollTop = 0;
+      lucide.createIcons();
+    }
+
+    // Section 0: Introduction
+    function renderIntro() {
+      document.getElementById('content').innerHTML = `
+        <div class="max-w-2xl mx-auto fade-in text-center py-8">
+          <div class="text-6xl mb-6">🎈</div>
+          <h2 class="text-3xl font-bold text-slate-900 mb-4">Charles' Law</h2>
+          <p class="text-lg text-slate-700 mb-6">Temperature & Volume of Gases</p>
+          <div class="bg-surface rounded-xl p-6 text-left space-y-4">
+            <p class="text-slate-700">In this lesson, you will:</p>
+            <ul class="space-y-2 text-slate-600">
+              <li class="flex items-start gap-2"><i data-lucide="check-circle" style="width:18px;height:18px;color:#22d3ee;margin-top:2px;"></i> Sort properties of ideal vs real gases</li>
+              <li class="flex items-start gap-2"><i data-lucide="check-circle" style="width:18px;height:18px;color:#22d3ee;margin-top:2px;"></i> Identify variables and constants in Charles' Law</li>
+              <li class="flex items-start gap-2"><i data-lucide="check-circle" style="width:18px;height:18px;color:#22d3ee;margin-top:2px;"></i> Answer concept-check questions</li>
+              <li class="flex items-start gap-2"><i data-lucide="check-circle" style="width:18px;height:18px;color:#22d3ee;margin-top:2px;"></i> Solve problems using V₁/T₁ = V₂/T₂</li>
+              <li class="flex items-start gap-2"><i data-lucide="check-circle" style="width:18px;height:18px;color:#22d3ee;margin-top:2px;"></i> Explore a gas simulation</li>
+              <li class="flex items-start gap-2"><i data-lucide="check-circle" style="width:18px;height:18px;color:#22d3ee;margin-top:2px;"></i> Discover real-life applications</li>
+            </ul>
+          </div>
+          <div class="mt-6 bg-surface/50 rounded-xl p-4 border border-accent/30">
+            <p class="mono text-accent2 text-lg">V ∝ T &nbsp;(at constant P and n)</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Section 1: Drag and Drop Sort
+    let sortState = { placed: {}, completed: false };
+    const sortItems = [
+      { text: 'No intermolecular forces', cat: 'ideal' },
+      { text: 'Has intermolecular forces', cat: 'real' },
+      { text: 'Collisions are perfectly elastic', cat: 'ideal' },
+      { text: 'Collisions may not be perfectly elastic', cat: 'real' },
+      { text: 'Gas particles have negligible volume', cat: 'ideal' },
+      { text: 'Gas particles have measurable volume', cat: 'real' },
+      { text: 'Follows gas laws exactly', cat: 'ideal' },
+      { text: 'Deviates from gas laws under some conditions', cat: 'real' },
+      { text: 'Best at low pressure and high temperature', cat: 'ideal' },
+      { text: 'Noticeable at high pressure and low temperature', cat: 'real' },
+    ];
+
+    function renderSort() {
+      sortState = { placed: {}, completed: false };
+      const shuffled = [...sortItems].sort(() => Math.random() - 0.5);
+      document.getElementById('content').innerHTML = `
+        <div class="max-w-3xl mx-auto fade-in">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2">Ideal Gas vs Real Gas</h2>
+          <p class="text-slate-600 mb-6">Drag each statement to the correct category.</p>
+          <div class="grid md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <h3 class="text-accent2 font-semibold mb-2 text-center">Ideal Gas</h3>
+              <div id="drop-ideal" class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-3 space-y-2 min-h-[200px]"
+                ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'ideal')"></div>
+            </div>
+            <div>
+              <h3 class="text-pink-400 font-semibold mb-2 text-center">Real Gas</h3>
+              <div id="drop-real" class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-3 space-y-2 min-h-[200px]"
+                ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event,'real')"></div>
+            </div>
+          </div>
+          <div id="sort-bank" class="flex flex-wrap gap-2 justify-center">
+            ${shuffled.map((item, i) => `
+              <div class="drag-item px-3 py-2 bg-surface border border-slate-300 rounded-lg text-sm text-slate-700 hover:border-accent"
+                draggable="true" data-idx="${sortItems.indexOf(item)}" ondragstart="handleDragStart(event)">
+                ${item.text}
+              </div>
+            `).join('')}
+          </div>
+          <div id="sort-feedback" class="mt-4 text-center"></div>
+        </div>
+      `;
+    }
+
+    let draggedIdx = null;
+    function handleDragStart(e) { draggedIdx = parseInt(e.target.dataset.idx); e.dataTransfer.effectAllowed = 'move'; }
+    function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+    function handleDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+    function handleDrop(e, zone) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      if (draggedIdx === null) return;
+      const item = sortItems[draggedIdx];
+      const correct = item.cat === zone;
+      sortState.placed[draggedIdx] = zone;
+
+      // Remove from bank
+      const bankEl = document.querySelector(`[data-idx="${draggedIdx}"]`);
+      if (bankEl) {
+        if (correct) {
+          const el = document.createElement('div');
+          el.className = 'px-3 py-2 rounded-lg text-sm ' + (zone === 'ideal' ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' : 'bg-pink-100 text-pink-700 border border-pink-300');
+          el.textContent = item.text;
+          e.currentTarget.appendChild(el);
+          bankEl.remove();
+          addScore(1);
+        } else {
+          bankEl.classList.add('border-red-500');
+          bankEl.style.animation = 'none';
+          bankEl.offsetHeight;
+          bankEl.style.animation = '';
+          setTimeout(() => bankEl.classList.remove('border-red-500'), 800);
+        }
+      }
+
+      // Check completion
+      const placed = Object.keys(sortState.placed).filter(k => sortItems[k].cat === sortState.placed[k]);
+      if (placed.length === sortItems.length) {
+        document.getElementById('sort-feedback').innerHTML = '<p class="text-green-400 font-semibold">🎉 All correct! Great job!</p>';
+      }
+      draggedIdx = null;
+    }
+
+    // Section 2: Variables
+    function renderVariables() {
+      const items = [
+        { name: 'Volume (V)', role: 'variable', icon: 'move' },
+        { name: 'Temperature (T)', role: 'variable', icon: 'thermometer' },
+        { name: 'Pressure (P)', role: 'constant', icon: 'gauge' },
+        { name: 'Amount of gas (n)', role: 'constant', icon: 'atom' },
+      ];
+      let revealed = new Set();
+      document.getElementById('content').innerHTML = `
+        <div class="max-w-2xl mx-auto fade-in">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2">Variables & Constants</h2>
+          <p class="text-slate-600 mb-4">Click each card to reveal its role in Charles' Law.</p>
+          <div class="bg-surface/50 rounded-xl p-4 mb-6 border border-accent/20 text-center">
+            <p class="mono text-xl text-slate-900">V₁ / T₁ = V₂ / T₂</p>
+            <p class="text-sm text-slate-600 mt-1">at constant P and n</p>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-6" id="var-cards">
+            ${items.map((item, i) => `
+              <div class="card-flip cursor-pointer" data-vi="${i}" onclick="flipVarCard(this, ${i})">
+                <div class="card-inner relative h-32">
+                  <div class="card-front absolute inset-0 bg-surface rounded-xl border border-slate-300 flex flex-col items-center justify-center p-4 hover:border-accent transition">
+                    <i data-lucide="${item.icon}" style="width:24px;height:24px;color:#6366f1;"></i>
+                    <span class="mt-2 text-sm font-medium text-slate-900">${item.name}</span>
+                    <span class="text-xs text-slate-500 mt-1">Click to reveal</span>
+                  </div>
+                  <div class="card-back absolute inset-0 rounded-xl flex flex-col items-center justify-center p-4 ${item.role === 'variable' ? 'bg-indigo-100 border border-accent/40' : 'bg-cyan-100 border border-cyan-300'}">
+                    <span class="text-sm font-medium text-slate-900">${item.name}</span>
+                    <span class="mt-2 px-3 py-1 rounded-full text-xs font-semibold ${item.role === 'variable' ? 'bg-accent text-white' : 'bg-cyan-200 text-cyan-800'}">${item.role === 'variable' ? '📈 Variable (changes)' : '🔒 Constant (fixed)'}</span>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="bg-amber-50 border border-amber-300 rounded-xl p-4">
+            <p class="text-amber-700 font-semibold text-sm flex items-center gap-2"><i data-lucide="alert-triangle" style="width:16px;height:16px;"></i> Important</p>
+            <p class="text-slate-700 text-sm mt-1">Temperature must be in <span class="mono text-accent2">Kelvin (K)</span>. Convert: K = °C + 273.15</p>
+          </div>
+        </div>
+      `;
+    }
+    let varRevealed = new Set();
+    function flipVarCard(el, idx) {
+      if (!el.classList.contains('flipped')) {
+        el.classList.add('flipped');
+        if (!varRevealed.has(idx)) { varRevealed.add(idx); addScore(1); }
+      }
+    }
+
+    // Section 3: MCQ
+    const mcqQuestions = [
+      { q: "According to Charles' Law, which two variables are directly proportional?", opts: ['Pressure and volume', 'Volume and temperature', 'Pressure and temperature', 'Mass and density'], correct: 1 },
+      { q: "In Charles' Law, which quantity must remain constant?", opts: ['Temperature', 'Volume', 'Pressure', 'Density'], correct: 2 },
+      { q: 'What happens to the volume of a gas when its temperature is decreased at constant pressure?', opts: ['Volume increases', 'Volume decreases', 'Volume stays the same', 'Volume becomes zero immediately'], correct: 1 },
+      { q: 'Why is Kelvin used instead of Celsius in gas law calculations?', opts: ['Kelvin has no negative values below absolute zero', 'Celsius is too inaccurate', 'Kelvin is easier to compute', 'Celsius cannot measure gases'], correct: 0 },
+      { q: 'A balloon placed inside a refrigerator becomes smaller because:', opts: ['The gas particles disappear', 'The gas loses mass', 'Lower temperature decreases gas volume', 'Pressure becomes zero'], correct: 2 },
+      { q: "Which situation best demonstrates Charles' Law?", opts: ['Compressing air inside a syringe', 'Heating a balloon causing it to expand', 'Pumping air into a tire', 'Dissolving gas in water'], correct: 1 },
+      { q: 'What happens to the volume of the gas when temperature increases?', opts: ['Increases', 'Decreases', 'Stays the same', 'Becomes zero'], correct: 0 },
+      { q: "In Charles' Law, increasing temperature causes the gas particles to:", opts: ['Move slower and occupy less space', 'Move faster and occupy more space', 'Lose kinetic energy', 'Decrease in number'], correct: 1 },
+      { q: "Which graph best represents Charles' Law?", opts: ['A decreasing curved line between volume and temperature', 'A straight line showing volume increasing with temperature', 'A horizontal line', 'A random scatter plot'], correct: 1 },
+      { q: 'What would happen if the temperature of a gas reached absolute zero theoretically?', opts: ['The gas would implode', 'The gas would explode', 'The gas volume would become infinite', 'The gas volume is the minimum'], correct: 3 },
+      { q: 'Which condition makes real gases behave most like ideal gases?', opts: ['High pressure and low temperature', 'Low pressure and high temperature', 'High pressure and high temperature', 'Low pressure and low temperature'], correct: 1 },
+      { q: 'Why does a hot air balloon rise when heated?', opts: ['Heated air becomes heavier', 'Heated air expands and becomes less dense', 'Heated air loses all pressure', 'Heated air stops moving'], correct: 1 },
+      { q: 'If the temperature of a gas doubles in Kelvin while pressure remains constant, what happens to its volume?', opts: ['The volume is cut in half', 'The volume doubles', 'The volume remains the same', 'The pressure doubles'], correct: 1 },
+      { q: "Which statement correctly describes Charles' Law?", opts: ['Gas pressure decreases as temperature increases', 'Gas volume is inversely proportional to temperature', 'Gas volume is directly proportional to absolute temperature', 'Gas volume depends only on mass'], correct: 2 },
+      { q: "A student forgot to convert Celsius to Kelvin before solving a Charles' Law problem. What is the likely result?", opts: ['The answer will still be exact', 'The calculation may produce incorrect results', 'The pressure becomes constant automatically', 'The gas becomes ideal'], correct: 1 },
+    ];
+    let mcqAnswered = {};
+
+    function renderMCQ() {
+      mcqAnswered = {};
+      document.getElementById('content').innerHTML = `
+        <div class="max-w-2xl mx-auto fade-in">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2">Concept Check</h2>
+          <p class="text-slate-600 mb-6">Test your understanding. Select the best answer.</p>
+          <div id="mcq-container" class="space-y-6">
+            ${mcqQuestions.map((q, qi) => `
+              <div class="bg-surface rounded-xl p-5 border border-slate-300" id="mcq-${qi}">
+                <p class="text-slate-900 font-medium mb-3">${qi + 1}. ${q.q}</p>
+                <div class="space-y-2">
+                  ${q.opts.map((opt, oi) => `
+                    <button onclick="answerMCQ(${qi}, ${oi})" id="mcq-${qi}-${oi}"
+                      class="w-full text-left px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:border-accent hover:text-slate-900 transition text-sm">
+                      ${String.fromCharCode(65 + oi)}. ${opt}
+                    </button>
+                  `).join('')}
+                </div>
+                <div id="mcq-fb-${qi}" class="mt-3"></div>
+              </div>
+            `).join('')}
+          </div>
+          <div id="mcq-summary" class="hidden mt-6 rounded-xl border-2 border-amber-300 bg-amber-50 p-4 shadow-sm">
+          </div>
+        </div>
+      `;
+    }
+
+    function answerMCQ(qi, oi) {
+      if (mcqAnswered[qi] !== undefined) return;
+      mcqAnswered[qi] = oi;
+      const correct = mcqQuestions[qi].correct === oi;
+      const fb = document.getElementById(`mcq-fb-${qi}`);
+      // Highlight
+      for (let i = 0; i < mcqQuestions[qi].opts.length; i++) {
+        const btn = document.getElementById(`mcq-${qi}-${i}`);
+        btn.disabled = true;
+        btn.classList.remove('hover:border-accent', 'hover:text-slate-900');
+        if (i === mcqQuestions[qi].correct) btn.classList.add('border-green-500', 'text-green-700', 'bg-green-50');
+        else if (i === oi && !correct) btn.classList.add('border-red-500', 'text-red-700', 'bg-red-50');
+      }
+      fb.innerHTML = correct
+        ? '<p class="text-green-700 text-sm">✓ Correct!</p>'
+        : '<p class="text-red-700 text-sm">✗ Incorrect. The correct answer is highlighted.</p>';
+      if (correct) addScore(2);
+
+      if (Object.keys(mcqAnswered).length === mcqQuestions.length) {
+        const correctCount = mcqQuestions.reduce((count, q, index) => {
+          return count + (mcqAnswered[index] === q.correct ? 1 : 0);
+        }, 0);
+        const total = mcqQuestions.length;
+        const percent = Math.round((correctCount / total) * 100);
+        const summary = document.getElementById('mcq-summary');
+        summary.classList.remove('hidden');
+        summary.innerHTML = `
+          <p class="text-amber-800 font-semibold">MCQ Summary</p>
+          <p class="text-slate-800 mt-1 text-sm">You got <span class="font-bold">${correctCount}/${total}</span> correct (${percent}%).</p>
+          <p class="text-slate-700 mt-1 text-sm">${percent === 100 ? 'Excellent work! You nailed every concept check.' : 'Review the highlighted corrections above, then move on when ready.'}</p>
+        `;
+      }
+    }
+
+    // Section 4: Problem Solving
+    function renderProblem() {
+      practiceAnswered = {};
+      document.getElementById('content').innerHTML = `
+        <div class="max-w-2xl mx-auto fade-in">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2">Problem Solving</h2>
+          <div class="bg-surface/50 rounded-xl p-4 mb-6 border border-accent/20 text-center">
+            <p class="mono text-lg text-slate-900">V₁ / T₁ = V₂ / T₂</p>
+          </div>
+          <!-- Calculator -->
+          <div class="mb-6 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-1 shadow-lg">
+            <div class="rounded-2xl border border-slate-700/60 bg-slate-900/95 p-5">
+              <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-slate-100 font-semibold tracking-wide">Charles' Law Calculator</h3>
+                <span class="mono text-xs text-cyan-300">PVn-LAB</span>
+              </div>
+              <div class="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 mb-4">
+                <p class="mono text-cyan-300 text-sm">V₁/T₁ = V₂/T₂</p>
+                <p class="text-xs text-slate-400 mt-1">Input any three values, then solve for the missing one.</p>
+              </div>
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="text-xs text-slate-300 block mb-1" for="calc-v1">V₁ (L)</label>
+                  <input id="calc-v1" type="number" step="any" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 text-sm focus:border-cyan-400 outline-none" placeholder="e.g. 2.0">
+                </div>
+                <div>
+                  <label class="text-xs text-slate-300 block mb-1" for="calc-t1">T₁</label>
+                  <div class="flex gap-1">
+                    <input id="calc-t1" type="number" step="any" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 text-sm focus:border-cyan-400 outline-none" placeholder="300">
+                    <select id="calc-t1-unit" class="bg-slate-800 border border-slate-600 rounded-lg px-2 text-sm text-slate-100 outline-none">
+                      <option value="K">K</option><option value="C">°C</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-xs text-slate-300 block mb-1" for="calc-v2">V₂ (L)</label>
+                  <input id="calc-v2" type="number" step="any" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 text-sm focus:border-cyan-400 outline-none" placeholder="?">
+                </div>
+                <div>
+                  <label class="text-xs text-slate-300 block mb-1" for="calc-t2">T₂</label>
+                  <div class="flex gap-1">
+                    <input id="calc-t2" type="number" step="any" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 text-sm focus:border-cyan-400 outline-none" placeholder="450">
+                    <select id="calc-t2-unit" class="bg-slate-800 border border-slate-600 rounded-lg px-2 text-sm text-slate-100 outline-none">
+                      <option value="K">K</option><option value="C">°C</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button onclick="calcSolve('v2')" class="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-400 transition">Solve for V₂</button>
+                <button onclick="calcSolve('t2')" class="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm hover:bg-cyan-500 transition">Solve for T₂</button>
+                <button onclick="calcClear()" class="px-4 py-2 bg-slate-700 text-slate-100 rounded-lg text-sm hover:bg-slate-600 transition">Clear</button>
+              </div>
+              <div id="calc-result" class="mt-4 min-h-[24px] rounded-lg border border-slate-700 bg-slate-950/80 px-3 py-2"></div>
+            </div>
+          </div>
+          <!-- Practice Problems -->
+          <div class="bg-surface rounded-xl p-5 border border-slate-300">
+            <h3 class="text-slate-900 font-semibold mb-4">Practice Problems</h3>
+            <div class="space-y-4">
+              ${practiceProblems.map((item, idx) => `
+                <div class="rounded-lg border border-slate-200 p-4 bg-slate-50/60">
+                  <p class="text-slate-700 text-sm mb-3">${idx + 1}. ${item.q}</p>
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <input id="practice-ans-${idx}" type="number" step="any" class="bg-white border border-slate-300 rounded-lg px-3 py-2 text-slate-900 text-sm w-36 focus:border-accent outline-none" placeholder="Your answer">
+                    <span class="text-slate-600 text-sm">${item.unit}</span>
+                    <button onclick="checkPractice(${idx})" class="px-4 py-2 bg-accent text-white rounded-lg text-sm hover:bg-indigo-500 transition">Check</button>
+                  </div>
+                  <div id="practice-fb-${idx}" class="mt-2"></div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function toKelvin(val, unit) { return unit === 'C' ? val + 273.15 : val; }
+
+    function calcSolve(target) {
+      const v1 = parseFloat(document.getElementById('calc-v1').value);
+      const t1raw = parseFloat(document.getElementById('calc-t1').value);
+      const v2 = parseFloat(document.getElementById('calc-v2').value);
+      const t2raw = parseFloat(document.getElementById('calc-t2').value);
+      const t1u = document.getElementById('calc-t1-unit').value;
+      const t2u = document.getElementById('calc-t2-unit').value;
+      const res = document.getElementById('calc-result');
+
+      if (target === 'v2') {
+        if (isNaN(v1) || isNaN(t1raw) || isNaN(t2raw)) { res.innerHTML = '<p class="text-red-400 text-sm">Please fill V₁, T₁, and T₂</p>'; return; }
+        const t1 = toKelvin(t1raw, t1u), t2 = toKelvin(t2raw, t2u);
+        if (t1 <= 0) { res.innerHTML = '<p class="text-red-400 text-sm">T₁ must be > 0 K</p>'; return; }
+        const answer = (v1 * t2) / t1;
+        document.getElementById('calc-v2').value = answer.toFixed(3);
+        res.innerHTML = `<p class="text-green-400 text-sm mono">V₂ = (${v1} × ${t2.toFixed(2)}) / ${t1.toFixed(2)} = <strong>${answer.toFixed(3)} L</strong></p>`;
+      } else {
+        if (isNaN(v1) || isNaN(v2) || isNaN(t1raw)) { res.innerHTML = '<p class="text-red-400 text-sm">Please fill V₁, V₂, and T₁</p>'; return; }
+        const t1 = toKelvin(t1raw, t1u);
+        if (v1 <= 0) { res.innerHTML = '<p class="text-red-400 text-sm">V₁ must be > 0</p>'; return; }
+        const answer = (v2 * t1) / v1;
+        document.getElementById('calc-t2').value = answer.toFixed(2);
+        res.innerHTML = `<p class="text-green-400 text-sm mono">T₂ = (${v2} × ${t1.toFixed(2)}) / ${v1} = <strong>${answer.toFixed(2)} K</strong></p>`;
+      }
+    }
+
+    function calcClear() {
+      ['calc-v1','calc-t1','calc-v2','calc-t2'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('calc-result').innerHTML = '';
+    }
+
+    const practiceProblems = [
+      { q: 'A gas occupies a volume of 1.5 L at 250 K. What will be its new volume at 400 K if pressure remains constant?', unit: 'L', expected: 2.4, tolerance: 0.05, hint: 'V2 = (1.5 x 400) / 250 = 2.4 L' },
+      { q: 'A balloon has a volume of 3.2 L at 280 K. If the temperature increases to 350 K, what is the new volume of the balloon?', unit: 'L', expected: 4.0, tolerance: 0.05, hint: 'V2 = (3.2 x 350) / 280 = 4.0 L' },
+      { q: 'A gas occupies 500 mL at 300 K. The temperature decreases to 240 K at constant pressure. What is the new volume of the gas?', unit: 'mL', expected: 400, tolerance: 2, hint: 'V2 = (500 x 240) / 300 = 400 mL' },
+      { q: 'A gas sample occupies 4.5 L at 27°C. The gas is heated until its volume becomes 6.0 L at constant pressure. What is the final temperature in °C?', unit: '°C', expected: 127.05, tolerance: 0.5, hint: 'T2(K) = (6.0 x (27 + 273.15)) / 4.5 = 400.2 K, so T2 = 127.05 C' },
+      { q: 'A weather balloon contains 12.0 L of gas at 15°C. During flight, the temperature drops to -25°C while pressure remains constant. What is the new volume of the gas?', unit: 'L', expected: 10.334, tolerance: 0.08, hint: 'V2 = (12.0 x ( -25 + 273.15 )) / (15 + 273.15) = 10.33 L' },
+    ];
+    let practiceAnswered = {};
+
+    function checkPractice(idx) {
+      if (practiceAnswered[idx]) return;
+      const ans = parseFloat(document.getElementById(`practice-ans-${idx}`).value);
+      const fb = document.getElementById(`practice-fb-${idx}`);
+      const item = practiceProblems[idx];
+
+      if (isNaN(ans)) {
+        fb.innerHTML = '<p class="text-red-700 text-sm">Enter a number.</p>';
+        return;
+      }
+
+      if (Math.abs(ans - item.expected) <= item.tolerance) {
+        fb.innerHTML = `<p class="text-green-700 text-sm">✓ Correct! ${item.hint}</p>`;
+        addScore(2);
+        practiceAnswered[idx] = true;
+      } else {
+        fb.innerHTML = '<p class="text-red-700 text-sm">Try again. Use V1/T1 = V2/T2 and convert °C to K when needed.</p>';
+      }
+    }
+
+    // Section 5: Simulation
+    function renderSimulation() {
+      document.getElementById('content').innerHTML = `
+        <div class="max-w-2xl mx-auto fade-in">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2">Gas Simulation</h2>
+          <p class="text-slate-600 mb-4">Adjust the temperature slider to see how volume changes. The container width represents volume (L and H are constant).</p>
+          <div class="bg-surface rounded-xl p-5 border border-slate-300">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-sm text-slate-600">P = constant, n = constant</span>
+              <span id="sim-temp" class="mono text-accent2 font-semibold">300 K</span>
+            </div>
+            <!-- Container visualization -->
+            <div class="relative bg-bg rounded-xl overflow-hidden mb-4" style="height:200px;">
+              <div id="sim-box" class="absolute top-0 left-0 h-full border-2 border-accent rounded-xl transition-all duration-500 sim-container" style="width:50%;">
+                <div id="sim-particles"></div>
+                <div class="absolute bottom-2 left-2 mono text-xs text-accent/70" id="sim-vol-label">V = 2.0 L</div>
+              </div>
+              <!-- Fixed walls indicator -->
+              <div class="absolute top-0 right-0 h-full flex items-center pr-3">
+                <span class="text-xs text-slate-500 rotate-90">L, H fixed</span>
+              </div>
+            </div>
+            <!-- Slider -->
+            <div class="flex items-center gap-4">
+              <span class="text-sm text-blue-300">❄️ 150K</span>
+              <input type="range" id="sim-slider" min="150" max="600" value="300" step="10"
+                class="flex-1 accent-indigo-500" oninput="updateSim(this.value)">
+              <span class="text-sm text-red-300">🔥 600K</span>
+            </div>
+            <!-- Graph -->
+            <div class="mt-4">
+              <canvas id="sim-graph" width="400" height="120" class="w-full rounded-lg bg-bg/50"></canvas>
+            </div>
+          </div>
+        </div>
+      `;
+      initSim();
+    }
+
+    function initSim() {
+      // Create particles
+      const box = document.getElementById('sim-particles');
+      for (let i = 0; i < 12; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = 6 + Math.random() * 4;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.background = Math.random() > 0.5 ? '#6366f1' : '#22d3ee';
+        p.style.top = (10 + Math.random() * 80) + '%';
+        p.style.left = (10 + Math.random() * 70) + '%';
+        p.style.animationDuration = (0.8 + Math.random() * 1.2) + 's';
+        p.style.animationDelay = (Math.random() * -2) + 's';
+        box.appendChild(p);
+      }
+      updateSim(300);
+      drawGraph(300);
+    }
+
+    function updateSim(temp) {
+      temp = parseInt(temp);
+      document.getElementById('sim-temp').textContent = temp + ' K';
+      // Volume proportional to temp: at 300K = 2.0L (50% width), scale linearly
+      const baseTemp = 300, baseVol = 2.0;
+      const vol = (baseVol * temp) / baseTemp;
+      const widthPct = (vol / 4.0) * 100; // 4.0L = 100% width
+      const box = document.getElementById('sim-box');
+      box.style.width = Math.min(Math.max(widthPct, 20), 100) + '%';
+      document.getElementById('sim-vol-label').textContent = `V = ${vol.toFixed(2)} L`;
+      // Particle speed
+      document.querySelectorAll('.particle').forEach(p => {
+        const speed = Math.max(0.3, 2.0 - (temp / 400));
+        p.style.animationDuration = speed + 's';
+      });
+      drawGraph(temp);
+    }
+
+    function drawGraph(currentTemp) {
+      const canvas = document.getElementById('sim-graph');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      // Axes
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(40, 10); ctx.lineTo(40, h - 20); ctx.lineTo(w - 10, h - 20); ctx.stroke();
+      ctx.fillStyle = '#94a3b8'; ctx.font = '10px JetBrains Mono';
+      ctx.fillText('V (L)', 5, 15); ctx.fillText('T (K)', w - 40, h - 5);
+      // Line V = 2T/300
+      ctx.strokeStyle = '#6366f1'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let t = 150; t <= 600; t += 5) {
+        const x = 40 + ((t - 150) / 450) * (w - 60);
+        const v = (2.0 * t) / 300;
+        const y = (h - 20) - (v / 4.5) * (h - 35);
+        t === 150 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      // Current point
+      const cx = 40 + ((currentTemp - 150) / 450) * (w - 60);
+      const cv = (2.0 * currentTemp) / 300;
+      const cy = (h - 20) - (cv / 4.5) * (h - 35);
+      ctx.fillStyle = '#22d3ee'; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Section 6: Applications & Score
+    function renderApplications() {
+      const apps = [
+        { emoji: '🎈', title: 'Hot Air Balloon', desc: 'Heating air increases volume, lowering density so the balloon rises.' },
+        { emoji: '☀️', title: 'Balloon in Sun', desc: 'Gas expands as temperature increases, inflating the balloon more.' },
+        { emoji: '🧊', title: 'Balloon in Freezer', desc: 'Gas volume decreases as temperature drops, shrinking the balloon.' },
+        { emoji: '🚗', title: 'Tire Pressure', desc: 'Temperature affects gas volume inside tires (pressure also changes).' },
+        { emoji: '🍞', title: 'Baking & Dough', desc: 'Heated gases expand inside dough, helping it rise.' },
+      ];
+      document.getElementById('content').innerHTML = `
+        <div class="max-w-2xl mx-auto fade-in">
+          <h2 class="text-2xl font-bold text-slate-900 mb-2">Real-Life Applications</h2>
+          <p class="text-slate-600 mb-6">Click each card to learn more.</p>
+          <div class="grid sm:grid-cols-2 gap-4 mb-8">
+            ${apps.map((a, i) => `
+              <div class="card-flip cursor-pointer" onclick="this.classList.toggle('flipped')">
+                <div class="card-inner relative h-36">
+                  <div class="card-front absolute inset-0 bg-surface rounded-xl border border-slate-300 flex flex-col items-center justify-center p-4 hover:border-accent transition">
+                    <span class="text-3xl">${a.emoji}</span>
+                    <span class="mt-2 text-sm font-medium text-slate-900">${a.title}</span>
+                  </div>
+                  <div class="card-back absolute inset-0 bg-indigo-100 rounded-xl border border-indigo-300 p-4 flex items-center justify-center text-center">
+                    <p class="text-sm text-slate-700">${a.desc}</p>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <!-- Final Score -->
+          <div class="bg-gradient-to-br from-indigo-100 to-cyan-100 rounded-xl p-6 border border-accent/30 text-center">
+            <h3 class="text-xl font-bold text-slate-900 mb-2">🎉 Lesson Complete!</h3>
+            <p class="text-3xl font-bold text-accent2 mono">${score} points</p>
+            <p class="text-slate-600 text-sm mt-2">Great work exploring Charles' Law!</p>
+            <button onclick="goToSection(0); score=0; document.getElementById('score-display').textContent='Score: 0';"
+              class="mt-4 px-5 py-2 bg-accent text-white rounded-lg hover:bg-indigo-500 transition text-sm">Restart Lesson</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Init
+    renderSection();
+    lucide.createIcons();
+
+    // Element SDK
+    const defaultConfig = {
+      main_title: "Charles' Law Interactive Lesson",
+      background_color: '#f8fafc',
+      surface_color: '#ffffff',
+      text_color: '#0f172a',
+      accent_color: '#4f46e5',
+      accent2_color: '#0284c7',
+      font_family: 'Outfit',
+      font_size: 18
+    };
+
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => {
+        const title = config.main_title || defaultConfig.main_title;
+        document.getElementById('main-title').textContent = title;
+        const font = config.font_family || defaultConfig.font_family;
+        document.body.style.fontFamily = `${font}, sans-serif`;
+        const size = config.font_size || defaultConfig.font_size;
+        document.body.style.fontSize = size + 'px';
+        const bg = config.background_color || defaultConfig.background_color;
+        const surface = config.surface_color || defaultConfig.surface_color;
+        const text = config.text_color || defaultConfig.text_color;
+        const accent = config.accent_color || defaultConfig.accent_color;
+        const accent2 = config.accent2_color || defaultConfig.accent2_color;
+        document.body.style.background = bg;
+        document.body.style.color = text;
+      },
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+          { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+          { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+          { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
+          { get: () => config.accent2_color || defaultConfig.accent2_color, set: (v) => { config.accent2_color = v; window.elementSdk.setConfig({ accent2_color: v }); } },
+        ],
+        borderables: [],
+        fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+        fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } },
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ['main_title', config.main_title || defaultConfig.main_title]
+      ])
+    });
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9fcf3bdff565404c',t:'MTc3ODk4NTM4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
