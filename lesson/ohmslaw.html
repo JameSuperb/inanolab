@@ -78,7 +78,7 @@ select:focus{outline:none;border-color:var(--accent)}
          </lineargradient>
         </defs> <!-- Bands --> <rect id="band1" x="115" y="25" width="18" height="70" rx="2" fill="#a52a2a" /> <rect id="band2" x="150" y="25" width="18" height="70" rx="2" fill="#000" /> <rect id="band3" x="185" y="25" width="18" height="70" rx="2" fill="#ff0000" /> <rect id="band4" x="260" y="25" width="18" height="70" rx="2" fill="#d4af37" />
        </svg>
-       <div id="colorResult" class="text-xl font-bold mt-2" style="font-family:'JetBrains Mono';color:var(--accent)">
+       <div id="colorResult" class="font-bold mt-4 px-5 py-3 rounded-xl" style="font-family:'JetBrains Mono';font-size:2rem;letter-spacing:.04em;color:var(--accent);background:rgba(56,189,248,.1);border:2px solid rgba(56,189,248,.4);text-shadow:0 0 18px rgba(56,189,248,.55)">
         1000 Ω (1 kΩ) ±5%
        </div>
        <button onclick="document.getElementById('colorTableModal').classList.remove('hidden')" class="mt-3 text-xs px-3 py-1.5 rounded-lg font-medium" style="background:var(--surface2);color:var(--accent);border:1px solid var(--accent)">📋 Show Resistor Color Code Table</button><!-- Dropdowns -->
@@ -132,7 +132,7 @@ select:focus{outline:none;border-color:var(--accent)}
       </div>
      </div>
      <div class="card" style="border-left:4px solid var(--yellow)">
-      <p class="text-sm leading-relaxed" style="opacity:.85">💡 <strong>Note:</strong> Real resistors may vary within their tolerance range. A 1000Ω resistor with ±5% tolerance can actually measure anywhere from 950Ω to 1050Ω. This is perfectly normal in electronics!</p>
+      <p class="leading-relaxed" style="opacity:.85;font-size:1.05rem">💡 <strong>Note:</strong> Real resistors may vary within their tolerance range. A <span id="noteNominal" style="color:var(--accent);font-family:'JetBrains Mono';font-weight:700">1.000 kΩ</span> resistor with <span id="noteTol" style="color:var(--yellow);font-family:'JetBrains Mono';font-weight:700">±5%</span> tolerance can actually measure anywhere from <span id="noteLower" style="color:var(--accent2);font-family:'JetBrains Mono';font-weight:700">950.0 Ω</span> to <span id="noteUpper" style="color:var(--accent2);font-family:'JetBrains Mono';font-weight:700">1.050 kΩ</span>. This is perfectly normal in electronics!</p>
      </div>
     </section><!-- ==================== SECTION 2: OHM'S LAW ==================== -->
     <section id="sec1" class="fade-in space-y-6" style="display:none">
@@ -398,6 +398,63 @@ select:focus{outline:none;border-color:var(--accent)}
      <div class="card" style="border-left:4px solid var(--green)">
       <p class="text-sm leading-relaxed" style="opacity:.85">🔑 <strong>Key Point:</strong> In series, current is <strong>the same</strong> everywhere, but voltage <strong>divides</strong> proportionally. The total of all voltage drops equals the source voltage (Kirchhoff's Voltage Law).</p>
      </div>
+     <!-- Series Conceptual Quiz -->
+     <div class="card">
+      <h3 class="font-semibold text-lg mb-4">🧠 Conceptual Check</h3>
+      <div class="space-y-6">
+       <div class="card2">
+        <p class="font-medium mb-3">1. What happens to the total resistance when you add more resistors in a series circuit?</p>
+        <div class="grid grid-cols-1 gap-2" id="sq1">
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq1',false)">It decreases because the current has more paths to travel</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq1',false)">It stays the same regardless of how many resistors are added</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq1',true)">It increases because each resistor adds to the total opposition</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq1',false)">It depends on the source voltage, not the resistors</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">2. In a series circuit, where is the current the largest?</p>
+        <div class="grid grid-cols-1 gap-2" id="sq2">
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq2',false)">At the first resistor, since it receives current first</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq2',false)">At the resistor with the lowest resistance</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq2',true)">The current is the same through every component in the circuit</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq2',false)">At the battery terminals only</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">3. Three equal resistors (100 Ω each) are connected in series to a 12 V supply. How is the voltage distributed?</p>
+        <div class="grid grid-cols-1 gap-2" id="sq3">
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq3',false)">All 12 V drops across the first resistor; the rest receive none</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq3',true)">Each resistor drops 4 V, since equal resistors share voltage equally</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq3',false)">Each resistor drops 12 V independently</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq3',false)">The voltage cannot be determined without knowing the current first</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">4. A series circuit with three light bulbs goes completely dark when one bulb burns out. Why?</p>
+        <div class="grid grid-cols-1 gap-2" id="sq4">
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq4',false)">The remaining bulbs draw too much current and burn out too</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq4',false)">The voltage is redistributed and becomes zero across all bulbs</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq4',true)">A burned-out bulb breaks the single current path, stopping all current flow</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq4',false)">The total resistance drops to zero, causing a short circuit</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">5. According to Kirchhoff's Voltage Law, what must the sum of all individual voltage drops in a series circuit equal?</p>
+        <div class="grid grid-cols-1 gap-2" id="sq5">
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq5',false)">Zero, since voltage is conserved and cancels out</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq5',false)">The voltage across the largest resistor</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq5',false)">The total current multiplied by the number of resistors</div>
+         <div class="quiz-opt" onclick="checkSeriesQuiz(this,'sq5',true)">The total source (supply) voltage applied to the circuit</div>
+        </div>
+       </div>
+       <div id="seriesQuizSummary" class="card2 mt-4" style="display:none">
+        <div class="text-sm opacity-60 mb-1">Quiz Summary</div>
+        <div id="seriesQuizScore" class="text-2xl font-bold" style="color:var(--accent)">0 / 5</div>
+        <div id="seriesQuizPercent" class="text-sm mt-1" style="color:var(--text)">0%</div>
+        <div id="seriesQuizFeedback" class="text-sm mt-2"></div>
+       </div>
+      </div>
+     </div>
     </section><!-- ==================== SECTION 4: PARALLEL ==================== -->
     <section id="sec3" class="fade-in space-y-6" style="display:none">
      <div class="card">
@@ -499,6 +556,63 @@ select:focus{outline:none;border-color:var(--accent)}
      </div>
      <div class="card" style="border-left:4px solid var(--accent3)">
       <p class="text-sm leading-relaxed" style="opacity:.85">🔑 <strong>Key Point:</strong> In parallel, voltage is <strong>the same</strong> across all branches, but current <strong>divides</strong>. The total equivalent resistance is always <strong>less than the smallest</strong> individual resistor. (Kirchhoff's Current Law: total current = sum of branch currents.)</p>
+     </div>
+     <!-- Parallel Conceptual Quiz -->
+     <div class="card">
+      <h3 class="font-semibold text-lg mb-4">🧠 Conceptual Check</h3>
+      <div class="space-y-6">
+       <div class="card2">
+        <p class="font-medium mb-3">1. What happens to the equivalent resistance when more resistors are added in parallel?</p>
+        <div class="grid grid-cols-1 gap-2" id="pq1">
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq1',false)">It increases because there are more components resisting the current</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq1',false)">It stays the same since each branch operates independently</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq1',true)">It decreases because more current paths reduce the total opposition</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq1',false)">It depends on the source voltage applied to the circuit</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">2. In a parallel circuit, which quantity is identical across every branch?</p>
+        <div class="grid grid-cols-2 gap-2" id="pq2">
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq2',false)">Current</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq2',false)">Resistance</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq2',true)">Voltage</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq2',false)">Power</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">3. Two identical 100 Ω resistors are connected in parallel. What is the equivalent resistance?</p>
+        <div class="grid grid-cols-2 gap-2" id="pq3">
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq3',false)">200 Ω — resistances add up just like in series</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq3',false)">100 Ω — it stays the same since both resistors are equal</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq3',true)">50 Ω — two equal parallel resistors give half the individual value</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq3',false)">25 Ω — resistance is divided by the number of branches squared</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">4. In a parallel circuit with branches of different resistances, which branch carries the most current?</p>
+        <div class="grid grid-cols-1 gap-2" id="pq4">
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq4',false)">The branch with the highest resistance, since it opposes current the most</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq4',false)">All branches carry equal current regardless of their resistance</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq4',true)">The branch with the lowest resistance, since it offers the easiest path</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq4',false)">The first branch connected to the positive terminal of the battery</div>
+        </div>
+       </div>
+       <div class="card2">
+        <p class="font-medium mb-3">5. One branch in a parallel circuit is disconnected. What happens to the other branches?</p>
+        <div class="grid grid-cols-1 gap-2" id="pq5">
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq5',false)">All branches stop working because the main circuit is broken</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq5',false)">The remaining branches share the lost current and each carries less</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq5',true)">The remaining branches continue operating normally with the same voltage</div>
+         <div class="quiz-opt" onclick="checkParallelQuiz(this,'pq5',false)">The source voltage increases to compensate for the missing branch</div>
+        </div>
+       </div>
+       <div id="parallelQuizSummary" class="card2 mt-4" style="display:none">
+        <div class="text-sm opacity-60 mb-1">Quiz Summary</div>
+        <div id="parallelQuizScore" class="text-2xl font-bold" style="color:var(--accent)">0 / 5</div>
+        <div id="parallelQuizPercent" class="text-sm mt-1" style="color:var(--text)">0%</div>
+        <div id="parallelQuizFeedback" class="text-sm mt-2"></div>
+       </div>
+      </div>
      </div>
     </section><!-- ==================== SECTION 5: PRACTICE ==================== -->
     <section id="sec4" class="fade-in space-y-6" style="display:none">
@@ -761,6 +875,12 @@ function updateResistor(){
   document.getElementById('mBand3').setAttribute('fill',multColors[mult]);
   document.getElementById('mBand4').setAttribute('fill',tolColors[tol]);
   document.getElementById('colorResult').textContent=formatR(val)+' ±'+tol+'%';
+  const lower=val*(1-tol/100);
+  const upper=val*(1+tol/100);
+  document.getElementById('noteNominal').textContent=formatR(val);
+  document.getElementById('noteTol').textContent='±'+tol+'%';
+  document.getElementById('noteLower').textContent=formatR(lower);
+  document.getElementById('noteUpper').textContent=formatR(upper);
   document.getElementById('ohmDisplay').textContent='--- Ω';
   document.getElementById('measureResult').innerHTML='';
 }
@@ -974,6 +1094,82 @@ function updateQuizSummary(){
   }
 
   summary.style.display='block';
+}
+
+// ===== PARALLEL QUIZ =====
+const parallelQuizState={answered:0,correct:0,total:5};
+
+function updateParallelQuizSummary(){
+  if(parallelQuizState.answered<parallelQuizState.total) return;
+  const pct=Math.round((parallelQuizState.correct/parallelQuizState.total)*100);
+  document.getElementById('parallelQuizScore').textContent=parallelQuizState.correct+' / '+parallelQuizState.total;
+  document.getElementById('parallelQuizPercent').textContent=pct+'% correct';
+  const feedback=document.getElementById('parallelQuizFeedback');
+  if(pct>=80){
+    feedback.style.color='var(--green)';
+    feedback.textContent='Excellent! You have a strong grasp of parallel circuits.';
+  }else if(pct>=60){
+    feedback.style.color='var(--accent)';
+    feedback.textContent='Good effort. Review voltage equality and current division in parallel.';
+  }else{
+    feedback.style.color='var(--yellow)';
+    feedback.textContent='Keep studying. Focus on how voltage and current behave across parallel branches.';
+  }
+  document.getElementById('parallelQuizSummary').style.display='block';
+}
+
+function checkParallelQuiz(el,qId,correct){
+  const container=document.getElementById(qId);
+  if(container.dataset.answered) return;
+  container.dataset.answered='1';
+  parallelQuizState.answered++;
+  if(correct) el.classList.add('correct');
+  else{
+    el.classList.add('wrong');
+    container.querySelectorAll('.quiz-opt').forEach(o=>{
+      if(o!==el && o.onclick.toString().includes('true')) o.classList.add('correct');
+    });
+  }
+  if(correct) parallelQuizState.correct++;
+  updateParallelQuizSummary();
+}
+
+// ===== SERIES QUIZ =====
+const seriesQuizState={answered:0,correct:0,total:5};
+
+function updateSeriesQuizSummary(){
+  if(seriesQuizState.answered<seriesQuizState.total) return;
+  const pct=Math.round((seriesQuizState.correct/seriesQuizState.total)*100);
+  document.getElementById('seriesQuizScore').textContent=seriesQuizState.correct+' / '+seriesQuizState.total;
+  document.getElementById('seriesQuizPercent').textContent=pct+'% correct';
+  const feedback=document.getElementById('seriesQuizFeedback');
+  if(pct>=80){
+    feedback.style.color='var(--green)';
+    feedback.textContent='Great understanding of series circuits!';
+  }else if(pct>=60){
+    feedback.style.color='var(--accent)';
+    feedback.textContent='Good effort. Review current flow and voltage division.';
+  }else{
+    feedback.style.color='var(--yellow)';
+    feedback.textContent='Keep studying. Focus on how current and voltage behave in series.';
+  }
+  document.getElementById('seriesQuizSummary').style.display='block';
+}
+
+function checkSeriesQuiz(el,qId,correct){
+  const container=document.getElementById(qId);
+  if(container.dataset.answered) return;
+  container.dataset.answered='1';
+  seriesQuizState.answered++;
+  if(correct) el.classList.add('correct');
+  else{
+    el.classList.add('wrong');
+    container.querySelectorAll('.quiz-opt').forEach(o=>{
+      if(o!==el && o.onclick.toString().includes('true')) o.classList.add('correct');
+    });
+  }
+  if(correct) seriesQuizState.correct++;
+  updateSeriesQuizSummary();
 }
 
 function checkQuiz(el,qId,correct){
