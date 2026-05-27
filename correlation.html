@@ -1213,8 +1213,6 @@
       </div>
       <div class="nav-item" data-section="analyze"><span>🤖</span> <span>Analyze</span>
       </div>
-      <div class="nav-item" data-section="results"><span>🧾</span> <span>Results</span>
-      </div>
      </div>
     </div><!-- Main Content -->
     <div class="main-content"><!-- EXPLORE SECTION -->
@@ -1241,7 +1239,6 @@
      </div><!-- LEARN SECTION -->
      <div id="learn" class="content-section">
       <div class="card">
-       <h2 style="color: #4DA8DA; margin-bottom: 1.5rem; font-size: 1.6rem;">📘 Scientific Background</h2>
        <div style="margin-bottom: 1rem;">
         <div class="accordion-header" onclick="toggleAccordion(this)"><span>📈 What are Variables?</span> <span style="font-size: 1.2rem;">▼</span>
         </div>
@@ -1261,7 +1258,7 @@
         <div class="accordion-header" onclick="toggleAccordion(this)"><span>🌊 Types of Relationships</span> <span style="font-size: 1.2rem;">▼</span>
         </div>
         <div class="accordion-content">
-         <p style="color: #555; line-height: 1.7; font-size: 0.95rem;"><strong>📊 Linear:</strong> y = mx + b (straight line)<br><strong>🧩 Quadratic:</strong> y = ax² + bx + c (parabola)<br><strong>📈 Exponential:</strong> y = ae^(bx) (rapid growth)<br><strong>🌲 Logarithmic:</strong> y = a·ln(x) + b (slow growth)</p>
+                 <p style="color: #555; line-height: 1.7; font-size: 0.95rem;"><strong>📊 Linear:</strong> y = mx + b (straight line)<br><strong>↘️ Inverse:</strong> y = a/x + b (decreasing curve)<br><strong>🔻 Inverse Square:</strong> y = a/x² + b (faster decreasing curve)<br><strong>🧩 Quadratic:</strong> y = ax² + bx + c (parabola)<br><strong>📈 Exponential:</strong> y = a·e^(bx) (rapid growth or decay)<br><strong>🌲 Logarithmic:</strong> y = a·ln(x) + b (quick rise then leveling)<br><strong>2️⃣ Power (2):</strong> y = ax² + b (second-order power relation)<br><strong>3️⃣ Power (3):</strong> y = ax³ + b (third-order power relation)<br><strong>4️⃣ Power (4):</strong> y = ax⁴ + b (fourth-order power relation)</p>
         </div>
        </div>
        <div style="margin-bottom: 1rem;">
@@ -1272,7 +1269,17 @@
            • R² = 1: Perfect fit<br>
            • R² = 0.8-0.99: Excellent fit ⭐<br>
            • R² = 0.5-0.79: Good fit ✅<br>
-           • R² &lt; 0.5: Poor fit ⚠️</p>
+                     • R² &lt; 0.5: Poor fit ⚠️<br><br><strong>Formula:</strong><br>R² = 1 - (SS<sub>res</sub> / SS<sub>tot</sub>)</p>
+                </div>
+             </div>
+             <div style="margin-bottom: 1rem;">
+                <div class="accordion-header" onclick="toggleAccordion(this)"><span>📉 Pearson r (Correlation Coefficient)</span> <span style="font-size: 1.2rem;">▼</span>
+                </div>
+                <div class="accordion-content">
+                 <p style="color: #555; line-height: 1.7; font-size: 0.95rem;"><strong>Pearson r</strong> measures the direction and strength of a linear relationship between X and Y.<br>
+                     • r = +1: Perfect positive linear relationship<br>
+                     • r = 0: No linear relationship<br>
+                     • r = -1: Perfect negative linear relationship<br><br><strong>Formula:</strong><br>r = Σ((x - x̄)(y - ȳ)) / √[Σ(x - x̄)² × Σ(y - ȳ)²]</p>
         </div>
        </div>
       </div>
@@ -1291,7 +1298,7 @@
              <div class="data-panel demo-data-panel">
                 <h3 class="column-setup-title">📦 Demo Data</h3>
                      <p class="data-helper-text">Use a sample dataset if you want to explore the analyzer first. Demo datasets now include realistic noise so they behave more like measured data.</p>
-                     <div class="data-entry-button-group demo-data-actions"><button class="btn btn-demo" onclick="loadSampleLinear()">📥 Linear Data</button> <button class="btn btn-demo" onclick="loadSampleQuadratic()">📥 Quadratic</button> <button class="btn btn-demo" onclick="loadSampleExponential()">📥 Exponential</button> <button class="btn btn-demo" onclick="generateRandomData()">🎲 Random</button>
+                            <div class="data-entry-button-group demo-data-actions"><button class="btn btn-demo" onclick="loadSampleLinear()">📥 Linear Data</button> <button class="btn btn-demo" onclick="loadSampleInverse()">📥 Inverse</button> <button class="btn btn-demo" onclick="loadSampleInverseSquare()">📥 Inverse Square</button> <button class="btn btn-demo" onclick="loadSampleQuadratic()">📥 Quadratic</button> <button class="btn btn-demo" onclick="loadSampleExponential()">📥 Exponential</button> <button class="btn btn-demo" onclick="loadSampleLogarithmic()">📥 Logarithmic</button> <button class="btn btn-demo" onclick="loadSamplePower2()">📥 Power (2)</button> <button class="btn btn-demo" onclick="loadSamplePower3()">📥 Power (3)</button> <button class="btn btn-demo" onclick="loadSamplePower4()">📥 Power (4)</button>
                 </div>
              </div>
              <div class="data-panel">
@@ -1308,8 +1315,9 @@
                     <tbody id="dataTable"></tbody>
                  </table>
                 </div>
-                <div class="data-entry-button-group"><button class="btn btn-success" onclick="addRow()">➕ Add Row</button> <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All</button>
+                     <div class="data-entry-button-group"><button class="btn btn-success" onclick="addRow()">➕ Add Row</button> <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All</button> <button class="btn btn-secondary" onclick="triggerCSVImport()">📤 Import CSV</button> <button class="btn btn-primary" onclick="downloadCSV()">📥 Export CSV</button>
                 </div>
+                     <input id="csvImportInput" type="file" accept=".csv,text/csv" style="display: none;" onchange="importCSVFile(event)">
              </div>
              <p class="data-section-note">💡 Tip: Start with sample data to see how the analyzer works, then try your own measurements in the table below.</p>
       </div>
@@ -1318,8 +1326,8 @@
       <div class="card">
        <h2 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.6rem;">📈 Visualization</h2>
              <div id="graphFeedback" class="graph-feedback"></div>
-       <div style="margin-bottom: 1.5rem;"><label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: #333;"> 🎛️ Select Trendline: </label>
-        <div class="btn-group"><button class="btn-group-item active" data-model="linear" onclick="selectModel('linear')"> 📊 Linear </button> <button class="btn-group-item" data-model="quadratic" onclick="selectModel('quadratic')"> 🧩 Quadratic </button> <button class="btn-group-item" data-model="exponential" onclick="selectModel('exponential')"> 📈 Exponential </button> <button class="btn-group-item" data-model="logarithmic" onclick="selectModel('logarithmic')"> 🌲 Logarithmic </button>
+    <div style="margin-bottom: 1.5rem;"><label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: #333;"> 🎛️ Select Trendline: </label>
+     <div class="btn-group"><button class="btn-group-item active" data-model="linear" onclick="selectModel('linear')"> 📊 Linear </button> <button class="btn-group-item" data-model="inverse" onclick="selectModel('inverse')"> ↘️ Inverse </button> <button class="btn-group-item" data-model="inverseSquare" onclick="selectModel('inverseSquare')"> 🔻 Inverse Square </button> <button class="btn-group-item" data-model="quadratic" onclick="selectModel('quadratic')"> 🧩 Quadratic </button> <button class="btn-group-item" data-model="exponential" onclick="selectModel('exponential')"> 📈 Exponential </button> <button class="btn-group-item" data-model="logarithmic" onclick="selectModel('logarithmic')"> 🌲 Logarithmic </button> <button class="btn-group-item" data-model="power2" onclick="selectModel('power2')"> 2️⃣ Power (2) </button> <button class="btn-group-item" data-model="power3" onclick="selectModel('power3')"> 3️⃣ Power (3) </button> <button class="btn-group-item" data-model="power4" onclick="selectModel('power4')"> 4️⃣ Power (4) </button>
         </div>
        </div>
        <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -1343,72 +1351,47 @@
        </div>
       </div>
      </div><!-- ANALYZE SECTION -->
-     <div id="analyze" class="content-section">
-      <div class="card">
-       <h2 style="color: #4DA8DA; margin-bottom: 0.75rem; font-size: 1.6rem;">🤖 Analysis</h2>
-             <p style="color: #666; margin-bottom: 1.5rem; line-height: 1.6;">Model comparison updates automatically once at least 4 valid data points are available.</p>
-       <div id="analysisResults"></div><!-- Mathematical Framework -->
-       <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, rgba(77, 168, 218, 0.05), rgba(155, 93, 229, 0.05)); border-radius: 15px; border-left: 4px solid #4DA8DA;">
-        <h3 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.1rem;">📐 Mathematical Framework</h3>
-        <div style="margin-bottom: 1rem;">
-         <p style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Pearson Correlation Coefficient:</p>
-         <p style="background: white; padding: 0.75rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem; overflow-x: auto;">r = Σ((x - x̄)(y - ȳ)) / √[Σ(x - x̄)² × Σ(y - ȳ)²]</p>
-        </div>
-        <div style="margin-bottom: 1rem;">
-         <p style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Coefficient of Determination:</p>
-         <p style="background: white; padding: 0.75rem; border-radius: 8px; font-family: monospace; font-size: 0.9rem;">R² = 1 - (SS_res / SS_tot)</p>
-        </div>
-        <div>
-         <p style="font-weight: 600; color: #333; margin-bottom: 0.5rem;">Model Forms:</p>
-         <ul style="list-style: none; padding: 0; font-size: 0.9rem; color: #555; font-family: monospace;">
-          <li style="margin-bottom: 0.5rem;">Linear: y = mx + b</li>
-          <li style="margin-bottom: 0.5rem;">Quadratic: y = ax² + bx + c</li>
-          <li style="margin-bottom: 0.5rem;">Exponential: y = a·e^(bx)</li>
-          <li>Logarithmic: y = a·ln(x) + b</li>
-         </ul>
-        </div>
-       </div>
-      </div>
-     </div><!-- RESULTS SECTION -->
-     <div id="results" class="content-section">
-      <div class="card">
-             <h2 style="color: #4DA8DA; margin-bottom: 0.75rem; font-size: 1.6rem;">🧾 Results &amp; Interpretation</h2>
-             <p style="color: #666; margin-bottom: 1rem; line-height: 1.6;">Switch between the four trendline options to review each equation, fit quality, and model-specific interpretation.</p>
-             <div class="btn-group results-model-group"><button class="btn-group-item results-model-button active" data-results-model="linear" onclick="selectResultsModel('linear')">📊 Linear</button> <button class="btn-group-item results-model-button" data-results-model="quadratic" onclick="selectResultsModel('quadratic')">🧩 Quadratic</button> <button class="btn-group-item results-model-button" data-results-model="exponential" onclick="selectResultsModel('exponential')">📈 Exponential</button> <button class="btn-group-item results-model-button" data-results-model="logarithmic" onclick="selectResultsModel('logarithmic')">🌲 Logarithmic</button>
+         <div id="analyze" class="content-section">
+        <div class="card">
+         <h2 style="color: #4DA8DA; margin-bottom: 0.75rem; font-size: 1.6rem;">🤖 Analyze</h2>
+             <p style="color: #666; margin-bottom: 1.5rem; line-height: 1.6;">Model comparison and interpretation update automatically once at least 4 valid data points are available.</p>
+         <div id="analysisResults"></div>
+             <div style="margin-top: 1.5rem;">
+                <p style="color: #666; margin-bottom: 1rem; line-height: 1.6;">Switch between the available trendline options to review each equation, fit quality, and model-specific interpretation.</p>
+                <div class="btn-group results-model-group"><button class="btn-group-item results-model-button active" data-results-model="linear" onclick="selectResultsModel('linear')">📊 Linear</button> <button class="btn-group-item results-model-button" data-results-model="inverse" onclick="selectResultsModel('inverse')">↘️ Inverse</button> <button class="btn-group-item results-model-button" data-results-model="inverseSquare" onclick="selectResultsModel('inverseSquare')">🔻 Inverse Square</button> <button class="btn-group-item results-model-button" data-results-model="quadratic" onclick="selectResultsModel('quadratic')">🧩 Quadratic</button> <button class="btn-group-item results-model-button" data-results-model="exponential" onclick="selectResultsModel('exponential')">📈 Exponential</button> <button class="btn-group-item results-model-button" data-results-model="logarithmic" onclick="selectResultsModel('logarithmic')">🌲 Logarithmic</button> <button class="btn-group-item results-model-button" data-results-model="power2" onclick="selectResultsModel('power2')">2️⃣ Power (2)</button> <button class="btn-group-item results-model-button" data-results-model="power3" onclick="selectResultsModel('power3')">3️⃣ Power (3)</button> <button class="btn-group-item results-model-button" data-results-model="power4" onclick="selectResultsModel('power4')">4️⃣ Power (4)</button>
+                </div>
+                <div id="resultsStatus" class="results-status"></div>
+                <div id="recommendationContainer"></div>
+                <div id="interpretationContainer" style="margin-top: 2rem;"></div>
              </div>
-             <div id="resultsStatus" class="results-status"></div><!-- Recommended Model Card -->
-       <div id="recommendationContainer"></div><!-- Interpretation -->
-       <div id="interpretationContainer" style="margin-top: 2rem;"></div><!-- Reflection Questions -->
-       <div style="margin-top: 2rem;">
-        <h3 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.2rem;">🎓 Reflection Questions</h3>
-        <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
-         <div class="reflection-card">
-          <div class="reflection-icon">
-           🧐
+         <div style="margin-top: 2rem;">
+          <h3 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.2rem;">🎓 Reflection Questions</h3>
+          <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+           <div class="reflection-card">
+            <div class="reflection-icon">
+             🧐
+            </div>
+            <h4 style="color: #333; margin-bottom: 0.5rem; font-weight: 600;">Think</h4>
+            <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">Which model best represents your data and why? What does the shape tell you about the relationship?</p>
+           </div>
+           <div class="reflection-card">
+            <div class="reflection-icon">
+             💬
+            </div>
+            <h4 style="color: #333; margin-bottom: 0.5rem; font-weight: 600;">Discuss</h4>
+            <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">How does the R² value help in choosing the best trendline? What would a low R² suggest?</p>
+           </div>
+           <div class="reflection-card">
+            <div class="reflection-icon">
+             ✍️
+            </div>
+            <h4 style="color: #333; margin-bottom: 0.5rem; font-weight: 600;">Answer</h4>
+            <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">Can you predict what would happen if you extended this relationship beyond your data range?</p>
+           </div>
           </div>
-          <h4 style="color: #333; margin-bottom: 0.5rem; font-weight: 600;">Think</h4>
-          <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">Which model best represents your data and why? What does the shape tell you about the relationship?</p>
-         </div>
-         <div class="reflection-card">
-          <div class="reflection-icon">
-           💬
-          </div>
-          <h4 style="color: #333; margin-bottom: 0.5rem; font-weight: 600;">Discuss</h4>
-          <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">How does the R² value help in choosing the best trendline? What would a low R² suggest?</p>
-         </div>
-         <div class="reflection-card">
-          <div class="reflection-icon">
-           ✍️
-          </div>
-          <h4 style="color: #333; margin-bottom: 0.5rem; font-weight: 600;">Answer</h4>
-          <p style="color: #666; font-size: 0.9rem; line-height: 1.5;">Can you predict what would happen if you extended this relationship beyond your data range?</p>
          </div>
         </div>
-       </div><!-- Export & Download -->
-       <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;"><button class="btn btn-primary" onclick="exportGraphAsImage()"> 📥 Export Graph </button> <button class="btn btn-secondary" onclick="downloadCSV()"> 📊 Download CSV </button> <button class="btn btn-highlight" onclick="copyEquation()"> ➗ Copy Equation </button>
-       </div>
-      </div>
-     </div>
+         </div>
     </div>
    </div>
      <div id="docOverlay" class="doc-overlay"></div>
@@ -1895,16 +1878,26 @@
         function getModelDetails(modelName) {
             const labels = {
                 linear: 'Linear',
+                inverse: 'Inverse',
+                inverseSquare: 'Inverse Square',
                 quadratic: 'Quadratic',
                 exponential: 'Exponential',
-                logarithmic: 'Logarithmic'
+                logarithmic: 'Logarithmic',
+                power2: 'Power (2)',
+                power3: 'Power (3)',
+                power4: 'Power (4)'
             };
 
             const descriptions = {
                 linear: 'a constant linear relationship',
+                inverse: 'an inverse relationship that levels off as x increases',
+                inverseSquare: 'a steeper inverse-square decay relationship',
                 quadratic: 'an accelerating or decelerating relationship',
                 exponential: 'rapid exponential growth or decay',
-                logarithmic: 'a rapidly declining rate of growth'
+                logarithmic: 'a rapidly declining rate of growth',
+                power2: 'a second-order power relationship',
+                power3: 'a third-order power relationship',
+                power4: 'a fourth-order power relationship'
             };
 
             return {
@@ -1921,9 +1914,14 @@
 
             const calculators = {
                 linear: calculateLinear,
+                inverse: calculateInverse,
+                inverseSquare: calculateInverseSquare,
                 quadratic: calculateQuadratic,
                 exponential: calculateExponential,
-                logarithmic: calculateLogarithmic
+                logarithmic: calculateLogarithmic,
+                power2: calculatePower2,
+                power3: calculatePower3,
+                power4: calculatePower4
             };
 
             const model = calculators[modelName]();
@@ -2076,6 +2074,28 @@
             updateGraph();
         }
 
+        function loadSampleInverse() {
+            data = {
+                x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                y: [20.5, 12.6, 9.4, 8.1, 7.0, 6.2, 5.8, 5.4, 5.1, 4.9]
+            };
+            addNoise();
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function loadSampleInverseSquare() {
+            data = {
+                x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                y: [25.2, 9.8, 6.7, 5.8, 5.2, 4.9, 4.7, 4.6, 4.5, 4.4]
+            };
+            addNoise();
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
         function loadSampleQuadratic() {
             data = {
                 x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -2098,12 +2118,45 @@
             updateGraph();
         }
 
-        function generateRandomData() {
-            data = { x: [], y: [] };
-            for (let i = 1; i <= 10; i++) {
-                data.x.push(i);
-                data.y.push(Math.random() * 100);
-            }
+        function loadSampleLogarithmic() {
+            data = {
+                x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                y: [4.9, 9.2, 11.1, 12.6, 13.7, 14.6, 15.2, 15.9, 16.4, 16.9]
+            };
+            addNoise();
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function loadSamplePower2() {
+            data = {
+                x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                y: [2.7, 6.5, 12.9, 22.8, 35.6, 51.2, 70.1, 92.0, 117.0, 145.1]
+            };
+            addNoise();
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function loadSamplePower3() {
+            data = {
+                x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                y: [1.4, 6.8, 20.2, 44.6, 81.3, 131.1, 195.5, 275.4, 371.7, 485.2]
+            };
+            addNoise();
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function loadSamplePower4() {
+            data = {
+                x: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                y: [0.8, 3.1, 11.6, 33.5, 79.4, 162.3, 298.2, 507.7, 814.6, 1246.3]
+            };
+            addNoise();
             renderDataTable();
             clearDerivedOutput();
             updateGraph();
@@ -2188,8 +2241,9 @@
             const sourceData = getValidData();
             if (sourceData.x.length < 2) return null;
 
-            const validData = sourceData.x.map((x, i) => sourceData.y[i] > 0 ? { x, y: Math.log(sourceData.y[i]) } : null).filter(d => d !== null);
-            if (validData.length < 2) return null;
+            if (sourceData.y.some(y => y <= 0)) return null;
+
+            const validData = sourceData.x.map((x, i) => ({ x, y: Math.log(sourceData.y[i]) }));
 
             const linear = calculateLinearFromData(validData.map(d => d.x), validData.map(d => d.y));
             if (!linear) return null;
@@ -2208,8 +2262,9 @@
             const sourceData = getValidData();
             if (sourceData.x.length < 2) return null;
 
-            const validData = sourceData.x.map((x, i) => x > 0 ? { x: Math.log(x), y: sourceData.y[i] } : null).filter(d => d !== null);
-            if (validData.length < 2) return null;
+            if (sourceData.x.some(x => x <= 0)) return null;
+
+            const validData = sourceData.x.map((x, i) => ({ x: Math.log(x), y: sourceData.y[i] }));
 
             const linear = calculateLinearFromData(validData.map(d => d.x), validData.map(d => d.y));
             if (!linear) return null;
@@ -2218,6 +2273,66 @@
                 a: linear.m,
                 b: linear.b,
                 equation: `y = ${linear.m.toFixed(3)}·ln(x) + ${linear.b.toFixed(3)}`
+            };
+        }
+
+        function calculateInverse() {
+            const sourceData = getValidData();
+            if (sourceData.x.length < 2) return null;
+            if (sourceData.x.some(x => x === 0)) return null;
+
+            const transformedX = sourceData.x.map(x => 1 / x);
+            const linear = calculateLinearFromData(transformedX, sourceData.y);
+            if (!linear) return null;
+
+            return {
+                a: linear.m,
+                b: linear.b,
+                equation: `y = ${linear.m.toFixed(3)}/x + ${linear.b.toFixed(3)}`
+            };
+        }
+
+        function calculateInverseSquare() {
+            const sourceData = getValidData();
+            if (sourceData.x.length < 2) return null;
+            if (sourceData.x.some(x => x === 0)) return null;
+
+            const transformedX = sourceData.x.map(x => 1 / (x * x));
+            const linear = calculateLinearFromData(transformedX, sourceData.y);
+            if (!linear) return null;
+
+            return {
+                a: linear.m,
+                b: linear.b,
+                equation: `y = ${linear.m.toFixed(3)}/x² + ${linear.b.toFixed(3)}`
+            };
+        }
+
+        function calculatePower2() {
+            return calculateFixedPower(2);
+        }
+
+        function calculatePower3() {
+            return calculateFixedPower(3);
+        }
+
+        function calculatePower4() {
+            return calculateFixedPower(4);
+        }
+
+        function calculateFixedPower(power) {
+            const sourceData = getValidData();
+            if (sourceData.x.length < 2) return null;
+
+            const transformedX = sourceData.x.map(x => x ** power);
+            const linear = calculateLinearFromData(transformedX, sourceData.y);
+            if (!linear) return null;
+
+            return {
+                a: linear.m,
+                b: linear.b,
+                power,
+                equation: `y = ${linear.m.toFixed(3)}x^${power} + ${linear.b.toFixed(3)}`
             };
         }
 
@@ -2304,14 +2419,24 @@
             return xs.map(x => {
                 if (model === 'linear') {
                     return coefficients.m * x + coefficients.b;
+                } else if (model === 'inverse') {
+                    return coefficients.a / x + coefficients.b;
+                } else if (model === 'inverseSquare') {
+                    return coefficients.a / (x * x) + coefficients.b;
                 } else if (model === 'quadratic') {
                     return coefficients.a * x * x + coefficients.b * x + coefficients.c;
                 } else if (model === 'exponential') {
                     return coefficients.a * Math.exp(coefficients.b * x);
                 } else if (model === 'logarithmic') {
-                    return x > 0 ? coefficients.a * Math.log(x) + coefficients.b : null;
+                    return coefficients.a * Math.log(x) + coefficients.b;
+                } else if (model === 'power2') {
+                    return coefficients.a * (x ** 2) + coefficients.b;
+                } else if (model === 'power3') {
+                    return coefficients.a * (x ** 3) + coefficients.b;
+                } else if (model === 'power4') {
+                    return coefficients.a * (x ** 4) + coefficients.b;
                 }
-            }).filter(y => y !== null);
+            });
         }
 
         // Graph Update
@@ -2331,9 +2456,14 @@
 
             let model = null;
             if (currentModel === 'linear') model = calculateLinear();
+            else if (currentModel === 'inverse') model = calculateInverse();
+            else if (currentModel === 'inverseSquare') model = calculateInverseSquare();
             else if (currentModel === 'quadratic') model = calculateQuadratic();
             else if (currentModel === 'exponential') model = calculateExponential();
             else if (currentModel === 'logarithmic') model = calculateLogarithmic();
+            else if (currentModel === 'power2') model = calculatePower2();
+            else if (currentModel === 'power3') model = calculatePower3();
+            else if (currentModel === 'power4') model = calculatePower4();
 
             if (!model) {
                 analysisResults = null;
@@ -2506,9 +2636,14 @@
 
             const models = {
                 linear: calculateLinear(),
+                inverse: calculateInverse(),
+                inverseSquare: calculateInverseSquare(),
                 quadratic: calculateQuadratic(),
                 exponential: calculateExponential(),
-                logarithmic: calculateLogarithmic()
+                logarithmic: calculateLogarithmic(),
+                power2: calculatePower2(),
+                power3: calculatePower3(),
+                power4: calculatePower4()
             };
 
             const r2Values = {};
@@ -2530,7 +2665,7 @@
             html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">';
 
             for (const [modelName, r2] of Object.entries(r2Values)) {
-                const modelLabel = modelName.charAt(0).toUpperCase() + modelName.slice(1);
+                const modelLabel = getModelDetails(modelName).label;
                 const bgColor = r2 < 0 ? '#FFF3CD' : r2 > 0.8 ? '#D4EDDA' : '#E2E3E5';
                 const textColor = r2 < 0 ? '#856404' : r2 > 0.8 ? '#155724' : '#383D41';
                 const status = r2 < 0 ? '❌ N/A' : r2 > 0.8 ? '⭐ Excellent' : '✅ Good';
@@ -2553,9 +2688,14 @@
 
             const models = {
                 linear: calculateLinear(),
+                inverse: calculateInverse(),
+                inverseSquare: calculateInverseSquare(),
                 quadratic: calculateQuadratic(),
                 exponential: calculateExponential(),
-                logarithmic: calculateLogarithmic()
+                logarithmic: calculateLogarithmic(),
+                power2: calculatePower2(),
+                power3: calculatePower3(),
+                power4: calculatePower4()
             };
 
             let bestModel = null;
@@ -2662,6 +2802,121 @@
             a.click();
         }
 
+        function triggerCSVImport() {
+            const fileInput = document.getElementById('csvImportInput');
+            fileInput.value = '';
+            fileInput.click();
+        }
+
+        function importCSVFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (loadEvent) => {
+                const csvText = String(loadEvent.target.result || '');
+                applyImportedCSV(csvText);
+            };
+            reader.onerror = () => {
+                alert('Unable to read the selected CSV file.');
+            };
+            reader.readAsText(file);
+        }
+
+        function applyImportedCSV(csvText) {
+            const lines = csvText.split(/\r?\n/).map(line => line.trim()).filter(line => line !== '');
+            if (lines.length === 0) {
+                alert('The selected CSV file is empty.');
+                return;
+            }
+
+            const rows = lines.map(parseCSVRow).filter(row => row.length > 0);
+            if (rows.length === 0) {
+                alert('No valid CSV rows were found.');
+                return;
+            }
+
+            let rowStartIndex = 0;
+            const firstRow = rows[0];
+            const firstX = parseFloat((firstRow[0] || '').trim());
+            const firstY = parseFloat((firstRow[1] || '').trim());
+            const hasHeader = !Number.isFinite(firstX) || !Number.isFinite(firstY);
+
+            if (hasHeader) {
+                const importedXHeader = (firstRow[0] || '').trim();
+                const importedYHeader = (firstRow[1] || '').trim();
+                if (importedXHeader) {
+                    columnHeaders.x = importedXHeader;
+                }
+                if (importedYHeader) {
+                    columnHeaders.y = importedYHeader;
+                }
+
+                document.getElementById('xHeaderInput').value = columnHeaders.x;
+                document.getElementById('yHeaderInput').value = columnHeaders.y;
+                updateTableHeaders();
+                rowStartIndex = 1;
+            }
+
+            const importedX = [];
+            const importedY = [];
+
+            for (let i = rowStartIndex; i < rows.length; i++) {
+                const row = rows[i];
+                const xValue = parseFloat((row[0] || '').trim());
+                const yValue = parseFloat((row[1] || '').trim());
+
+                if (Number.isFinite(xValue) && Number.isFinite(yValue)) {
+                    importedX.push(xValue);
+                    importedY.push(yValue);
+                }
+            }
+
+            if (importedX.length === 0) {
+                alert('No valid numeric X and Y pairs were found in the CSV file.');
+                return;
+            }
+
+            data = {
+                x: importedX,
+                y: importedY
+            };
+
+            renderDataTable();
+            clearDerivedOutput();
+            updateGraph();
+        }
+
+        function parseCSVRow(line) {
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                const nextChar = line[i + 1];
+
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    values.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+
+            values.push(current);
+            return values;
+        }
+
         function exportGraphAsImage() {
             if (!mainChart) {
                 alert('Please create a graph first');
@@ -2686,7 +2941,7 @@
         updatePearsonToggleVisibility();
         updateGraph();
 
-        // Update results when switching to results section
+        // Refresh computed sections when navigating
         const originalSwitchSection = switchSection;
         switchSection = function(sectionName) {
             originalSwitchSection(sectionName);
@@ -2695,8 +2950,6 @@
             }
             if (sectionName === 'analyze') {
                 analyzeData();
-            }
-            if (sectionName === 'results') {
                 renderResultsSection();
             }
         };

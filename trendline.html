@@ -1666,7 +1666,7 @@
              <div class="data-panel demo-data-panel">
                 <h3 class="column-setup-title">📦 Demo Data</h3>
                      <p class="data-helper-text">Use a sample dataset if you want to explore the analyzer first. Demo datasets now include realistic noise so they behave more like measured data.</p>
-                     <div class="data-entry-button-group demo-data-actions"><button class="btn btn-demo" onclick="loadSampleLinear()">📥 Linear Data</button> <button class="btn btn-demo" onclick="loadSampleQuadratic()">📥 Quadratic</button> <button class="btn btn-demo" onclick="loadSampleExponential()">📥 Exponential</button> <button class="btn btn-demo" onclick="generateRandomData()">🎲 Random</button>
+                            <div class="data-entry-button-group demo-data-actions"><button class="btn btn-demo" onclick="loadSampleLinear()">📥 Linear Data</button> <button class="btn btn-demo" onclick="loadSampleQuadratic()">📥 Quadratic</button> <button class="btn btn-demo" onclick="loadSampleExponential()">📥 Exponential</button>
                 </div>
              </div>
                  <div class="data-panel">
@@ -1700,8 +1700,8 @@
       <div class="card">
        <h2 style="color: #4DA8DA; margin-bottom: 1rem; font-size: 1.6rem;">📈 Visualization</h2>
              <div id="graphFeedback" class="graph-feedback"></div>
-       <div style="margin-bottom: 1.5rem;"><label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: #333;"> 🎛️ Select Trendline: </label>
-        <div class="btn-group"><button class="btn-group-item active" data-model="linear" onclick="selectModel('linear')"> 📊 Linear </button> <button class="btn-group-item" data-model="quadratic" onclick="selectModel('quadratic')"> 🧩 Quadratic </button> <button class="btn-group-item" data-model="exponential" onclick="selectModel('exponential')"> 📈 Exponential </button> <button class="btn-group-item" data-model="logarithmic" onclick="selectModel('logarithmic')"> 🌲 Logarithmic </button>
+    <div style="margin-bottom: 1.5rem;"><label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: #333;"> 🎛️ Select Trendline: </label>
+     <div class="btn-group"><button class="btn-group-item active" data-model="linear" onclick="selectModel('linear')"> 📊 Linear </button> <button class="btn-group-item" data-model="inverse" onclick="selectModel('inverse')"> ↘️ Inverse </button> <button class="btn-group-item" data-model="inverseSquare" onclick="selectModel('inverseSquare')"> 🔻 Inverse Square </button> <button class="btn-group-item" data-model="quadratic" onclick="selectModel('quadratic')"> 🧩 Quadratic </button> <button class="btn-group-item" data-model="exponential" onclick="selectModel('exponential')"> 📈 Exponential </button> <button class="btn-group-item" data-model="logarithmic" onclick="selectModel('logarithmic')"> 🌲 Logarithmic </button> <button class="btn-group-item" data-model="power2" onclick="selectModel('power2')"> 2️⃣ Power (2) </button> <button class="btn-group-item" data-model="power3" onclick="selectModel('power3')"> 3️⃣ Power (3) </button> <button class="btn-group-item" data-model="power4" onclick="selectModel('power4')"> 4️⃣ Power (4) </button>
         </div>
        </div>
        <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
@@ -1755,8 +1755,8 @@
      <div id="results" class="content-section">
       <div class="card">
              <h2 style="color: #4DA8DA; margin-bottom: 0.75rem; font-size: 1.6rem;">🧾 Results &amp; Interpretation</h2>
-             <p style="color: #666; margin-bottom: 1rem; line-height: 1.6;">Switch between the four trendline options to review each equation, fit quality, and model-specific interpretation.</p>
-             <div class="btn-group results-model-group"><button class="btn-group-item results-model-button active" data-results-model="linear" onclick="selectResultsModel('linear')">📊 Linear</button> <button class="btn-group-item results-model-button" data-results-model="quadratic" onclick="selectResultsModel('quadratic')">🧩 Quadratic</button> <button class="btn-group-item results-model-button" data-results-model="exponential" onclick="selectResultsModel('exponential')">📈 Exponential</button> <button class="btn-group-item results-model-button" data-results-model="logarithmic" onclick="selectResultsModel('logarithmic')">🌲 Logarithmic</button>
+             <p style="color: #666; margin-bottom: 1rem; line-height: 1.6;">Switch between the available trendline options to review each equation, fit quality, and model-specific interpretation.</p>
+             <div class="btn-group results-model-group"><button class="btn-group-item results-model-button active" data-results-model="linear" onclick="selectResultsModel('linear')">📊 Linear</button> <button class="btn-group-item results-model-button" data-results-model="inverse" onclick="selectResultsModel('inverse')">↘️ Inverse</button> <button class="btn-group-item results-model-button" data-results-model="inverseSquare" onclick="selectResultsModel('inverseSquare')">🔻 Inverse Square</button> <button class="btn-group-item results-model-button" data-results-model="quadratic" onclick="selectResultsModel('quadratic')">🧩 Quadratic</button> <button class="btn-group-item results-model-button" data-results-model="exponential" onclick="selectResultsModel('exponential')">📈 Exponential</button> <button class="btn-group-item results-model-button" data-results-model="logarithmic" onclick="selectResultsModel('logarithmic')">🌲 Logarithmic</button> <button class="btn-group-item results-model-button" data-results-model="power2" onclick="selectResultsModel('power2')">2️⃣ Power (2)</button> <button class="btn-group-item results-model-button" data-results-model="power3" onclick="selectResultsModel('power3')">3️⃣ Power (3)</button> <button class="btn-group-item results-model-button" data-results-model="power4" onclick="selectResultsModel('power4')">4️⃣ Power (4)</button>
              </div>
              <div id="resultsStatus" class="results-status"></div><!-- Recommended Model Card -->
        <div id="recommendationContainer"></div><!-- Interpretation -->
@@ -2951,16 +2951,26 @@
         function getModelDetails(modelName) {
             const labels = {
                 linear: 'Linear',
+                inverse: 'Inverse',
+                inverseSquare: 'Inverse Square',
                 quadratic: 'Quadratic',
                 exponential: 'Exponential',
-                logarithmic: 'Logarithmic'
+                logarithmic: 'Logarithmic',
+                power2: 'Power (2)',
+                power3: 'Power (3)',
+                power4: 'Power (4)'
             };
 
             const descriptions = {
                 linear: 'a constant linear relationship',
+                inverse: 'an inverse relationship that levels off as x increases',
+                inverseSquare: 'a steeper inverse-square decay relationship',
                 quadratic: 'an accelerating or decelerating relationship',
                 exponential: 'rapid exponential growth or decay',
-                logarithmic: 'a rapidly declining rate of growth'
+                logarithmic: 'a rapidly declining rate of growth',
+                power2: 'a second-order power relationship',
+                power3: 'a third-order power relationship',
+                power4: 'a fourth-order power relationship'
             };
 
             return {
@@ -2977,9 +2987,14 @@
 
             const calculators = {
                 linear: calculateLinear,
+                inverse: calculateInverse,
+                inverseSquare: calculateInverseSquare,
                 quadratic: calculateQuadratic,
                 exponential: calculateExponential,
-                logarithmic: calculateLogarithmic
+                logarithmic: calculateLogarithmic,
+                power2: calculatePower2,
+                power3: calculatePower3,
+                power4: calculatePower4
             };
 
             const model = calculators[modelName]();
@@ -3299,17 +3314,6 @@
             updateGraph();
         }
 
-        function generateRandomData() {
-            data = { x: [], y: [] };
-            for (let i = 1; i <= 10; i++) {
-                data.x.push(i);
-                data.y.push(Math.random() * 100);
-            }
-            renderDataTable();
-            clearDerivedOutput();
-            updateGraph();
-        }
-
         function addNoise() {
             for (let i = 0; i < data.y.length; i++) {
                 const noise = (Math.random() - 0.5) * data.y[i] * 0.1;
@@ -3389,8 +3393,9 @@
             const sourceData = getValidData();
             if (sourceData.x.length < 2) return null;
 
-            const validData = sourceData.x.map((x, i) => sourceData.y[i] > 0 ? { x, y: Math.log(sourceData.y[i]) } : null).filter(d => d !== null);
-            if (validData.length < 2) return null;
+            if (sourceData.y.some(y => y <= 0)) return null;
+
+            const validData = sourceData.x.map((x, i) => ({ x, y: Math.log(sourceData.y[i]) }));
 
             const linear = calculateLinearFromData(validData.map(d => d.x), validData.map(d => d.y));
             if (!linear) return null;
@@ -3409,8 +3414,9 @@
             const sourceData = getValidData();
             if (sourceData.x.length < 2) return null;
 
-            const validData = sourceData.x.map((x, i) => x > 0 ? { x: Math.log(x), y: sourceData.y[i] } : null).filter(d => d !== null);
-            if (validData.length < 2) return null;
+            if (sourceData.x.some(x => x <= 0)) return null;
+
+            const validData = sourceData.x.map((x, i) => ({ x: Math.log(x), y: sourceData.y[i] }));
 
             const linear = calculateLinearFromData(validData.map(d => d.x), validData.map(d => d.y));
             if (!linear) return null;
@@ -3419,6 +3425,66 @@
                 a: linear.m,
                 b: linear.b,
                 equation: `y = ${linear.m.toFixed(3)}·ln(x) + ${linear.b.toFixed(3)}`
+            };
+        }
+
+        function calculateInverse() {
+            const sourceData = getValidData();
+            if (sourceData.x.length < 2) return null;
+            if (sourceData.x.some(x => x === 0)) return null;
+
+            const transformedX = sourceData.x.map(x => 1 / x);
+            const linear = calculateLinearFromData(transformedX, sourceData.y);
+            if (!linear) return null;
+
+            return {
+                a: linear.m,
+                b: linear.b,
+                equation: `y = ${linear.m.toFixed(3)}/x + ${linear.b.toFixed(3)}`
+            };
+        }
+
+        function calculateInverseSquare() {
+            const sourceData = getValidData();
+            if (sourceData.x.length < 2) return null;
+            if (sourceData.x.some(x => x === 0)) return null;
+
+            const transformedX = sourceData.x.map(x => 1 / (x * x));
+            const linear = calculateLinearFromData(transformedX, sourceData.y);
+            if (!linear) return null;
+
+            return {
+                a: linear.m,
+                b: linear.b,
+                equation: `y = ${linear.m.toFixed(3)}/x² + ${linear.b.toFixed(3)}`
+            };
+        }
+
+        function calculatePower2() {
+            return calculateFixedPower(2);
+        }
+
+        function calculatePower3() {
+            return calculateFixedPower(3);
+        }
+
+        function calculatePower4() {
+            return calculateFixedPower(4);
+        }
+
+        function calculateFixedPower(power) {
+            const sourceData = getValidData();
+            if (sourceData.x.length < 2) return null;
+
+            const transformedX = sourceData.x.map(x => x ** power);
+            const linear = calculateLinearFromData(transformedX, sourceData.y);
+            if (!linear) return null;
+
+            return {
+                a: linear.m,
+                b: linear.b,
+                power,
+                equation: `y = ${linear.m.toFixed(3)}x^${power} + ${linear.b.toFixed(3)}`
             };
         }
 
@@ -3505,14 +3571,24 @@
             return xs.map(x => {
                 if (model === 'linear') {
                     return coefficients.m * x + coefficients.b;
+                } else if (model === 'inverse') {
+                    return coefficients.a / x + coefficients.b;
+                } else if (model === 'inverseSquare') {
+                    return coefficients.a / (x * x) + coefficients.b;
                 } else if (model === 'quadratic') {
                     return coefficients.a * x * x + coefficients.b * x + coefficients.c;
                 } else if (model === 'exponential') {
                     return coefficients.a * Math.exp(coefficients.b * x);
                 } else if (model === 'logarithmic') {
-                    return x > 0 ? coefficients.a * Math.log(x) + coefficients.b : null;
+                    return coefficients.a * Math.log(x) + coefficients.b;
+                } else if (model === 'power2') {
+                    return coefficients.a * (x ** 2) + coefficients.b;
+                } else if (model === 'power3') {
+                    return coefficients.a * (x ** 3) + coefficients.b;
+                } else if (model === 'power4') {
+                    return coefficients.a * (x ** 4) + coefficients.b;
                 }
-            }).filter(y => y !== null);
+            });
         }
 
         // Graph Update
@@ -3533,9 +3609,14 @@
 
             let model = null;
             if (currentModel === 'linear') model = calculateLinear();
+            else if (currentModel === 'inverse') model = calculateInverse();
+            else if (currentModel === 'inverseSquare') model = calculateInverseSquare();
             else if (currentModel === 'quadratic') model = calculateQuadratic();
             else if (currentModel === 'exponential') model = calculateExponential();
             else if (currentModel === 'logarithmic') model = calculateLogarithmic();
+            else if (currentModel === 'power2') model = calculatePower2();
+            else if (currentModel === 'power3') model = calculatePower3();
+            else if (currentModel === 'power4') model = calculatePower4();
 
             if (!model) {
                 analysisResults = null;
@@ -3710,9 +3791,14 @@
 
             const models = {
                 linear: calculateLinear(),
+                inverse: calculateInverse(),
+                inverseSquare: calculateInverseSquare(),
                 quadratic: calculateQuadratic(),
                 exponential: calculateExponential(),
-                logarithmic: calculateLogarithmic()
+                logarithmic: calculateLogarithmic(),
+                power2: calculatePower2(),
+                power3: calculatePower3(),
+                power4: calculatePower4()
             };
 
             const r2Values = {};
@@ -3734,7 +3820,7 @@
             html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">';
 
             for (const [modelName, r2] of Object.entries(r2Values)) {
-                const modelLabel = modelName.charAt(0).toUpperCase() + modelName.slice(1);
+                const modelLabel = getModelDetails(modelName).label;
                 const bgColor = r2 < 0 ? '#FFF3CD' : r2 > 0.8 ? '#D4EDDA' : '#E2E3E5';
                 const textColor = r2 < 0 ? '#856404' : r2 > 0.8 ? '#155724' : '#383D41';
                 const status = r2 < 0 ? '❌ N/A' : r2 > 0.8 ? '⭐ Excellent' : '✅ Good';
@@ -3757,9 +3843,14 @@
 
             const models = {
                 linear: calculateLinear(),
+                inverse: calculateInverse(),
+                inverseSquare: calculateInverseSquare(),
                 quadratic: calculateQuadratic(),
                 exponential: calculateExponential(),
-                logarithmic: calculateLogarithmic()
+                logarithmic: calculateLogarithmic(),
+                power2: calculatePower2(),
+                power3: calculatePower3(),
+                power4: calculatePower4()
             };
 
             let bestModel = null;
