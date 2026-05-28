@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcario</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f6faf6;--bg-panel:#edf4ed;--bg-hdr:#e2ede2;
+  --border:#b8d4b8;--prompt:#1e6b38;--text:#111e11;
+  --dim:#5a7a5a;--err:#b53030;--sym:#1e6b38;
+  --vname:#1a5280;--accent:#1e6b38;
+}
+body{font-family:'Cascadia Code','Consolas','Monaco','Courier New',monospace;font-size:15px;
+  background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#hdr{background:var(--bg-hdr);border-bottom:2px solid var(--border);
+  padding:9px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.logo{color:var(--accent);font-size:17px;font-weight:700;letter-spacing:.4px}
+.sub{color:var(--dim);font-size:12px}
+#body{display:flex;flex-direction:column;flex:1;overflow:hidden}
+#sidebar{flex-shrink:0;background:var(--bg-panel);border-top:1px solid var(--border);
+  display:flex;flex-direction:row;align-items:stretch;order:2;max-height:70px}
+.ptitle{padding:0 14px;background:var(--bg-hdr);border-right:1px solid var(--border);
+  color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;
+  display:flex;align-items:center;flex-shrink:0;white-space:nowrap}
+#vars{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;align-content:center;
+  padding:6px 10px;gap:6px;overflow-y:auto;flex:1}
+.vrow{display:flex;flex-direction:row;align-items:center;gap:5px;background:var(--bg);
+  border:1px solid var(--border);border-radius:5px;padding:3px 10px;cursor:default;white-space:nowrap}
+.vrow:hover{background:rgba(30,107,56,.07)}
+.vn{color:var(--vname);font-size:13px;font-weight:600}
+.vv{color:var(--dim);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px}
+.novars{color:var(--dim);font-size:12px;padding:0;display:flex;align-items:center}
+#term{flex:1;display:flex;flex-direction:column;overflow:hidden;order:1}
+#out{flex:1;overflow-y:auto;padding:14px 20px 8px;line-height:1.7}
+.e{margin-bottom:2px}
+.ecmd .p{color:var(--prompt);font-weight:700}
+.ecmd .c{color:#111}
+.eres{color:var(--text);white-space:pre;padding-left:4px}
+.esym{color:#1a7a3a;white-space:pre;padding-left:4px;font-weight:500}
+.eerr{color:var(--err)}
+.einfo{color:var(--dim);font-style:italic}
+.eblank{height:8px}
+#inbar{
+  border-top:2px solid var(--accent);
+  background:#cfe8d4;
+  padding:14px 20px;
+  display:flex;align-items:center;
+  box-shadow:0 -4px 24px rgba(30,107,56,.18);
+}
+#inpill{
+  display:flex;align-items:center;flex:1;
+  background:#fff;
+  border:2px solid var(--border);
+  border-radius:999px;
+  padding:7px 7px 7px 18px;
+  gap:0;
+  transition:border-color .2s,box-shadow .2s;
+}
+#inpill.focused{
+  border-color:var(--accent);
+  box-shadow:0 0 0 4px rgba(30,107,56,.13);
+}
+#iprompt{
+  color:var(--prompt);white-space:nowrap;flex-shrink:0;
+  font-size:12px;font-weight:700;letter-spacing:.4px;
+  background:#e2f2e6;border-radius:20px;
+  padding:3px 11px;margin-right:10px;
+}
+#inp{
+  flex:1;background:transparent;border:none;outline:none;
+  color:#0a180a;font:inherit;font-size:16px;
+  padding:0 4px;caret-color:var(--accent);
+}
+#inp::placeholder{color:var(--dim);opacity:.55}
+#runbtn{
+  flex-shrink:0;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:999px;
+  font:inherit;font-size:13px;font-weight:700;
+  padding:7px 18px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  transition:background .15s,transform .1s;
+  white-space:nowrap;letter-spacing:.3px;
+}
+#runbtn:hover{background:#175c2f;}
+#runbtn:active{transform:scale(.95);}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;z-index:999}
+#loading.done{display:none}
+.spin{width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.htbl{border-collapse:collapse;margin:2px 0 6px}
+.htbl td{padding:2px 16px 2px 0}
+.htbl td:first-child{color:#1a6040;min-width:220px}
+.htbl td:last-child{color:var(--dim)}
+.hcat{color:var(--accent);margin:8px 0 3px;font-weight:600}
+
+/* ── Documentation button ── */
+#doc-btn{
+  margin-left:auto;background:transparent;
+  border:1.5px solid var(--accent);color:var(--accent);
+  font:inherit;font-size:12px;padding:5px 14px;border-radius:5px;
+  cursor:pointer;white-space:nowrap;transition:background .15s,color .15s;
+}
+#doc-btn:hover{background:var(--accent);color:#fff;}
+
+/* ── Doc modal ── */
+#doc-overlay{
+  position:fixed;inset:0;
+  background:rgba(8,24,12,.45);backdrop-filter:blur(4px);
+  z-index:800;display:flex;align-items:center;justify-content:center;
+  animation:dFadeIn .18s ease;
+}
+#doc-overlay.dhide{display:none;}
+@keyframes dFadeIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+#doc-panel{
+  background:#fff;border:1px solid var(--border);border-radius:9px;
+  width:90vw;max-width:980px;height:90vh;
+  display:flex;flex-direction:column;
+  box-shadow:0 10px 50px rgba(0,0,0,.2);overflow:hidden;
+}
+#doc-mhdr{
+  background:var(--bg-hdr);border-bottom:2px solid var(--border);
+  padding:11px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+#doc-mhdr h2{color:var(--accent);font-size:15px;font-weight:700;margin:0;font-family:inherit;}
+#doc-close{
+  margin-left:auto;background:transparent;border:none;
+  color:var(--dim);font-size:24px;line-height:1;cursor:pointer;padding:0 4px;
+}
+#doc-close:hover{color:var(--err);}
+#doc-body{display:flex;flex:1;overflow:hidden;}
+#doc-nav{
+  width:192px;flex-shrink:0;background:var(--bg-panel);
+  border-right:1px solid var(--border);padding:8px 0;overflow-y:auto;
+}
+.dnav-grp{
+  padding:8px 14px 3px;font-size:10px;text-transform:uppercase;
+  letter-spacing:1.2px;color:var(--dim);font-family:inherit;
+}
+.dnav{
+  display:block;width:100%;text-align:left;background:transparent;border:none;
+  padding:7px 16px;font-family:inherit;font-size:13px;color:var(--dim);
+  cursor:pointer;border-left:3px solid transparent;transition:all .1s;
+}
+.dnav:hover{background:rgba(30,107,56,.07);color:var(--text);}
+.dnav.dact{color:var(--accent);font-weight:600;border-left-color:var(--accent);background:rgba(30,107,56,.09);}
+#doc-content{flex:1;overflow-y:auto;padding:26px 30px;font-family:-apple-system,'Segoe UI',sans-serif;font-size:14px;line-height:1.75;color:#222d22;}
+.dsec{display:none;}.dsec.dact{display:block;}
+.dsec h3{color:var(--accent);font-size:18px;margin:0 0 14px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.dsec h4{color:var(--text);font-size:14px;margin:20px 0 6px;font-weight:700;}
+.dsec p{margin:0 0 10px;color:#334433;}
+.dsec ul,.dsec ol{margin:4px 0 10px 22px;}
+.dsec li{margin-bottom:5px;}
+.dsec code{font-family:'Cascadia Code','Consolas',monospace;font-size:12.5px;background:#edf5ed;border:1px solid #c2d8c2;border-radius:3px;padding:1px 5px;color:#1a4020;}
+.dsec pre{background:#edf5ed;border:1px solid #c2d8c2;border-radius:7px;padding:13px 15px;margin:8px 0 16px;overflow-x:auto;font-family:'Cascadia Code','Consolas',monospace;font-size:13px;line-height:1.65;color:#1a3020;}
+.dsec pre .pr{color:#1e6b38;font-weight:700;}
+.dsec pre .rs{color:#1a7030;}
+.dsec pre .cm{color:#7a9a7a;font-style:italic;}
+.dftbl{width:100%;border-collapse:collapse;margin:6px 0 16px;font-size:13px;}
+.dftbl th{background:var(--bg-hdr);color:var(--dim);font-weight:600;text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);font-family:inherit;}
+.dftbl td{padding:6px 10px;border-bottom:1px solid rgba(184,212,184,.35);}
+.dftbl tr:hover td{background:rgba(30,107,56,.04);}
+.dftbl td:first-child{font-family:'Cascadia Code','Consolas',monospace;font-size:12.5px;color:#1a6040;white-space:nowrap;}
+.dftbl td:nth-child(2){color:#2a3a2a;}
+.dftbl td:last-child{color:#667066;font-size:12.5px;}
+.dnote{background:#f0faf0;border-left:3px solid var(--accent);padding:9px 13px;border-radius:0 5px 5px 0;margin:10px 0;font-size:13px;color:#334433;}
+.dtip{background:#fff8e8;border-left:3px solid #c09020;padding:9px 13px;border-radius:0 5px 5px 0;margin:10px 0;font-size:13px;color:#443322;}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spin"></div>
+  <div style="color:var(--dim)">Loading math libraries…</div>
+</div>
+
+<div id="hdr">
+  <svg width="28" height="28" viewBox="0 0 26 26" fill="none">
+    <circle cx="13" cy="13" r="12" stroke="#1e6b38" stroke-width="1.5"/>
+    <polyline points="3,18 7,10 11,16 15,8 19,13 23,9"
+      stroke="#2ea84e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span class="logo">Calcario</span>
+  <span class="sub">Educational scientific calculator platform</span>
+  <button id="doc-btn">Documentation</button>
+</div>
+
+<div id="body">
+  <div id="sidebar">
+    <div class="ptitle">Workspace</div>
+    <div id="vars"><div class="novars">No variables</div></div>
+  </div>
+  <div id="term">
+    <div id="out">
+      <div class="e einfo">Calcario — type <span style="color:var(--accent)">help</span> for commands and examples.</div>
+      <div class="eblank"></div>
+    </div>
+    <div id="inbar">
+      <div id="inpill">
+        <span id="iprompt">IN&nbsp;[1]</span>
+        <input id="inp" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="Type an expression and press Enter…">
+        <button id="runbtn">&#9654; Enter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Documentation Modal ══════════════════════════════════════════════ -->
+<div id="doc-overlay" class="dhide">
+<div id="doc-panel">
+  <div id="doc-mhdr">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <rect x="3" y="2" width="14" height="16" rx="2" stroke="#1e6b38" stroke-width="1.4"/>
+      <line x1="6" y1="6" x2="14" y2="6" stroke="#1e6b38" stroke-width="1.2"/>
+      <line x1="6" y1="9.5" x2="14" y2="9.5" stroke="#1e6b38" stroke-width="1.2"/>
+      <line x1="6" y1="13" x2="11" y2="13" stroke="#1e6b38" stroke-width="1.2"/>
+    </svg>
+    <h2>Calcario — Documentation</h2>
+    <button id="doc-close">&#215;</button>
+  </div>
+  <div id="doc-body">
+    <nav id="doc-nav">
+      <div class="dnav-grp">Overview</div>
+      <button class="dnav dact" data-sec="gs">Getting Started</button>
+      <div class="dnav-grp">Mathematics</div>
+      <button class="dnav" data-sec="dnumeric">Numeric Operations</button>
+      <button class="dnav" data-sec="dmatrix">Matrix &amp; Linear Algebra</button>
+      <button class="dnav" data-sec="dsymbolic">Symbolic Math</button>
+      <button class="dnav" data-sec="deqsys">System of Equations</button>
+      <div class="dnav-grp">Reference</div>
+      <button class="dnav" data-sec="dcmds">Constants &amp; Commands</button>
+    </nav>
+    <div id="doc-content">
+
+      <!-- ── Getting Started ── -->
+      <div class="dsec dact" id="gs">
+        <h3>Getting Started</h3>
+        <p>Calcario is a browser-based mathematical computing environment that supports both <strong>numerical</strong> and <strong>symbolic</strong> calculations — no installation required. It is powered by <strong>Math.js</strong> for numeric/matrix work and <strong>Algebrite</strong> (a JavaScript CAS) for symbolic algebra and calculus.</p>
+
+        <h4>The Interface</h4>
+        <ul>
+          <li><strong>Input bar</strong> (bottom) — type any expression and press <code>Enter</code> to evaluate.</li>
+          <li><strong>Output area</strong> — shows each command and its result. Results are color-coded: black for numbers, green for symbolic expressions, red for errors.</li>
+          <li><strong>Workspace panel</strong> (right) — lists all variables currently defined in the session.</li>
+        </ul>
+
+        <h4>Two Computation Modes</h4>
+        <p>Calcario automatically chooses the right engine based on context:</p>
+        <ul>
+          <li><strong>Numeric mode</strong> (default) — evaluates expressions to numbers using Math.js. All standard arithmetic, functions, and matrix operations run here.</li>
+          <li><strong>Symbolic mode</strong> — activated when symbolic variables are declared with <code>syms</code>, or when symbolic functions like <code>diff</code>, <code>integrate</code>, <code>factor</code> are used. Results are kept as exact algebraic expressions.</li>
+        </ul>
+
+        <h4>Quick Start Examples</h4>
+        <pre><span class="pr">&gt;&gt; 1&gt;</span> 2 + 3 * 4              <span class="cm">% arithmetic</span>
+<span class="rs">ans = 14</span>
+
+<span class="pr">&gt;&gt; 2&gt;</span> sqrt(2)
+<span class="rs">ans = 1.41421</span>
+
+<span class="pr">&gt;&gt; 3&gt;</span> A = [1, 2; 3, 4]        <span class="cm">% 2×2 matrix</span>
+<span class="rs">A =
+   1   2
+   3   4</span>
+
+<span class="pr">&gt;&gt; 4&gt;</span> syms x                  <span class="cm">% declare symbolic variable</span>
+<span class="pr">&gt;&gt; 5&gt;</span> diff(x^3 + 2*x, x)
+<span class="rs">ans = 3*x^2+2</span></pre>
+
+        <h4>Suppressing Output</h4>
+        <p>End any command with a semicolon <code>;</code> to suppress its output (the calculation still runs and the variable is stored):</p>
+        <pre><span class="pr">&gt;&gt;</span> x = 1000;        <span class="cm">% silent — no output printed</span>
+<span class="pr">&gt;&gt;</span> y = x / 4        <span class="cm">% output shown: y = 250</span></pre>
+
+        <h4>Command History</h4>
+        <p>Press <code>↑</code> / <code>↓</code> arrow keys to scroll through previous commands. Press <code>Ctrl+L</code> to clear the terminal.</p>
+
+        <h4>Comments</h4>
+        <p>Anything after <code>%</code> on a line is a comment and is ignored by the engine:</p>
+        <pre><span class="pr">&gt;&gt;</span> det(A)    <span class="cm">% computes determinant of A</span></pre>
+
+        <div class="dnote">💡 Variables persist for the entire browser session. Use <code>clear all</code> to reset the workspace.</div>
+      </div>
+
+      <!-- ── Numeric Operations ── -->
+      <div class="dsec" id="dnumeric">
+        <h3>Numeric Operations</h3>
+        <p>All numeric operations use <strong>Math.js</strong> under the hood. Results are floating-point numbers (IEEE 754 double precision, ~15 significant digits).</p>
+
+        <h4>Arithmetic Operators</h4>
+        <table class="dftbl">
+          <tr><th>Syntax</th><th>Operation</th><th>Example</th></tr>
+          <tr><td>a + b</td><td>Addition</td><td><code>3 + 4</code> → 7</td></tr>
+          <tr><td>a - b</td><td>Subtraction</td><td><code>10 - 3</code> → 7</td></tr>
+          <tr><td>a * b</td><td>Multiplication</td><td><code>3 * 4</code> → 12</td></tr>
+          <tr><td>a / b</td><td>Division</td><td><code>7 / 2</code> → 3.5</td></tr>
+          <tr><td>a ^ b</td><td>Power / Exponentiation</td><td><code>2^10</code> → 1024</td></tr>
+          <tr><td>mod(a, b)</td><td>Modulo (remainder)</td><td><code>mod(17,5)</code> → 2</td></tr>
+        </table>
+
+        <h4>Common Math Functions</h4>
+        <table class="dftbl">
+          <tr><th>Function</th><th>Description</th><th>Example</th></tr>
+          <tr><td>sqrt(x)</td><td>Square root √x</td><td><code>sqrt(9)</code> → 3</td></tr>
+          <tr><td>abs(x)</td><td>Absolute value |x|</td><td><code>abs(-5)</code> → 5</td></tr>
+          <tr><td>exp(x)</td><td>Exponential eˣ</td><td><code>exp(1)</code> → 2.71828</td></tr>
+          <tr><td>log(x)</td><td>Natural logarithm ln(x)</td><td><code>log(e)</code> → 1</td></tr>
+          <tr><td>log2(x)</td><td>Base-2 logarithm</td><td><code>log2(8)</code> → 3</td></tr>
+          <tr><td>log10(x)</td><td>Base-10 logarithm</td><td><code>log10(1000)</code> → 3</td></tr>
+          <tr><td>sign(x)</td><td>Sign: −1, 0, or +1</td><td><code>sign(-9)</code> → -1</td></tr>
+          <tr><td>floor(x)</td><td>Round toward −∞</td><td><code>floor(3.9)</code> → 3</td></tr>
+          <tr><td>ceil(x)</td><td>Round toward +∞</td><td><code>ceil(3.1)</code> → 4</td></tr>
+          <tr><td>round(x)</td><td>Round to nearest integer</td><td><code>round(3.5)</code> → 4</td></tr>
+          <tr><td>factorial(n)</td><td>n! = n·(n−1)·…·1</td><td><code>factorial(5)</code> → 120</td></tr>
+          <tr><td>nchoosek(n,k)</td><td>Binomial coefficient C(n,k)</td><td><code>nchoosek(5,2)</code> → 10</td></tr>
+          <tr><td>gcd(a,b)</td><td>Greatest common divisor</td><td><code>gcd(12,8)</code> → 4</td></tr>
+          <tr><td>lcm(a,b)</td><td>Least common multiple</td><td><code>lcm(4,6)</code> → 12</td></tr>
+        </table>
+
+        <h4>Trigonometric Functions</h4>
+        <p>All angles are in <strong>radians</strong>. Use <code>pi/180</code> to convert degrees.</p>
+        <table class="dftbl">
+          <tr><th>Function</th><th>Description</th><th>Example</th></tr>
+          <tr><td>sin(x), cos(x), tan(x)</td><td>Sine, cosine, tangent</td><td><code>sin(pi/2)</code> → 1</td></tr>
+          <tr><td>asin(x), acos(x), atan(x)</td><td>Inverse trig (result in rad)</td><td><code>asin(1)</code> → π/2</td></tr>
+          <tr><td>atan2(y, x)</td><td>Four-quadrant arctangent</td><td><code>atan2(1,1)</code> → π/4</td></tr>
+          <tr><td>sinh(x), cosh(x), tanh(x)</td><td>Hyperbolic functions</td><td><code>cosh(0)</code> → 1</td></tr>
+        </table>
+
+        <h4>Complex Numbers</h4>
+        <p>Use <code>i</code> as the imaginary unit. Complex results are displayed as <em>a + bi</em>.</p>
+        <pre><span class="pr">&gt;&gt;</span> z = 3 + 4i
+<span class="rs">z = 3 + 4i</span>
+<span class="pr">&gt;&gt;</span> abs(z)          <span class="cm">% magnitude |z| = sqrt(9+16)</span>
+<span class="rs">ans = 5</span>
+<span class="pr">&gt;&gt;</span> conj(z)
+<span class="rs">ans = 3 - 4i</span>
+<span class="pr">&gt;&gt;</span> real(z)
+<span class="rs">ans = 3</span>
+<span class="pr">&gt;&gt;</span> imag(z)
+<span class="rs">ans = 4</span></pre>
+
+        <h4>Output Precision</h4>
+        <p>Control the number of displayed digits:</p>
+        <ul>
+          <li><code>format short</code> — 6 significant digits (default)</li>
+          <li><code>format long</code> — 15 significant digits</li>
+        </ul>
+      </div>
+
+      <!-- ── Matrix & Linear Algebra ── -->
+      <div class="dsec" id="dmatrix">
+        <h3>Matrix &amp; Linear Algebra</h3>
+        <p>Matrices are first-class objects. Use square-bracket notation with commas separating elements and semicolons separating rows — identical to MATLAB/Octave syntax.</p>
+
+        <h4>Creating Matrices &amp; Vectors</h4>
+        <pre><span class="pr">&gt;&gt;</span> v = [1, 2, 3, 4]          <span class="cm">% row vector (1×4)</span>
+<span class="pr">&gt;&gt;</span> A = [1, 2; 3, 4]           <span class="cm">% 2×2 matrix</span>
+<span class="pr">&gt;&gt;</span> B = [1,0,0; 0,1,0; 0,0,1]  <span class="cm">% 3×3 identity (manually)</span>
+<span class="pr">&gt;&gt;</span> r = linspace(0, 1, 5)      <span class="cm">% [0, 0.25, 0.5, 0.75, 1]</span></pre>
+
+        <h4>Special Matrices</h4>
+        <table class="dftbl">
+          <tr><th>Function</th><th>Description</th></tr>
+          <tr><td>zeros(m, n)</td><td>m×n matrix of zeros</td></tr>
+          <tr><td>ones(m, n)</td><td>m×n matrix of ones</td></tr>
+          <tr><td>eye(n)</td><td>n×n identity matrix</td></tr>
+          <tr><td>diag(v)</td><td>Diagonal matrix from vector v</td></tr>
+          <tr><td>diag(A)</td><td>Extract main diagonal of matrix A as vector</td></tr>
+          <tr><td>linspace(a, b, n)</td><td>n evenly-spaced values from a to b</td></tr>
+        </table>
+
+        <h4>Element Access</h4>
+        <p>Indexing is <strong>1-based</strong> (like MATLAB/Octave):</p>
+        <pre><span class="pr">&gt;&gt;</span> A = [10, 20; 30, 40]
+<span class="pr">&gt;&gt;</span> A(1, 2)        <span class="cm">% row 1, col 2 → 20</span>
+<span class="pr">&gt;&gt;</span> A(2, 1)        <span class="cm">% row 2, col 1 → 30</span></pre>
+
+        <h4>Arithmetic Operations</h4>
+        <table class="dftbl">
+          <tr><th>Syntax</th><th>Description</th></tr>
+          <tr><td>A + B, A - B</td><td>Element-wise addition / subtraction</td></tr>
+          <tr><td>A * B</td><td>Matrix multiplication (dot product of rows × columns)</td></tr>
+          <tr><td>A .* B</td><td>Element-wise multiplication (Hadamard product)</td></tr>
+          <tr><td>A ^ n</td><td>Matrix power (A multiplied by itself n times)</td></tr>
+          <tr><td>A .^ n</td><td>Element-wise power</td></tr>
+          <tr><td>A / B</td><td>Right matrix division: A·B⁻¹</td></tr>
+          <tr><td>transpose(A)</td><td>Transpose of A (rows become columns)</td></tr>
+        </table>
+
+        <h4>Linear Algebra Functions</h4>
+        <table class="dftbl">
+          <tr><th>Function</th><th>Description</th></tr>
+          <tr><td>det(A)</td><td>Determinant of A</td></tr>
+          <tr><td>inv(A)</td><td>Inverse A⁻¹ (A must be square and non-singular)</td></tr>
+          <tr><td>trace(A)</td><td>Sum of diagonal elements</td></tr>
+          <tr><td>norm(v)</td><td>Euclidean norm (length) of vector or matrix</td></tr>
+          <tr><td>eig(A)</td><td>Eigenvalues of A</td></tr>
+          <tr><td>rref(A)</td><td>Row-reduced echelon form (Gaussian elimination)</td></tr>
+          <tr><td>cross(u, v)</td><td>Cross product of 3D vectors</td></tr>
+          <tr><td>dot(u, v)</td><td>Dot product u·v</td></tr>
+          <tr><td>size(A)</td><td>Dimensions [rows, cols]</td></tr>
+          <tr><td>numel(A)</td><td>Total number of elements</td></tr>
+        </table>
+
+        <h4>Statistics on Vectors</h4>
+        <table class="dftbl">
+          <tr><th>Function</th><th>Description</th></tr>
+          <tr><td>sum(v)</td><td>Sum of all elements</td></tr>
+          <tr><td>mean(v)</td><td>Arithmetic mean</td></tr>
+          <tr><td>std(v)</td><td>Standard deviation</td></tr>
+          <tr><td>median(v)</td><td>Median value</td></tr>
+          <tr><td>max(v), min(v)</td><td>Maximum / minimum element</td></tr>
+          <tr><td>sort(v)</td><td>Sort elements in ascending order</td></tr>
+        </table>
+
+        <h4>Example: Solving a Linear System Ax = b</h4>
+        <pre><span class="pr">&gt;&gt;</span> A = [2, 1; 5, 3]
+<span class="pr">&gt;&gt;</span> b = [1; 2]
+<span class="pr">&gt;&gt;</span> x = inv(A) * b      <span class="cm">% or: lusolve(A, b)</span>
+<span class="rs">x =
+   1
+  -1</span></pre>
+      </div>
+
+      <!-- ── Symbolic Math ── -->
+      <div class="dsec" id="dsymbolic">
+        <h3>Symbolic Math</h3>
+        <p>Symbolic computation keeps expressions in exact algebraic form rather than evaluating them to decimals. Calcario uses <strong>Algebrite</strong> as its CAS (Computer Algebra System).</p>
+
+        <h4>Declaring Symbolic Variables</h4>
+        <p>Before using a symbol in an expression, declare it with <code>syms</code>:</p>
+        <pre><span class="pr">&gt;&gt;</span> syms x y t</pre>
+        <p>Once declared, any expression containing <code>x</code>, <code>y</code>, or <code>t</code> is automatically handled symbolically.</p>
+
+        <h4>Differentiation</h4>
+        <p>Compute derivatives using <code>diff(expression, variable)</code>. Add a third argument for higher-order derivatives.</p>
+        <pre><span class="pr">&gt;&gt;</span> syms x
+<span class="pr">&gt;&gt;</span> diff(x^4 - 3*x^2 + 2, x)
+<span class="rs">ans = 4*x^3-6*x</span>
+
+<span class="pr">&gt;&gt;</span> diff(sin(x)*cos(x), x)     <span class="cm">% product rule applied</span>
+<span class="rs">ans = cos(x)^2-sin(x)^2</span>
+
+<span class="pr">&gt;&gt;</span> diff(x^5, x, 2)             <span class="cm">% second derivative d²/dx²</span>
+<span class="rs">ans = 20*x^3</span></pre>
+
+        <h4>Integration</h4>
+        <p><code>integrate(expression, variable)</code> computes the <em>indefinite</em> integral (antiderivative). The constant of integration C is omitted.</p>
+        <pre><span class="pr">&gt;&gt;</span> integrate(x^2, x)
+<span class="rs">ans = 1/3*x^3</span>
+
+<span class="pr">&gt;&gt;</span> integrate(sin(x), x)
+<span class="rs">ans = -cos(x)</span>
+
+<span class="pr">&gt;&gt;</span> integrate(1/x, x)
+<span class="rs">ans = log(x)</span></pre>
+        <div class="dtip">For a <strong>definite integral</strong> ∫ₐᵇ f(x)dx, evaluate the antiderivative at the bounds manually or use: <code>integrate(f, x, a, b)</code> is not yet supported — compute as <code>subs(F,b) - subs(F,a)</code>.</div>
+
+        <h4>Factoring Polynomials</h4>
+        <pre><span class="pr">&gt;&gt;</span> factor(x^2 - 1)
+<span class="rs">ans = (x-1)*(x+1)</span>
+
+<span class="pr">&gt;&gt;</span> factor(x^3 - x)
+<span class="rs">ans = x*(x-1)*(x+1)</span></pre>
+
+        <h4>Expanding Expressions</h4>
+        <pre><span class="pr">&gt;&gt;</span> expand((x + 1)^3)
+<span class="rs">ans = x^3+3*x^2+3*x+1</span>
+
+<span class="pr">&gt;&gt;</span> expand((x + y)^2)
+<span class="rs">ans = x^2+2*x*y+y^2</span></pre>
+
+        <h4>Simplification</h4>
+        <pre><span class="pr">&gt;&gt;</span> simplify(sin(x)^2 + cos(x)^2)
+<span class="rs">ans = 1</span>
+
+<span class="pr">&gt;&gt;</span> simplify((x^2 - 1)/(x - 1))
+<span class="rs">ans = 1+x</span></pre>
+
+        <h4>Limits</h4>
+        <pre><span class="pr">&gt;&gt;</span> limit(sin(x)/x, x, 0)
+<span class="rs">ans = 1</span>
+
+<span class="pr">&gt;&gt;</span> limit((1 + 1/x)^x, x, inf)
+<span class="rs">ans = e</span></pre>
+
+        <h4>Taylor Series</h4>
+        <p><code>taylor(expression, variable, order)</code> — expands around 0 up to the given order:</p>
+        <pre><span class="pr">&gt;&gt;</span> taylor(sin(x), x, 5)
+<span class="rs">ans = x - 1/6*x^3 + 1/120*x^5</span>
+
+<span class="pr">&gt;&gt;</span> taylor(exp(x), x, 4)
+<span class="rs">ans = 1 + x + 1/2*x^2 + 1/6*x^3 + 1/24*x^4</span></pre>
+
+        <h4>Single-Variable Solve</h4>
+        <p>Find roots of f(x) = 0:</p>
+        <pre><span class="pr">&gt;&gt;</span> solve(x^2 - 4, x)
+<span class="rs">ans = 2,-2</span>
+
+<span class="pr">&gt;&gt;</span> roots(x^2 - 5*x + 6, x)
+<span class="rs">ans = 2,3</span></pre>
+
+        <h4>Storing Symbolic Expressions</h4>
+        <p>Assign symbolic results to variables for reuse:</p>
+        <pre><span class="pr">&gt;&gt;</span> syms x
+<span class="pr">&gt;&gt;</span> f = x^3 - 3*x + 2
+<span class="pr">&gt;&gt;</span> df = diff(f, x)
+<span class="rs">df = 3*x^2-3</span>
+<span class="pr">&gt;&gt;</span> factor(f)
+<span class="rs">ans = (x-1)^2*(x+2)</span></pre>
+      </div>
+
+      <!-- ── System of Equations ── -->
+      <div class="dsec" id="deqsys">
+        <h3>System of Equations Solver</h3>
+        <p>Calcario can solve systems of <strong>linear equations</strong> in multiple unknowns. The solver uses Algebrite's symbolic differentiation to extract coefficients, then applies Math.js matrix factorization (LU decomposition) to find the solution.</p>
+
+        <h4>Workflow</h4>
+        <ol>
+          <li>Declare the unknowns as symbolic variables with <code>syms</code>.</li>
+          <li>Define each equation as an expression equal to zero (the LHS).</li>
+          <li>Call <code>solve()</code> with the equation names.</li>
+          <li>Access individual results with dot notation.</li>
+        </ol>
+
+        <h4>Syntax</h4>
+        <pre><span class="cm">% Step 1 — declare unknowns</span>
+<span class="pr">&gt;&gt;</span> syms x y z
+
+<span class="cm">% Step 2 — define equations (LHS, set equal to zero)</span>
+<span class="pr">&gt;&gt;</span> eq1 = x + y - 5        <span class="cm">% means x + y = 5</span>
+<span class="pr">&gt;&gt;</span> eq2 = 2*x - y - 1      <span class="cm">% means 2x - y = 1</span>
+
+<span class="cm">% Step 3 — solve</span>
+<span class="pr">&gt;&gt;</span> sol = solve(eq1, eq2)
+<span class="rs">sol:
+  x = 2
+  y = 3</span>
+
+<span class="cm">% Step 4 — access results</span>
+<span class="pr">&gt;&gt;</span> sol.x
+<span class="rs">ans = 2</span>
+<span class="pr">&gt;&gt;</span> sol.y
+<span class="rs">ans = 3</span></pre>
+
+        <h4>Kirchhoff's Laws Example</h4>
+        <p>Consider a circuit with three mesh currents I₁, I₂, I₃ governed by:</p>
+        <ul>
+          <li>KCL node: I₁ + I₂ − I₃ = 0</li>
+          <li>KVL loop 1: 3I₁ − I₂ = 10</li>
+          <li>KVL loop 2: I₃ − 2I₁ = 50</li>
+        </ul>
+        <pre><span class="pr">&gt;&gt;</span> syms I1 I2 I3
+<span class="pr">&gt;&gt;</span> f1 = I1 + I2 - I3
+<span class="pr">&gt;&gt;</span> f2 = 3*I1 - I2 - 10
+<span class="pr">&gt;&gt;</span> f3 = I3 - 2*I1 - 50
+<span class="pr">&gt;&gt;</span> solution = solve(f1, f2, f3)
+<span class="rs">solution:
+  I1 = 30
+  I2 = 80
+  I3 = 110</span>
+<span class="pr">&gt;&gt;</span> solution.I1
+<span class="rs">ans = 30</span></pre>
+
+        <h4>How It Works Internally</h4>
+        <p>For a system of n equations in n unknowns x₁…xₙ, Calcario:</p>
+        <ol>
+          <li>Extracts each coefficient <em>aᵢⱼ</em> = ∂fᵢ/∂xⱼ using symbolic differentiation.</li>
+          <li>Evaluates each equation at x₁=…=xₙ=0 to find the constant term.</li>
+          <li>Assembles the matrix system <strong>A·x = b</strong>.</li>
+          <li>Solves using LU decomposition via Math.js.</li>
+        </ol>
+        <div class="dnote">Currently supports <strong>linear systems only</strong>. For nonlinear systems, rearrange algebraically into a linear form, or use <code>roots()</code> for single-variable polynomial equations.</div>
+
+        <h4>Alternative Array Syntax</h4>
+        <p>You can also pass equation lists explicitly with the array form:</p>
+        <pre><span class="pr">&gt;&gt;</span> solve([f1, f2, f3], [I1, I2, I3])</pre>
+      </div>
+
+      <!-- ── Constants & Commands ── -->
+      <div class="dsec" id="dcmds">
+        <h3>Constants &amp; Commands</h3>
+
+        <h4>Built-in Constants</h4>
+        <table class="dftbl">
+          <tr><th>Name</th><th>Value</th><th>Description</th></tr>
+          <tr><td>pi</td><td>3.14159265…</td><td>Ratio of circumference to diameter (π)</td></tr>
+          <tr><td>e</td><td>2.71828182…</td><td>Euler's number, base of natural logarithm</td></tr>
+          <tr><td>i</td><td>√(−1)</td><td>Imaginary unit</td></tr>
+          <tr><td>Inf</td><td>∞</td><td>Positive infinity</td></tr>
+          <tr><td>NaN</td><td>—</td><td>Not a Number (result of 0/0, etc.)</td></tr>
+          <tr><td>phi</td><td>1.61803398…</td><td>Golden ratio φ = (1+√5)/2</td></tr>
+        </table>
+
+        <h4>Terminal Commands</h4>
+        <table class="dftbl">
+          <tr><th>Command</th><th>Description</th></tr>
+          <tr><td>help</td><td>Display quick-reference command list in the terminal</td></tr>
+          <tr><td>clc</td><td>Clear all terminal output (variables are kept)</td></tr>
+          <tr><td>clear</td><td>Alias for <code>clc</code></td></tr>
+          <tr><td>who</td><td>List all variables in the workspace with types and values</td></tr>
+          <tr><td>whos</td><td>Alias for <code>who</code></td></tr>
+          <tr><td>clear x</td><td>Remove variable <code>x</code> from the workspace</td></tr>
+          <tr><td>clear all</td><td>Remove all variables and reset workspace</td></tr>
+          <tr><td>format short</td><td>Display 6 significant digits (default)</td></tr>
+          <tr><td>format long</td><td>Display 15 significant digits</td></tr>
+        </table>
+
+        <h4>Syntax Shortcuts</h4>
+        <table class="dftbl">
+          <tr><th>Syntax</th><th>Meaning</th></tr>
+          <tr><td>expr;</td><td>Trailing semicolon — compute but suppress output</td></tr>
+          <tr><td>% text</td><td>Comment — ignored by the engine</td></tr>
+          <tr><td>ans</td><td>Last computed result (auto-assigned)</td></tr>
+          <tr><td>↑ / ↓</td><td>Navigate command history</td></tr>
+          <tr><td>Ctrl+L</td><td>Clear terminal</td></tr>
+        </table>
+
+        <h4>Keyboard Shortcuts</h4>
+        <ul>
+          <li><code>Enter</code> — Execute the current command</li>
+          <li><code>↑</code> / <code>↓</code> — Scroll through command history</li>
+          <li><code>Ctrl+L</code> — Clear terminal output</li>
+        </ul>
+
+        <div class="dnote">The workspace is session-based: all variables are lost when the page is refreshed. Use <code>clear all</code> to intentionally reset it during a session.</div>
+      </div>
+
+    </div><!-- #doc-content -->
+  </div><!-- #doc-body -->
+</div><!-- #doc-panel -->
+</div><!-- #doc-overlay -->
+
+<script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.3/lib/browser/math.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/algebrite@1.4.0/dist/algebrite.bundle-for-browser.js"></script>
+<script>
+(function(){
+'use strict';
+
+// ── boot ──────────────────────────────────────────────────────────────────────
+function boot(cb){
+  let t=0;
+  const iv=setInterval(()=>{
+    if(typeof math!=='undefined'&&typeof Algebrite!=='undefined'){
+      clearInterval(iv);
+      document.getElementById('loading').classList.add('done');
+      cb();
+    } else if(++t>120){
+      clearInterval(iv);
+      document.getElementById('loading').innerHTML=
+        '<div style="color:var(--err)">Failed to load libraries — check your connection.</div>';
+    }
+  },100);
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Engine ────────────────────────────────────────────────────────────────────
+class Engine {
+  constructor(){
+    this.scope={};
+    this.symVars=new Set();
+    this.meta={};  // varName → {type, display}
+    this.fmt='short';
+
+    // register custom functions into mathjs
+    try{
+      math.import({
+        linspace:(a,b,n)=>{
+          const arr=[];
+          for(let i=0;i<n;i++) arr.push(a+(b-a)*i/(n-1));
+          return math.matrix(arr);
+        },
+        eye:(r,c)=>math.identity(r,c??r),
+        nchoosek:(n,k)=>math.combinations(n,k),
+        phi:(1+Math.sqrt(5))/2,
+        rref: A => {
+          // row-reduce
+          const M=math.clone(A).toArray().map(r=>[...r]);
+          const rows=M.length, cols=M[0].length;
+          let lead=0;
+          for(let r=0;r<rows;r++){
+            if(lead>=cols) break;
+            let i=r;
+            while(Math.abs(M[i][lead])<1e-12){
+              i++;
+              if(i===rows){i=r;lead++;if(lead===cols) return math.matrix(M);}
+            }
+            [M[i],M[r]]=[M[r],M[i]];
+            const d=M[r][lead];
+            M[r]=M[r].map(v=>v/d);
+            for(let j=0;j<rows;j++){
+              if(j!==r){const f=M[j][lead];M[j]=M[j].map((v,k)=>v-f*M[r][k]);}
+            }
+            lead++;
+          }
+          return math.matrix(M);
+        }
+      },{override:true});
+    }catch(e){}
+  }
+
+  eval(raw){
+    const s=raw.trim();
+    if(!s||/^[%#]/.test(s)) return {k:'none'};
+    const sup=s.endsWith(';');
+    const expr=sup?s.slice(0,-1).trim():s;
+
+    const bi=this._builtin(expr);
+    if(bi!==null) return {...bi,sup};
+
+    const sm=expr.match(/^syms\s+(.+)$/);
+    if(sm){
+      const vars=sm[1].trim().split(/\s+/);
+      vars.forEach(v=>{this.symVars.add(v);delete this.scope[v];this.meta[v]={type:'sym',display:v};});
+      return {k:'syms',vars,sup};
+    }
+
+    // Dot notation: solution.I1  or  x = solution.I1
+    const dotM=expr.match(/^(?:(\w+)\s*=\s*)?(\w+)\.(\w+)$/);
+    if(dotM){
+      const objName=dotM[2],propName=dotM[3];
+      const obj=this.scope[objName];
+      if(obj!==undefined&&typeof obj==='object'&&!(math.isMatrix&&math.isMatrix(obj))){
+        const val=obj[propName];
+        if(val!==undefined){
+          const key=dotM[1]||'ans';
+          this.scope[key]=val;
+          this.meta[key]={type:this._typeStr(val),display:this._shortFmt(val)};
+          return {k:'num',name:dotM[1]||null,result:val,sup};
+        }
+        return {k:'err',msg:`'${objName}' has no field '${propName}'. Available: ${Object.keys(obj).join(', ')}`};
+      }
+    }
+    // Intercept solve(...) — system solve or single-var
+    if(/\bsolve\s*\(/.test(expr)){
+      const ss=this._syssolve(expr,sup);
+      if(ss!==null) return ss;
+    }
+    if(this._needsSym(expr)) return this._sym(expr,sup);
+    return this._num(expr,sup);
+  }
+
+  _builtin(e){
+    const lc=e.trim().toLowerCase();
+    if(lc==='help') return {k:'help'};
+    if(lc==='clc'||lc==='clear') return {k:'clc'};
+    if(lc==='who'||lc==='whos') return {k:'who'};
+    if(lc==='clear all'||lc==='clearall'){
+      this.scope={};this.symVars.clear();this.meta={};
+      return {k:'info',msg:'All variables cleared.'};
+    }
+    if(lc==='format long'){this.fmt='long';return {k:'info',msg:'Output format: long (15 digits)'};}
+    if(lc==='format short'){this.fmt='short';return {k:'info',msg:'Output format: short (6 digits)'};}
+    const cm=e.match(/^clear\s+(\w+)$/i);
+    if(cm){
+      const v=cm[1];
+      delete this.scope[v];this.symVars.delete(v);delete this.meta[v];
+      return {k:'info',msg:`Cleared '${v}'.`};
+    }
+    return null;
+  }
+
+  _needsSym(expr){
+    const fns=['diff','integrate','factor','expand','simplify',
+                'solve','limit','taylor','roots','laplace','ilaplace','gcd'];
+    for(const f of fns){
+      if(new RegExp(`\\b${f}\\s*\\(`).test(expr)) return true;
+    }
+    const rhs=expr.replace(/^\w+\s*=\s*/,'');
+    for(const v of this.symVars){
+      if(new RegExp(`\\b${v}\\b`).test(rhs)) return true;
+    }
+    return false;
+  }
+
+  _toAlg(expr){
+    let e=expr;
+    e=e.replace(/\*\*/g,'^');
+    e=e.replace(/\.\*/g,'*').replace(/\.\//g,'/').replace(/\.\^/g,'^');
+    // ==0 equation syntax (f=expr==0 → f=expr)
+    e=e.replace(/==\s*0\b/g,'');
+    e=e.replace(/\bdiff\s*\(/g,'d(');
+    e=e.replace(/\bintegrate\s*\(/g,'integral(');
+    // solve(f=0,x) → roots(f,x)  [single variable only]
+    e=e.replace(/\bsolve\s*\(\s*([^,)\[=]+)\s*=\s*0\s*,\s*(\w+)\s*\)/g,'roots($1,$2)');
+    // Don't remap solve([...],[...]) — handled by _syssolve
+    if(!/\bsolve\s*\(\s*\[/.test(e)) e=e.replace(/\bsolve\s*\(/g,'roots(');
+    return e;
+  }
+
+  // Solve a linear system: solve(f1,f2,f3) or solve([f1,...],[v1,...])
+  _syssolve(expr,sup){
+    let asgn=null,eqNames=[],varNames=[];
+
+    // Array form: solve([f1,f2,...],[v1,v2,...])
+    const arrM=expr.match(/^(?:(\w+)\s*=\s*)?solve\s*\(\s*\[([^\]]+)\]\s*,\s*\[([^\]]+)\]\s*\)\s*$/);
+    if(arrM){
+      asgn=arrM[1]||null;
+      eqNames=arrM[2].split(',').map(s=>s.trim());
+      varNames=arrM[3].split(',').map(s=>s.trim());
+    } else {
+      // Simple form: solve(f1,f2,f3) — all args must be names of stored sym expressions
+      const simM=expr.match(/^(?:(\w+)\s*=\s*)?solve\s*\(([^)]+)\)\s*$/);
+      if(!simM) return null;
+      asgn=simM[1]||null;
+      const args=simM[2].split(',').map(s=>s.trim());
+      // Only proceed if every arg is an identifier whose value is a sym string in scope
+      const allSym=args.every(a=>/^\w+$/.test(a)&&this.scope[a]!==undefined&&typeof this.scope[a]==='string');
+      if(!allSym) return null;
+      eqNames=args;
+      // Auto-detect variables: symVars that actually appear in the equations
+      const exprs=eqNames.map(n=>this.scope[n]);
+      varNames=[...this.symVars].filter(v=>{
+        const re=new RegExp(`\\b${v}\\b`);
+        return exprs.some(eq=>re.test(eq));
+      });
+      if(varNames.length!==eqNames.length){
+        return {k:'err',msg:`solve: ${eqNames.length} equations but ${varNames.length} matching symbolic variable(s) found (${varNames.join(', ')}). Declare all unknowns with syms.`};
+      }
+    }
+
+    try{
+      const eqExprs=eqNames.map(n=>(this.scope[n]&&typeof this.scope[n]==='string')?this.scope[n]:n);
+      const A=[],rhs=[];
+      for(const eqExpr of eqExprs){
+        const row=[];
+        for(const v of varNames){
+          const c=Algebrite.run(`d(${eqExpr},${v})`);
+          row.push(parseFloat(c)||0);
+        }
+        let zExpr=eqExpr;
+        for(const v of varNames) zExpr=`subst(0,${v},${zExpr})`;
+        const k=parseFloat(Algebrite.run(zExpr))||0;
+        rhs.push(-k);
+        A.push(row);
+      }
+      const sol=math.lusolve(A,rhs);
+      const resultObj={};
+      varNames.forEach((v,i)=>{resultObj[v]=sol[i][0];});
+      const lines=varNames.map((v,i)=>`  ${v} = ${this.fmtVal(sol[i][0])}`).join('\n');
+      const short=varNames.map((v,i)=>`${v}=${this.fmtVal(sol[i][0])}`).join(', ');
+      if(asgn){this.scope[asgn]=resultObj;this.meta[asgn]={type:'struct',display:short};}
+      return {k:'syssol',asgn,varNames,sol,lines,sup};
+    }catch(e){
+      return {k:'err',msg:'System solve failed: '+e.message};
+    }
+  }
+
+  _sym(expr,sup){
+    try{
+      const alg=this._toAlg(expr);
+      const am=expr.match(/^(\w+)\s*=\s*(.+)$/);
+      if(am){
+        const name=am[1];
+        Algebrite.run(alg); // Algebrite returns "" for assignments; side-effect stores the value
+        const res=Algebrite.run(name); // fetch the stored value
+        if(res&&res.startsWith('Stop:')) return {k:'err',msg:res.replace('Stop:','').trim()};
+        this.scope[name]=res;
+        this.meta[name]={type:'sym',display:res.length>22?res.slice(0,22)+'…':res};
+        return {k:'sym',name,res,sup};
+      }
+      const res=Algebrite.run(alg);
+      if(res&&res.startsWith('Stop:')) return {k:'err',msg:res.replace('Stop:','').trim()};
+      this.scope['ans']=res;
+      this.meta['ans']={type:'sym',display:res.length>22?res.slice(0,22)+'…':res};
+      return {k:'sym',res,sup};
+    }catch(e){
+      return {k:'err',msg:e.message};
+    }
+  }
+
+  _num(expr,sup){
+    try{
+      const result=math.evaluate(expr,this.scope);
+      const am=expr.match(/^(\w+)\s*=\s*(.+)$/);
+      const name=am?am[1]:null;
+      const display=this._shortFmt(result);
+      if(name){
+        this.meta[name]={type:this._typeStr(result),display};
+      }else{
+        this.scope['ans']=result;
+        this.meta['ans']={type:this._typeStr(result),display};
+      }
+      return {k:'num',name,result,sup};
+    }catch(e){
+      // algebrite fallback
+      try{
+        const alg=this._toAlg(expr);
+        const res=Algebrite.run(alg);
+        if(res&&!res.startsWith('Stop')&&res!=='undefined'){
+          const am=expr.match(/^(\w+)\s*=\s*(.+)$/);
+          const name=am?am[1]:null;
+          if(name){this.scope[name]=res;this.meta[name]={type:'sym',display:res.slice(0,22)};}
+          return {k:'sym',name,res,sup};
+        }
+      }catch(e2){}
+      return {k:'err',msg:this._cleanErr(e.message)};
+    }
+  }
+
+  _cleanErr(msg){
+    if(/Undefined symbol\s+(\S+)/.test(msg)){
+      const v=msg.match(/Undefined symbol\s+(\S+)/)[1];
+      return `Undefined variable '${v}'. Use 'syms ${v}' for symbolic use.`;
+    }
+    return msg.replace(/\s*\(char \d+\)/,'');
+  }
+
+  _typeStr(v){
+    if(math.isMatrix&&math.isMatrix(v)){const s=v.size();return `${s[0]}×${s[1]??1}`;}
+    if(typeof v==='number') return 'scalar';
+    if(v&&v.re!==undefined) return 'complex';
+    if(Array.isArray(v)) return `[${v.length}]`;
+    return 'value';
+  }
+
+  _shortFmt(v){
+    const s=this.fmtVal(v);
+    return s.length>22?s.slice(0,22)+'…':s;
+  }
+
+  fmtResult(result){
+    if(result===null||result===undefined) return '';
+    if(math.isMatrix&&math.isMatrix(result)){
+      return this._fmtArr(result.toArray());
+    }
+    if(Array.isArray(result)){
+      if(Array.isArray(result[0])) return this._fmtArr(result);
+      return '   '+result.map(v=>this.fmtVal(v)).join('   ');
+    }
+    return this.fmtVal(result);
+  }
+
+  fmtVal(v){
+    if(v===null||v===undefined) return '0';
+    if(typeof v==='number'){
+      if(!isFinite(v)) return v>0?'Inf':'-Inf';
+      if(isNaN(v)) return 'NaN';
+      if(Number.isInteger(v)) return v.toString();
+      const prec=this.fmt==='long'?15:6;
+      return parseFloat(v.toPrecision(prec)).toString();
+    }
+    if(v&&v.re!==undefined&&v.im!==undefined){
+      const re=this.fmtVal(v.re);
+      const aim=Math.abs(v.im);
+      const sg=v.im>=0?'+':'-';
+      if(v.re===0&&v.im===0) return '0';
+      if(v.im===0) return re;
+      if(v.re===0) return `${v.im<0?'-':''}${this.fmtVal(aim)}i`;
+      return `${re} ${sg} ${this.fmtVal(aim)}i`;
+    }
+    if(typeof v==='boolean') return v.toString();
+    if(typeof v==='string') return `"${v}"`;
+    if(Array.isArray(v)){
+      if(Array.isArray(v[0])) return this._fmtArr(v);
+      return '['+v.map(x=>this.fmtVal(x)).join('  ')+']';
+    }
+    if(v&&v.toArray) return this.fmtResult(v);
+    return String(v);
+  }
+
+  _fmtArr(arr){
+    if(!arr||!arr.length) return '[]';
+    if(!Array.isArray(arr[0])){
+      return '   '+arr.map(v=>this.fmtVal(v).padStart(10)).join('');
+    }
+    const rows=arr.map(row=>row.map(v=>this.fmtVal(v)));
+    const cw=rows[0].map((_,ci)=>Math.max(...rows.map(r=>(r[ci]||'').length)));
+    return rows.map(row=>'   '+row.map((c,ci)=>c.padStart(cw[ci]+2)).join('')).join('\n');
+  }
+
+  getVars(){
+    const res={};
+    for(const [k,v] of Object.entries(this.meta)){
+      if(typeof this.scope[k]!=='function'||this.symVars.has(k)){
+        res[k]=v;
+      }
+    }
+    return res;
+  }
+}
+
+// ── Terminal ──────────────────────────────────────────────────────────────────
+class Term {
+  constructor(eng){
+    this.eng=eng; this.n=1;
+    this.hist=[]; this.hi=-1; this.cur='';
+    this.$out=document.getElementById('out');
+    this.$inp=document.getElementById('inp');
+    this.$prompt=document.getElementById('iprompt');
+  }
+
+  init(){
+    this.$inp.addEventListener('keydown',e=>this._key(e));
+    const pill=document.getElementById('inpill');
+    this.$inp.addEventListener('focus',()=>pill.classList.add('focused'));
+    this.$inp.addEventListener('blur',()=>pill.classList.remove('focused'));
+    document.getElementById('runbtn').addEventListener('click',()=>{
+      const cmd=this.$inp.value;
+      this.$inp.value='';this.hi=-1;this.cur='';
+      this._run(cmd);this.$inp.focus();
+    });
+    document.addEventListener('click',e=>{if(!e.target.closest('#runbtn'))this.$inp.focus();});
+    this.$inp.focus();
+  }
+
+  _key(e){
+    if(e.key==='Enter'){
+      const cmd=this.$inp.value;
+      this.$inp.value=''; this.hi=-1; this.cur='';
+      this._run(cmd);
+    } else if(e.key==='ArrowUp'){
+      e.preventDefault();
+      if(this.hi===-1) this.cur=this.$inp.value;
+      if(this.hi<this.hist.length-1){
+        this.hi++;
+        this.$inp.value=this.hist[this.hist.length-1-this.hi];
+        setTimeout(()=>{const l=this.$inp.value.length;this.$inp.setSelectionRange(l,l);},0);
+      }
+    } else if(e.key==='ArrowDown'){
+      e.preventDefault();
+      if(this.hi>0){this.hi--;this.$inp.value=this.hist[this.hist.length-1-this.hi];}
+      else if(this.hi===0){this.hi=-1;this.$inp.value=this.cur;}
+    } else if(e.ctrlKey&&e.key==='l'){
+      e.preventDefault(); this._clc();
+    }
+  }
+
+  _run(cmd){
+    if(cmd.trim()&&(this.hist.length===0||this.hist[this.hist.length-1]!==cmd)){
+      this.hist.push(cmd);
+      if(this.hist.length>1000) this.hist.shift();
+    }
+    this._addCmd(cmd);
+    const r=this.eng.eval(cmd);
+    this._handle(r);
+    this.n++;
+    this.$prompt.textContent=`IN [${this.n}]`;
+    this._updateVars();
+    this._scroll();
+  }
+
+  _handle(r){
+    if(!r) return;
+    switch(r.k){
+      case 'none': break;
+      case 'help': this._showHelp(); break;
+      case 'clc':  this._clc(); break;
+      case 'who':  this._showWho(); break;
+      case 'info': this._add('einfo',r.msg); break;
+      case 'syms':
+        if(!r.sup) this._add('einfo',`Symbolic variables declared: ${r.vars.join(', ')}`);
+        break;
+      case 'num':
+        if(!r.sup){
+          const fmt=this.eng.fmtResult(r.result);
+          const name=r.name||'ans';
+          this._add('eres', fmt.includes('\n') ? `${name} =\n${fmt}` : `${name} = ${fmt}`);
+        }
+        break;
+      case 'sym':
+        if(!r.sup){
+          const name=r.name||'ans';
+          this._add('esym',`${name} = ${r.res}`);
+        }
+        break;
+      case 'syssol':
+        if(!r.sup){
+          const label=r.asgn||'solution';
+          this._add('eres',`${label}:\n${r.lines}`);
+        }
+        break;
+      case 'err': this._add('eerr',`error: ${r.msg}`); break;
+    }
+  }
+
+  _clc(){ this.$out.innerHTML=''; }
+
+  _add(cls,text){
+    const el=document.createElement('div');
+    el.className=`e ${cls}`; el.textContent=text;
+    this.$out.appendChild(el);
+  }
+
+  _addCmd(cmd){
+    const el=document.createElement('div');
+    el.className='e ecmd';
+    el.innerHTML=`<span class="p">&gt;&gt;&nbsp;${this.n}&gt;&nbsp;</span><span class="c">${esc(cmd)}</span>`;
+    this.$out.appendChild(el);
+  }
+
+  _showHelp(){
+    const div=document.createElement('div');
+    div.innerHTML=`
+<div class="e hcat">── Numeric Operations ─────────────────────────────────────</div>
+<table class="htbl">
+  <tr><td>2 + 3 * 4 ^ 2</td><td>Arithmetic (+, -, *, /, ^)</td></tr>
+  <tr><td>sqrt(2), abs(-3), sign(-5)</td><td>Basic functions</td></tr>
+  <tr><td>sin(pi/4), cos(0), tan(pi/3)</td><td>Trig (radians)</td></tr>
+  <tr><td>asin(1), acos(0), atan2(y,x)</td><td>Inverse trig</td></tr>
+  <tr><td>exp(1), log(e), log2(8), log10(100)</td><td>Exp &amp; logarithms</td></tr>
+  <tr><td>floor(3.7), ceil(3.2), round(3.5)</td><td>Rounding</td></tr>
+  <tr><td>factorial(5), nchoosek(10,3)</td><td>Combinatorics</td></tr>
+  <tr><td>gcd(12,8), lcm(4,6)</td><td>Number theory</td></tr>
+  <tr><td>2+3i, real(z), imag(z), conj(z), abs(z)</td><td>Complex numbers</td></tr>
+  <tr><td>mod(17,5), rem(17,5)</td><td>Modulo / remainder</td></tr>
+</table>
+<div class="e hcat">── Matrix Operations ───────────────────────────────────────</div>
+<table class="htbl">
+  <tr><td>A = [1,2; 3,4]</td><td>Matrix (rows separated by ;)</td></tr>
+  <tr><td>v = [1, 2, 3, 4, 5]</td><td>Row vector</td></tr>
+  <tr><td>A(2,1)</td><td>Element access (1-indexed)</td></tr>
+  <tr><td>zeros(3,3), ones(2,4), eye(3)</td><td>Special matrices</td></tr>
+  <tr><td>linspace(0, 1, 6)</td><td>Evenly spaced vector</td></tr>
+  <tr><td>diag(v), diag(A)</td><td>Diagonal matrix / extract diagonal</td></tr>
+  <tr><td>A * B, A .* B</td><td>Matrix / element-wise multiply</td></tr>
+  <tr><td>A ^ 2, A .^ 2</td><td>Matrix power / element-wise power</td></tr>
+  <tr><td>transpose(A)</td><td>Transpose</td></tr>
+  <tr><td>det(A), inv(A), trace(A)</td><td>Determinant, inverse, trace</td></tr>
+  <tr><td>eig(A)</td><td>Eigenvalues</td></tr>
+  <tr><td>norm(v), norm(A)</td><td>Norm</td></tr>
+  <tr><td>rref(A)</td><td>Row-reduced echelon form</td></tr>
+  <tr><td>cross(u,v), dot(u,v)</td><td>Cross &amp; dot products</td></tr>
+  <tr><td>sum(v), mean(v), std(v), median(v)</td><td>Statistics</td></tr>
+  <tr><td>max(v), min(v), sort(v)</td><td>Extrema &amp; sorting</td></tr>
+  <tr><td>size(A), length(v), numel(A)</td><td>Dimensions</td></tr>
+</table>
+<div class="e hcat">── Symbolic Operations (Algebrite) ────────────────────────</div>
+<table class="htbl">
+  <tr><td>syms x y t</td><td>Declare symbolic variables</td></tr>
+  <tr><td>diff(x^3 + 2*x, x)</td><td>Differentiation d/dx</td></tr>
+  <tr><td>diff(sin(x), x, 2)</td><td>2nd derivative</td></tr>
+  <tr><td>integrate(x^2, x)</td><td>Indefinite integral</td></tr>
+  <tr><td>factor(x^2 - 1)</td><td>Factor polynomial</td></tr>
+  <tr><td>expand((x+1)^3)</td><td>Expand expression</td></tr>
+  <tr><td>simplify(sin(x)^2 + cos(x)^2)</td><td>Simplify</td></tr>
+  <tr><td>solve(x^2 - 4, x)</td><td>Solve f(x)=0 for x</td></tr>
+  <tr><td>limit(sin(x)/x, x, 0)</td><td>Limit as x→0</td></tr>
+  <tr><td>taylor(sin(x), x, 5)</td><td>Taylor series to order 5</td></tr>
+  <tr><td>roots(x^3 - x, x)</td><td>Polynomial roots</td></tr>
+</table>
+<div class="e hcat">── Constants ───────────────────────────────────────────────</div>
+<table class="htbl">
+  <tr><td>pi, e, i, Inf, NaN</td><td>Built-in constants</td></tr>
+  <tr><td>phi</td><td>Golden ratio (1+√5)/2</td></tr>
+</table>
+<div class="e hcat">── Commands ────────────────────────────────────────────────</div>
+<table class="htbl">
+  <tr><td>help</td><td>Show this help</td></tr>
+  <tr><td>clc / clear</td><td>Clear terminal</td></tr>
+  <tr><td>who / whos</td><td>List workspace variables</td></tr>
+  <tr><td>clear x</td><td>Remove variable x</td></tr>
+  <tr><td>clear all</td><td>Remove all variables</td></tr>
+  <tr><td>format long / short</td><td>Set output precision</td></tr>
+  <tr><td>% comment text</td><td>Line comment (ignored)</td></tr>
+  <tr><td>x = 5;</td><td>Trailing semicolon suppresses output</td></tr>
+  <tr><td>↑ / ↓ arrows</td><td>Command history navigation</td></tr>
+  <tr><td>Ctrl+L</td><td>Clear terminal</td></tr>
+</table>
+<div class="eblank"></div>`;
+    this.$out.appendChild(div);
+  }
+
+  _showWho(){
+    const vars=this.eng.getVars();
+    const keys=Object.keys(vars);
+    if(!keys.length){this._add('einfo','No variables in workspace.');return;}
+    const rows=keys.map(k=>{
+      const v=vars[k];
+      return `  ${k.padEnd(14)} ${(v.type||'').padEnd(10)} ${v.display||''}`;
+    });
+    this._add('eres','Name           Type       Value\n'+'─'.repeat(48)+'\n'+rows.join('\n'));
+  }
+
+  _updateVars(){
+    const vars=this.eng.getVars();
+    const panel=document.getElementById('vars');
+    const keys=Object.keys(vars);
+    if(!keys.length){panel.innerHTML='<div class="novars">No variables</div>';return;}
+    panel.innerHTML=keys.map(k=>{
+      const v=vars[k];
+      return `<div class="vrow"><span class="vn">${esc(k)}</span><span class="vv">${esc(v.display||v.type||'')}</span></div>`;
+    }).join('');
+  }
+
+  _scroll(){ this.$out.scrollTop=this.$out.scrollHeight; }
+}
+
+// ── Documentation modal ───────────────────────────────────────────────────────
+(function(){
+  const overlay=document.getElementById('doc-overlay');
+  const open=()=>overlay.classList.remove('dhide');
+  const close=()=>overlay.classList.add('dhide');
+  document.getElementById('doc-btn').addEventListener('click',open);
+  document.getElementById('doc-close').addEventListener('click',close);
+  overlay.addEventListener('click',e=>{if(e.target===overlay)close();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+  document.querySelectorAll('.dnav').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.dnav').forEach(b=>b.classList.remove('dact'));
+      document.querySelectorAll('.dsec').forEach(s=>s.classList.remove('dact'));
+      btn.classList.add('dact');
+      document.getElementById(btn.dataset.sec).classList.add('dact');
+    });
+  });
+})();
+
+// ── start ─────────────────────────────────────────────────────────────────────
+boot(()=>{
+  const eng=new Engine();
+  const term=new Term(eng);
+  term.init();
+});
+
+})();
+</script>
+</body>
+</html>

@@ -569,6 +569,96 @@
             cursor: pointer;
         }
 
+        .segment-controls {
+            display: none;
+            margin-bottom: 0.9rem;
+            padding: 0.75rem;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 10px;
+            background: rgba(124, 58, 237, 0.04);
+        }
+
+        .segment-controls.active {
+            display: block;
+        }
+
+        .segment-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.55rem;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+
+        .segment-title {
+            color: #6d28d9;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+
+        .segment-add-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 0.35rem 0.65rem;
+            background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .segment-add-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .segment-list {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .segment-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 0.4rem;
+            align-items: center;
+        }
+
+        .segment-row select {
+            padding: 0.3rem 0.5rem;
+            border: 1px solid rgba(124, 58, 237, 0.28);
+            border-radius: 7px;
+            background: white;
+            color: #1a202c;
+            font-size: 0.8rem;
+            outline: none;
+        }
+
+        .segment-row select:focus {
+            border-color: #7c3aed;
+        }
+
+        .segment-delete-btn {
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.1);
+            color: #b91c1c;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.3rem 0.45rem;
+            min-width: 28px;
+        }
+
+        .segment-note {
+            margin-top: 0.5rem;
+            color: #64748b;
+            font-size: 0.77rem;
+            line-height: 1.35;
+        }
+
         .analysis-item {
             margin-bottom: 1.5rem;
         }
@@ -597,6 +687,127 @@
             color: #475569;
             line-height: 1.6;
             font-size: 0.95rem;
+        }
+
+        .analysis-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.65rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .analysis-metric {
+            background: rgba(255, 255, 255, 0.55);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 8px;
+            padding: 0.45rem 0.55rem;
+        }
+
+        .analysis-metric-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+            color: #6d28d9;
+            margin-bottom: 0.15rem;
+            line-height: 1.2;
+        }
+
+        .analysis-metric-value {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #1f2937;
+            font-family: 'Courier New', monospace;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+
+        .analysis-interpretation {
+            color: #475569;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .segment-analysis-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .segment-analysis-card {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(124, 58, 237, 0.22);
+            border-radius: 10px;
+            padding: 0.75rem;
+        }
+
+        .segment-analysis-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .segment-analysis-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.5rem;
+            height: 1.5rem;
+            padding: 0 0.45rem;
+            border-radius: 999px;
+            background: #6d28d9;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+
+        .segment-analysis-type {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #4c1d95;
+            background: rgba(124, 58, 237, 0.13);
+            border-radius: 999px;
+            padding: 0.2rem 0.55rem;
+            white-space: nowrap;
+        }
+
+        .segment-analysis-meta {
+            margin-bottom: 0.45rem;
+            color: #64748b;
+            font-size: 0.76rem;
+        }
+
+        .segment-analysis-row {
+            display: grid;
+            grid-template-columns: 66px 1fr;
+            gap: 0.4rem;
+            align-items: start;
+            margin-top: 0.25rem;
+        }
+
+        .segment-analysis-key {
+            color: #475569;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+        }
+
+        .segment-analysis-value {
+            color: #1e293b;
+            font-size: 0.84rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .segment-analysis-r2 {
+            color: #1e293b;
+            font-size: 0.84rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
         }
 
         /* ASSESSMENT TAB */
@@ -1122,7 +1333,7 @@
           <rect x="569" y="103" width="2" height="20" fill="#ef4444"/>
           <polygon points="571,103 556,109 571,115" fill="#ef4444"/>
           <!-- End distance label -->
-          <text id="distEndLabel" x="569" y="98" font-size="10" fill="#ef4444" text-anchor="middle">75 m</text>
+          <text id="distEndLabel" x="569" y="98" font-size="10" fill="#ef4444" text-anchor="middle">100 m</text>
           <!-- Car SVG group -->
           <g id="distCarSVG" transform="translate(20,78)">
            <!-- Body -->
@@ -1228,28 +1439,14 @@
           <option value="power4">Power (4)</option>
          </select>
          <label class="smooth-line-toggle"><input type="checkbox" id="smoothLineDistance"> Smooth line</label>
+         <label class="smooth-line-toggle"><input type="checkbox" id="multiTrendlineDistance"> Multi trendline</label>
         </div>
+        <div id="segmentControlsDistance" class="segment-controls"></div>
         <div class="chart-wrapper">
          <canvas id="chartDistance"></canvas>
         </div>
        </div>
        <div class="analysis-panel">
-        <div class="analysis-item">
-         <div class="analysis-label">
-          Equation
-         </div>
-         <div class="analysis-value" id="equationDistance">
-          y = 0
-         </div>
-        </div>
-        <div class="analysis-item">
-         <div class="analysis-label">
-          R² Value
-         </div>
-         <div class="analysis-value" id="r2Distance">
-          0.00
-         </div>
-        </div>
         <div class="analysis-item">
          <div class="analysis-text" id="interpretationDistance">
           Add data points to see the trendline and analysis
@@ -1323,7 +1520,7 @@
              <polygon points="31,103 46,109 31,115" fill="#10b981"/>
              <rect x="569" y="103" width="2" height="20" fill="#ef4444"/>
              <polygon points="571,103 556,109 571,115" fill="#ef4444"/>
-             <text id="velEndLabel" x="569" y="98" font-size="10" fill="#ef4444" text-anchor="middle">75 m</text>
+             <text id="velEndLabel" x="569" y="98" font-size="10" fill="#ef4444" text-anchor="middle">100 m</text>
              <g id="velCarSVG" transform="translate(20,78)">
               <rect x="0" y="10" width="72" height="28" rx="5" fill="#2563eb"/>
               <path d="M 10,10 L 20,-8 L 52,-8 L 62,10 Z" fill="#1d4ed8"/>
@@ -1414,28 +1611,14 @@
           <option value="power4">Power (4)</option>
          </select>
          <label class="smooth-line-toggle"><input type="checkbox" id="smoothLineVelocity"> Smooth line</label>
+         <label class="smooth-line-toggle"><input type="checkbox" id="multiTrendlineVelocity"> Multi trendline</label>
         </div>
+        <div id="segmentControlsVelocity" class="segment-controls"></div>
         <div class="chart-wrapper">
          <canvas id="chartVelocity"></canvas>
         </div>
        </div>
        <div class="analysis-panel">
-        <div class="analysis-item">
-         <div class="analysis-label">
-          Equation
-         </div>
-         <div class="analysis-value" id="equationVelocity">
-          y = 0
-         </div>
-        </div>
-        <div class="analysis-item">
-         <div class="analysis-label">
-          R² Value
-         </div>
-         <div class="analysis-value" id="r2Velocity">
-          0.00
-         </div>
-        </div>
         <div class="analysis-item">
          <div class="analysis-text" id="interpretationVelocity">
           Add data points to see the trendline and analysis
@@ -1933,7 +2116,7 @@
                     acceleration: 2,
                     currentVelocity: 0,
                     isPlaying: false,
-                    maxTime: 15,
+                    maxTime: 20,
                     mode: 'pos_velocity',
                     carProgress: 0,
                     baseDistance: 0,
@@ -1954,7 +2137,7 @@
                     acceleration: 2,
                     currentVelocity: 0,
                     isPlaying: false,
-                    maxTime: 15,
+                    maxTime: 20,
                     mode: 'pos_velocity',
                     carProgress: 0,
                     baseDistance: 0,
@@ -2361,6 +2544,14 @@
             };
             
             const ids = buttonIdMap[moduleName];
+
+            function setAddDataResumeState(isResume) {
+                if (moduleName !== 'distance' && moduleName !== 'velocity') return;
+                const addBtn = document.getElementById(ids.addData);
+                if (!addBtn) return;
+                addBtn.dataset.state = isResume ? 'resume' : 'add';
+                addBtn.textContent = isResume ? 'Resume' : '+ Add Data Point';
+            }
             
             // Play button
             const playBtn = document.getElementById(ids.play);
@@ -2393,6 +2584,7 @@
                         }
                     }
                     modules[moduleName].simulation.isPlaying = true;
+                    setAddDataResumeState(false);
                 });
             }
             
@@ -2401,6 +2593,7 @@
             if (pauseBtn) {
                 pauseBtn.addEventListener('click', () => {
                     modules[moduleName].simulation.isPlaying = false;
+                    setAddDataResumeState(false);
                 });
             }
             
@@ -2410,6 +2603,7 @@
                 resetBtn.addEventListener('click', () => {
                     modules[moduleName].simulation.isPlaying = false;
                     resetSimulation(moduleName);
+                    setAddDataResumeState(false);
                 });
             }
             
@@ -2439,7 +2633,8 @@
                             sim.currentVelocity = sim.modeStartVelocity;
                         }
                         sim.isPlaying = false;
-                        const showVel = (m === 'pos_velocity' || m === 'neg_velocity' || m === 'neg_accel');
+                        setAddDataResumeState(false);
+                        const showVel = (m === 'pos_velocity' || m === 'neg_velocity');
                         const showAccel = (m === 'pos_accel' || m === 'neg_accel');
                         document.getElementById('distVelSliderGroup').style.display = showVel ? '' : 'none';
                         document.getElementById('distAccelSliderGroup').style.display = showAccel ? '' : 'none';
@@ -2517,7 +2712,18 @@
                     document.getElementById('distAccelValue').textContent = a.toString();
                     updateDistanceSVG();
                 });
-                document.getElementById('addDataDistance').addEventListener('click', () => addDataPoint('distance'));
+                document.getElementById('addDataDistance').addEventListener('click', () => {
+                    const addBtn = document.getElementById('addDataDistance');
+                    const sim = modules.distance.simulation;
+                    if (addBtn && addBtn.dataset.state === 'resume') {
+                        sim.isPlaying = true;
+                        setAddDataResumeState(false);
+                        return;
+                    }
+                    addDataPoint('distance');
+                    sim.isPlaying = false;
+                    setAddDataResumeState(true);
+                });
                 distLastTime = Date.now();
                 distanceAnimationLoop();
             } else if (moduleName === 'velocity') {
@@ -2544,7 +2750,8 @@
                             sim.currentVelocity = sim.modeStartVelocity;
                         }
                         sim.isPlaying = false;
-                        const showVel = (m === 'pos_velocity' || m === 'neg_velocity' || m === 'neg_accel');
+                        setAddDataResumeState(false);
+                        const showVel = (m === 'pos_velocity' || m === 'neg_velocity');
                         const showAccel = (m === 'pos_accel' || m === 'neg_accel');
                         document.getElementById('velVelSliderGroup').style.display = showVel ? '' : 'none';
                         document.getElementById('velAccelSliderGroup').style.display = showAccel ? '' : 'none';
@@ -2621,7 +2828,18 @@
                     document.getElementById('velAccelValue').textContent = a.toString();
                     updateVelocitySVG();
                 });
-                document.getElementById('addDataVelocity').addEventListener('click', () => addDataPoint('velocity'));
+                document.getElementById('addDataVelocity').addEventListener('click', () => {
+                    const addBtn = document.getElementById('addDataVelocity');
+                    const sim = modules.velocity.simulation;
+                    if (addBtn && addBtn.dataset.state === 'resume') {
+                        sim.isPlaying = true;
+                        setAddDataResumeState(false);
+                        return;
+                    }
+                    addDataPoint('velocity');
+                    sim.isPlaying = false;
+                    setAddDataResumeState(true);
+                });
                 velLastTime = Date.now();
                 velocityAnimationLoop();
             } else if (moduleName === 'acceleration') {
@@ -3316,6 +3534,306 @@
         // CHART MANAGEMENT
         // ===========================
         const charts = {};
+        const segmentPalette = ['#f59e0b', '#2563eb', '#10b981', '#ef4444', '#8b5cf6'];
+        const trendlineModeOptions = ['none', 'linear', 'inverse', 'inverse_square', 'quadratic', 'exponential', 'logarithmic', 'power2', 'power3', 'power4'];
+        const trendlineModeLabels = {
+            none: 'None',
+            linear: 'Linear',
+            inverse: 'Inverse',
+            inverse_square: 'Inverse Square',
+            quadratic: 'Quadratic',
+            exponential: 'Exponential',
+            logarithmic: 'Logarithmic',
+            power2: 'Power (2)',
+            power3: 'Power (3)',
+            power4: 'Power (4)'
+        };
+        const segmentedTrendlineState = {
+            distance: {
+                enabled: false,
+                segments: [{ start: 0, end: 1, type: 'linear' }]
+            },
+            velocity: {
+                enabled: false,
+                segments: [{ start: 0, end: 1, type: 'linear' }]
+            }
+        };
+
+        function supportsSegmentTrendlines(moduleName) {
+            return moduleName === 'distance' || moduleName === 'velocity';
+        }
+
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, value));
+        }
+
+        function getSegmentTypes(moduleName) {
+            return trendlineModeOptions;
+        }
+
+        function getDefaultSegmentType(moduleName) {
+            return getSegmentTypes(moduleName)[0];
+        }
+
+        function normalizeSegments(moduleName, pointCount) {
+            const state = segmentedTrendlineState[moduleName];
+            if (!state) return;
+            const maxIndex = Math.max(pointCount - 1, 0);
+            const minSpan = pointCount >= 2 ? 1 : 0;
+            const allowedTypes = getSegmentTypes(moduleName);
+
+            if (!Array.isArray(state.segments) || state.segments.length === 0) {
+                state.segments = [{ start: 0, end: minSpan, type: getDefaultSegmentType(moduleName) }];
+            }
+
+            state.segments = state.segments.slice(0, 5).map(segment => {
+                let start = Number.isFinite(segment.start) ? segment.start : 0;
+                let end = Number.isFinite(segment.end) ? segment.end : minSpan;
+                start = clamp(Math.round(start), 0, maxIndex);
+                end = clamp(Math.round(end), 0, maxIndex);
+
+                if (pointCount >= 2 && end <= start) {
+                    end = clamp(start + 1, 0, maxIndex);
+                    if (end <= start) {
+                        start = clamp(end - 1, 0, maxIndex);
+                    }
+                }
+
+                if (pointCount < 2) {
+                    start = 0;
+                    end = 0;
+                }
+
+                const type = allowedTypes.includes(segment.type) ? segment.type : getDefaultSegmentType(moduleName);
+                return { start, end, type };
+            });
+        }
+
+        function addSegment(moduleName) {
+            const state = segmentedTrendlineState[moduleName];
+            if (!state || state.segments.length >= 5) return;
+
+            const sortedData = [...modules[moduleName].data].sort((a, b) => a.x - b.x);
+            const pointCount = sortedData.length;
+            normalizeSegments(moduleName, pointCount);
+
+            let start = 0;
+            let end = pointCount >= 2 ? 1 : 0;
+            if (state.segments.length > 0 && pointCount >= 2) {
+                const lastSegment = state.segments[state.segments.length - 1];
+                start = clamp(lastSegment.end, 0, Math.max(pointCount - 2, 0));
+                end = clamp(start + 1, 0, pointCount - 1);
+            }
+
+            state.segments.push({
+                start,
+                end,
+                type: getDefaultSegmentType(moduleName)
+            });
+
+            normalizeSegments(moduleName, pointCount);
+            updateChart(moduleName);
+        }
+
+        function removeSegment(moduleName, index) {
+            const state = segmentedTrendlineState[moduleName];
+            if (!state || state.segments.length <= 1) return;
+            if (index < 0 || index >= state.segments.length) return;
+
+            state.segments.splice(index, 1);
+            const sortedData = [...modules[moduleName].data].sort((a, b) => a.x - b.x);
+            normalizeSegments(moduleName, sortedData.length);
+            updateChart(moduleName);
+        }
+
+        function buildSegmentPointOptions(sortedData, selectedIndex) {
+            return sortedData.map((point, index) => {
+                const selected = index === selectedIndex ? 'selected' : '';
+                return `<option value="${index}" ${selected}>P${index + 1} (${point.x.toFixed(3)})</option>`;
+            }).join('');
+        }
+
+        function buildSegmentTypeOptions(moduleName, selectedType) {
+            return getSegmentTypes(moduleName).map(type => {
+                const selected = type === selectedType ? 'selected' : '';
+                const label = trendlineModeLabels[type] || type;
+                return `<option value="${type}" ${selected}>${label}</option>`;
+            }).join('');
+        }
+
+        function renderSegmentControls(moduleName, sortedData) {
+            if (!supportsSegmentTrendlines(moduleName)) return;
+
+            const cap = moduleName.charAt(0).toUpperCase() + moduleName.slice(1);
+            const container = document.getElementById('segmentControls' + cap);
+            const toggle = document.getElementById('multiTrendline' + cap);
+            if (!container || !toggle) return;
+
+            const state = segmentedTrendlineState[moduleName];
+            state.enabled = !!toggle.checked;
+            container.classList.toggle('active', state.enabled);
+
+            const trendSelect = document.getElementById('trendline' + cap);
+            if (trendSelect) {
+                trendSelect.disabled = state.enabled;
+                trendSelect.title = state.enabled ? 'Disabled while Multi trendline is enabled' : '';
+            }
+
+            if (!state.enabled) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const pointCount = sortedData.length;
+            normalizeSegments(moduleName, pointCount);
+
+            if (pointCount < 2) {
+                container.innerHTML = `
+                    <div class="segment-toolbar">
+                        <div class="segment-title">Segmented trendline (1-5)</div>
+                        <button type="button" class="segment-add-btn" disabled>Add segment</button>
+                    </div>
+                    <div class="segment-note">Add at least two data points to define segment ranges.</div>
+                `;
+                return;
+            }
+
+            const rows = state.segments.map((segment, index) => {
+                const pointOptionsStart = buildSegmentPointOptions(sortedData, segment.start);
+                const pointOptionsEnd = buildSegmentPointOptions(sortedData, segment.end);
+                const typeOptions = buildSegmentTypeOptions(moduleName, segment.type);
+                const disableDelete = state.segments.length <= 1 ? 'disabled' : '';
+
+                return `
+                    <div class="segment-row" data-segment-index="${index}">
+                        <select class="segment-start">
+                            ${pointOptionsStart}
+                        </select>
+                        <select class="segment-end">
+                            ${pointOptionsEnd}
+                        </select>
+                        <select class="segment-type">
+                            ${typeOptions}
+                        </select>
+                        <button type="button" class="segment-delete-btn" ${disableDelete}>-</button>
+                    </div>
+                `;
+            }).join('');
+
+            const addDisabled = state.segments.length >= 5 ? 'disabled' : '';
+            container.innerHTML = `
+                <div class="segment-toolbar">
+                    <div class="segment-title">Segmented trendline (1-5)</div>
+                    <button type="button" class="segment-add-btn" ${addDisabled}>Add segment</button>
+                </div>
+                <div class="segment-list">${rows}</div>
+                <div class="segment-note">Each row is Start Point, End Point, and Fit Type.</div>
+            `;
+
+            const addBtn = container.querySelector('.segment-add-btn');
+            if (addBtn) {
+                addBtn.addEventListener('click', () => addSegment(moduleName));
+            }
+
+            container.querySelectorAll('.segment-row').forEach(row => {
+                const index = Number(row.dataset.segmentIndex);
+                const startSel = row.querySelector('.segment-start');
+                const endSel = row.querySelector('.segment-end');
+                const typeSel = row.querySelector('.segment-type');
+                const delBtn = row.querySelector('.segment-delete-btn');
+
+                if (startSel) {
+                    startSel.addEventListener('change', () => {
+                        const current = state.segments[index];
+                        if (!current) return;
+                        const maxIndex = Math.max(pointCount - 1, 0);
+                        current.start = clamp(parseInt(startSel.value, 10), 0, maxIndex);
+                        if (current.end <= current.start) {
+                            current.end = clamp(current.start + 1, 0, maxIndex);
+                        }
+                        normalizeSegments(moduleName, pointCount);
+                        updateChart(moduleName);
+                    });
+                }
+
+                if (endSel) {
+                    endSel.addEventListener('change', () => {
+                        const current = state.segments[index];
+                        if (!current) return;
+                        const maxIndex = Math.max(pointCount - 1, 0);
+                        current.end = clamp(parseInt(endSel.value, 10), 0, maxIndex);
+                        if (current.end <= current.start) {
+                            current.start = clamp(current.end - 1, 0, maxIndex);
+                        }
+                        normalizeSegments(moduleName, pointCount);
+                        updateChart(moduleName);
+                    });
+                }
+
+                if (typeSel) {
+                    typeSel.addEventListener('change', () => {
+                        const current = state.segments[index];
+                        if (!current) return;
+                        current.type = typeSel.value;
+                        normalizeSegments(moduleName, pointCount);
+                        updateChart(moduleName);
+                    });
+                }
+
+                if (delBtn) {
+                    delBtn.addEventListener('click', () => removeSegment(moduleName, index));
+                }
+            });
+        }
+
+        function calculateFitByType(data, trendType) {
+            if (trendType === 'none') return { equation: '—', r2: 0, _none: true };
+            if (trendType === 'linear') return calculateLinearFit(data);
+            if (trendType === 'quadratic') return calculateQuadraticFit(data);
+            if (trendType === 'inverse') return calculateInverseFit(data);
+            if (trendType === 'inverse_square') return calculateInverseSquareFit(data);
+            if (trendType === 'exponential') return calculateExponentialFit(data);
+            if (trendType === 'logarithmic') return calculateLogarithmicFit(data);
+            if (trendType === 'power2') return calculatePowerNFit(data, 2);
+            if (trendType === 'power3') return calculatePowerNFit(data, 3);
+            if (trendType === 'power4') return calculatePowerNFit(data, 4);
+            return calculateLinearFit(data);
+        }
+
+        function generateTrendlineSeries(fit, trendType, minX, maxX) {
+            const trendlineData = [];
+            if (!isFinite(minX) || !isFinite(maxX) || maxX === minX || trendType === 'none') return trendlineData;
+
+            const step = (maxX - minX) / 80;
+            for (let x = minX; x <= maxX + step * 0.001; x += step) {
+                let y;
+                if (trendType === 'linear') {
+                    y = fit.slope * x + fit.intercept;
+                } else if (trendType === 'quadratic') {
+                    y = fit.a * x * x + fit.b * x + fit.c;
+                } else if (trendType === 'inverse') {
+                    y = x !== 0 ? fit.k / x : null;
+                } else if (trendType === 'inverse_square') {
+                    y = x !== 0 ? fit.k / (x * x) : null;
+                } else if (trendType === 'exponential') {
+                    y = fit.a * Math.exp(fit.b * x);
+                } else if (trendType === 'logarithmic') {
+                    y = x > 0 ? fit.a * Math.log(x) + fit.b : null;
+                } else if (trendType === 'power2') {
+                    y = fit.k * Math.pow(x, 2);
+                } else if (trendType === 'power3') {
+                    y = fit.k * Math.pow(x, 3);
+                } else if (trendType === 'power4') {
+                    y = fit.k * Math.pow(x, 4);
+                }
+
+                if (y !== null && isFinite(y)) {
+                    trendlineData.push({ x, y });
+                }
+            }
+
+            return trendlineData;
+        }
 
         function updateChart(moduleName) {
             const module = modules[moduleName];
@@ -3341,73 +3859,84 @@
             
             // Sort data by x value
             const sortedData = [...module.data].sort((a, b) => a.x - b.x);
+            const sortedDataWithPointId = sortedData.map((point, index) => ({
+                x: point.x,
+                y: point.y,
+                _pointId: `P${index + 1}`
+            }));
+            renderSegmentControls(moduleName, sortedData);
             
             // Get selected trendline type
             const trendSelectEl = document.getElementById('trendline' + moduleName.charAt(0).toUpperCase() + moduleName.slice(1));
             const trendType = trendSelectEl ? trendSelectEl.value : module.type;
             const smoothToggleEl = document.getElementById('smoothLine' + moduleName.charAt(0).toUpperCase() + moduleName.slice(1));
             const smoothLine = smoothToggleEl ? smoothToggleEl.checked : false;
+            const multiTrendlineToggleEl = document.getElementById('multiTrendline' + moduleName.charAt(0).toUpperCase() + moduleName.slice(1));
+            const useSegmentTrendlines = supportsSegmentTrendlines(moduleName) && !!(multiTrendlineToggleEl && multiTrendlineToggleEl.checked);
 
-            // Calculate trendline
-            let fit;
-            if (trendType === 'none') {
-                fit = { equation: '—', r2: 0, _none: true };
-            } else if (trendType === 'linear') {
-                fit = calculateLinearFit(sortedData);
-            } else if (trendType === 'quadratic') {
-                fit = calculateQuadraticFit(sortedData);
-            } else if (trendType === 'inverse') {
-                fit = calculateInverseFit(sortedData);
-            } else if (trendType === 'inverse_square') {
-                fit = calculateInverseSquareFit(sortedData);
-            } else if (trendType === 'exponential') {
-                fit = calculateExponentialFit(sortedData);
-            } else if (trendType === 'logarithmic') {
-                fit = calculateLogarithmicFit(sortedData);
-            } else if (trendType === 'power2') {
-                fit = calculatePowerNFit(sortedData, 2);
-            } else if (trendType === 'power3') {
-                fit = calculatePowerNFit(sortedData, 3);
-            } else if (trendType === 'power4') {
-                fit = calculatePowerNFit(sortedData, 4);
+            let fit = { equation: '—', r2: 0, _none: true };
+            let segmentFits = [];
+            const trendlineDatasets = [];
+
+            if (useSegmentTrendlines) {
+                const state = segmentedTrendlineState[moduleName];
+                normalizeSegments(moduleName, sortedData.length);
+
+                state.segments.forEach((segment, index) => {
+                    const segmentData = sortedData.slice(segment.start, segment.end + 1);
+                    if (segmentData.length < 2) return;
+
+                    const segmentType = segment.type;
+                    if (segmentType === 'quadratic' && segmentData.length < 3) return;
+
+                    const segmentFit = calculateFitByType(segmentData, segmentType);
+                    const minX = segmentData[0].x;
+                    const maxX = segmentData[segmentData.length - 1].x;
+                    const trendlineData = generateTrendlineSeries(segmentFit, segmentType, minX, maxX);
+
+                    trendlineDatasets.push({
+                        label: `Trendline ${index + 1}`,
+                        data: trendlineData,
+                        borderColor: segmentPalette[index % segmentPalette.length],
+                        borderWidth: 2.5,
+                        backgroundColor: 'transparent',
+                        pointRadius: 0,
+                        pointStyle: 'line',
+                        showLine: true,
+                        fill: false,
+                        tension: 0.2
+                    });
+
+                    segmentFits.push({
+                        index: index + 1,
+                        fit: segmentFit,
+                        type: segmentType,
+                        start: segment.start,
+                        end: segment.end,
+                        startX: minX,
+                        endX: maxX,
+                        pointCount: segmentData.length
+                    });
+                });
             } else {
-                fit = calculateLinearFit(sortedData);
-            }
+                fit = calculateFitByType(sortedData, trendType);
 
-            // Generate trendline points
-            let trendlineData = [];
-            if (trendType !== 'none' && sortedData.length > 0) {
-                const minX = Math.min(...sortedData.map(d => d.x));
-                const maxX = Math.max(...sortedData.map(d => d.x));
-
-                if (maxX !== minX) {
-                    const step = (maxX - minX) / 100;
-
-                    for (let x = minX; x <= maxX + step * 0.001; x += step) {
-                        let y;
-                        if (trendType === 'linear') {
-                            y = fit.slope * x + fit.intercept;
-                        } else if (trendType === 'quadratic') {
-                            y = fit.a * x * x + fit.b * x + fit.c;
-                        } else if (trendType === 'inverse') {
-                            y = x !== 0 ? fit.k / x : null;
-                        } else if (trendType === 'inverse_square') {
-                            y = x !== 0 ? fit.k / (x * x) : null;
-                        } else if (trendType === 'exponential') {
-                            y = fit.a * Math.exp(fit.b * x);
-                        } else if (trendType === 'logarithmic') {
-                            y = x > 0 ? fit.a * Math.log(x) + fit.b : null;
-                        } else if (trendType === 'power2') {
-                            y = fit.k * Math.pow(x, 2);
-                        } else if (trendType === 'power3') {
-                            y = fit.k * Math.pow(x, 3);
-                        } else if (trendType === 'power4') {
-                            y = fit.k * Math.pow(x, 4);
-                        }
-                        if (y !== null && isFinite(y)) {
-                            trendlineData.push({ x, y });
-                        }
-                    }
+                if (trendType !== 'none' && sortedData.length > 0) {
+                    const minX = Math.min(...sortedData.map(d => d.x));
+                    const maxX = Math.max(...sortedData.map(d => d.x));
+                    const trendlineData = generateTrendlineSeries(fit, trendType, minX, maxX);
+                    trendlineDatasets.push({
+                        label: 'Trendline',
+                        data: trendlineData,
+                        borderColor: '#f59e0b',
+                        borderWidth: 2.5,
+                        backgroundColor: 'transparent',
+                        pointRadius: 0,
+                        pointStyle: 'line',
+                        showLine: true,
+                        fill: false,
+                        tension: 0.3
+                    });
                 }
             }
             
@@ -3418,7 +3947,7 @@
                     datasets: [
                         {
                             label: 'Data Points',
-                            data: sortedData,
+                            data: sortedDataWithPointId,
                             backgroundColor: 'rgba(124, 58, 237, 0.7)',
                             borderColor: '#7c3aed',
                             borderWidth: 2,
@@ -3428,25 +3957,26 @@
                             fill: false,
                             tension: smoothLine ? 0.35 : 0,
                             cubicInterpolationMode: smoothLine ? 'monotone' : 'default'
-                        },
-                        {
-                            label: 'Trendline',
-                            data: trendlineData,
-                            borderColor: '#f59e0b',
-                            borderWidth: 2.5,
-                            backgroundColor: 'transparent',
-                            pointRadius: 0,
-                            pointStyle: 'line',
-                            showLine: true,
-                            fill: false,
-                            tension: 0.3
                         }
-                    ]
+                    ].concat(trendlineDatasets)
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const point = context.raw || {};
+                                    const xVal = typeof point.x === 'number' ? point.x.toFixed(3) : point.x;
+                                    const yVal = typeof point.y === 'number' ? point.y.toFixed(3) : point.y;
+                                    if (context.datasetIndex === 0 && point._pointId) {
+                                        return `${point._pointId}: (${xVal}, ${yVal})`;
+                                    }
+                                    return `${context.dataset.label}: (${xVal}, ${yVal})`;
+                                }
+                            }
+                        },
                         legend: {
                             labels: {
                                 color: '#1a202c',
@@ -3491,10 +4021,10 @@
             });
             
             // Update analysis panel
-            updateAnalysisPanel(moduleName, fit);
+            updateAnalysisPanel(moduleName, fit, trendType, segmentFits, useSegmentTrendlines);
         }
 
-        function updateAnalysisPanel(moduleName, fit) {
+        function updateAnalysisPanel(moduleName, fit, trendType, segmentFits = [], useSegmentTrendlines = false) {
             const panelIdMap = {
                 'distance': { eq: 'equationDistance', r2: 'r2Distance', interp: 'interpretationDistance' },
                 'velocity': { eq: 'equationVelocity', r2: 'r2Velocity', interp: 'interpretationVelocity' },
@@ -3508,12 +4038,59 @@
             const eqElement = document.getElementById(ids.eq);
             const r2Element = document.getElementById(ids.r2);
             const interpElement = document.getElementById(ids.interp);
+
+            if (useSegmentTrendlines && supportsSegmentTrendlines(moduleName)) {
+                if (eqElement) eqElement.textContent = `Segmented (${segmentFits.length})`;
+                if (r2Element) {
+                    const avgR2 = segmentFits.length > 0
+                        ? segmentFits.reduce((sum, seg) => sum + (Number(seg.fit.r2) || 0), 0) / segmentFits.length
+                        : 0;
+                    r2Element.textContent = segmentFits.length > 0 ? avgR2.toFixed(4) : '0.0000';
+                }
+
+                if (interpElement) {
+                    if (modules[moduleName].data.length < 2) {
+                        interpElement.innerHTML = 'Add at least two data points to compute segmented trendlines.';
+                        return;
+                    }
+
+                    if (segmentFits.length === 0) {
+                        interpElement.innerHTML = 'No valid segments yet. Ensure each segment has enough points for its fit type.';
+                        return;
+                    }
+
+                    const cards = segmentFits.map(seg => {
+                        const fitLabel = trendlineModeLabels[seg.type] || seg.type;
+                        return `
+                            <div class="segment-analysis-card">
+                                <div class="segment-analysis-header">
+                                    <span class="segment-analysis-badge">${seg.index}</span>
+                                    <span class="segment-analysis-type">${fitLabel}</span>
+                                </div>
+                                <div class="segment-analysis-meta">Points P${seg.start + 1} to P${seg.end + 1}</div>
+                                <div class="segment-analysis-row">
+                                    <div class="segment-analysis-key">Equation</div>
+                                    <div class="segment-analysis-value">${seg.fit.equation}</div>
+                                </div>
+                                <div class="segment-analysis-row">
+                                    <div class="segment-analysis-key">R²</div>
+                                    <div class="segment-analysis-r2">${seg.fit.r2.toFixed(4)}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    interpElement.innerHTML = `<div class="segment-analysis-list">${cards.join('')}</div>`;
+                }
+                return;
+            }
             
             if (eqElement) eqElement.textContent = fit._none ? '—' : fit.equation;
             if (r2Element) r2Element.textContent = fit._none ? '—' : fit.r2.toFixed(4);
             
             if (interpElement) {
                 let interpretation = '';
+                const equationText = fit._none ? '—' : fit.equation;
+                const r2Text = fit._none ? '—' : fit.r2.toFixed(4);
                 
                 if (trendType === 'none') {
                     interpretation = 'No trendline selected.';
@@ -3542,8 +4119,20 @@
                 } else if (moduleName === 'intensity' && modules[moduleName].data.length > 0) {
                     interpretation += ' Inverse square law confirmed: intensity decreases with distance squared.';
                 }
-                
-                interpElement.textContent = interpretation;
+
+                interpElement.innerHTML = `
+                    <div class="analysis-metrics">
+                        <div class="analysis-metric">
+                            <div class="analysis-metric-label">Equation</div>
+                            <div class="analysis-metric-value">${equationText}</div>
+                        </div>
+                        <div class="analysis-metric">
+                            <div class="analysis-metric-label">R² Value</div>
+                            <div class="analysis-metric-value">${r2Text}</div>
+                        </div>
+                    </div>
+                    <div class="analysis-interpretation">${interpretation}</div>
+                `;
             }
         }
 
@@ -3767,9 +4356,12 @@
                 
                 // Reset analysis
                 const ids = panelIdMap[moduleName];
-                document.getElementById(ids.eq).textContent = 'y = 0';
-                document.getElementById(ids.r2).textContent = '0.00';
-                document.getElementById(ids.interp).textContent = 'Add data points to see the trendline and analysis';
+                const eqElement = document.getElementById(ids.eq);
+                const r2Element = document.getElementById(ids.r2);
+                const interpElement = document.getElementById(ids.interp);
+                if (eqElement) eqElement.textContent = 'y = 0';
+                if (r2Element) r2Element.textContent = '0.00';
+                if (interpElement) interpElement.textContent = 'Add data points to see the trendline and analysis';
             });
         });
 
@@ -4419,6 +5011,13 @@
             if (sel) sel.addEventListener('change', function () { updateChart(moduleName); });
             const smooth = document.getElementById('smoothLine' + cap);
             if (smooth) smooth.addEventListener('change', function () { updateChart(moduleName); });
+
+            const multi = document.getElementById('multiTrendline' + cap);
+            if (multi) {
+                multi.addEventListener('change', function () {
+                    updateChart(moduleName);
+                });
+            }
         });
 
         // Initialize first module
