@@ -271,9 +271,10 @@ function setupCanvasEvents() {
     routeClick(x, y);
   });
 
-  // Mousedown — start origin or axes drag when placed but not yet confirmed
-  App.canvasEl.addEventListener('mousedown', e => {
+  // Pointerdown — start origin or axes drag when placed but not yet confirmed
+  App.canvasEl.addEventListener('pointerdown', e => {
     if (App.mode !== 'idle') return;
+    App.canvasEl.setPointerCapture(e.pointerId);
     const { x, y } = canvasCoordsFromEvent(e);
     App._dragMoved = false;
     if (App.cal.origin.point && !App.cal.origin.done) {
@@ -285,8 +286,8 @@ function setupCanvasEvents() {
     }
   });
 
-  // Mousemove — update drag OR update hover cursor
-  App.canvasEl.addEventListener('mousemove', e => {
+  // Pointermove — update drag OR update hover cursor
+  App.canvasEl.addEventListener('pointermove', e => {
     const { x, y } = canvasCoordsFromEvent(e);
     if (App.dragging) {
       App._dragMoved = true;
@@ -302,9 +303,12 @@ function setupCanvasEvents() {
     }
   });
 
-  // Mouseup / mouseleave — finish drag and refresh data
-  const finishDrag = () => {
+  // Pointerup / pointercancel / pointerleave — finish drag and refresh data
+  const finishDrag = e => {
     if (!App.dragging) return;
+    if (e && App.canvasEl.hasPointerCapture(e.pointerId)) {
+      App.canvasEl.releasePointerCapture(e.pointerId);
+    }
     const wasDragging = App.dragging;
     App.dragging = null;
     if (wasDragging === 'origin') {
@@ -319,8 +323,9 @@ function setupCanvasEvents() {
       setStatus('Axes rotated. Tracked point coordinates have been updated.');
     }
   };
-  App.canvasEl.addEventListener('mouseup',    finishDrag);
-  App.canvasEl.addEventListener('mouseleave', finishDrag);
+  App.canvasEl.addEventListener('pointerup',     finishDrag);
+  App.canvasEl.addEventListener('pointercancel', finishDrag);
+  App.canvasEl.addEventListener('pointerleave',  finishDrag);
 }
 
 // ---- Axis drag helpers ----
@@ -413,9 +418,11 @@ function canvasCoordsFromEvent(e) {
   const rect   = App.canvasEl.getBoundingClientRect();
   const scaleX = App.canvasEl.width  / rect.width;
   const scaleY = App.canvasEl.height / rect.height;
+  const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+  const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
   return {
-    x: (e.clientX - rect.left) * scaleX,
-    y: (e.clientY - rect.top)  * scaleY
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top)  * scaleY
   };
 }
 
@@ -1548,9 +1555,6 @@ function setupInfoModals() {
   document.getElementById('btn-show-workflow').addEventListener('click', () => {
     document.getElementById('modal-workflow').classList.remove('hidden');
   });
-  document.getElementById('btn-show-howto').addEventListener('click', () => {
-    document.getElementById('modal-howto').classList.remove('hidden');
-  });
 
   // Close buttons inside each modal (✕ and Close button share .info-close)
   document.querySelectorAll('.info-close').forEach(btn => {
@@ -1560,7 +1564,7 @@ function setupInfoModals() {
   });
 
   // Click outside the modal box to dismiss
-  ['modal-workflow', 'modal-howto'].forEach(id => {
+  ['modal-workflow'].forEach(id => {
     document.getElementById(id).addEventListener('click', e => {
       if (e.target === document.getElementById(id)) {
         document.getElementById(id).classList.add('hidden');
