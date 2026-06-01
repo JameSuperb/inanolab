@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal:   #0F6E56;
+    --teal2:  #1D9E75;
+    --teal3:  #E1F5EE;
+    --teal4:  #9FE1CB;
+    --red50:  #FCEBEB;
+    --red800: #791F1F;
+    --amber50:#FAEEDA;
+    --amber800:#633806;
+    --gray50: #F8F8F7;
+    --gray100:#EFEFED;
+    --gray400:#888780;
+    --gray700:#444441;
+    --gray900:#1a1a19;
+    --text:   #1a1a19;
+    --muted:  #5F5E5A;
+    --border: #D3D1C7;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 9.5pt;
+    color: var(--text);
+    background: #fff;
+    line-height: 1.55;
+  }
+
+  /* ── PRINT TOOLBAR ── */
+  .toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: 10px 24px; display: flex; align-items: center; gap: 12px;
+  }
+  .toolbar span { font-size: 12px; color: var(--muted); }
+  .btn-pdf {
+    margin-left: auto;
+    background: var(--teal); color: #fff; border: none;
+    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+    padding: 7px 18px; border-radius: 6px; cursor: pointer; letter-spacing: .01em;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-pdf:hover { background: var(--teal2); }
+
+  /* ── PAGE WRAPPER ── */
+  .pages { padding-top: 52px; }
+
+  /* ── A4 PAGE ── */
+  .page {
+    width: 794px; min-height: 1123px;
+    margin: 0 auto 24px;
+    padding: 56px 60px 56px;
+    background: #fff;
+    border: 1px solid var(--border);
+    position: relative;
+    page-break-after: always;
+  }
+
+  /* ── COVER HEADER ── */
+  .cover-header {
+    background: var(--teal);
+    margin: -56px -60px 0;
+    padding: 42px 60px 36px;
+  }
+  .cover-logo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .cover-logo {
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .cover-logo img { width: 88px; height: auto; object-fit: contain; display: block; }
+  .cover-title { color: #fff; font-size: 19pt; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; }
+  .cover-subtitle { color: var(--teal4); font-size: 10pt; margin-top: 3px; }
+  .cover-divider { border: none; border-top: 1px solid rgba(255,255,255,0.2); margin: 20px 0; }
+  .cover-meta { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+  .cover-meta-item { color: var(--teal4); font-size: 8.5pt; display: flex; align-items: center; gap: 6px; }
+  .cover-meta-item svg { width: 13px; height: 13px; fill: none; stroke: var(--teal4); stroke-width: 1.8; flex-shrink: 0; }
+
+  /* ── SECTION HEADING ── */
+  .sec-head {
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 2px solid var(--teal);
+    padding-bottom: 7px; margin-bottom: 16px; margin-top: 28px;
+  }
+  .sec-head:first-of-type { margin-top: 30px; }
+  .sec-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: var(--teal3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .sec-icon svg { width: 15px; height: 15px; fill: none; stroke: var(--teal); stroke-width: 1.8; }
+  .sec-head h2 { font-size: 13pt; font-weight: 600; color: var(--teal); letter-spacing: -.01em; }
+  .sec-badge {
+    margin-left: auto; font-size: 7.5pt; font-weight: 500;
+    background: var(--teal3); color: var(--teal); padding: 2px 9px; border-radius: 20px;
+  }
+
+  /* ── SUB HEADING ── */
+  .sub-head { font-size: 9pt; font-weight: 600; color: var(--teal); margin: 14px 0 7px; text-transform: uppercase; letter-spacing: .05em; }
+
+  /* ── SERVICE CARDS ── */
+  .service-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .scard {
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+    background: #fff; position: relative;
+  }
+  .scard.featured { border-color: var(--teal2); border-width: 1.5px; }
+  .scard-tag {
+    display: inline-block; font-size: 7pt; font-weight: 600; padding: 2px 9px;
+    border-radius: 20px; margin-bottom: 7px; letter-spacing: .04em;
+  }
+  .tag-basic { background: var(--teal3); color: var(--teal); }
+  .tag-full  { background: var(--teal);  color: #fff; }
+  .scard h3  { font-size: 10pt; font-weight: 600; margin-bottom: 3px; }
+  .scard p   { font-size: 8.5pt; color: var(--muted); margin-bottom: 10px; }
+  .check-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .check-list li { font-size: 8.5pt; display: flex; align-items: flex-start; gap: 6px; }
+  .check-list li::before { content: ""; display: inline-block; width: 12px; height: 12px; min-width: 12px; margin-top: 1px;
+    background: var(--teal3); border-radius: 50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6l2.5 2.5 4.5-5' stroke='%230F6E56' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  /* ── INFO BOX ── */
+  .info-box {
+    border-radius: 6px; padding: 9px 12px; font-size: 8.5pt;
+    display: flex; gap: 8px; align-items: flex-start; margin: 10px 0;
+  }
+  .info-box svg { width: 14px; height: 14px; fill: none; stroke-width: 1.8; flex-shrink: 0; margin-top: 1px; }
+  .info-teal  { background: var(--teal3); color: #085041; }
+  .info-teal svg { stroke: var(--teal); }
+  .info-amber { background: var(--amber50); color: var(--amber800); }
+  .info-amber svg { stroke: #BA7517; }
+
+  /* ── EQUIPMENT GRID ── */
+  .eq-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+  .eq-cell { background: var(--gray50); border-radius: 6px; padding: 9px 11px; border: 1px solid var(--gray100); }
+  .eq-lbl  { font-size: 7.5pt; color: var(--muted); margin-bottom: 2px; }
+  .eq-val  { font-size: 8.5pt; font-weight: 500; }
+
+  /* ── WHY GRID ── */
+  .why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+  .why-card { background: var(--gray50); border-radius: 6px; padding: 10px 11px; border: 1px solid var(--gray100); }
+  .why-card svg { width: 16px; height: 16px; fill: none; stroke: var(--teal2); stroke-width: 1.8; margin-bottom: 5px; display: block; }
+  .why-title { font-size: 8.5pt; font-weight: 600; margin-bottom: 2px; }
+  .why-desc  { font-size: 8pt; color: var(--muted); }
+
+  /* ── SAMPLE ELIGIBILITY ── */
+  .sample-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+  .sample-col  { border-radius: 7px; overflow: hidden; border: 1px solid var(--border); }
+  .sample-col-head { padding: 7px 12px; font-size: 8.5pt; font-weight: 600; }
+  .allowed-head    { background: var(--teal3); color: var(--teal); }
+  .notallowed-head { background: var(--red50);  color: var(--red800); }
+  .sample-col ul   { list-style: none; padding: 9px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .sample-col li   { font-size: 8.5pt; display: flex; align-items: center; gap: 7px; }
+  .dot-green { width: 7px; height: 7px; border-radius: 50%; background: var(--teal2); flex-shrink: 0; }
+  .dot-red   { width: 7px; height: 7px; border-radius: 50%; background: #E24B4A; flex-shrink: 0; }
+
+  /* ── PREP CARDS ── */
+  .prep-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
+  .prep-card { border: 1px solid var(--border); border-radius: 7px; padding: 12px; background: #fff; }
+  .prep-num  {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--teal);
+    color: #fff; font-size: 10pt; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 8px;
+  }
+  .prep-card h4 { font-size: 9pt; font-weight: 600; margin-bottom: 5px; }
+  .prep-card p  { font-size: 8.5pt; color: var(--muted); }
+  .prep-card ul { list-style: none; margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .prep-card ul li { font-size: 8.5pt; color: var(--muted); padding-left: 10px; position: relative; }
+  .prep-card ul li::before { content: "·"; position: absolute; left: 2px; color: var(--teal2); }
+
+  /* ── STEPS ── */
+  .steps { display: flex; flex-direction: column; gap: 7px; margin: 10px 0; }
+  .step  { display: flex; gap: 11px; align-items: flex-start; background: var(--gray50); border-radius: 7px; padding: 9px 12px; border: 1px solid var(--gray100); }
+  .step-n {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--teal);
+    color: #fff; font-size: 8pt; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  }
+  .step-body { font-size: 8.5pt; }
+  .step-body strong { font-weight: 600; }
+  .step-body > strong:first-child { display: block; margin-bottom: 1px; }
+
+  /* ── DELIV GRID ── */
+  .deliv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+  .deliv-card { background: var(--gray50); border-radius: 6px; padding: 11px 13px; border: 1px solid var(--gray100); }
+  .deliv-card h4 { font-size: 9pt; font-weight: 600; margin-bottom: 7px; color: var(--teal); }
+  .deliv-card ul { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .deliv-card li { font-size: 8.5pt; color: var(--muted); display: flex; align-items: flex-start; gap: 6px; }
+  .deliv-card li::before { content: ""; display: inline-block; width: 10px; height: 10px; min-width: 10px; margin-top: 2px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1.5 5l2.2 2.2 4.8-4.4' stroke='%231D9E75' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  /* ── FAQ ── */
+  .faq-group { margin-bottom: 14px; }
+  .faq-group-label { font-size: 7.5pt; font-weight: 600; color: var(--teal); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .faq-item { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 5px; overflow: hidden; }
+  .faq-q    { background: var(--gray50); padding: 8px 12px; font-size: 8.5pt; font-weight: 600; }
+  .faq-a    { padding: 7px 12px 9px; font-size: 8.5pt; color: var(--muted); line-height: 1.55; }
+  .faq-a ul { padding-left: 14px; margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
+
+  /* ── FOOTER ── */
+  .page-footer {
+    position: absolute; bottom: 30px; left: 60px; right: 60px;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .page-footer span { font-size: 7.5pt; color: var(--gray400); }
+  .page-footer .pnum { font-size: 7.5pt; color: var(--gray400); }
+
+  /* Avoid awkward splitting of structured content across print pages */
+  .scard, .eq-cell, .why-card, .sample-col, .prep-card,
+  .step, .deliv-card, .faq-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* ── TOC ── */
+  .toc { margin: 20px 0; }
+  .toc-item { display: flex; align-items: baseline; gap: 0; margin-bottom: 6px; }
+  .toc-label { font-size: 9.5pt; font-weight: 500; white-space: nowrap; }
+  .toc-dots  { flex: 1; border-bottom: 1px dotted var(--border); margin: 0 8px; margin-bottom: 3px; }
+  .toc-page  { font-size: 9.5pt; color: var(--muted); white-space: nowrap; }
+
+  /* ── PRINT ── */
+  @media print {
+    .toolbar { display: none !important; }
+    .pages   { padding-top: 0; }
+    .page    { margin: 0; border: none; width: 100%; min-height: 1123px; break-after: page; }
+    body     { font-size: 9.5pt; }
+    body, .page { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+  @page { size: A4; margin: 0; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <span>i-Nano Research Facility — SEM &amp; EDX Services Document</span>
+  <a class="btn-pdf" href="document/inanolab_semedx.pdf" download="inanolab_semedx.pdf">Download PDF</a>
+</div>
+
+<div class="pages">
+
+<!-- ══════════════════════════════════════
+     PAGE 1 — COVER + TOC
+     ══════════════════════════════════════ -->
+<div class="page">
+
+  <div class="cover-header">
+    <div class="cover-logo-row">
+      <div class="cover-logo">
+        <img src="Images/iNanoLogo.png" alt="i-Nano Research Facility logo">
+      </div>
+      <div>
+        <div class="cover-title">i-Nano Research Facility</div>
+        <div class="cover-subtitle">De La Salle University Manila</div>
+      </div>
+    </div>
+    <hr class="cover-divider">
+    <div style="color:#fff; font-size:14pt; font-weight:500; margin-bottom:6px;">SEM &amp; EDX Analysis Services</div>
+    <div style="color:var(--teal4); font-size:9pt; margin-bottom:20px;">Scope of Services · Sample Submission Guidelines · Frequently Asked Questions</div>
+    <div class="cover-meta">
+      <span class="cover-meta-item">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z" rx="2"/><path d="M8 2v4M16 2v4M4 10h16"/></svg>
+        Effective 2026
+      </span>
+      <span class="cover-meta-item">
+        <svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        De La Salle University Manila
+      </span>
+      <span class="cover-meta-item">
+        <svg viewBox="0 0 24 24"><path d="M22 16.9a18.5 18.5 0 01-5.5 1.1 18.6 18.6 0 01-13-5.5A18.5 18.5 0 012 7"/><path d="M22 16.9V22l-4-2-4 2-4-2-4 2v-5.1"/></svg>
+        www.inanolab.com
+      </span>
+      <span class="cover-meta-item">
+        <svg viewBox="0 0 24 24"><path d="M22 16.9a18.5 18.5 0 01-5.5 1.1"/><path d="M4 4l16 16M4 4a18.5 18.5 0 0113.5 2"/></svg>
+        admin@inanolab.com · 0929 805 1084
+      </span>
+    </div>
+  </div>
+
+  <!-- About -->
+  <div style="margin-top:30px; margin-bottom:20px;">
+    <p style="font-size:9.5pt; color:var(--muted); line-height:1.7;">
+      The i-Nano Research Facility at De La Salle University Manila provides professional Scanning Electron Microscopy (SEM) and Energy Dispersive X-ray Spectroscopy (EDX) analysis services to support academic research, industry applications, and quality control. All analyses are performed using the <strong>Phenom XL Desktop SEM Platform</strong> (Thermo Fisher Scientific), a benchstop instrument with integrated EDX. This document outlines our scope of services, sample submission guidelines, and answers to frequently asked questions.
+    </p>
+  </div>
+
+  <!-- Table of Contents -->
+  <div class="sub-head">Table of contents</div>
+  <div class="toc">
+    <div class="toc-item"><span class="toc-label">1 &nbsp; Scope of Services</span><span class="toc-dots"></span><span class="toc-page">2</span></div>
+    <div class="toc-item"><span class="toc-label">2 &nbsp; Sample Submission Guidelines</span><span class="toc-dots"></span><span class="toc-page">3</span></div>
+    <div class="toc-item"><span class="toc-label">3 &nbsp; Submission &amp; Payment Procedures</span><span class="toc-dots"></span><span class="toc-page">4 – 5</span></div>
+    <div class="toc-item"><span class="toc-label">4 &nbsp; Frequently Asked Questions</span><span class="toc-dots"></span><span class="toc-page">5 – 7</span></div>
+  </div>
+
+  <!-- Contact quick-ref -->
+  <div style="margin-top:24px; background:var(--teal3); border-radius:8px; padding:14px 18px;">
+    <div style="font-size:8.5pt; font-weight:600; color:var(--teal); margin-bottom:8px;">Contact information</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 24px;">
+      <div style="font-size:8.5pt; color:#085041;"><strong>Laboratory Coordinator</strong><br>Dr. James Salveo L. Olarve</div>
+      <div style="font-size:8.5pt; color:#085041;"><strong>Email</strong><br>admin@inanolab.com</div>
+      <div style="font-size:8.5pt; color:#085041;"><strong>Mobile</strong><br>0929 805 1084</div>
+      <div style="font-size:8.5pt; color:#085041;"><strong>Website</strong><br>www.inanolab.com</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>i-Nano Research Facility · De La Salle University Manila</span>
+    <span class="pnum">Page 1 of 7</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PAGE 2 — SCOPE OF SERVICES
+     ══════════════════════════════════════ -->
+<div class="page">
+
+  <div class="sec-head" style="margin-top:0;">
+    <div class="sec-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h4"/></svg></div>
+    <h2 id="scope-of-services">1. Scope of Services</h2>
+    <span class="sec-badge">Phenom XL SEM Platform</span>
+  </div>
+
+  <div class="sub-head">Service packages</div>
+  <div class="service-row">
+    <div class="scard">
+      <span class="scard-tag tag-basic">Basic SEM</span>
+      <h3>Surface Morphology Analysis</h3>
+      <p>High-resolution electron microscopy imaging of your sample's surface structure and topography.</p>
+      <ul class="check-list">
+        <li>Minimum 12 high-resolution SEM micrographs</li>
+        <li>Imaging of up to 3 areas per sample</li>
+        <li>Multiple magnifications (500× – 10,000× or higher)</li>
+        <li>Gold sputter coating of sample</li>
+        <li>Raw digital image files delivered via email</li>
+        <li>Official Certification of Analysis</li>
+        <li>Quick turnaround</li>
+      </ul>
+    </div>
+    <div class="scard featured">
+      <span class="scard-tag tag-full">SEM + EDX</span>
+      <h3>Morphology + Elemental Analysis</h3>
+      <p>Full surface imaging combined with detailed elemental composition data via EDX spectroscopy.</p>
+      <ul class="check-list">
+        <li>All Basic SEM inclusions</li>
+        <li>Elemental analysis (EDX) of 3 different areas per sample</li>
+        <li>Quantitative concentrations: atomic % and weight %</li>
+        <li>EDS graph spectrum with characteristic peaks</li>
+        <li>Elemental mapping</li>
+        <li>Raw data files delivered via email</li>
+        <li>Official Certification of Analysis</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="info-box info-amber">
+    <svg viewBox="0 0 24 24"><path d="M10.3 3.2L2 20h20L13.7 3.2a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+    <div><strong>Not included in any service package:</strong> Image processing, annotation, measurements, interpretation and analysis. These remain the sole responsibility of the researcher.</div>
+  </div>
+
+  <div class="sub-head">Equipment specifications</div>
+  <div class="eq-grid">
+    <div class="eq-cell"><div class="eq-lbl">Model</div><div class="eq-val">Phenom Pro &amp; XL</div></div>
+    <div class="eq-cell"><div class="eq-lbl">Manufacturer</div><div class="eq-val">Thermo Fisher Scientific</div></div>
+    <div class="eq-cell"><div class="eq-lbl">Type</div><div class="eq-val">Benchstop SEM with EDX</div></div>
+    <div class="eq-cell"><div class="eq-lbl">Effective magnification</div><div class="eq-val">Up to 20,000×</div></div>
+    <div class="eq-cell"><div class="eq-lbl">Sample chamber</div><div class="eq-val">Accommodates multiple samples</div></div>
+    <div class="eq-cell"><div class="eq-lbl">Applications</div><div class="eq-val">Materials Sci., Life Sci., Electronics, QC</div></div>
+  </div>
+
+  <div class="sub-head">Why choose i-Nano Research Facility?</div>
+  <div class="why-grid">
+    <div class="why-card">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      <div class="why-title">Quick turnaround</div>
+      <div class="why-desc">Results released within 2-3 working days after the scheduled analysis</div>
+    </div>
+    <div class="why-card">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3 6.5L22 9.3l-5 5 1.2 7.2L12 18l-6.2 3.5L7 14.3l-5-5 7-.8z"/></svg>
+      <div class="why-title">Certified results</div>
+      <div class="why-desc">Official Certification of Analysis provided with every service</div>
+    </div>
+    <div class="why-card">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M12 12v4M10 14h4"/></svg>
+      <div class="why-title">Affordable rates</div>
+      <div class="why-desc">High-quality analyses at student- and researcher-friendly pricing</div>
+    </div>
+    <div class="why-card">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+      <div class="why-title">Hassle-free requests</div>
+      <div class="why-desc">Simple and straightforward sample submission process</div>
+    </div>
+    <div class="why-card">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <div class="why-title">Comprehensive imaging</div>
+      <div class="why-desc">12 high-resolution SEM images per sample at varying magnifications</div>
+    </div>
+    <div class="why-card">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <div class="why-title">Precise EDX analysis</div>
+      <div class="why-desc">3 detailed spot analyses for complete elemental composition</div>
+    </div>
+  </div>
+
+  <div class="sub-head" style="margin-top:16px;">Limitations of service</div>
+  <div style="font-size:8.5pt; color:var(--muted); line-height:1.6;">
+    The following are explicitly outside the scope of services: (1) image processing, annotation, or enhancement; (2) dimensional measurements or scale calculations; (3) interpretation or discussion of morphological or elemental results; (4) guarantee of specific imaging and elementatl outcomes if limited by sample quality; (5) return of submitted samples — SEM/EDX analysis is destructive in nature.
+  </div>
+
+  <div class="page-footer">
+    <span>i-Nano Research Facility · De La Salle University Manila</span>
+    <span class="pnum">Page 2 of 7</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PAGE 3 — SAMPLE GUIDELINES
+     ══════════════════════════════════════ -->
+<div class="page">
+
+  <div class="sec-head" style="margin-top:0;">
+    <div class="sec-icon"><svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg></div>
+    <h2 id="sample-submission-guidelines">2. Sample Submission Guidelines</h2>
+  </div>
+
+  <div class="sub-head">Sample eligibility — solid samples only</div>
+  <div class="sample-grid">
+    <div class="sample-col">
+      <div class="sample-col-head allowed-head">Allowed samples</div>
+      <ul>
+        <li><span class="dot-green"></span>Powders / powder-like materials</li>
+        <li><span class="dot-green"></span>Rock-like or mineral samples</li>
+        <li><span class="dot-green"></span>Glass pieces</li>
+        <li><span class="dot-green"></span>Plastics / polymers</li>
+        <li><span class="dot-green"></span>Organic solids (wood, leaves, seeds)</li>
+        <li><span class="dot-green"></span>Insects (dry and preserved)</li>
+        <li><span class="dot-green"></span>Teeth / bone fragments</li>
+        <li><span class="dot-green"></span>Rubber pieces</li>
+        <li><span class="dot-green"></span>Paper / cardboard</li>
+        <li><span class="dot-green"></span>Textiles / fabric</li>
+      </ul>
+    </div>
+    <div class="sample-col">
+      <div class="sample-col-head notallowed-head">Not allowed samples</div>
+      <ul>
+        <li><span class="dot-red"></span>Liquids</li>
+        <li><span class="dot-red"></span>Gases</li>
+        <li><span class="dot-red"></span>Samples containing mercury</li>
+        <li><span class="dot-red"></span>Radioactive materials</li>
+        <li><span class="dot-red"></span>Biological hazards (blood, tissue, pathogens)</li>
+        <li><span class="dot-red"></span>Toxic or highly hazardous materials</li>
+        <li><span class="dot-red"></span>Corrosive or strongly reactive chemicals</li>
+        <li><span class="dot-red"></span>Wet, moist, or damp samples</li>
+        <li><span class="dot-red"></span>Samples that may outgas or contaminate the chamber</li>
+        <li><span class="dot-red"></span>Sticky, oily, or adhesive substances</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="info-box info-amber">
+    <svg viewBox="0 0 24 24"><path d="M10.3 3.2L2 20h20L13.7 3.2a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+    <span>The laboratory reserves the right to <strong>reject</strong> samples that are wet or moist, excessively large, hazardous, improperly prepared, or not in accordance with laboratory safety and testing requirements. Testing may be terminated at any point if safety risks are identified.</span>
+  </div>
+
+  <div class="sub-head">Sample preparation requirements</div>
+  <div class="prep-grid">
+    <div class="prep-card">
+      <div class="prep-num">1</div>
+      <h4>Sample mass &amp; size</h4>
+      <p>Submit small, solid samples for best imaging and EDX results.</p>
+      <ul>
+        <li>Surface area: approx. 1 cm × 1 cm</li>
+        <li>Thickness: a few millimeters</li>
+        <li>Ideal mass: ≈ 50 mg</li>
+        <li>Submit the minimum amount necessary</li>
+      </ul>
+    </div>
+    <div class="prep-card">
+      <div class="prep-num">2</div>
+      <h4>Drying</h4>
+      <p>Samples must be completely dry before submission to prevent contamination or equipment damage. Note that we do not offer any drying services. Example drying methods: Air drying or sun drying, Oven drying, or Freeze drying</p>
+    </div>
+    <div class="prep-card">
+      <div class="prep-num">3</div>
+      <h4>Packaging &amp; labeling</h4>
+      <p>Use clean, tightly sealed containers to prevent spills or contamination. Label each container clearly with:</p>
+      <ul>
+        <li>Client name</li>
+        <li>Sample code or identifier</li>
+        <li>Brief sample description (if needed)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="info-box info-amber">
+    <svg viewBox="0 0 24 24"><path d="M10.3 3.2L2 20h20L13.7 3.2a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+    <span>Samples will <strong>not be returned</strong> after analysis due to the destructive nature of the SEM procedure. Please submit only the minimum amount of material necessary.</span>
+  </div>
+
+  <div class="sub-head">Confidentiality &amp; intellectual property</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
+    <div class="info-box info-teal" style="margin:0;">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      <div>All data, images, and results are treated as strictly <strong>confidential</strong>. Results will not be disclosed to any third party without written consent from the client.</div>
+    </div>
+    <div class="info-box info-teal" style="margin:0;">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+      <div>All SEM and EDX results remain the <strong>property of the client</strong>. The facility retains the right to use anonymized data for training purposes only, unless stated otherwise in writing.</div>
+    </div>
+  </div>
+
+  <div class="sub-head" style="margin-top:16px;">Liability</div>
+  <div style="font-size:8.5pt; color:var(--muted); line-height:1.6;">
+    SEM analysis is destructive in nature — samples will not be returned. The i-Nano Research Facility shall not be liable for sample damage during preparation or imaging, nor for failure to obtain desired imaging results due to sample quality limitations. The facility reserves the right to reject improperly prepared or unsafe samples and to terminate testing if risks are identified at any stage of the process.
+  </div>
+
+  <div class="page-footer">
+    <span>i-Nano Research Facility · De La Salle University Manila</span>
+    <span class="pnum">Page 3 of 7</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PAGE 4 — SUBMISSION & PAYMENT
+     ══════════════════════════════════════ -->
+<div class="page">
+
+  <div class="sec-head" style="margin-top:0;">
+    <div class="sec-icon"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+    <h2 id="submission-payment-procedures">3. Submission &amp; Payment Procedures</h2>
+  </div>
+
+  <div class="sub-head">Step-by-step submission process</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <div class="step-body">
+        <strong>Scheduling</strong>
+        Complete the service request form at <strong>www.inanolab.com</strong>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <div class="step-body">
+        <strong>Confirmation of test schedule</strong>
+        Confirm your requested analysis within <strong>24 hours</strong> of receiving the schedule email notification. Failure to confirm within this period may result in forfeiture of the reserved slot.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <div class="step-body">
+        <strong>Down payment</strong>
+        A <strong>50% down payment</strong> is required to confirm the test schedule. Bank details and the delivery address will be provided upon confirmation of your request.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">4</div>
+      <div class="step-body">
+        <strong>Prior notice before sample delivery</strong>
+        Inform the facility before delivering your samples so that the necessary receiving arrangements can be made. The drop-off location is <strong>not necessarily at De La Salle University – Manila</strong>.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">5</div>
+      <div class="step-body">
+        <strong>Sample submission</strong>
+        Deliver properly packed and labeled samples to the confirmed drop-off address. Samples must comply with all eligibility and preparation requirements outlined in Section 2.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">6</div>
+      <div class="step-body">
+        <strong>Client access policy</strong>
+        For safety, quality assurance, and regulatory compliance, clients shall deliver samples only at the designated drop-off area. Entry into laboratory work areas and observation of testing procedures are not permitted.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">7</div>
+      <div class="step-body">
+        <strong>Full payment &amp; release of results</strong>
+        Full payment must be settled prior to the release of results. Results are sent via email <strong>2 to 3 working days</strong> after the scheduled analysis, subject to the absence of technical interruptions or unforeseen delays.
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box info-teal">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+    <span>All fees are <strong>exclusive of shipping costs</strong>. Clients are responsible for the cost of transporting samples to the facility. Service fees are based on the number of samples and the type of analysis required — contact us for the current rate schedule.</span>
+  </div>
+
+  <div class="sub-head">Data deliverables by service type</div>
+  <div class="deliv-grid">
+    <div class="deliv-card">
+      <h4>Basic SEM</h4>
+      <ul>
+        <li>Minimum 12 raw SEM micrographs (digital files)</li>
+        <li>Multiple magnifications (500× – 10,000× or higher)</li>
+        <li>Raw data files delivered via email</li>
+        <li>Official Certification of Analysis</li>
+      </ul>
+    </div>
+    <div class="deliv-card">
+      <h4>SEM + EDX</h4>
+      <ul>
+        <li>All Basic SEM deliverables</li>
+        <li>EDX spectra and elemental mapping data</li>
+        <li>Quantitative elemental concentrations (at% &amp; wt%)</li>
+        <li>EDS graph spectrum with characteristic peaks</li>
+        <li>Official Certification of Analysis</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>i-Nano Research Facility · De La Salle University Manila</span>
+    <span class="pnum">Page 4 of 7</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PAGE 5 — KEY TERMS + FAQ PART 1
+     ══════════════════════════════════════ -->
+<div class="page">
+
+  <div class="sub-head" style="margin-top:0;">Summary of key terms</div>
+  <table style="width:100%; border-collapse:collapse; font-size:8.5pt; margin-top:6px;">
+    <thead>
+      <tr style="background:var(--teal3);">
+        <th style="padding:7px 12px; text-align:left; font-weight:600; color:var(--teal); border-radius:6px 0 0 0;">Term</th>
+        <th style="padding:7px 12px; text-align:left; font-weight:600; color:var(--teal);">Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 12px; font-weight:500;">Confirmation deadline</td>
+        <td style="padding:7px 12px; color:var(--muted);">Within 24 hours of receiving the schedule notification</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); background:var(--gray50);">
+        <td style="padding:7px 12px; font-weight:500;">Down payment</td>
+        <td style="padding:7px 12px; color:var(--muted);">50% of total service fee upon schedule confirmation</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 12px; font-weight:500;">Full payment</td>
+        <td style="padding:7px 12px; color:var(--muted);">Required prior to release of results</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); background:var(--gray50);">
+        <td style="padding:7px 12px; font-weight:500;">Turnaround time</td>
+        <td style="padding:7px 12px; color:var(--muted);">2-3 working days after scheduled analysis (upon full payment)</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:7px 12px; font-weight:500;">Shipping costs</td>
+        <td style="padding:7px 12px; color:var(--muted);">Excluded from service fee; borne by the client</td>
+      </tr>
+      <tr style="background:var(--gray50);">
+        <td style="padding:7px 12px; font-weight:500;">Sample return</td>
+        <td style="padding:7px 12px; color:var(--muted);">Not applicable — analysis is destructive in nature</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="sec-head">
+    <div class="sec-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></div>
+    <h2 id="frequently-asked-questions">4. Frequently Asked Questions</h2>
+  </div>
+
+  <div class="faq-group" style="margin-top:0;">
+    <div class="faq-group-label">About the services</div>
+    <div class="faq-item">
+      <div class="faq-q">What services does the i-Nano Research Facility offer?</div>
+      <div class="faq-a">Two main analysis services are offered: (1) <strong>Basic SEM</strong> — high-resolution surface morphology imaging; and (2) <strong>SEM + EDX</strong> — surface morphology imaging combined with elemental composition analysis via Energy Dispersive X-ray Spectroscopy.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What equipment is used for the analysis?</div>
+      <div class="faq-a">All analyses are performed using the <strong>Phenom XL Desktop SEM Platform</strong> (Thermo Fisher Scientific), a benchstop scanning electron microscope with integrated EDX functionality. The chamber can accommodate multiple samples simultaneously.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What will I receive as output from Basic SEM?</div>
+      <div class="faq-a">You will receive a minimum of 12 high-resolution SEM micrographs at multiple magnifications (500× to 10,000× or higher), raw digital image files delivered via email, and an Official Certification of Analysis.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What additional outputs are included in the SEM + EDX package?</div>
+      <div class="faq-a">In addition to all Basic SEM deliverables, the SEM + EDX package includes: elemental analysis (EDX) of 3 different areas on the sample, quantitative elemental concentrations (atomic % and weight %), an EDS graph spectrum showing characteristic peaks, and elemental mapping.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Will the facility interpret or measure my SEM images and EDX results?</div>
+      <div class="faq-a">No. Only raw SEM micrographs and raw EDX results will be provided. Analysis, interpretation, measurements, and discussion of results are not included in the service and remain the sole responsibility of the researcher.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Who can avail of your services?</div>
+      <div class="faq-a">Services are open to university researchers, graduate and undergraduate students, and industry partners. Student- and researcher-friendly rates are offered.</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>i-Nano Research Facility · De La Salle University Manila</span>
+    <span class="pnum">Page 5 of 7</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PAGE 6 — FAQ PART 2
+     ══════════════════════════════════════ -->
+<div class="page">
+
+  <div class="faq-group" style="margin-top:0;">
+    <div class="faq-group-label">Sample requirements</div>
+    <div class="faq-item">
+      <div class="faq-q">What types of samples are accepted?</div>
+      <div class="faq-a">Only solid, dry samples are accepted. Acceptable samples include: powders, mineral or rock-like samples, glass, plastics/polymers, organic solids (wood, leaves, seeds), preserved insects, teeth and bone fragments, rubber, paper/cardboard, and textiles.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What samples are NOT accepted?</div>
+      <div class="faq-a">The following are not allowed: liquids, gases, samples containing mercury, radioactive materials, biological hazards (blood, tissue, pathogens), toxic or corrosive substances, wet or moist samples, samples that may outgas or contaminate the vacuum chamber, and sticky or oily substances.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">How much sample material do I need to submit?</div>
+      <div class="faq-a">Only a small amount is required. An ideal sample has a surface area of approximately 1 cm × 1 cm, a thickness of a few millimeters, and a mass of about 50 mg. Please submit only the minimum necessary, as samples will not be returned after analysis.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I submit wet or liquid samples?</div>
+      <div class="faq-a">No. All samples must be completely dry prior to submission. Wet or moist samples will be rejected, as moisture can cause contamination, outgassing, or damage to the SEM equipment. Acceptable drying methods include air drying, sun drying, oven drying, and freeze drying.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can the facility reject my sample?</div>
+      <div class="faq-a">Yes. The laboratory reserves the right to reject samples that are wet, moist, excessively large, hazardous, improperly prepared, or not in compliance with safety and testing requirements. Testing may also be terminated if safety risks are identified during the process.</div>
+    </div>
+  </div>
+
+  <div class="faq-group">
+    <div class="faq-group-label">Submission &amp; scheduling</div>
+    <div class="faq-item">
+      <div class="faq-q">How do I request an analysis?</div>
+      <div class="faq-a">Complete the service request form at www.inanolab.com.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">How do I confirm my test schedule?</div>
+      <div class="faq-a">You must confirm your requested analysis via email or mobile within <strong>24 hours</strong> of receiving the schedule notification. Failure to confirm within this period may result in forfeiture of the reserved testing slot.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Where do I deliver my samples?</div>
+      <div class="faq-a">The delivery address will be provided upon confirmation of the service request. Please note that the drop-off location is <strong>not necessarily at De La Salle University – Manila</strong>. Always confirm the specific address before delivering your samples.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can clients enter the laboratory and observe the testing procedures?</div>
+      <div class="faq-a">No. Clients are not permitted to enter laboratory work areas or oversee testing procedures. Samples must be submitted only at the confirmed drop-off location in accordance with laboratory safety and compliance protocols.</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>i-Nano Research Facility · De La Salle University Manila</span>
+    <span class="pnum">Page 6 of 7</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PAGE 7 — FAQ PART 3
+     ══════════════════════════════════════ -->
+<div class="page">
+
+  <div class="faq-group" style="margin-top:0;">
+    <div class="faq-group-label">Submission &amp; scheduling (continued)</div>
+    <div class="faq-item">
+      <div class="faq-q">Do I need to notify the facility before delivering my samples?</div>
+      <div class="faq-a">Yes. Kindly inform the facility prior to delivering your samples so that receiving arrangements can be made. Unannounced deliveries may cause delays in processing.</div>
+    </div>
+  </div>
+
+  <div class="faq-group">
+    <div class="faq-group-label">Payment &amp; fees</div>
+    <div class="faq-item">
+      <div class="faq-q">Is a down payment required?</div>
+      <div class="faq-a">Yes. A <strong>50% down payment</strong> is required to confirm the test schedule. Bank details will be provided upon confirmation of your request.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">When is full payment due?</div>
+      <div class="faq-a">Full payment must be completed <strong>prior to the release of results</strong>. Results will not be sent until payment has been settled in full.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Are shipping costs included in the service fee?</div>
+      <div class="faq-a">No. All fees are exclusive of shipping costs. Clients are fully responsible for the cost of delivering samples to the facility.</div>
+    </div>
+  </div>
+
+  <div class="faq-group">
+    <div class="faq-group-label">Results &amp; turnaround</div>
+    <div class="faq-item">
+      <div class="faq-q">When will I receive my results?</div>
+      <div class="faq-a">Results will be sent via email <strong>2 to 3 working days after the scheduled analysis</strong>, subject to the completion of full payment and the absence of technical interruptions or unforeseen delays.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Will I get my samples back after analysis?</div>
+      <div class="faq-a">No. SEM analysis is destructive in nature, and samples will not be returned after testing. Please submit only the minimum amount of material necessary for the analysis.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What if clear images cannot be obtained due to my sample's condition?</div>
+      <div class="faq-a">The facility does not guarantee specific morphological features or imaging outcomes if results are limited by sample quality. Proper sample preparation — including thorough drying and correct sizing — is the client's responsibility.</div>
+    </div>
+  </div>
+
+  <div class="faq-group">
+    <div class="faq-group-label">Confidentiality &amp; liability</div>
+    <div class="faq-item">
+      <div class="faq-q">Are my results kept confidential?</div>
+      <div class="faq-a">Yes. All data, images, and information are treated as strictly confidential. Results will not be shared with any third party without written consent from the client.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Who owns the data and results generated from the analysis?</div>
+      <div class="faq-a">All SEM and EDX results and data remain the <strong>property of the client</strong>. The facility retains the right to use anonymized data for internal training or demonstration purposes only, unless the client explicitly requests otherwise in writing.</div>
+    </div>
+  </div>
+
+  <!-- Closing -->
+  <div style="margin-top:20px; background:var(--teal); border-radius:8px; padding:16px 20px; display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <div style="color:#fff; font-size:9.5pt; font-weight:600; margin-bottom:4px;">For inquiries and scheduling</div>
+      <div style="color:var(--teal4); font-size:8.5pt;">Contact us and we will be happy to assist you.</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="color:var(--teal4); font-size:8pt;">admin@inanolab.com</div>
+      <div style="color:var(--teal4); font-size:8pt;">0929 805 1084</div>
+      <div style="color:var(--teal4); font-size:8pt;">www.inanolab.com</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>i-Nano Research Facility · De La Salle University Manila</span>
+    <span class="pnum">Page 7 of 7</span>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

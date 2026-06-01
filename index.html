@@ -864,6 +864,161 @@
             border-color: #3498db;
             box-shadow: 0 8px 20px rgba(0,0,0,0.12);
         }
+
+        /* Guidelines overview (prep page top) */
+        .guidelines-overview {
+            background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+            border: 1px solid #dde7f0;
+            border-radius: 18px;
+            box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+            padding: clamp(1.1rem, 1.4vw, 1.5rem);
+            margin-bottom: 1.25rem;
+        }
+        .guidelines-overview h3 {
+            margin: 0;
+            color: #0b7668;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-size: clamp(1rem, 1.3vw, 1.15rem);
+            font-weight: 800;
+        }
+        .guidelines-overview p {
+            margin: 0.7rem 0 0;
+            color: #314255;
+            line-height: 1.7;
+            max-width: 110ch;
+        }
+        .guidelines-toc {
+            margin-top: 1rem;
+            border-top: 1px solid #e6edf4;
+            padding-top: 0.9rem;
+        }
+        .guidelines-toc-label {
+            margin: 0;
+            font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            color: #35495f;
+            text-transform: uppercase;
+        }
+        .guidelines-updated {
+            display: inline-flex;
+            margin-top: 0.5rem;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.24rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.79rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            color: #1e3a5f;
+            background: #e6f0ff;
+            border: 1px solid #c7dcff;
+        }
+        .guidelines-toc-list {
+            list-style: none;
+            margin: 0.9rem 0 0;
+            padding: 0;
+            display: grid;
+            gap: 0.6rem;
+        }
+        .guidelines-toc-item {
+            margin: 0;
+        }
+        .guidelines-toc-link {
+            width: 100%;
+            display: flex;
+            display: flex;
+            align-items: baseline;
+            gap: 0.6rem;
+            color: #0f2742;
+            font-size: clamp(1.06rem, 1.4vw, 1.17rem);
+            padding: 0.28rem 0.42rem;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            background: transparent;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+        }
+        .guidelines-toc-link:hover {
+            background: #f0f7ff;
+            border-color: #d5e6fb;
+            transform: translateX(2px);
+        }
+        .guidelines-toc-link:focus {
+            outline: 3px solid rgba(37, 99, 235, 0.28);
+            outline-offset: 2px;
+        }
+        .guidelines-toc-num {
+            color: #0b1324;
+            font-weight: 800;
+            min-width: 1ch;
+        }
+        .guidelines-toc-title {
+            font-weight: 700;
+        }
+        .guidelines-toc-dots {
+            flex: 1;
+            border-bottom: 1px dotted #ced4da;
+            transform: translateY(-2px);
+        }
+        .guidelines-toc-page {
+            color: #334155;
+            min-width: 3rem;
+            text-align: right;
+            font-weight: 700;
+        }
+        .guidelines-overview-actions {
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        .guidelines-overview-actions .guidelines-cta {
+            margin-top: 0;
+            border-radius: 999px;
+            padding: 0.78rem 1.3rem;
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            width: 100%;
+            font-size: 1.02rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            color: #ffffff;
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.32);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+        }
+        .guidelines-overview-actions .guidelines-cta:hover {
+            background: linear-gradient(135deg, #0284c7 0%, #1d4ed8 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(37, 99, 235, 0.38);
+        }
+        .guidelines-overview-actions .guidelines-cta:focus {
+            outline: 3px solid rgba(37, 99, 235, 0.32);
+            outline-offset: 2px;
+        }
+        .guidelines-cta-icon {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+            display: inline-block;
+        }
+        .guidelines-cta-icon path {
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
         .prep-photo {
             display: block;
             width: 100%;
@@ -1344,6 +1499,42 @@
             width: min(1080px, 96vw);
         }
 
+        .guidelines-modal {
+            width: min(1180px, 97vw);
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .guidelines-modal .modal-header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #ffffff;
+        }
+
+        .guidelines-modal .modal-content {
+            padding: 0;
+            max-height: calc(92vh - 78px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .guidelines-frame {
+            width: 100%;
+            height: min(80vh, 980px);
+            border: none;
+            background: #ffffff;
+            display: block;
+        }
+
+        .guidelines-modal .modal-footer {
+            margin-top: 0;
+            padding: 0.85rem 1.1rem;
+            border-top: 1px solid #e9ecef;
+            background: #ffffff;
+        }
+
         .brochure-modal .modal-content {
             padding: 0;
             background: #f4f8fc;
@@ -1370,6 +1561,60 @@
         @media (max-width: 860px) {
             .modal-grid { grid-template-columns: 1fr; }
             .modal-content { padding: 1rem; }
+        }
+
+        @media (max-width: 768px) {
+            .guidelines-overview {
+                padding: 1rem;
+            }
+
+            .guidelines-toc-item {
+                font-size: 0.96rem;
+                align-items: center;
+                gap: 0.45rem;
+            }
+
+            .guidelines-toc-link {
+                padding: 0.24rem 0.3rem;
+            }
+
+            .guidelines-toc-page {
+                min-width: 2.4rem;
+            }
+
+            .guidelines-overview-actions .guidelines-cta {
+                font-size: 0.96rem;
+                padding: 0.72rem 1.05rem;
+            }
+
+            .guidelines-modal {
+                width: 100vw;
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+                border: none;
+            }
+
+            .guidelines-modal .modal-content {
+                max-height: calc(100vh - 74px);
+            }
+
+            .guidelines-frame {
+                height: calc(100vh - 140px);
+            }
+        }
+
+        @media (max-width: 520px) {
+            .guidelines-overview-actions {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.55rem;
+            }
+
+            .guidelines-overview-actions .guidelines-cta {
+                width: 100%;
+            }
+
         }
 
         /* Form Section */
@@ -2075,7 +2320,50 @@
         <!-- Sample Preparation Page -->
         <div id="preparation-page" class="page">
             <section class="section">
-                <h2>Sample Preparation Guidelines</h2>
+                <div class="guidelines-overview" aria-labelledby="guidelines-overview-title">
+                    <h3 id="guidelines-overview-title">Guidelines Overview</h3>
+                    <p>
+                        The i-Nano Research Facility at De La Salle University Manila provides SEM and EDX analysis services for academic, industrial, and quality-control applications. The full document includes service scope, sample submission policies, payment procedures, and detailed FAQs to guide your submission.
+                    </p>
+
+                    <div class="guidelines-toc" role="region" aria-label="Table of contents">
+                        <p class="guidelines-toc-label">Table of Contents</p>
+                        <ul class="guidelines-toc-list">
+                            <li class="guidelines-toc-item">
+                                <button class="guidelines-toc-link" type="button" data-open-modal="full-guidelines" data-guidelines-target="scope-of-services" aria-haspopup="dialog">
+                                    <span class="guidelines-toc-num">1</span><span class="guidelines-toc-title">Scope of Services</span><span class="guidelines-toc-dots" aria-hidden="true"></span><span class="guidelines-toc-page">2</span>
+                                </button>
+                            </li>
+                            <li class="guidelines-toc-item">
+                                <button class="guidelines-toc-link" type="button" data-open-modal="full-guidelines" data-guidelines-target="sample-submission-guidelines" aria-haspopup="dialog">
+                                    <span class="guidelines-toc-num">2</span><span class="guidelines-toc-title">Sample Submission Guidelines</span><span class="guidelines-toc-dots" aria-hidden="true"></span><span class="guidelines-toc-page">3</span>
+                                </button>
+                            </li>
+                            <li class="guidelines-toc-item">
+                                <button class="guidelines-toc-link" type="button" data-open-modal="full-guidelines" data-guidelines-target="submission-payment-procedures" aria-haspopup="dialog">
+                                    <span class="guidelines-toc-num">3</span><span class="guidelines-toc-title">Submission &amp; Payment Procedures</span><span class="guidelines-toc-dots" aria-hidden="true"></span><span class="guidelines-toc-page">4 - 5</span>
+                                </button>
+                            </li>
+                            <li class="guidelines-toc-item">
+                                <button class="guidelines-toc-link" type="button" data-open-modal="full-guidelines" data-guidelines-target="frequently-asked-questions" aria-haspopup="dialog">
+                                    <span class="guidelines-toc-num">4</span><span class="guidelines-toc-title">Frequently Asked Questions</span><span class="guidelines-toc-dots" aria-hidden="true"></span><span class="guidelines-toc-page">5 - 7</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="guidelines-overview-actions">
+                        <button class="btn-primary guidelines-cta" type="button" data-open-modal="full-guidelines" aria-haspopup="dialog">
+                            <svg class="guidelines-cta-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M8 3h6l5 5v13H8z"></path>
+                                <path d="M14 3v5h5"></path>
+                            </svg>
+                            <span>View Full Guidelines</span>
+                        </button>
+                    </div>
+                </div>
+
+                <h2 id="sample-prep-guidelines-title">Sample Preparation Guidelines</h2>
                 <p class="section-subtitle">Proper sample preparation is essential for obtaining high-quality SEM and EDX results. Only solid, fully dried samples are accepted to ensure safety and prevent instrument contamination. Each sample should be small, clean, and securely packaged in a labeled container. Following these preparation guidelines helps achieve accurate imaging, reliable elemental analysis, and smooth processing of your request.</p>
                 <div class="table-wrap" aria-label="Allowed vs. Not Allowed Samples table">
                     <table class="prep-table">
@@ -2598,9 +2886,9 @@
                 <div class="nav-button-icon" aria-hidden="true">📝</div>
                 <div class="nav-button-text">Service Request</div>
             </a>
-            <a href="#" class="nav-button" data-section="preparation" aria-label="Sample Prep">
+            <a href="#" class="nav-button" data-section="preparation" aria-label="Guidelines">
                 <div class="nav-button-icon" aria-hidden="true">⚗️</div>
-                <div class="nav-button-text">Sample Prep</div>
+                <div class="nav-button-text">Guidelines</div>
             </a>
             <a href="#" class="nav-button" data-section="extras" aria-label="Extras">
                 <div class="nav-button-icon" aria-hidden="true">🔧</div>
@@ -3012,6 +3300,25 @@
                 <div class="modal-footer">
                     <a class="btn-subtle" href="compressiontest.html">Open Stress-Strain Analyzer</a>
                     <button class="btn-primary" type="button" data-close-modal>Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-full-guidelines" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-full-guidelines-title" aria-hidden="true">
+        <div class="modal guidelines-modal" role="document">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modal-full-guidelines-title" class="modal-title">Full SEM-EDX Guidelines</h3>
+                    <p class="modal-subtitle">Complete policy document covering scope, submission, payment, and frequently asked questions.</p>
+                </div>
+                <button class="modal-close" type="button" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-content">
+                <iframe class="guidelines-frame" src="semedx.html" title="Full SEM-EDX Guidelines"></iframe>
+                <div class="modal-footer">
+                    <a class="btn-subtle" href="semedx.html" target="_blank" rel="noopener noreferrer">Open in New Tab</a>
+                    <button class="btn-subtle" type="button" data-close-modal>Close</button>
                 </div>
             </div>
         </div>
@@ -4939,10 +5246,22 @@
                 if (v && !v.paused) { try { v.pause(); } catch(_) {} }
             }
 
-            function openModal(id){
+            function setGuidelinesTarget(target){
+                const frame = document.querySelector('#modal-full-guidelines .guidelines-frame');
+                if (!frame) return;
+                const base = 'semedx.html';
+                const safeTarget = (target || '').trim();
+                frame.setAttribute('src', safeTarget ? `${base}#${safeTarget}` : base);
+            }
+
+            function openModal(id, target){
                 const overlay = document.getElementById('modal-' + id);
                 if (!overlay) return;
                 if (activeOverlay) closeModal(activeOverlay, true);
+
+                if (id === 'full-guidelines') {
+                    setGuidelinesTarget(target);
+                }
 
                 lastFocus = document.activeElement;
                 activeOverlay = overlay;
@@ -4970,7 +5289,8 @@
             openButtons.forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.getAttribute('data-open-modal');
-                    openModal(id);
+                    const target = btn.getAttribute('data-guidelines-target');
+                    openModal(id, target);
                 });
             });
 
