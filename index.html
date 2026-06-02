@@ -2163,19 +2163,6 @@
                     A few representative SEM micrographs and EDX results from our lab. Click to enlarge.
                 </p>
                 <div id="samples-grid" class="samples-grid" aria-live="polite"></div>
-                
-                <!-- Download Sample Raw Data -->
-                <h4 class="team-heading" style="margin-top: 1.5rem;">📥 Sample Raw Data</h4>
-                <div class="extra-service" id="raw-data-download">
-                    <p style="margin-top: 0; color: #6c757d;">
-                        Download a sample package containing SEM micrographs and EDX outputs (images, spectrum, and document report data).
-                    </p>
-                    <!-- TODO: Replace href with your Google Drive folder link -->
-                    <a class="btn-subtle" href="https://drive.google.com/drive/folders/1Z2xSd-d935kg6bFXfIpvtg8A_0EWd5Td?usp=sharing" target="_blank" rel="noopener noreferrer"
-                       aria-label="Download sample SEM and EDX raw data from Google Drive">
-                        Download Sample Raw Data
-                    </a>
-                </div>
 
                 <!-- Feedback Section -->
                 <h4 class="team-heading" id="feedback-title" style="margin-top: 1.5rem;">💬 Feedback</h4>
@@ -2226,6 +2213,32 @@
         <div id="cost-page" class="page">
             <section class="section">
                 <h2>Cost of Analysis</h2>
+                <!-- Cost Calculator -->
+                <div class="calculator">
+                    <h3>🧮 Cost Calculator</h3>
+                    <div class="calc-row">
+                        <div class="calc-input">
+                            <label for="samples">Number of Samples:</label>
+                            <input type="number" id="samples" min="1" max="100" value="1" aria-describedby="bulk-pricing-hint">
+                            <input type="range" id="samples-slider" min="1" max="100" step="1" value="1" aria-label="Samples slider" aria-describedby="bulk-pricing-hint">
+                            <p id="bulk-pricing-hint" class="calc-help">Bulk pricing: the average cost per sample decreases as sample count increases.</p>
+                        </div>
+                        <div class="calc-input">
+                            <label for="analysis-type">Analysis Type:</label>
+                            <select id="analysis-type">
+                                <option value="basic">Basic SEM</option>
+                                <option value="semedx">SEM and EDX</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="calc-result">
+                        <div class="calc-total">Total Cost ₱<span id="total-cost">—</span></div>
+                    </div>
+                </div>
+
+                <h2 style="margin-top: 1.5rem;">Inclusion of Analysis</h2>
+
                 <div class="pricing-grid">
                     <div class="pricing-card">
                         <h3>Basic SEM</h3>
@@ -2288,30 +2301,6 @@
                                 <span>Equipment Specifications</span>
                             </button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Cost Calculator -->
-                <div class="calculator">
-                    <h3>🧮 Cost Calculator</h3>
-                    <div class="calc-row">
-                        <div class="calc-input">
-                            <label for="samples">Number of Samples:</label>
-                            <input type="number" id="samples" min="1" max="100" value="1" aria-describedby="bulk-pricing-hint">
-                            <input type="range" id="samples-slider" min="1" max="100" step="1" value="1" aria-label="Samples slider" aria-describedby="bulk-pricing-hint">
-                            <p id="bulk-pricing-hint" class="calc-help">Bulk pricing: the average cost per sample decreases as sample count increases.</p>
-                        </div>
-                        <div class="calc-input">
-                            <label for="analysis-type">Analysis Type:</label>
-                            <select id="analysis-type">
-                                <option value="basic">Basic SEM</option>
-                                <option value="semedx">SEM and EDX</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="calc-result">
-                        <div class="calc-total">Total Cost ₱<span id="total-cost">—</span></div>
                     </div>
                 </div>
             </section>

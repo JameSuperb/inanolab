@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chemistry Through Correlation</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'DM Sans', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    html, body { height: 100%; margin: 0; }
+    .tab-active { background: #0891b2; color: white; }
+    .tab-inactive { background: #e0f2fe; color: #0369a1; }
+    .tab-inactive:hover { background: #cffafe; }
+    .section-btn-active { background: #0ea5e9; color: white; font-weight: 600; }
+    .section-btn-inactive { background: #f1f5f9; color: #0369a1; }
+    .section-btn-inactive:hover { background: #e2e8f0; }
+    canvas { image-rendering: auto; }
+    .sim-container { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; }
+    .quiz-option { transition: all 0.2s; }
+    .quiz-option:hover { transform: translateX(4px); }
+    .quiz-correct { background: #dcfce7 !important; border-color: #22c55e !important; }
+    .quiz-wrong { background: #fee2e2 !important; border-color: #ef4444 !important; }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 8px; background: #22c55e; color: white; z-index: 1000; animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
+    ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 3px; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ <script src="/_sdk/telemetry_sdk.js"></script></head>
+ <body class="h-full bg-white text-slate-800 overflow-auto">
+  <div id="app" class="w-full min-h-full flex flex-col"><!-- Header -->
+   <header class="w-full px-6 py-5 bg-gradient-to-r from-white via-sky-50 to-white border-b border-sky-200">
+    <div class="max-w-7xl mx-auto">
+     <h1 id="main-title" class="text-3xl font-bold text-sky-900 tracking-tight">Chemistry Through Correlation</h1>
+     <p id="subtitle" class="text-sky-600 mt-1 text-sm">Interactive Data Explorer</p>
+    </div>
+   </header><!-- Topic Tabs -->
+   <nav class="w-full px-6 py-3 bg-sky-50 border-b border-sky-200">
+    <div class="max-w-7xl mx-auto flex flex-wrap gap-2"><button onclick="switchTopic(0)" id="topic-tab-0" class="tab-active px-4 py-2 rounded-lg text-sm font-medium transition-all">Charles' Law</button> <button onclick="switchTopic(1)" id="topic-tab-1" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Boyle's Law</button> <button onclick="switchTopic(2)" id="topic-tab-2" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Reaction Kinetics</button> <button onclick="switchTopic(3)" id="topic-tab-3" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Beer-Lambert Law</button>
+    </div>
+   </nav><!-- Main Content -->
+   <main class="flex-1 w-full px-6 py-6">
+    <div class="max-w-7xl mx-auto"><!-- Section Navigation -->
+     <div class="flex flex-wrap gap-2 mb-6"><button onclick="switchSection(0)" id="sec-btn-0" class="section-btn-active px-3 py-1.5 rounded-md text-xs transition-all">📚 Description</button> <button onclick="switchSection(1)" id="sec-btn-1" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">🔬 Simulation</button> <button onclick="switchSection(2)" id="sec-btn-2" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">📊 Data Table</button> <button onclick="switchSection(3)" id="sec-btn-3" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">📈 Graph &amp; Analysis</button> <button onclick="switchSection(4)" id="sec-btn-4" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">❓ Quiz</button>
+     </div><!-- Content Area -->
+     <div id="content-area" class="fade-in"></div>
+    </div>
+   </main>
+  </div>
+  <script>
+    // ===== DATA =====
+    const topics = [
+      {
+        name: "Charles' Law",
+        description: {
+          intro: "At constant pressure, the volume of a gas increases linearly as temperature increases. This fundamental gas law demonstrates a direct linear relationship between volume and absolute temperature.",
+          variables: ["Temperature (K) — Independent variable", "Volume (mL) — Dependent variable"],
+          trendline: "Linear: V = kT (where k is a constant)",
+          application: "Hot air balloons rise because heating the air inside increases its volume, making the balloon less dense than surrounding air. This principle is also used in gas thermometers and industrial gas storage."
+        },
+        sim: { xLabel: "Temperature (K)", yLabel: "Volume (mL)", xMin: 200, xMax: 500, generate: t => (t * 0.5 + Math.random() * 5).toFixed(1) },
+        quiz: [
+          { q: "What happens to gas volume when temperature increases at constant pressure?", opts: ["Decreases", "Increases linearly", "Stays the same", "Increases exponentially"], correct: 1, explain: "Charles' Law states V ∝ T at constant pressure, giving a linear increase." },
+          { q: "What temperature scale must be used for Charles' Law?", opts: ["Celsius", "Fahrenheit", "Kelvin", "Any scale"], correct: 2, explain: "Kelvin (absolute temperature) must be used because Charles' Law requires T=0 to mean zero molecular motion." },
+          { q: "If volume is 100 mL at 300 K, what is it at 600 K?", opts: ["50 mL", "100 mL", "200 mL", "400 mL"], correct: 2, explain: "Doubling temperature doubles volume: V₂ = V₁(T₂/T₁) = 100(600/300) = 200 mL." },
+          { q: "The graph of V vs T (in Kelvin) for Charles' Law is:", opts: ["A curve", "A straight line through origin", "A hyperbola", "An exponential"], correct: 1, explain: "V = kT is a linear equation passing through the origin (absolute zero)." },
+          { q: "Which real-world example demonstrates Charles' Law?", opts: ["Scuba tank pressure", "Hot air balloon inflation", "Rusting iron", "Dissolving sugar"], correct: 1, explain: "Hot air balloons work by heating air to increase its volume, reducing density." }
+        ]
+      },
+      {
+        name: "Boyle's Law",
+        description: {
+          intro: "At constant temperature, the pressure of a gas increases as its volume decreases. This inverse relationship means that P × V = constant, producing a hyperbolic curve when graphed.",
+          variables: ["Volume (mL) — Independent variable", "Pressure (kPa) — Dependent variable"],
+          trendline: "Inverse: P = k/V (hyperbola)",
+          application: "Syringes work on this principle — pushing the plunger reduces volume and increases pressure, forcing liquid out. Scuba diving, breathing mechanics, and hydraulic systems all rely on Boyle's Law."
+        },
+        sim: { xLabel: "Volume (mL)", yLabel: "Pressure (kPa)", xMin: 10, xMax: 100, generate: v => (1000 / v + Math.random() * 3).toFixed(1) },
+        quiz: [
+          { q: "Boyle's Law describes the relationship between:", opts: ["Pressure and temperature", "Volume and temperature", "Pressure and volume", "Density and pressure"], correct: 2, explain: "Boyle's Law: P₁V₁ = P₂V₂ at constant temperature." },
+          { q: "If you halve the volume of a gas at constant temperature, pressure:", opts: ["Halves", "Doubles", "Stays the same", "Quadruples"], correct: 1, explain: "PV = k, so if V is halved, P must double to maintain the constant." },
+          { q: "The graph of P vs V for Boyle's Law is:", opts: ["A straight line", "A parabola", "A hyperbola", "An S-curve"], correct: 2, explain: "P = k/V produces a hyperbolic curve." },
+          { q: "Which condition must remain constant for Boyle's Law?", opts: ["Pressure", "Volume", "Temperature", "Amount of gas and temperature"], correct: 3, explain: "Boyle's Law requires constant temperature and amount of gas." },
+          { q: "A syringe with 60 mL of air is compressed to 20 mL. If initial pressure is 100 kPa, final pressure is:", opts: ["100 kPa", "200 kPa", "300 kPa", "33 kPa"], correct: 2, explain: "P₂ = P₁V₁/V₂ = 100×60/20 = 300 kPa." }
+        ]
+      },
+      {
+        name: "Reaction Kinetics",
+        description: {
+          intro: "In a first-order reaction, the concentration of reactant decreases exponentially over time. The rate of reaction is proportional to the current concentration, leading to exponential decay.",
+          variables: ["Time (s) — Independent variable", "Concentration (mol/L) — Dependent variable"],
+          trendline: "Exponential decay: [A] = [A]₀ × e^(-kt)",
+          application: "Radioactive decay, drug metabolism in the body, and decomposition of hydrogen peroxide all follow first-order kinetics. The half-life concept comes directly from this relationship."
+        },
+        sim: { xLabel: "Time (s)", yLabel: "Concentration (mol/L)", xMin: 0, xMax: 60, generate: t => (1.0 * Math.exp(-0.05 * t) + Math.random() * 0.03).toFixed(3) },
+        quiz: [
+          { q: "In first-order kinetics, concentration vs time gives:", opts: ["A straight line", "A parabola", "An exponential decay curve", "A step function"], correct: 2, explain: "[A] = [A]₀e^(-kt) produces exponential decay." },
+          { q: "What is the half-life of a first-order reaction with k = 0.05 s⁻¹?", opts: ["10 s", "13.9 s", "20 s", "50 s"], correct: 1, explain: "t½ = ln(2)/k = 0.693/0.05 ≈ 13.9 s." },
+          { q: "Doubling the initial concentration in a first-order reaction:", opts: ["Doubles the half-life", "Halves the rate constant", "Doubles the initial rate", "Has no effect on half-life"], correct: 2, explain: "Rate = k[A], so doubling [A] doubles the rate. Half-life is independent of concentration." },
+          { q: "A plot of ln[A] vs time for first-order gives:", opts: ["A curve", "A straight line with negative slope", "A horizontal line", "A parabola"], correct: 1, explain: "ln[A] = ln[A]₀ - kt is linear with slope = -k." },
+          { q: "Which is an example of first-order kinetics?", opts: ["Combining two solutions", "Radioactive decay", "Burning wood", "Neutralization"], correct: 1, explain: "Radioactive decay follows first-order kinetics with a constant half-life." }
+        ]
+      },
+      {
+        name: "Beer-Lambert Law",
+        description: {
+          intro: "The absorbance of a solution is directly proportional to its concentration and path length. A = εlc produces a linear calibration curve that allows unknown concentrations to be determined from measured absorbance.",
+          variables: ["Concentration (mol/L) — Independent variable", "Absorbance (AU) — Dependent variable"],
+          trendline: "Linear calibration: A = εlc (slope = εl)",
+          application: "Spectrophotometry in clinical labs measures blood glucose, protein levels, and drug concentrations. Environmental monitoring uses this law to measure pollutant concentrations in water samples."
+        },
+        sim: { xLabel: "Concentration (mol/L)", yLabel: "Absorbance (AU)", xMin: 0, xMax: 0.1, generate: c => (12 * c + Math.random() * 0.02).toFixed(3) },
+        quiz: [
+          { q: "Beer-Lambert Law states that absorbance is proportional to:", opts: ["Temperature", "Pressure", "Concentration and path length", "Wavelength"], correct: 2, explain: "A = εlc, where ε is molar absorptivity, l is path length, c is concentration." },
+          { q: "A calibration curve in Beer-Lambert Law should be:", opts: ["Exponential", "A straight line through origin", "A hyperbola", "S-shaped"], correct: 1, explain: "A = εlc is linear with y-intercept at origin (zero concentration = zero absorbance)." },
+          { q: "If absorbance doubles, concentration:", opts: ["Halves", "Doubles", "Stays the same", "Quadruples"], correct: 1, explain: "A ∝ c, so doubling A means concentration has doubled." },
+          { q: "The slope of a Beer-Lambert calibration curve equals:", opts: ["Concentration", "Absorbance", "εl (molar absorptivity × path length)", "Wavelength"], correct: 2, explain: "In A = (εl)c, the slope is εl." },
+          { q: "To find an unknown concentration, you:", opts: ["Measure its mass", "Use the calibration curve equation", "Heat the solution", "Add indicator"], correct: 1, explain: "Substitute the measured absorbance into A = (εl)c and solve for c." }
+        ]
+      }
+    ];
+
+    let currentTopic = 0;
+    let currentSection = 0;
+    let dataPoints = [[], [], [], []]; // per topic
+    let quizStates = [{}, {}, {}, {}]; // per topic
+
+    // ===== NAVIGATION =====
+    function switchTopic(idx) {
+      currentTopic = idx;
+      for (let i = 0; i < 4; i++) {
+        document.getElementById(`topic-tab-${i}`).className = i === idx ? 'tab-active px-4 py-2 rounded-lg text-sm font-medium transition-all' : 'tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all';
+      }
+      renderContent();
+    }
+
+    function switchSection(idx) {
+      currentSection = idx;
+      for (let i = 0; i < 5; i++) {
+        document.getElementById(`sec-btn-${i}`).className = i === idx ? 'section-btn-active px-3 py-1.5 rounded-md text-xs transition-all' : 'section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all';
+      }
+      renderContent();
+    }
+
+    // ===== RENDER =====
+    function renderContent() {
+      const area = document.getElementById('content-area');
+      area.className = 'fade-in';
+      switch (currentSection) {
+        case 0: renderDescription(area); break;
+        case 1: renderSimulation(area); break;
+        case 2: renderDataTable(area); break;
+        case 3: renderGraph(area); break;
+        case 4: renderQuiz(area); break;
+      }
+      lucide.createIcons();
+    }
+
+    function renderDescription(area) {
+      const t = topics[currentTopic].description;
+      area.innerHTML = `
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
+            <h2 class="text-xl font-bold text-sky-900 mb-3">${topics[currentTopic].name}</h2>
+            <p class="text-sky-800 leading-relaxed text-sm">${t.intro}</p>
+          </div>
+          <div class="space-y-4">
+            <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+              <h3 class="text-sm font-semibold text-sky-700 mb-2 flex items-center gap-2"><i data-lucide="variable" class="w-4 h-4"></i> Variables</h3>
+              <ul class="space-y-1">${t.variables.map(v => `<li class="text-sky-800 text-xs mono">• ${v}</li>`).join('')}</ul>
+            </div>
+            <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+              <h3 class="text-sm font-semibold text-sky-700 mb-2 flex items-center gap-2"><i data-lucide="trending-up" class="w-4 h-4"></i> Trendline</h3>
+              <p class="text-sky-900 text-xs mono">${t.trendline}</p>
+            </div>
+            <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+              <h3 class="text-sm font-semibold text-sky-700 mb-2 flex items-center gap-2"><i data-lucide="flask-conical" class="w-4 h-4"></i> Application</h3>
+              <p class="text-sky-800 text-xs leading-relaxed">${t.application}</p>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderSimulation(area) {
+      const t = topics[currentTopic];
+      const sim = t.sim;
+      area.innerHTML = `
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="sim-container p-6">
+            <h3 class="text-sm font-semibold text-teal-400 mb-4">${t.name} Simulation</h3>
+            <div class="mb-4">
+              <label class="text-xs text-sky-700 block mb-1">${sim.xLabel}: <span id="sim-val" class="mono text-sky-900">${sim.xMin}</span></label>
+              <input type="range" id="sim-slider" min="${sim.xMin}" max="${sim.xMax}" value="${sim.xMin}" step="${(sim.xMax - sim.xMin) / 100}" class="w-full accent-teal-500" oninput="updateSim()">
+            </div>
+            <div id="sim-visual" class="h-48 flex items-center justify-center rounded-lg bg-white border border-sky-200"></div>
+            <div class="mt-3 text-center">
+              <span class="text-xs text-sky-600">${sim.yLabel}: </span>
+              <span id="sim-result" class="mono text-sky-900 text-sm font-semibold"></span>
+            </div>
+          </div>
+          <div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
+            <h3 class="text-sm font-semibold text-sky-700 mb-4">Record Data</h3>
+            <p class="text-xs text-sky-700 mb-4">Adjust the slider and click "Add Data Point" to record values to your data table.</p>
+            <button onclick="addFromSim()" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2">
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Data Point
+            </button>
+            <div class="mt-4 p-3 bg-white rounded-lg border border-sky-200">
+              <p class="text-xs text-sky-600">Points recorded: <span class="text-sky-900 font-semibold">${dataPoints[currentTopic].length}</span></p>
+            </div>
+          </div>
+        </div>`;
+      updateSim();
+    }
+
+    function updateSim() {
+      const slider = document.getElementById('sim-slider');
+      const val = parseFloat(slider.value);
+      document.getElementById('sim-val').textContent = val.toFixed(1);
+      const sim = topics[currentTopic].sim;
+      const y = parseFloat(sim.generate(val));
+      document.getElementById('sim-result').textContent = y;
+
+      // Visual
+      const visual = document.getElementById('sim-visual');
+      if (currentTopic === 0) { // Charles - balloon
+        const pct = (val - sim.xMin) / (sim.xMax - sim.xMin);
+        const size = 40 + pct * 80;
+        visual.innerHTML = `<div style="width:${size}px;height:${size}px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #5eead4, #0d9488);transition:all 0.3s;box-shadow:0 0 ${size/3}px #14b8a655;"></div>`;
+      } else if (currentTopic === 1) { // Boyle - syringe
+        const pct = (val - sim.xMin) / (sim.xMax - sim.xMin);
+        const width = 30 + pct * 150;
+        visual.innerHTML = `<div class="relative" style="width:180px;height:60px;border:2px solid #2dd4bf;border-radius:8px;overflow:hidden;"><div style="width:${width}px;height:100%;background:linear-gradient(90deg,#0d9488,#14b8a6);transition:all 0.3s;display:flex;align-items:center;justify-content:center;"><span class="text-xs text-white font-bold mono">${val.toFixed(0)} mL</span></div></div>`;
+      } else if (currentTopic === 2) { // Kinetics - particles
+        const pct = Math.exp(-0.05 * val);
+        const count = Math.max(1, Math.round(pct * 30));
+        let dots = '';
+        for (let i = 0; i < count; i++) {
+          const x = Math.random() * 90 + 5;
+          const yp = Math.random() * 90 + 5;
+          dots += `<div style="position:absolute;left:${x}%;top:${yp}%;width:8px;height:8px;border-radius:50%;background:#2dd4bf;"></div>`;
+        }
+        visual.innerHTML = `<div class="relative w-full h-full bg-sky-100 rounded-lg">${dots}</div>`;
+      } else { // Beer-Lambert - color
+        const pct = val / sim.xMax;
+        const alpha = 0.1 + pct * 0.8;
+        visual.innerHTML = `<div style="width:80px;height:120px;border-radius:4px 4px 0 0;border:2px solid #0ea5e9;background:rgba(99,102,241,${alpha});transition:all 0.3s;position:relative;"><div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:30px;height:10px;background:#0ea5e9;border-radius:4px 4px 0 0;"></div></div>`;
+      }
+    }
+
+    function addFromSim() {
+      const slider = document.getElementById('sim-slider');
+      const x = parseFloat(slider.value);
+      const y = parseFloat(topics[currentTopic].sim.generate(x));
+      dataPoints[currentTopic].push({ x, y });
+      showToast(`Data point added (${dataPoints[currentTopic].length} total)`);
+      renderSimulation(document.getElementById('content-area'));
+      lucide.createIcons();
+    }
+
+    function renderDataTable(area) {
+      const t = topics[currentTopic];
+      const data = dataPoints[currentTopic];
+      area.innerHTML = `
+        <div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h3 class="text-lg font-semibold text-sky-900">${t.name} Data</h3>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="generateSample()" class="px-3 py-1.5 bg-sky-500 hover:bg-sky-600 rounded-md text-xs text-white transition-all">Generate Sample</button>
+              <button onclick="clearData()" class="px-3 py-1.5 bg-red-200 hover:bg-red-300 rounded-md text-xs text-red-700 transition-all">Clear</button>
+              <button onclick="downloadCSV()" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 rounded-md text-xs text-white transition-all flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> CSV</button>
+            </div>
+          </div>
+          ${data.length === 0 ? '<p class="text-sky-600 text-sm text-center py-8">No data yet. Use the Simulation tab or "Generate Sample" to add data points.</p>' : `
+          <div class="overflow-x-auto max-h-80 overflow-y-auto">
+            <table class="w-full text-sm">
+              <thead class="sticky top-0 bg-sky-50"><tr>
+                <th class="text-left py-2 px-3 text-sky-700 text-xs font-medium border-b border-sky-200">#</th>
+                <th class="text-left py-2 px-3 text-sky-700 text-xs font-medium border-b border-sky-200">${t.sim.xLabel}</th>
+                <th class="text-left py-2 px-3 text-sky-700 text-xs font-medium border-b border-sky-200">${t.sim.yLabel}</th>
+              </tr></thead>
+              <tbody>${data.map((d, i) => `<tr class="border-b border-sky-200 hover:bg-sky-100"><td class="py-1.5 px-3 text-sky-600 mono text-xs">${i + 1}</td><td class="py-1.5 px-3 text-sky-900 mono text-xs">${d.x.toFixed(3)}</td><td class="py-1.5 px-3 text-sky-900 mono text-xs">${d.y.toFixed(3)}</td></tr>`).join('')}</tbody>
+            </table>
+          </div>`}
+        </div>`;
+    }
+
+    function generateSample() {
+      const sim = topics[currentTopic].sim;
+      const range = sim.xMax - sim.xMin;
+      for (let i = 0; i < 8; i++) {
+        const x = sim.xMin + (range / 9) * (i + 1) + (Math.random() - 0.5) * range * 0.05;
+        const y = parseFloat(sim.generate(x));
+        dataPoints[currentTopic].push({ x, y });
+      }
+      renderDataTable(document.getElementById('content-area'));
+      lucide.createIcons();
+      showToast('8 sample points generated');
+    }
+
+    function clearData() {
+      dataPoints[currentTopic] = [];
+      renderDataTable(document.getElementById('content-area'));
+      lucide.createIcons();
+    }
+
+    function downloadCSV() {
+      const t = topics[currentTopic];
+      const data = dataPoints[currentTopic];
+      if (!data.length) return showToast('No data to download');
+      let csv = `${t.sim.xLabel},${t.sim.yLabel}\n`;
+      data.forEach(d => csv += `${d.x},${d.y}\n`);
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${t.name.replace(/[^a-z]/gi, '_')}_data.csv`;
+      a.click();
+      showToast('CSV downloaded');
+    }
+
+    // ===== GRAPH =====
+    function renderGraph(area) {
+      const t = topics[currentTopic];
+      const data = dataPoints[currentTopic];
+      const hasData = data.length >= 2;
+
+      let analysisHTML = '';
+      let unknownHTML = '';
+
+      if (hasData) {
+        const fit = computeFit(data);
+        analysisHTML = `
+          <div class="mt-4 p-4 bg-white rounded-lg border border-sky-200">
+            <h4 class="text-xs font-semibold text-sky-700 mb-2">Analysis Results</h4>
+            <p class="mono text-xs text-sky-900 mb-1">Equation: ${fit.equation}</p>
+            <p class="mono text-xs text-sky-900">R² = ${fit.r2.toFixed(4)}</p>
+            <p class="text-xs text-sky-700 mt-2">${fit.interpretation}</p>
+          </div>`;
+
+        if (currentTopic === 3) {
+          unknownHTML = `
+            <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 class="text-xs font-semibold text-sky-800 mb-2">Determine Unknown Concentration</h4>
+              <div class="flex gap-2 items-end">
+                <div class="flex-1">
+                  <label class="text-xs text-sky-700 block mb-1">Unknown Absorbance (AU)</label>
+                  <input type="number" id="unknown-abs" step="0.001" class="w-full px-3 py-2 bg-white border border-sky-300 rounded-md text-sky-900 text-sm mono" placeholder="e.g. 0.5">
+                </div>
+                <button onclick="calcUnknown()" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-md text-sm transition-all">Calculate</button>
+              </div>
+              <div id="unknown-result" class="mt-2"></div>
+            </div>`;
+        }
+      }
+
+      area.innerHTML = `
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="md:col-span-2 sim-container p-4">
+            <canvas id="graph-canvas" width="600" height="350" class="w-full"></canvas>
+          </div>
+          <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+            <h3 class="text-sm font-semibold text-sky-900 mb-3">Scatter Plot & Trendline</h3>
+            ${!hasData ? '<p class="text-xs text-sky-600">Need at least 2 data points. Use Simulation or Data Table to add points.</p>' : analysisHTML}
+            ${unknownHTML}
+          </div>
+        </div>`;
+
+      if (hasData) drawGraph(data);
+    }
+
+    function computeFit(data) {
+      const n = data.length;
+      const xs = data.map(d => d.x), ys = data.map(d => d.y);
+
+      if (currentTopic === 0 || currentTopic === 3) { // Linear
+        const { m, b, r2 } = linearFit(xs, ys);
+        const interp = r2 > 0.9 ? "Strong linear correlation confirmed." : r2 > 0.7 ? "Moderate linear trend observed." : "Weak correlation — check data quality.";
+        return { equation: `y = ${m.toFixed(4)}x + ${b.toFixed(4)}`, r2, interpretation: interp, m, b, type: 'linear' };
+      } else if (currentTopic === 1) { // Inverse
+        const invX = xs.map(x => 1 / x);
+        const { m, b, r2 } = linearFit(invX, ys);
+        const interp = r2 > 0.9 ? "Strong inverse relationship confirmed." : "Moderate inverse trend observed.";
+        return { equation: `P = ${m.toFixed(2)}/V + ${b.toFixed(2)}`, r2, interpretation: interp, m, b, type: 'inverse' };
+      } else { // Exponential
+        const lnY = ys.map(y => Math.log(Math.max(y, 0.001)));
+        const { m, b, r2 } = linearFit(xs, lnY);
+        const A0 = Math.exp(b);
+        const interp = r2 > 0.9 ? "Strong exponential decay confirmed." : "Moderate exponential trend observed.";
+        return { equation: `[A] = ${A0.toFixed(3)} × e^(${m.toFixed(4)}t)`, r2, interpretation: interp, A0, k: m, type: 'exponential' };
+      }
+    }
+
+    function linearFit(xs, ys) {
+      const n = xs.length;
+      const sx = xs.reduce((a, b) => a + b, 0), sy = ys.reduce((a, b) => a + b, 0);
+      const sxx = xs.reduce((a, x) => a + x * x, 0), sxy = xs.reduce((a, x, i) => a + x * ys[i], 0);
+      const syy = ys.reduce((a, y) => a + y * y, 0);
+      const m = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+      const b = (sy - m * sx) / n;
+      const ssRes = ys.reduce((a, y, i) => a + (y - (m * xs[i] + b)) ** 2, 0);
+      const ssTot = ys.reduce((a, y) => a + (y - sy / n) ** 2, 0);
+      const r2 = ssTot === 0 ? 1 : 1 - ssRes / ssTot;
+      return { m, b, r2 };
+    }
+
+    function drawGraph(data) {
+      const canvas = document.getElementById('graph-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+      const pad = { top: 30, right: 30, bottom: 50, left: 60 };
+      const gW = W - pad.left - pad.right, gH = H - pad.top - pad.bottom;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, H);
+
+      const xs = data.map(d => d.x), ys = data.map(d => d.y);
+      const xMin = Math.min(...xs) * 0.9, xMax = Math.max(...xs) * 1.1;
+      const yMin = Math.min(...ys) * 0.9, yMax = Math.max(...ys) * 1.1;
+
+      const toX = x => pad.left + (x - xMin) / (xMax - xMin) * gW;
+      const toY = y => pad.top + gH - (y - yMin) / (yMax - yMin) * gH;
+
+      // Grid
+      ctx.strokeStyle = '#bae6fd44';
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i <= 5; i++) {
+        const y = pad.top + gH * i / 5;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + gW, y); ctx.stroke();
+        const x = pad.left + gW * i / 5;
+        ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + gH); ctx.stroke();
+      }
+
+      // Axes
+      ctx.strokeStyle = '#0369a1';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + gH); ctx.lineTo(pad.left + gW, pad.top + gH); ctx.stroke();
+
+      // Labels
+      ctx.fillStyle = '#0369a1';
+      ctx.font = '10px JetBrains Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText(topics[currentTopic].sim.xLabel, pad.left + gW / 2, H - 8);
+      ctx.save(); ctx.translate(12, pad.top + gH / 2); ctx.rotate(-Math.PI / 2);
+      ctx.fillText(topics[currentTopic].sim.yLabel, 0, 0); ctx.restore();
+
+      // Axis values
+      ctx.fillStyle = '#0369a1';
+      ctx.font = '9px JetBrains Mono';
+      for (let i = 0; i <= 5; i++) {
+        const xv = xMin + (xMax - xMin) * i / 5;
+        ctx.textAlign = 'center';
+        ctx.fillText(xv.toPrecision(3), toX(xv), pad.top + gH + 15);
+        const yv = yMin + (yMax - yMin) * i / 5;
+        ctx.textAlign = 'right';
+        ctx.fillText(yv.toPrecision(3), pad.left - 5, toY(yv) + 3);
+      }
+
+      // Trendline
+      const fit = computeFit(data);
+      ctx.strokeStyle = '#f59e0bdd';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([5, 3]);
+      ctx.beginPath();
+      for (let i = 0; i <= 100; i++) {
+        const x = xMin + (xMax - xMin) * i / 100;
+        let y;
+        if (fit.type === 'linear') y = fit.m * x + fit.b;
+        else if (fit.type === 'inverse') y = fit.m / x + fit.b;
+        else y = fit.A0 * Math.exp(fit.k * x);
+        const px = toX(x), py = toY(y);
+        if (py >= pad.top && py <= pad.top + gH) {
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Points
+      data.forEach(d => {
+        ctx.fillStyle = '#0ea5e9';
+        ctx.beginPath();
+        ctx.arc(toX(d.x), toY(d.y), 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#0369a1';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+    }
+
+    function calcUnknown() {
+      const data = dataPoints[currentTopic];
+      if (data.length < 2) return;
+      const abs = parseFloat(document.getElementById('unknown-abs').value);
+      if (isNaN(abs)) return;
+      const fit = computeFit(data);
+      const conc = fit.m !== 0 ? (abs - fit.b) / fit.m : 0;
+      document.getElementById('unknown-result').innerHTML = `<p class="mono text-xs text-teal-200 mt-2">Estimated concentration: <strong>${conc.toFixed(4)} mol/L</strong></p>`;
+    }
+
+    // ===== QUIZ =====
+    function renderQuiz(area) {
+      const quiz = topics[currentTopic].quiz;
+      const state = quizStates[currentTopic];
+      if (!state.answers) state.answers = {};
+      if (!state.finished) state.finished = false;
+
+      const answered = Object.keys(state.answers).length;
+      const allDone = answered === quiz.length;
+
+      let html = `<div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
+        <div class="flex items-center justify-between mb-5">
+          <h3 class="text-lg font-semibold text-sky-900">${topics[currentTopic].name} Quiz</h3>
+          <span class="text-xs mono text-sky-600">${answered}/${quiz.length} answered</span>
+        </div>
+        <div class="space-y-6">`;
+
+      quiz.forEach((item, qi) => {
+        const userAns = state.answers[qi];
+        const isAnswered = userAns !== undefined;
+        html += `<div class="p-4 bg-white rounded-lg border border-sky-200">
+          <p class="text-sm text-sky-900 font-medium mb-3">${qi + 1}. ${item.q}</p>
+          <div class="space-y-2">`;
+        item.opts.forEach((opt, oi) => {
+          let cls = 'quiz-option block w-full text-left px-4 py-2.5 rounded-md text-xs border ';
+          if (isAnswered) {
+            if (oi === item.correct) cls += 'quiz-correct border-emerald-500 text-emerald-700';
+            else if (oi === userAns && oi !== item.correct) cls += 'quiz-wrong border-red-500 text-red-700';
+            else cls += 'bg-slate-100 border-sky-200 text-slate-600';
+          } else {
+            cls += 'bg-white border-sky-300 text-sky-900 hover:bg-sky-100 cursor-pointer';
+          }
+          const onclick = isAnswered ? '' : `onclick="answerQuiz(${qi},${oi})"`;
+          html += `<button ${onclick} class="${cls}">${String.fromCharCode(65 + oi)}. ${opt}</button>`;
+        });
+        if (isAnswered) {
+          html += `<p class="text-xs text-sky-700 mt-2 pl-2 border-l-2 border-sky-500">${item.explain}</p>`;
+        }
+        html += `</div></div>`;
+      });
+
+      if (allDone) {
+        const score = quiz.reduce((s, item, i) => s + (state.answers[i] === item.correct ? 1 : 0), 0);
+        const msg = score === 5 ? "Perfect! Outstanding mastery!" : score >= 4 ? "Excellent understanding!" : score >= 3 ? "Good work! Review the explanations." : "Keep studying — review the descriptions tab.";
+        html += `<div class="p-4 bg-blue-100 rounded-lg border border-blue-300 text-center">
+          <p class="text-lg font-bold text-sky-900">Score: ${score}/5</p>
+          <p class="text-sm text-sky-700 mt-1">${msg}</p>
+          <button onclick="resetQuiz()" class="mt-3 px-4 py-2 bg-sky-600 hover:bg-sky-700 rounded-md text-xs text-white transition-all">Retry Quiz</button>
+        </div>`;
+      }
+
+      html += `</div></div>`;
+      area.innerHTML = html;
+    }
+
+    function answerQuiz(qi, oi) {
+      quizStates[currentTopic].answers[qi] = oi;
+      renderQuiz(document.getElementById('content-area'));
+      lucide.createIcons();
+    }
+
+    function resetQuiz() {
+      quizStates[currentTopic] = { answers: {}, finished: false };
+      renderQuiz(document.getElementById('content-area'));
+      lucide.createIcons();
+    }
+
+    // ===== TOAST =====
+    function showToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2500);
+    }
+
+    // ===== ELEMENT SDK =====
+    const defaultConfig = {
+      main_title: 'Chemistry Through Correlation',
+      subtitle: 'Interactive Data Explorer',
+      background_color: '#ffffff',
+      surface_color: '#f0f9ff',
+      text_color: '#0f172a',
+      primary_action: '#0ea5e9',
+      secondary_action: '#0369a1',
+      font_family: 'DM Sans',
+      font_size: 16
+    };
+
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => {
+        document.getElementById('main-title').textContent = config.main_title || defaultConfig.main_title;
+        document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
+
+        const bg = config.background_color || defaultConfig.background_color;
+        const surface = config.surface_color || defaultConfig.surface_color;
+        const text = config.text_color || defaultConfig.text_color;
+        const primary = config.primary_action || defaultConfig.primary_action;
+        const secondary = config.secondary_action || defaultConfig.secondary_action;
+        const font = config.font_family || defaultConfig.font_family;
+        const size = config.font_size || defaultConfig.font_size;
+
+        document.body.style.backgroundColor = bg;
+        document.body.style.color = text;
+        document.body.style.fontFamily = `${font}, DM Sans, sans-serif`;
+        document.body.style.fontSize = `${size}px`;
+        document.getElementById('main-title').style.color = text;
+      },
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          { get: () => config.background_color || defaultConfig.background_color, set: v => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+          { get: () => config.surface_color || defaultConfig.surface_color, set: v => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+          { get: () => config.text_color || defaultConfig.text_color, set: v => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+          { get: () => config.primary_action || defaultConfig.primary_action, set: v => { config.primary_action = v; window.elementSdk.setConfig({ primary_action: v }); } },
+          { get: () => config.secondary_action || defaultConfig.secondary_action, set: v => { config.secondary_action = v; window.elementSdk.setConfig({ secondary_action: v }); } }
+        ],
+        borderables: [],
+        fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: v => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+        fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: v => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
+      }),
+      mapToEditPanelValues: (config) => new Map([
+        ['main_title', config.main_title || defaultConfig.main_title],
+        ['subtitle', config.subtitle || defaultConfig.subtitle]
+      ])
+    });
+
+    // Initial render
+    renderContent();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0552b0c899b9d0c',t:'MTc4MDM4OTc4Mg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
