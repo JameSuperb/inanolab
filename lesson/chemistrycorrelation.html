@@ -33,6 +33,286 @@
     ::-webkit-scrollbar-thumb { background: #0ea5e9; border-radius: 3px; }
   </style>
   <style>body { box-sizing: border-box; }</style>
+  <style>
+    /* ===== PHASE 1: GLASSMORPHISM DESIGN SYSTEM ===== */
+
+    /* Glass Cards */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(14, 165, 233, 0.08);
+      border: 1px solid rgba(186, 230, 253, 0.6);
+      padding: 1.5rem;
+    }
+
+    /* Equation Box */
+    .equation-box {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.09) 0%, rgba(6, 182, 212, 0.09) 100%);
+      padding: 0.85rem 1.1rem;
+      border-radius: 10px;
+      border-left: 4px solid #0ea5e9;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 0.88rem;
+      color: #0c4a6e;
+      margin: 0.5rem 0;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+    .empty-state-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      opacity: 0.65;
+    }
+    .empty-state-text {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .trendline-select {
+      padding: 0.45rem 0.65rem;
+      border: 1px solid #7dd3fc;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #0c4a6e;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .analysis-panel {
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(186, 230, 253, 0.7);
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(14, 165, 233, 0.08);
+      padding: 1rem;
+    }
+
+    .analysis-label {
+      font-size: 0.72rem;
+      color: #0369a1;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.2rem;
+    }
+
+    .analysis-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: #0f172a;
+      font-weight: 600;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .analysis-interpretation {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(6, 182, 212, 0.08) 100%);
+      border-left: 4px solid #0ea5e9;
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.8rem;
+      color: #0c4a6e;
+      line-height: 1.45;
+    }
+
+    .quiz-progress-track {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      overflow: hidden;
+      margin-bottom: 0.45rem;
+    }
+
+    .quiz-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0ea5e9 0%, #0284c7 100%);
+      transition: width 0.25s ease;
+    }
+
+    .quiz-feedback {
+      margin-top: 0.6rem;
+      padding: 0.6rem 0.7rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      border-left: 4px solid #0ea5e9;
+      background: #e0f2fe;
+      color: #0c4a6e;
+    }
+
+    .quiz-summary-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #075985;
+    }
+
+    .quiz-celebrate {
+      font-size: 2.5rem;
+      line-height: 1;
+      animation: popIn 0.45s ease;
+    }
+
+    .surface-card {
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(186, 230, 253, 0.7);
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(14, 165, 233, 0.08);
+    }
+
+    .action-btn {
+      padding: 0.38rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      cursor: pointer;
+    }
+
+    .action-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-primary { background: #0284c7; color: #ffffff; }
+    .btn-primary:hover { background: #0369a1; }
+    .btn-secondary { background: #7c3aed; color: #ffffff; }
+    .btn-secondary:hover { background: #6d28d9; }
+    .btn-warning { background: #d97706; color: #ffffff; }
+    .btn-warning:hover { background: #b45309; }
+    .btn-danger-soft { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+    .btn-danger-soft:hover { background: #fecaca; }
+    .btn-outline { background: #ffffff; color: #0c4a6e; border-color: #7dd3fc; }
+    .btn-outline:hover { background: #e0f2fe; }
+
+    #main-title {
+      font-size: clamp(1.45rem, 2.8vw, 2.1rem);
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+    }
+
+    #subtitle {
+      font-size: clamp(0.78rem, 1.4vw, 0.92rem);
+      line-height: 1.35;
+    }
+
+    #main-shell {
+      padding: clamp(1rem, 2.4vw, 1.65rem);
+    }
+
+    #nav-topic-buttons button {
+      font-size: 0.82rem;
+      padding: 0.5rem 0.88rem;
+      border-radius: 0.62rem;
+      line-height: 1.2;
+    }
+
+    #section-nav {
+      gap: 0.55rem;
+      margin-bottom: 1.1rem;
+    }
+
+    #section-nav button {
+      font-size: 0.79rem;
+      padding: 0.44rem 0.72rem;
+      border-radius: 0.56rem;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
+    }
+
+    #content-area {
+      margin-top: 0.15rem;
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ===== PHASE 2: HAMBURGER NAV ===== */
+    .hamburger-btn {
+      display: none;
+      padding: 0.45rem 0.65rem;
+      background: rgba(14, 165, 233, 0.12);
+      border: none;
+      border-radius: 8px;
+      color: #0369a1;
+      font-size: 1.25rem;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .hamburger-btn:hover { background: rgba(14, 165, 233, 0.22); }
+
+    @media (max-width: 640px) {
+      .hamburger-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #nav-topic-buttons {
+        flex: none;
+        width: 100%;
+        order: 3;
+        flex-direction: column;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+      #nav-topic-buttons.nav-open {
+        max-height: 280px;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+      #nav-topic-buttons .tab-active,
+      #nav-topic-buttons .tab-inactive {
+        width: 100%;
+        text-align: left;
+      }
+
+      #main-shell {
+        padding: 0.9rem;
+      }
+
+      #section-nav {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.45rem;
+      }
+
+      #section-nav button {
+        width: 100%;
+        justify-content: center;
+        font-size: 0.75rem;
+        padding: 0.42rem 0.5rem;
+      }
+
+      .surface-card {
+        border-radius: 12px;
+      }
+
+      .action-btn {
+        font-size: 0.72rem;
+        padding: 0.36rem 0.62rem;
+      }
+    }
+  </style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
  <script src="/_sdk/telemetry_sdk.js"></script></head>
  <body class="h-full bg-white text-slate-800 overflow-auto">
@@ -43,13 +323,16 @@
      <p id="subtitle" class="text-sky-600 mt-1 text-sm">Interactive Data Explorer</p>
     </div>
    </header><!-- Topic Tabs -->
-   <nav class="w-full px-6 py-3 bg-sky-50 border-b border-sky-200">
-    <div class="max-w-7xl mx-auto flex flex-wrap gap-2"><button onclick="switchTopic(0)" id="topic-tab-0" class="tab-active px-4 py-2 rounded-lg text-sm font-medium transition-all">Charles' Law</button> <button onclick="switchTopic(1)" id="topic-tab-1" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Boyle's Law</button> <button onclick="switchTopic(2)" id="topic-tab-2" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Reaction Kinetics</button> <button onclick="switchTopic(3)" id="topic-tab-3" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Beer-Lambert Law</button>
+   <nav class="w-full bg-sky-50 border-b border-sky-200">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-center gap-2">
+     <div id="nav-topic-buttons" class="flex flex-wrap gap-2 flex-1"><button onclick="switchTopic(0)" id="topic-tab-0" class="tab-active px-4 py-2 rounded-lg text-sm font-medium transition-all">Charles' Law</button> <button onclick="switchTopic(1)" id="topic-tab-1" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Boyle's Law</button> <button onclick="switchTopic(2)" id="topic-tab-2" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Reaction Kinetics</button> <button onclick="switchTopic(3)" id="topic-tab-3" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Beer-Lambert Law</button>
+     </div>
+     <button id="hamburger-btn" onclick="toggleHamburger()" class="hamburger-btn" aria-label="Toggle navigation" aria-expanded="false">☰</button>
     </div>
    </nav><!-- Main Content -->
-   <main class="flex-1 w-full px-6 py-6">
+   <main id="main-shell" class="flex-1 w-full px-6 py-6">
     <div class="max-w-7xl mx-auto"><!-- Section Navigation -->
-     <div class="flex flex-wrap gap-2 mb-6"><button onclick="switchSection(0)" id="sec-btn-0" class="section-btn-active px-3 py-1.5 rounded-md text-xs transition-all">📚 Description</button> <button onclick="switchSection(1)" id="sec-btn-1" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">🔬 Simulation</button> <button onclick="switchSection(2)" id="sec-btn-2" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">📊 Data Table</button> <button onclick="switchSection(3)" id="sec-btn-3" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">📈 Graph &amp; Analysis</button> <button onclick="switchSection(4)" id="sec-btn-4" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">❓ Quiz</button>
+     <div id="section-nav" class="flex flex-wrap gap-2 mb-6"><button onclick="switchSection(0)" id="sec-btn-0" class="section-btn-active px-3 py-1.5 rounded-md text-xs transition-all">📚 Description</button> <button onclick="switchSection(1)" id="sec-btn-1" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">🔬 Simulation</button> <button onclick="switchSection(2)" id="sec-btn-2" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">📊 Data Table</button> <button onclick="switchSection(3)" id="sec-btn-3" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">📈 Graph &amp; Analysis</button> <button onclick="switchSection(4)" id="sec-btn-4" class="section-btn-inactive px-3 py-1.5 rounded-md text-xs transition-all">❓ Quiz</button>
      </div><!-- Content Area -->
      <div id="content-area" class="fade-in"></div>
     </div>
@@ -60,13 +343,15 @@
     const topics = [
       {
         name: "Charles' Law",
+        subtitle: "Exploring volume–temperature relationships at constant pressure",
         description: {
           intro: "At constant pressure, the volume of a gas increases linearly as temperature increases. This fundamental gas law demonstrates a direct linear relationship between volume and absolute temperature.",
           variables: ["Temperature (K) — Independent variable", "Volume (mL) — Dependent variable"],
+          controlledVariables: ["Pressure (kPa) — kept constant", "Amount of gas (mol) — kept constant"],
           trendline: "Linear: V = kT (where k is a constant)",
           application: "Hot air balloons rise because heating the air inside increases its volume, making the balloon less dense than surrounding air. This principle is also used in gas thermometers and industrial gas storage."
         },
-        sim: { xLabel: "Temperature (K)", yLabel: "Volume (mL)", xMin: 200, xMax: 500, generate: t => (t * 0.5 + Math.random() * 5).toFixed(1) },
+        sim: { xLabel: "Temperature (K)", yLabel: "Volume (mL)", xMin: 200, xMax: 500, generate: t => (t * 0.5 + Math.random() * 5).toFixed(1), derived: { label: "Charles' Constant (V/T)", compute: (x, y) => (y / x).toFixed(4) + ' mL/K' } },
         quiz: [
           { q: "What happens to gas volume when temperature increases at constant pressure?", opts: ["Decreases", "Increases linearly", "Stays the same", "Increases exponentially"], correct: 1, explain: "Charles' Law states V ∝ T at constant pressure, giving a linear increase." },
           { q: "What temperature scale must be used for Charles' Law?", opts: ["Celsius", "Fahrenheit", "Kelvin", "Any scale"], correct: 2, explain: "Kelvin (absolute temperature) must be used because Charles' Law requires T=0 to mean zero molecular motion." },
@@ -77,13 +362,15 @@
       },
       {
         name: "Boyle's Law",
+        subtitle: "Discovering the pressure–volume inverse relationship",
         description: {
           intro: "At constant temperature, the pressure of a gas increases as its volume decreases. This inverse relationship means that P × V = constant, producing a hyperbolic curve when graphed.",
           variables: ["Volume (mL) — Independent variable", "Pressure (kPa) — Dependent variable"],
+          controlledVariables: ["Temperature (K) — kept constant", "Amount of gas (mol) — kept constant"],
           trendline: "Inverse: P = k/V (hyperbola)",
           application: "Syringes work on this principle — pushing the plunger reduces volume and increases pressure, forcing liquid out. Scuba diving, breathing mechanics, and hydraulic systems all rely on Boyle's Law."
         },
-        sim: { xLabel: "Volume (mL)", yLabel: "Pressure (kPa)", xMin: 10, xMax: 100, generate: v => (1000 / v + Math.random() * 3).toFixed(1) },
+        sim: { xLabel: "Volume (mL)", yLabel: "Pressure (kPa)", xMin: 10, xMax: 100, generate: v => (1000 / v + Math.random() * 3).toFixed(1), derived: { label: "Boyle's Constant (P×V)", compute: (x, y) => (x * y).toFixed(1) + ' kPa·mL' } },
         quiz: [
           { q: "Boyle's Law describes the relationship between:", opts: ["Pressure and temperature", "Volume and temperature", "Pressure and volume", "Density and pressure"], correct: 2, explain: "Boyle's Law: P₁V₁ = P₂V₂ at constant temperature." },
           { q: "If you halve the volume of a gas at constant temperature, pressure:", opts: ["Halves", "Doubles", "Stays the same", "Quadruples"], correct: 1, explain: "PV = k, so if V is halved, P must double to maintain the constant." },
@@ -94,13 +381,15 @@
       },
       {
         name: "Reaction Kinetics",
+        subtitle: "Tracking exponential concentration decay over time",
         description: {
           intro: "In a first-order reaction, the concentration of reactant decreases exponentially over time. The rate of reaction is proportional to the current concentration, leading to exponential decay.",
           variables: ["Time (s) — Independent variable", "Concentration (mol/L) — Dependent variable"],
+          controlledVariables: ["Temperature (K) — kept constant", "Catalyst presence — kept constant", "Reaction volume — kept constant"],
           trendline: "Exponential decay: [A] = [A]₀ × e^(-kt)",
           application: "Radioactive decay, drug metabolism in the body, and decomposition of hydrogen peroxide all follow first-order kinetics. The half-life concept comes directly from this relationship."
         },
-        sim: { xLabel: "Time (s)", yLabel: "Concentration (mol/L)", xMin: 0, xMax: 60, generate: t => (1.0 * Math.exp(-0.05 * t) + Math.random() * 0.03).toFixed(3) },
+        sim: { xLabel: "Time (s)", yLabel: "Concentration (mol/L)", xMin: 0, xMax: 60, generate: t => (1.0 * Math.exp(-0.05 * t) + Math.random() * 0.03).toFixed(3), derived: { label: "Remaining Concentration", compute: (x, y) => (y * 100).toFixed(1) + '% of [A]₀' } },
         quiz: [
           { q: "In first-order kinetics, concentration vs time gives:", opts: ["A straight line", "A parabola", "An exponential decay curve", "A step function"], correct: 2, explain: "[A] = [A]₀e^(-kt) produces exponential decay." },
           { q: "What is the half-life of a first-order reaction with k = 0.05 s⁻¹?", opts: ["10 s", "13.9 s", "20 s", "50 s"], correct: 1, explain: "t½ = ln(2)/k = 0.693/0.05 ≈ 13.9 s." },
@@ -111,13 +400,15 @@
       },
       {
         name: "Beer-Lambert Law",
+        subtitle: "Building a linear absorbance–concentration calibration curve",
         description: {
           intro: "The absorbance of a solution is directly proportional to its concentration and path length. A = εlc produces a linear calibration curve that allows unknown concentrations to be determined from measured absorbance.",
           variables: ["Concentration (mol/L) — Independent variable", "Absorbance (AU) — Dependent variable"],
+          controlledVariables: ["Path length (l) — kept constant", "Wavelength — kept constant", "Solvent/cuvette type — kept constant"],
           trendline: "Linear calibration: A = εlc (slope = εl)",
           application: "Spectrophotometry in clinical labs measures blood glucose, protein levels, and drug concentrations. Environmental monitoring uses this law to measure pollutant concentrations in water samples."
         },
-        sim: { xLabel: "Concentration (mol/L)", yLabel: "Absorbance (AU)", xMin: 0, xMax: 0.1, generate: c => (12 * c + Math.random() * 0.02).toFixed(3) },
+        sim: { xLabel: "Concentration (mol/L)", yLabel: "Absorbance (AU)", xMin: 0, xMax: 0.1, generate: c => (12 * c + Math.random() * 0.02).toFixed(3), derived: { label: "Transmittance (%T)", compute: (x, y) => (Math.pow(10, -y) * 100).toFixed(1) + '%' } },
         quiz: [
           { q: "Beer-Lambert Law states that absorbance is proportional to:", opts: ["Temperature", "Pressure", "Concentration and path length", "Wavelength"], correct: 2, explain: "A = εlc, where ε is molar absorptivity, l is path length, c is concentration." },
           { q: "A calibration curve in Beer-Lambert Law should be:", opts: ["Exponential", "A straight line through origin", "A hyperbola", "S-shaped"], correct: 1, explain: "A = εlc is linear with y-intercept at origin (zero concentration = zero absorbance)." },
@@ -132,6 +423,10 @@
     let currentSection = 0;
     let dataPoints = [[], [], [], []]; // per topic
     let quizStates = [{}, {}, {}, {}]; // per topic
+    let tableEditStates = [null, null, null, null]; // per topic row edit state
+    const defaultTrendlines = ['linear', 'inverse', 'exponential', 'linear'];
+    let selectedTrendlines = [...defaultTrendlines]; // per topic trendline type
+    let smoothGraphLines = [false, false, false, false]; // per topic smooth line toggle
 
     // ===== NAVIGATION =====
     function switchTopic(idx) {
@@ -139,7 +434,26 @@
       for (let i = 0; i < 4; i++) {
         document.getElementById(`topic-tab-${i}`).className = i === idx ? 'tab-active px-4 py-2 rounded-lg text-sm font-medium transition-all' : 'tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all';
       }
+      // Item 16: dynamic subtitle
+      const subEl = document.getElementById('subtitle');
+      if (subEl) subEl.textContent = topics[idx].subtitle;
+      // Item 13: close hamburger on topic switch
+      const navBtns = document.getElementById('nav-topic-buttons');
+      const hBtn = document.getElementById('hamburger-btn');
+      if (navBtns && navBtns.classList.contains('nav-open')) {
+        navBtns.classList.remove('nav-open');
+        if (hBtn) { hBtn.textContent = '\u2630'; hBtn.setAttribute('aria-expanded', 'false'); }
+      }
       renderContent();
+    }
+
+    // Item 13: hamburger toggle
+    function toggleHamburger() {
+      const nav = document.getElementById('nav-topic-buttons');
+      const btn = document.getElementById('hamburger-btn');
+      const isOpen = nav.classList.toggle('nav-open');
+      btn.textContent = isOpen ? '\u2715' : '\u2630';
+      btn.setAttribute('aria-expanded', String(isOpen));
     }
 
     function switchSection(idx) {
@@ -168,20 +482,24 @@
       const t = topics[currentTopic].description;
       area.innerHTML = `
         <div class="grid md:grid-cols-2 gap-6">
-          <div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
+          <div class="glass-card">
             <h2 class="text-xl font-bold text-sky-900 mb-3">${topics[currentTopic].name}</h2>
             <p class="text-sky-800 leading-relaxed text-sm">${t.intro}</p>
           </div>
           <div class="space-y-4">
-            <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+            <div class="glass-card">
               <h3 class="text-sm font-semibold text-sky-700 mb-2 flex items-center gap-2"><i data-lucide="variable" class="w-4 h-4"></i> Variables</h3>
               <ul class="space-y-1">${t.variables.map(v => `<li class="text-sky-800 text-xs mono">• ${v}</li>`).join('')}</ul>
             </div>
-            <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
-              <h3 class="text-sm font-semibold text-sky-700 mb-2 flex items-center gap-2"><i data-lucide="trending-up" class="w-4 h-4"></i> Trendline</h3>
-              <p class="text-sky-900 text-xs mono">${t.trendline}</p>
+            <div class="glass-card">
+              <h3 class="text-sm font-semibold text-sky-700 mb-2 flex items-center gap-2"><i data-lucide="sliders-horizontal" class="w-4 h-4"></i> Controlled Variables</h3>
+              <ul class="space-y-1">${t.controlledVariables.map(v => `<li class="text-sky-800 text-xs mono">• ${v}</li>`).join('')}</ul>
             </div>
-            <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+            <div class="glass-card">
+              <h3 class="text-sm font-semibold text-sky-700 mb-2 flex items-center gap-2"><i data-lucide="trending-up" class="w-4 h-4"></i> Trendline</h3>
+              <div class="equation-box">${t.trendline}</div>
+            </div>
+            <div class="glass-card">
               <h3 class="text-sm font-semibold text-sky-700 mb-2 flex items-center gap-2"><i data-lucide="flask-conical" class="w-4 h-4"></i> Application</h3>
               <p class="text-sky-800 text-xs leading-relaxed">${t.application}</p>
             </div>
@@ -197,14 +515,16 @@
           <div class="sim-container p-6">
             <h3 class="text-sm font-semibold text-teal-400 mb-4">${t.name} Simulation</h3>
             <div class="mb-4">
-              <label class="text-xs text-sky-700 block mb-1">${sim.xLabel}: <span id="sim-val" class="mono text-sky-900">${sim.xMin}</span></label>
-              <input type="range" id="sim-slider" min="${sim.xMin}" max="${sim.xMax}" value="${sim.xMin}" step="${(sim.xMax - sim.xMin) / 100}" class="w-full accent-teal-500" oninput="updateSim()">
+              <label class="text-xs text-sky-700 block mb-1">${sim.xLabel}: <span id="sim-val" class="mono text-sky-900">${sim.xMax >= 1 ? sim.xMin.toFixed(1) : sim.xMin.toFixed(4)}</span></label>
+              <input type="range" id="sim-slider" min="${sim.xMin}" max="${sim.xMax}" value="${sim.xMin}" step="${(sim.xMax - sim.xMin) / 100}" class="w-full accent-teal-500 mb-2" oninput="updateSim()">
+              <input type="number" id="sim-number" min="${sim.xMin}" max="${sim.xMax}" value="${sim.xMin}" step="${(sim.xMax - sim.xMin) / 100}" class="w-full px-3 py-1.5 border border-sky-300 rounded-lg text-xs mono text-sky-900 bg-white focus:outline-none focus:border-sky-500 transition-colors" oninput="syncSimNumber()">
             </div>
             <div id="sim-visual" class="h-48 flex items-center justify-center rounded-lg bg-white border border-sky-200"></div>
             <div class="mt-3 text-center">
               <span class="text-xs text-sky-600">${sim.yLabel}: </span>
               <span id="sim-result" class="mono text-sky-900 text-sm font-semibold"></span>
             </div>
+            <div id="sim-derived" class="mt-2 p-2 bg-white rounded-lg border border-sky-100 text-center"></div>
           </div>
           <div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
             <h3 class="text-sm font-semibold text-sky-700 mb-4">Record Data</h3>
@@ -223,10 +543,18 @@
     function updateSim() {
       const slider = document.getElementById('sim-slider');
       const val = parseFloat(slider.value);
-      document.getElementById('sim-val').textContent = val.toFixed(1);
       const sim = topics[currentTopic].sim;
+      document.getElementById('sim-val').textContent = sim.xMax >= 1 ? val.toFixed(1) : val.toFixed(4);
       const y = parseFloat(sim.generate(val));
       document.getElementById('sim-result').textContent = y;
+      // Item 3: sync number input
+      const numInput = document.getElementById('sim-number');
+      if (numInput) numInput.value = sim.xMax >= 1 ? val.toFixed(1) : val.toFixed(4);
+      // Item 4: derived metric
+      const derivedEl = document.getElementById('sim-derived');
+      if (derivedEl && sim.derived) {
+        derivedEl.innerHTML = '<span class="text-xs text-sky-600">' + sim.derived.label + ': </span><span class="mono text-sky-900 text-sm font-semibold">' + sim.derived.compute(val, y) + '</span>';
+      }
 
       // Visual
       const visual = document.getElementById('sim-visual');
@@ -255,6 +583,18 @@
       }
     }
 
+    function syncSimNumber() {
+      const numInput = document.getElementById('sim-number');
+      const slider = document.getElementById('sim-slider');
+      if (!numInput || !slider) return;
+      const sim = topics[currentTopic].sim;
+      let val = parseFloat(numInput.value);
+      if (isNaN(val)) return;
+      val = Math.max(sim.xMin, Math.min(sim.xMax, val));
+      slider.value = val;
+      updateSim();
+    }
+
     function addFromSim() {
       const slider = document.getElementById('sim-slider');
       const x = parseFloat(slider.value);
@@ -268,28 +608,155 @@
     function renderDataTable(area) {
       const t = topics[currentTopic];
       const data = dataPoints[currentTopic];
+      const editState = tableEditStates[currentTopic];
       area.innerHTML = `
-        <div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
+        <div class="surface-card p-6">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h3 class="text-lg font-semibold text-sky-900">${t.name} Data</h3>
             <div class="flex flex-wrap gap-2">
-              <button onclick="generateSample()" class="px-3 py-1.5 bg-sky-500 hover:bg-sky-600 rounded-md text-xs text-white transition-all">Generate Sample</button>
-              <button onclick="clearData()" class="px-3 py-1.5 bg-red-200 hover:bg-red-300 rounded-md text-xs text-red-700 transition-all">Clear</button>
-              <button onclick="downloadCSV()" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 rounded-md text-xs text-white transition-all flex items-center gap-1"><i data-lucide="download" class="w-3 h-3"></i> CSV</button>
+              <button onclick="generateSample()" class="action-btn btn-primary">Generate Sample</button>
+              <button onclick="addManualRow()" class="action-btn btn-secondary">Add Row</button>
+              <button onclick="triggerImportCSV()" class="action-btn btn-warning">Import CSV</button>
+              <button onclick="clearData()" class="action-btn btn-danger-soft">Clear</button>
+              <button onclick="downloadCSV()" class="action-btn btn-outline">Export CSV</button>
             </div>
           </div>
-          ${data.length === 0 ? '<p class="text-sky-600 text-sm text-center py-8">No data yet. Use the Simulation tab or "Generate Sample" to add data points.</p>' : `
+          <input type="file" id="csv-import-input" accept=".csv,text/csv" class="hidden" onchange="importCSVFile(event)">
+          ${data.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">📋</div><p class="empty-state-text">No data yet. Use the Simulation tab or "Generate Sample" to add data points.</p></div>' : `
           <div class="overflow-x-auto max-h-80 overflow-y-auto">
             <table class="w-full text-sm">
-              <thead class="sticky top-0 bg-sky-50"><tr>
+              <thead class="sticky top-0 bg-sky-50/90 backdrop-blur-sm"><tr>
                 <th class="text-left py-2 px-3 text-sky-700 text-xs font-medium border-b border-sky-200">#</th>
                 <th class="text-left py-2 px-3 text-sky-700 text-xs font-medium border-b border-sky-200">${t.sim.xLabel}</th>
                 <th class="text-left py-2 px-3 text-sky-700 text-xs font-medium border-b border-sky-200">${t.sim.yLabel}</th>
+                <th class="text-left py-2 px-3 text-sky-700 text-xs font-medium border-b border-sky-200">Actions</th>
               </tr></thead>
-              <tbody>${data.map((d, i) => `<tr class="border-b border-sky-200 hover:bg-sky-100"><td class="py-1.5 px-3 text-sky-600 mono text-xs">${i + 1}</td><td class="py-1.5 px-3 text-sky-900 mono text-xs">${d.x.toFixed(3)}</td><td class="py-1.5 px-3 text-sky-900 mono text-xs">${d.y.toFixed(3)}</td></tr>`).join('')}</tbody>
+              <tbody>${data.map((d, i) => {
+                const isEditing = editState && editState.index === i;
+                if (isEditing) {
+                  return `<tr class="border-b border-sky-200 bg-sky-100/60">
+                    <td class="py-1.5 px-3 text-sky-600 mono text-xs">${i + 1}</td>
+                    <td class="py-1.5 px-3"><input id="edit-x-${i}" type="number" step="any" value="${Number.isFinite(d.x) ? d.x : ''}" class="w-full px-2 py-1 border border-sky-300 rounded-md text-xs mono text-sky-900"></td>
+                    <td class="py-1.5 px-3"><input id="edit-y-${i}" type="number" step="any" value="${Number.isFinite(d.y) ? d.y : ''}" class="w-full px-2 py-1 border border-sky-300 rounded-md text-xs mono text-sky-900"></td>
+                    <td class="py-1.5 px-3">
+                      <div class="flex flex-wrap gap-1">
+                        <button onclick="saveEditedRow(${i})" class="action-btn btn-primary">Save</button>
+                        <button onclick="cancelEditRow()" class="action-btn btn-outline">Cancel</button>
+                      </div>
+                    </td>
+                  </tr>`;
+                }
+                return `<tr class="border-b border-sky-200 hover:bg-sky-100">
+                  <td class="py-1.5 px-3 text-sky-600 mono text-xs">${i + 1}</td>
+                  <td class="py-1.5 px-3 text-sky-900 mono text-xs">${Number.isFinite(d.x) ? d.x.toFixed(3) : '--'}</td>
+                  <td class="py-1.5 px-3 text-sky-900 mono text-xs">${Number.isFinite(d.y) ? d.y.toFixed(3) : '--'}</td>
+                  <td class="py-1.5 px-3">
+                    <div class="flex flex-wrap gap-1">
+                      <button onclick="startEditRow(${i})" class="action-btn btn-secondary">Edit</button>
+                      <button onclick="deleteDataRow(${i})" class="action-btn btn-danger-soft">Delete</button>
+                    </div>
+                  </td>
+                </tr>`;
+              }).join('')}</tbody>
             </table>
           </div>`}
         </div>`;
+    }
+
+    function addManualRow() {
+      const sim = topics[currentTopic].sim;
+      const ySeed = parseFloat(sim.generate(sim.xMin));
+      dataPoints[currentTopic].push({ x: sim.xMin, y: Number.isFinite(ySeed) ? ySeed : sim.xMin });
+      tableEditStates[currentTopic] = { index: dataPoints[currentTopic].length - 1, isNew: true };
+      renderDataTable(document.getElementById('content-area'));
+      lucide.createIcons();
+    }
+
+    function startEditRow(index) {
+      if (index < 0 || index >= dataPoints[currentTopic].length) return;
+      tableEditStates[currentTopic] = { index, isNew: false };
+      renderDataTable(document.getElementById('content-area'));
+      lucide.createIcons();
+    }
+
+    function cancelEditRow() {
+      const editState = tableEditStates[currentTopic];
+      if (editState && editState.isNew) {
+        dataPoints[currentTopic].splice(editState.index, 1);
+      }
+      tableEditStates[currentTopic] = null;
+      renderDataTable(document.getElementById('content-area'));
+      lucide.createIcons();
+    }
+
+    function saveEditedRow(index) {
+      const xInput = document.getElementById(`edit-x-${index}`);
+      const yInput = document.getElementById(`edit-y-${index}`);
+      if (!xInput || !yInput) return;
+      const x = parseFloat(xInput.value);
+      const y = parseFloat(yInput.value);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        showToast('Please enter valid numeric values.');
+        return;
+      }
+      dataPoints[currentTopic][index] = { x, y };
+      tableEditStates[currentTopic] = null;
+      renderDataTable(document.getElementById('content-area'));
+      lucide.createIcons();
+      showToast('Row saved');
+    }
+
+    function deleteDataRow(index) {
+      if (index < 0 || index >= dataPoints[currentTopic].length) return;
+      dataPoints[currentTopic].splice(index, 1);
+      const editState = tableEditStates[currentTopic];
+      if (editState) {
+        if (editState.index === index) tableEditStates[currentTopic] = null;
+        else if (editState.index > index) tableEditStates[currentTopic] = { ...editState, index: editState.index - 1 };
+      }
+      renderDataTable(document.getElementById('content-area'));
+      lucide.createIcons();
+      showToast('Row deleted');
+    }
+
+    function triggerImportCSV() {
+      const input = document.getElementById('csv-import-input');
+      if (input) input.click();
+    }
+
+    function importCSVFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = String(e.target.result || '');
+        const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+        if (lines.length < 2) {
+          showToast('CSV must include a header and at least one data row.');
+          event.target.value = '';
+          return;
+        }
+        const parsed = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cols = lines[i].split(',').map(c => c.trim());
+          if (cols.length < 2) continue;
+          const x = parseFloat(cols[0]);
+          const y = parseFloat(cols[1]);
+          if (Number.isFinite(x) && Number.isFinite(y)) parsed.push({ x, y });
+        }
+        if (!parsed.length) {
+          showToast('No valid numeric rows found in CSV.');
+          event.target.value = '';
+          return;
+        }
+        dataPoints[currentTopic] = dataPoints[currentTopic].concat(parsed);
+        tableEditStates[currentTopic] = null;
+        renderDataTable(document.getElementById('content-area'));
+        lucide.createIcons();
+        showToast(`${parsed.length} rows imported`);
+        event.target.value = '';
+      };
+      reader.readAsText(file);
     }
 
     function generateSample() {
@@ -307,6 +774,7 @@
 
     function clearData() {
       dataPoints[currentTopic] = [];
+      tableEditStates[currentTopic] = null;
       renderDataTable(document.getElementById('content-area'));
       lucide.createIcons();
     }
@@ -330,18 +798,28 @@
       const t = topics[currentTopic];
       const data = dataPoints[currentTopic];
       const hasData = data.length >= 2;
+      const trendType = selectedTrendlines[currentTopic] || defaultTrendlines[currentTopic];
+      const smoothChecked = smoothGraphLines[currentTopic];
 
       let analysisHTML = '';
       let unknownHTML = '';
 
       if (hasData) {
-        const fit = computeFit(data);
+        const fit = computeFit(data, trendType);
         analysisHTML = `
-          <div class="mt-4 p-4 bg-white rounded-lg border border-sky-200">
-            <h4 class="text-xs font-semibold text-sky-700 mb-2">Analysis Results</h4>
-            <p class="mono text-xs text-sky-900 mb-1">Equation: ${fit.equation}</p>
-            <p class="mono text-xs text-sky-900">R² = ${fit.r2.toFixed(4)}</p>
-            <p class="text-xs text-sky-700 mt-2">${fit.interpretation}</p>
+          <div class="analysis-panel space-y-3">
+            <div>
+              <div class="analysis-label">Equation</div>
+              <div class="analysis-value">${fit.equation}</div>
+            </div>
+            <div>
+              <div class="analysis-label">R² Value</div>
+              <div class="analysis-value">${Number.isFinite(fit.r2) ? fit.r2.toFixed(4) : 'N/A'}</div>
+            </div>
+            <div>
+              <div class="analysis-label">Interpretation</div>
+              <div class="analysis-interpretation">${fit.interpretation}</div>
+            </div>
           </div>`;
 
         if (currentTopic === 3) {
@@ -362,39 +840,197 @@
 
       area.innerHTML = `
         <div class="grid md:grid-cols-3 gap-6">
-          <div class="md:col-span-2 sim-container p-4">
+          <div class="md:col-span-2 surface-card p-4 space-y-3">
+            <div class="flex flex-wrap items-center gap-3">
+              <label class="text-xs font-semibold text-sky-700">Trendline</label>
+              <select class="trendline-select" onchange="setTrendlineType(this.value)">
+                <option value="none" ${trendlineType === 'none' ? 'selected' : ''}>None</option>
+                <option value="linear" ${trendlineType === 'linear' ? 'selected' : ''}>Linear</option>
+                <option value="inverse" ${trendlineType === 'inverse' ? 'selected' : ''}>Inverse</option>
+                <option value="inverse_square" ${trendlineType === 'inverse_square' ? 'selected' : ''}>Inverse Square</option>
+                <option value="quadratic" ${trendlineType === 'quadratic' ? 'selected' : ''}>Quadratic</option>
+                <option value="exponential" ${trendlineType === 'exponential' ? 'selected' : ''}>Exponential</option>
+                <option value="logarithmic" ${trendlineType === 'logarithmic' ? 'selected' : ''}>Logarithmic</option>
+                <option value="power2" ${trendlineType === 'power2' ? 'selected' : ''}>Power (2)</option>
+                <option value="power3" ${trendlineType === 'power3' ? 'selected' : ''}>Power (3)</option>
+                <option value="power4" ${trendlineType === 'power4' ? 'selected' : ''}>Power (4)</option>
+              </select>
+              <label class="text-xs text-sky-700 inline-flex items-center gap-2"><input type="checkbox" ${smoothChecked ? 'checked' : ''} onchange="setSmoothLine(this.checked)"> Smooth line</label>
+            </div>
             <canvas id="graph-canvas" width="600" height="350" class="w-full"></canvas>
           </div>
-          <div class="bg-sky-50 rounded-xl p-5 border border-sky-200">
+          <div class="surface-card p-5 space-y-3">
             <h3 class="text-sm font-semibold text-sky-900 mb-3">Scatter Plot & Trendline</h3>
             ${!hasData ? '<p class="text-xs text-sky-600">Need at least 2 data points. Use Simulation or Data Table to add points.</p>' : analysisHTML}
             ${unknownHTML}
           </div>
         </div>`;
 
-      if (hasData) drawGraph(data);
+      if (hasData) drawGraph(data, trendType, smoothChecked);
     }
 
-    function computeFit(data) {
-      const n = data.length;
+    function setTrendlineType(type) {
+      selectedTrendlines[currentTopic] = type;
+      renderGraph(document.getElementById('content-area'));
+      lucide.createIcons();
+    }
+
+    function setSmoothLine(enabled) {
+      smoothGraphLines[currentTopic] = !!enabled;
+      renderGraph(document.getElementById('content-area'));
+      lucide.createIcons();
+    }
+
+    function computeFit(data, trendlineType) {
       const xs = data.map(d => d.x), ys = data.map(d => d.y);
 
-      if (currentTopic === 0 || currentTopic === 3) { // Linear
-        const { m, b, r2 } = linearFit(xs, ys);
-        const interp = r2 > 0.9 ? "Strong linear correlation confirmed." : r2 > 0.7 ? "Moderate linear trend observed." : "Weak correlation — check data quality.";
-        return { equation: `y = ${m.toFixed(4)}x + ${b.toFixed(4)}`, r2, interpretation: interp, m, b, type: 'linear' };
-      } else if (currentTopic === 1) { // Inverse
-        const invX = xs.map(x => 1 / x);
-        const { m, b, r2 } = linearFit(invX, ys);
-        const interp = r2 > 0.9 ? "Strong inverse relationship confirmed." : "Moderate inverse trend observed.";
-        return { equation: `P = ${m.toFixed(2)}/V + ${b.toFixed(2)}`, r2, interpretation: interp, m, b, type: 'inverse' };
-      } else { // Exponential
-        const lnY = ys.map(y => Math.log(Math.max(y, 0.001)));
-        const { m, b, r2 } = linearFit(xs, lnY);
-        const A0 = Math.exp(b);
-        const interp = r2 > 0.9 ? "Strong exponential decay confirmed." : "Moderate exponential trend observed.";
-        return { equation: `[A] = ${A0.toFixed(3)} × e^(${m.toFixed(4)}t)`, r2, interpretation: interp, A0, k: m, type: 'exponential' };
+      if (trendlineType === 'none') {
+        return {
+          equation: 'No trendline selected',
+          r2: NaN,
+          interpretation: 'Select a trendline type to run a regression analysis.',
+          type: 'none',
+          predict: () => NaN
+        };
       }
+
+      const withR2 = (equation, type, predict, interpretation) => {
+        const preds = xs.map(x => predict(x));
+        return { equation, r2: calcR2(ys, preds), interpretation, type, predict };
+      };
+
+      if (trendlineType === 'linear') {
+        const { m, b } = linearFit(xs, ys);
+        const predict = x => m * x + b;
+        return withR2(`y = ${m.toFixed(4)}x + ${b.toFixed(4)}`, 'linear', predict, 'Linear fit shows how directly y changes with x.');
+      }
+
+      if (trendlineType === 'inverse') {
+        const invX = xs.map(x => 1 / (Math.abs(x) < 1e-9 ? 1e-9 : x));
+        const { m, b } = linearFit(invX, ys);
+        const predict = x => m / (Math.abs(x) < 1e-9 ? 1e-9 : x) + b;
+        return withR2(`y = ${m.toFixed(4)}/x + ${b.toFixed(4)}`, 'inverse', predict, 'Inverse fit suggests y decreases as x increases.');
+      }
+
+      if (trendlineType === 'inverse_square') {
+        const invSqX = xs.map(x => 1 / ((Math.abs(x) < 1e-9 ? 1e-9 : x) ** 2));
+        const { m, b } = linearFit(invSqX, ys);
+        const predict = x => m / ((Math.abs(x) < 1e-9 ? 1e-9 : x) ** 2) + b;
+        return withR2(`y = ${m.toFixed(4)}/x² + ${b.toFixed(4)}`, 'inverse_square', predict, 'Inverse-square fit emphasizes rapid drop-off at larger x.');
+      }
+
+      if (trendlineType === 'quadratic') {
+        const q = quadraticFit(xs, ys);
+        const predict = x => q.a * x * x + q.b * x + q.c;
+        return withR2(`y = ${q.a.toFixed(4)}x² + ${q.b.toFixed(4)}x + ${q.c.toFixed(4)}`, 'quadratic', predict, 'Quadratic fit captures curved relationships with changing slope.');
+      }
+
+      if (trendlineType === 'exponential') {
+        const valid = data.filter(d => d.y > 0);
+        if (valid.length < 2) {
+          return {
+            equation: 'Exponential fit unavailable',
+            r2: NaN,
+            interpretation: 'Exponential regression requires positive y values.',
+            type: 'exponential',
+            predict: () => NaN
+          };
+        }
+        const vx = valid.map(d => d.x);
+        const vlny = valid.map(d => Math.log(d.y));
+        const { m, b } = linearFit(vx, vlny);
+        const A0 = Math.exp(b);
+        const predict = x => A0 * Math.exp(m * x);
+        return withR2(`y = ${A0.toFixed(4)}e^(${m.toFixed(4)}x)`, 'exponential', predict, 'Exponential fit models growth or decay proportional to current value.');
+      }
+
+      if (trendlineType === 'logarithmic') {
+        const valid = data.filter(d => d.x > 0);
+        if (valid.length < 2) {
+          return {
+            equation: 'Logarithmic fit unavailable',
+            r2: NaN,
+            interpretation: 'Logarithmic regression requires positive x values.',
+            type: 'logarithmic',
+            predict: () => NaN
+          };
+        }
+        const lx = valid.map(d => Math.log(d.x));
+        const ly = valid.map(d => d.y);
+        const { m, b } = linearFit(lx, ly);
+        const predict = x => m * Math.log(Math.max(x, 1e-9)) + b;
+        return withR2(`y = ${m.toFixed(4)}ln(x) + ${b.toFixed(4)}`, 'logarithmic', predict, 'Logarithmic fit captures quick initial change then leveling.');
+      }
+
+      if (trendlineType === 'power2' || trendlineType === 'power3' || trendlineType === 'power4') {
+        const p = trendlineType === 'power2' ? 2 : trendlineType === 'power3' ? 3 : 4;
+        const xp = xs.map(x => x ** p);
+        const { m, b } = linearFit(xp, ys);
+        const predict = x => m * (x ** p) + b;
+        return withR2(`y = ${m.toFixed(4)}x^${p} + ${b.toFixed(4)}`, trendlineType, predict, `Power-${p} fit tests whether y follows an x^${p} shape.`);
+      }
+
+      return {
+        equation: 'Fit unavailable',
+        r2: NaN,
+        interpretation: 'Unsupported trendline type.',
+        type: 'none',
+        predict: () => NaN
+      };
+    }
+
+    function calcR2(actual, predicted) {
+      if (!actual.length || actual.length !== predicted.length) return NaN;
+      const mean = actual.reduce((a, b) => a + b, 0) / actual.length;
+      let ssRes = 0;
+      let ssTot = 0;
+      for (let i = 0; i < actual.length; i++) {
+        if (!Number.isFinite(predicted[i])) continue;
+        ssRes += (actual[i] - predicted[i]) ** 2;
+        ssTot += (actual[i] - mean) ** 2;
+      }
+      if (ssTot === 0) return 1;
+      return 1 - ssRes / ssTot;
+    }
+
+    function quadraticFit(xs, ys) {
+      const n = xs.length;
+      const sx = xs.reduce((a, x) => a + x, 0);
+      const sx2 = xs.reduce((a, x) => a + x * x, 0);
+      const sx3 = xs.reduce((a, x) => a + x * x * x, 0);
+      const sx4 = xs.reduce((a, x) => a + x * x * x * x, 0);
+      const sy = ys.reduce((a, y) => a + y, 0);
+      const sxy = xs.reduce((a, x, i) => a + x * ys[i], 0);
+      const sx2y = xs.reduce((a, x, i) => a + x * x * ys[i], 0);
+      const [a, b, c] = solve3x3([
+        [sx4, sx3, sx2],
+        [sx3, sx2, sx],
+        [sx2, sx, n]
+      ], [sx2y, sxy, sy]);
+      return { a, b, c };
+    }
+
+    function solve3x3(mat, rhs) {
+      const a = mat.map(row => [...row]);
+      const b = [...rhs];
+      for (let i = 0; i < 3; i++) {
+        let maxRow = i;
+        for (let r = i + 1; r < 3; r++) {
+          if (Math.abs(a[r][i]) > Math.abs(a[maxRow][i])) maxRow = r;
+        }
+        [a[i], a[maxRow]] = [a[maxRow], a[i]];
+        [b[i], b[maxRow]] = [b[maxRow], b[i]];
+        const pivot = Math.abs(a[i][i]) < 1e-12 ? 1e-12 : a[i][i];
+        for (let j = i; j < 3; j++) a[i][j] /= pivot;
+        b[i] /= pivot;
+        for (let r = 0; r < 3; r++) {
+          if (r === i) continue;
+          const factor = a[r][i];
+          for (let j = i; j < 3; j++) a[r][j] -= factor * a[i][j];
+          b[r] -= factor * b[i];
+        }
+      }
+      return b;
     }
 
     function linearFit(xs, ys) {
@@ -410,7 +1046,7 @@
       return { m, b, r2 };
     }
 
-    function drawGraph(data) {
+    function drawGraph(data, trendlineType, smoothOn) {
       const canvas = document.getElementById('graph-canvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
@@ -463,25 +1099,58 @@
         ctx.fillText(yv.toPrecision(3), pad.left - 5, toY(yv) + 3);
       }
 
-      // Trendline
-      const fit = computeFit(data);
-      ctx.strokeStyle = '#f59e0bdd';
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([5, 3]);
-      ctx.beginPath();
-      for (let i = 0; i <= 100; i++) {
-        const x = xMin + (xMax - xMin) * i / 100;
-        let y;
-        if (fit.type === 'linear') y = fit.m * x + fit.b;
-        else if (fit.type === 'inverse') y = fit.m / x + fit.b;
-        else y = fit.A0 * Math.exp(fit.k * x);
-        const px = toX(x), py = toY(y);
-        if (py >= pad.top && py <= pad.top + gH) {
-          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      // Data line (smooth toggle)
+      const sorted = [...data].sort((a, b) => a.x - b.x);
+      if (sorted.length > 1) {
+        ctx.strokeStyle = '#0ea5e999';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        if (!smoothOn) {
+          sorted.forEach((d, i) => {
+            const px = toX(d.x), py = toY(d.y);
+            if (i === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          });
+        } else {
+          ctx.moveTo(toX(sorted[0].x), toY(sorted[0].y));
+          for (let i = 0; i < sorted.length - 1; i++) {
+            const p0 = sorted[i];
+            const p1 = sorted[i + 1];
+            const cx = (toX(p0.x) + toX(p1.x)) / 2;
+            const cy = (toY(p0.y) + toY(p1.y)) / 2;
+            ctx.quadraticCurveTo(toX(p0.x), toY(p0.y), cx, cy);
+          }
+          const last = sorted[sorted.length - 1];
+          ctx.lineTo(toX(last.x), toY(last.y));
         }
+        ctx.stroke();
       }
-      ctx.stroke();
-      ctx.setLineDash([]);
+
+      // Trendline
+      const fit = computeFit(data, trendlineType);
+      if (fit.type !== 'none' && fit.type !== 'unsupported') {
+        ctx.strokeStyle = '#f59e0bdd';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([5, 3]);
+        ctx.beginPath();
+        let started = false;
+        for (let i = 0; i <= 140; i++) {
+          const x = xMin + (xMax - xMin) * i / 140;
+          const y = fit.predict(x);
+          if (!Number.isFinite(y)) continue;
+          const px = toX(x), py = toY(y);
+          if (py >= pad.top - 4 && py <= pad.top + gH + 4) {
+            if (!started) {
+              ctx.moveTo(px, py);
+              started = true;
+            } else {
+              ctx.lineTo(px, py);
+            }
+          }
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
 
       // Points
       data.forEach(d => {
@@ -500,9 +1169,13 @@
       if (data.length < 2) return;
       const abs = parseFloat(document.getElementById('unknown-abs').value);
       if (isNaN(abs)) return;
-      const fit = computeFit(data);
-      const conc = fit.m !== 0 ? (abs - fit.b) / fit.m : 0;
-      document.getElementById('unknown-result').innerHTML = `<p class="mono text-xs text-teal-200 mt-2">Estimated concentration: <strong>${conc.toFixed(4)} mol/L</strong></p>`;
+      const fit = computeFit(data, 'linear');
+      if (!Number.isFinite(fit.m) || fit.m === 0) {
+        showToast('Unable to compute concentration from current data.');
+        return;
+      }
+      const conc = (abs - fit.b) / fit.m;
+      document.getElementById('unknown-result').innerHTML = `<p class="mono text-xs text-teal-700 mt-2">Estimated concentration: <strong>${conc.toFixed(4)} mol/L</strong></p>`;
     }
 
     // ===== QUIZ =====
@@ -510,64 +1183,94 @@
       const quiz = topics[currentTopic].quiz;
       const state = quizStates[currentTopic];
       if (!state.answers) state.answers = {};
-      if (!state.finished) state.finished = false;
+      if (state.currentIndex === undefined) state.currentIndex = 0;
+      if (state.finished === undefined) state.finished = false;
 
-      const answered = Object.keys(state.answers).length;
-      const allDone = answered === quiz.length;
-
-      let html = `<div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="text-lg font-semibold text-sky-900">${topics[currentTopic].name} Quiz</h3>
-          <span class="text-xs mono text-sky-600">${answered}/${quiz.length} answered</span>
-        </div>
-        <div class="space-y-6">`;
-
-      quiz.forEach((item, qi) => {
-        const userAns = state.answers[qi];
-        const isAnswered = userAns !== undefined;
-        html += `<div class="p-4 bg-white rounded-lg border border-sky-200">
-          <p class="text-sm text-sky-900 font-medium mb-3">${qi + 1}. ${item.q}</p>
-          <div class="space-y-2">`;
-        item.opts.forEach((opt, oi) => {
-          let cls = 'quiz-option block w-full text-left px-4 py-2.5 rounded-md text-xs border ';
-          if (isAnswered) {
-            if (oi === item.correct) cls += 'quiz-correct border-emerald-500 text-emerald-700';
-            else if (oi === userAns && oi !== item.correct) cls += 'quiz-wrong border-red-500 text-red-700';
-            else cls += 'bg-slate-100 border-sky-200 text-slate-600';
-          } else {
-            cls += 'bg-white border-sky-300 text-sky-900 hover:bg-sky-100 cursor-pointer';
-          }
-          const onclick = isAnswered ? '' : `onclick="answerQuiz(${qi},${oi})"`;
-          html += `<button ${onclick} class="${cls}">${String.fromCharCode(65 + oi)}. ${opt}</button>`;
-        });
-        if (isAnswered) {
-          html += `<p class="text-xs text-sky-700 mt-2 pl-2 border-l-2 border-sky-500">${item.explain}</p>`;
-        }
-        html += `</div></div>`;
-      });
-
-      if (allDone) {
+      const answeredCount = Object.keys(state.answers).length;
+      if (state.finished) {
         const score = quiz.reduce((s, item, i) => s + (state.answers[i] === item.correct ? 1 : 0), 0);
-        const msg = score === 5 ? "Perfect! Outstanding mastery!" : score >= 4 ? "Excellent understanding!" : score >= 3 ? "Good work! Review the explanations." : "Keep studying — review the descriptions tab.";
-        html += `<div class="p-4 bg-blue-100 rounded-lg border border-blue-300 text-center">
-          <p class="text-lg font-bold text-sky-900">Score: ${score}/5</p>
-          <p class="text-sm text-sky-700 mt-1">${msg}</p>
-          <button onclick="resetQuiz()" class="mt-3 px-4 py-2 bg-sky-600 hover:bg-sky-700 rounded-md text-xs text-white transition-all">Retry Quiz</button>
+        const msg = score === 5 ? 'Perfect mastery. Outstanding work!' : score >= 4 ? 'Great understanding. Minor review recommended.' : score >= 3 ? 'Good progress. Revisit a few concepts.' : 'Review the topic tabs and try again.';
+        const celebrate = score >= 4 ? '🏆' : score >= 3 ? '🎉' : '📘';
+        area.innerHTML = `<div class="surface-card p-6 text-center space-y-3">
+          <div class="quiz-celebrate">${celebrate}</div>
+          <h3 class="text-lg font-semibold text-sky-900">${topics[currentTopic].name} Quiz Complete</h3>
+          <div class="quiz-summary-score">${score}/${quiz.length}</div>
+          <p class="text-sm text-sky-700">${msg}</p>
+          <button onclick="resetQuiz()" class="action-btn btn-primary mt-2">Retry Quiz</button>
         </div>`;
+        return;
       }
 
-      html += `</div></div>`;
-      area.innerHTML = html;
+      const qIndex = state.currentIndex;
+      const item = quiz[qIndex];
+      const selected = state.answers[qIndex];
+      const isAnswered = selected !== undefined;
+      const progress = Math.round((answeredCount / quiz.length) * 100);
+
+      let optionsHtml = '';
+      item.opts.forEach((opt, oi) => {
+        let cls = 'quiz-option block w-full text-left px-4 py-2.5 rounded-md text-xs border ';
+        if (!isAnswered) {
+          cls += 'bg-white border-sky-300 text-sky-900 hover:bg-sky-100 cursor-pointer';
+        } else if (oi === item.correct) {
+          cls += 'quiz-correct border-emerald-500 text-emerald-700';
+        } else if (oi === selected) {
+          cls += 'quiz-wrong border-red-500 text-red-700';
+        } else {
+          cls += 'bg-slate-100 border-sky-200 text-slate-600';
+        }
+        const onclick = isAnswered ? '' : `onclick="answerQuiz(${oi})"`;
+        optionsHtml += `<button ${onclick} class="${cls}">${String.fromCharCode(65 + oi)}. ${opt}</button>`;
+      });
+
+      const nextLabel = qIndex === quiz.length - 1 ? 'See Results' : 'Next Question';
+
+      area.innerHTML = `<div class="surface-card p-6">
+        <div class="mb-5">
+          <div class="quiz-progress-track"><div class="quiz-progress-fill" style="width:${progress}%"></div></div>
+          <div class="flex items-center justify-between text-xs text-sky-700">
+            <span>Question ${qIndex + 1} of ${quiz.length}</span>
+            <span class="mono">${answeredCount}/${quiz.length} answered</span>
+          </div>
+        </div>
+        <div class="p-4 bg-white rounded-lg border border-sky-200">
+          <p class="text-sm text-sky-900 font-medium mb-3">${item.q}</p>
+          <div class="space-y-2">${optionsHtml}</div>
+          ${isAnswered ? `<div class="quiz-feedback">${item.explain}</div>` : ''}
+        </div>
+        <div class="mt-4 flex justify-end">
+          <button onclick="nextQuizQuestion()" ${isAnswered ? '' : 'disabled'} class="action-btn ${isAnswered ? 'btn-primary' : 'btn-outline'}">${nextLabel}</button>
+        </div>
+      </div>`;
     }
 
-    function answerQuiz(qi, oi) {
-      quizStates[currentTopic].answers[qi] = oi;
+    function answerQuiz(oi) {
+      const state = quizStates[currentTopic];
+      if (!state.answers) state.answers = {};
+      if (state.currentIndex === undefined) state.currentIndex = 0;
+      if (state.answers[state.currentIndex] !== undefined) return;
+      state.answers[state.currentIndex] = oi;
+      renderQuiz(document.getElementById('content-area'));
+      lucide.createIcons();
+    }
+
+    function nextQuizQuestion() {
+      const quiz = topics[currentTopic].quiz;
+      const state = quizStates[currentTopic];
+      if (!state.answers) state.answers = {};
+      if (state.currentIndex === undefined) state.currentIndex = 0;
+      if (state.answers[state.currentIndex] === undefined) return;
+      if (state.currentIndex < quiz.length - 1) {
+        state.currentIndex += 1;
+      } else {
+        state.finished = true;
+      }
       renderQuiz(document.getElementById('content-area'));
       lucide.createIcons();
     }
 
     function resetQuiz() {
-      quizStates[currentTopic] = { answers: {}, finished: false };
+      quizStates[currentTopic] = { answers: {}, currentIndex: 0, finished: false };
       renderQuiz(document.getElementById('content-area'));
       lucide.createIcons();
     }
@@ -594,44 +1297,45 @@
       font_size: 16
     };
 
-    window.elementSdk.init({
-      defaultConfig,
-      onConfigChange: async (config) => {
-        document.getElementById('main-title').textContent = config.main_title || defaultConfig.main_title;
-        document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          document.getElementById('main-title').textContent = config.main_title || defaultConfig.main_title;
+          document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
 
-        const bg = config.background_color || defaultConfig.background_color;
-        const surface = config.surface_color || defaultConfig.surface_color;
-        const text = config.text_color || defaultConfig.text_color;
-        const primary = config.primary_action || defaultConfig.primary_action;
-        const secondary = config.secondary_action || defaultConfig.secondary_action;
-        const font = config.font_family || defaultConfig.font_family;
-        const size = config.font_size || defaultConfig.font_size;
+          const bg = config.background_color || defaultConfig.background_color;
+          const text = config.text_color || defaultConfig.text_color;
+          const font = config.font_family || defaultConfig.font_family;
+          const size = config.font_size || defaultConfig.font_size;
 
-        document.body.style.backgroundColor = bg;
-        document.body.style.color = text;
-        document.body.style.fontFamily = `${font}, DM Sans, sans-serif`;
-        document.body.style.fontSize = `${size}px`;
-        document.getElementById('main-title').style.color = text;
-      },
-      mapToCapabilities: (config) => ({
-        recolorables: [
-          { get: () => config.background_color || defaultConfig.background_color, set: v => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
-          { get: () => config.surface_color || defaultConfig.surface_color, set: v => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
-          { get: () => config.text_color || defaultConfig.text_color, set: v => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
-          { get: () => config.primary_action || defaultConfig.primary_action, set: v => { config.primary_action = v; window.elementSdk.setConfig({ primary_action: v }); } },
-          { get: () => config.secondary_action || defaultConfig.secondary_action, set: v => { config.secondary_action = v; window.elementSdk.setConfig({ secondary_action: v }); } }
-        ],
-        borderables: [],
-        fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: v => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
-        fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: v => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
-      }),
-      mapToEditPanelValues: (config) => new Map([
-        ['main_title', config.main_title || defaultConfig.main_title],
-        ['subtitle', config.subtitle || defaultConfig.subtitle]
-      ])
-    });
+          document.body.style.backgroundColor = bg;
+          document.body.style.color = text;
+          document.body.style.fontFamily = `${font}, DM Sans, sans-serif`;
+          document.body.style.fontSize = `${size}px`;
+          document.getElementById('main-title').style.color = text;
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [
+            { get: () => config.background_color || defaultConfig.background_color, set: v => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+            { get: () => config.surface_color || defaultConfig.surface_color, set: v => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+            { get: () => config.text_color || defaultConfig.text_color, set: v => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+            { get: () => config.primary_action || defaultConfig.primary_action, set: v => { config.primary_action = v; window.elementSdk.setConfig({ primary_action: v }); } },
+            { get: () => config.secondary_action || defaultConfig.secondary_action, set: v => { config.secondary_action = v; window.elementSdk.setConfig({ secondary_action: v }); } }
+          ],
+          borderables: [],
+          fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: v => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+          fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: v => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['main_title', config.main_title || defaultConfig.main_title],
+          ['subtitle', config.subtitle || defaultConfig.subtitle]
+        ])
+      });
+    }
 
+    // Item 16: set initial topic subtitle on page load
+    document.getElementById('subtitle').textContent = topics[0].subtitle;
     // Initial render
     renderContent();
   </script>
