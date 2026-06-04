@@ -325,7 +325,7 @@
    </header><!-- Topic Tabs -->
    <nav class="w-full bg-sky-50 border-b border-sky-200">
     <div class="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-center gap-2">
-     <div id="nav-topic-buttons" class="flex flex-wrap gap-2 flex-1"><button onclick="switchTopic(0)" id="topic-tab-0" class="tab-active px-4 py-2 rounded-lg text-sm font-medium transition-all">Charles' Law</button> <button onclick="switchTopic(1)" id="topic-tab-1" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Boyle's Law</button> <button onclick="switchTopic(2)" id="topic-tab-2" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Reaction Kinetics</button> <button onclick="switchTopic(3)" id="topic-tab-3" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Beer-Lambert Law</button>
+     <div id="nav-topic-buttons" class="flex flex-wrap gap-2 flex-1"><button onclick="switchTopic(0)" id="topic-tab-0" class="tab-active px-4 py-2 rounded-lg text-sm font-medium transition-all">Charles' Law</button> <button onclick="switchTopic(1)" id="topic-tab-1" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Boyle's Law</button> <button onclick="switchTopic(2)" id="topic-tab-2" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">First-Order Kinetics</button> <button onclick="switchTopic(3)" id="topic-tab-3" class="tab-inactive px-4 py-2 rounded-lg text-sm font-medium transition-all">Beer-Lambert Law</button>
      </div>
      <button id="hamburger-btn" onclick="toggleHamburger()" class="hamburger-btn" aria-label="Toggle navigation" aria-expanded="false">☰</button>
     </div>
@@ -364,13 +364,26 @@
         name: "Boyle's Law",
         subtitle: "Discovering the pressure–volume inverse relationship",
         description: {
-          intro: "At constant temperature, the pressure of a gas increases as its volume decreases. This inverse relationship means that P × V = constant, producing a hyperbolic curve when graphed.",
-          variables: ["Volume (mL) — Independent variable", "Pressure (kPa) — Dependent variable"],
+          intro: "In the PASCO gas-law apparatus, manually pushing the piston downward compresses the trapped gas. As piston position lowers the gas volume, the connected pressure sensor reports a higher pressure at approximately constant temperature.",
+          variables: ["Piston Position (mm) — Independent variable", "Pressure (kPa) — Dependent variable"],
           controlledVariables: ["Temperature (K) — kept constant", "Amount of gas (mol) — kept constant"],
           trendline: "Inverse: P = k/V (hyperbola)",
-          application: "Syringes work on this principle — pushing the plunger reduces volume and increases pressure, forcing liquid out. Scuba diving, breathing mechanics, and hydraulic systems all rely on Boyle's Law."
+          application: "Manual piston compression in lab apparatus, breathing mechanics, and syringe systems all rely on Boyle's Law: reducing gas volume raises pressure."
         },
-        sim: { xLabel: "Volume (mL)", yLabel: "Pressure (kPa)", xMin: 10, xMax: 100, generate: v => (1000 / v + Math.random() * 3).toFixed(1), derived: { label: "Boyle's Constant (P×V)", compute: (x, y) => (x * y).toFixed(1) + ' kPa·mL' } },
+        sim: {
+          xLabel: "Piston Position (mm)",
+          yLabel: "Pressure (kPa)",
+          xMin: 20,
+          xMax: 100,
+          generate: pos => getBoylePressureFromPosition(pos),
+          derived: {
+            label: "Estimated Volume and Boyle's Constant",
+            compute: (x, y) => {
+              const volume = getBoyleVolumeFromPosition(x);
+              return `V≈${volume.toFixed(1)} mL | P×V=${(y * volume).toFixed(1)} kPa·mL`;
+            }
+          }
+        },
         quiz: [
           { q: "Boyle's Law describes the relationship between:", opts: ["Pressure and temperature", "Volume and temperature", "Pressure and volume", "Density and pressure"], correct: 2, explain: "Boyle's Law: P₁V₁ = P₂V₂ at constant temperature." },
           { q: "If you halve the volume of a gas at constant temperature, pressure:", opts: ["Halves", "Doubles", "Stays the same", "Quadruples"], correct: 1, explain: "PV = k, so if V is halved, P must double to maintain the constant." },
@@ -380,16 +393,16 @@
         ]
       },
       {
-        name: "Reaction Kinetics",
-        subtitle: "Tracking exponential concentration decay over time",
+        name: "First-Order Reaction Kinetics",
+        subtitle: "Exponential concentration decay in a first-order reaction",
         description: {
-          intro: "In a first-order reaction, the concentration of reactant decreases exponentially over time. The rate of reaction is proportional to the current concentration, leading to exponential decay.",
+          intro: "In a first-order reaction, the rate of reaction depends only on the concentration of a single reactant: rate = k[A]. Because the rate is proportional to the current concentration, the concentration decays exponentially over time following [A] = [A]₀ × e^(−kt), where k is the first-order rate constant (s⁻¹) and t is elapsed time. This means each successive half-life removes the same fraction — not the same amount — of remaining reactant.",
           variables: ["Time (s) — Independent variable", "Concentration (mol/L) — Dependent variable"],
           controlledVariables: ["Temperature (K) — kept constant", "Catalyst presence — kept constant", "Reaction volume — kept constant"],
-          trendline: "Exponential decay: [A] = [A]₀ × e^(-kt)",
-          application: "Radioactive decay, drug metabolism in the body, and decomposition of hydrogen peroxide all follow first-order kinetics. The half-life concept comes directly from this relationship."
+          trendline: "Exponential decay: [A] = [A]₀ × e^(−kt), with constant half-life t½ = ln(2)/k",
+          application: "Radioactive decay, drug metabolism in the body, and decomposition of hydrogen peroxide all follow first-order kinetics. The constant half-life concept — central to nuclear medicine and pharmacokinetics — arises directly from this first-order rate law."
         },
-        sim: { xLabel: "Time (s)", yLabel: "Concentration (mol/L)", xMin: 0, xMax: 60, generate: t => (1.0 * Math.exp(-0.05 * t) + Math.random() * 0.03).toFixed(3), derived: { label: "Remaining Concentration", compute: (x, y) => (y * 100).toFixed(1) + '% of [A]₀' } },
+        sim: { xLabel: "Time (s)", yLabel: "Concentration (mol/L)", xMin: 0, xMax: 60, generate: t => (1.0 * Math.exp(-0.05 * t) + Math.random() * 0.03).toFixed(3), derived: { label: "Reaction Progress", compute: (x, y) => `${(y * 100).toFixed(1)}% of [A]₀ remaining | t½ = ${(Math.LN2 / 0.05).toFixed(2)} s` } },
         quiz: [
           { q: "In first-order kinetics, concentration vs time gives:", opts: ["A straight line", "A parabola", "An exponential decay curve", "A step function"], correct: 2, explain: "[A] = [A]₀e^(-kt) produces exponential decay." },
           { q: "What is the half-life of a first-order reaction with k = 0.05 s⁻¹?", opts: ["10 s", "13.9 s", "20 s", "50 s"], correct: 1, explain: "t½ = ln(2)/k = 0.693/0.05 ≈ 13.9 s." },
@@ -419,6 +432,23 @@
       }
     ];
 
+    topics[1].description.intro = "In the PASCO gas law apparatus, the piston is pushed down manually to compress trapped gas. The piston position sets gas volume, and the connected pressure sensor measures how pressure rises as volume decreases at constant temperature (25 °C).";
+    topics[1].description.variables = ["Volume (mL) — Independent variable", "Pressure (kPa) — Dependent variable"];
+    topics[1].description.controlledVariables = ["Temperature — 25 °C (298.2 K), kept constant", "Amount of gas (mol) — kept constant"];
+    topics[1].description.application = "Manual piston compression in lab apparatus, breathing mechanics, and syringe systems all rely on Boyle's Law: reducing gas volume raises pressure.";
+    topics[1].sim.xLabel = "Volume (mL)";
+    topics[1].sim.yLabel = "Pressure (kPa)";
+    topics[1].sim.xMin = 20;
+    topics[1].sim.xMax = 100;
+    topics[1].sim.generate = pos => getBoylePressureFromPosition(pos);
+    topics[1].sim.derived = {
+      label: "Temperature (constant)",
+      compute: (x, y) => {
+        const volume = getBoyleVolumeFromPosition(x);
+        return `T = 25.0 \u00b0C (298.2 K) | P\u00d7V = ${(y * volume).toFixed(1)} kPa\u00b7mL`;
+      }
+    };
+
     let currentTopic = 0;
     let currentSection = 0;
     let dataPoints = [[], [], [], []]; // per topic
@@ -434,6 +464,26 @@
       const clampedTemp = Math.max(295, Math.min(385, tempK));
       const k = 110 / 295; // mL/K at the baseline point
       return k * clampedTemp;
+    }
+
+    function getBoyleVolumeFromPosition(displacementMm) {
+      // V = A × Height, A = 1000 mm², initial height H₀ = 100 mm
+      // V (mL) = 1000 mm² × H(mm) / 1000 mm³·mL⁻¹ = H numerically
+      // Height decreases as piston is pushed down: H = H₀ − displacement
+      const H0 = 100; // mm (initial gas column height)
+      const clampedDisp = Math.max(0, Math.min(80, displacementMm));
+      return H0 - clampedDisp; // volume in mL
+    }
+
+    function getBoylePressureFromPosition(positionMm) {
+      const volume = getBoyleVolumeFromPosition(positionMm);
+      return getBoylePressure(volume);
+    }
+
+    function getBoylePressure(volumeMl) {
+      const clampedVolume = Math.max(10, Math.min(200, volumeMl));
+      const boyleConstant = 10132.5; // 101.325 kPa × 100 mL (atmospheric pressure at zero displacement)
+      return boyleConstant / clampedVolume;
     }
 
     function applyMeasurementVariation(value, variation = 0.02) {
@@ -524,16 +574,24 @@
     function renderSimulation(area) {
       const t = topics[currentTopic];
       const sim = t.sim;
-      const simValue = Number.isFinite(simInputValues[currentTopic]) ? simInputValues[currentTopic] : sim.xMin;
+      const isBoylePasco = currentTopic === 1;
+      const simDefault = isBoylePasco ? 0 : sim.xMin;
+      const simValue = Number.isFinite(simInputValues[currentTopic]) ? simInputValues[currentTopic] : simDefault;
+      const controlLabel = isBoylePasco ? 'Piston Displacement (mm)' : sim.xLabel;
+      const controlMin = isBoylePasco ? 0 : sim.xMin;
+      const controlMax = isBoylePasco ? 80 : sim.xMax;
+      const controlStep = isBoylePasco ? 0.5 : (sim.xMax - sim.xMin) / 100;
+      const controlDisplay = controlMax >= 1 ? simValue.toFixed(1) : simValue.toFixed(4);
       const recordButtonLabel = `Add ${sim.xLabel.split(' (')[0]} and ${sim.yLabel.split(' (')[0]}`;
       area.innerHTML = `
         <div class="grid md:grid-cols-2 gap-6">
           <div class="sim-container p-6">
             <h3 class="text-sm font-semibold text-teal-400 mb-4">${t.name} Simulation</h3>
             <div class="mb-4">
-              <label class="text-xs text-sky-700 block mb-1">${sim.xLabel}: <span id="sim-val" class="mono text-sky-900">${sim.xMax >= 1 ? simValue.toFixed(1) : simValue.toFixed(4)}</span></label>
-              <input type="range" id="sim-slider" min="${sim.xMin}" max="${sim.xMax}" value="${simValue}" step="${(sim.xMax - sim.xMin) / 100}" class="w-full accent-teal-500 mb-2" oninput="updateSim()">
-              <input type="number" id="sim-number" min="${sim.xMin}" max="${sim.xMax}" value="${simValue}" step="${(sim.xMax - sim.xMin) / 100}" class="w-full px-3 py-1.5 border border-sky-300 rounded-lg text-xs mono text-sky-900 bg-white focus:outline-none focus:border-sky-500 transition-colors" oninput="syncSimNumber()">
+              <label class="text-xs text-sky-700 block mb-1">${controlLabel}: <span id="sim-val" class="mono text-sky-900">${controlDisplay}</span></label>
+              <input type="range" id="sim-slider" min="${controlMin}" max="${controlMax}" value="${simValue}" step="${controlStep}" class="w-full accent-teal-500 mb-2" oninput="updateSim()">
+              <input type="number" id="sim-number" min="${controlMin}" max="${controlMax}" value="${simValue}" step="${controlStep}" class="w-full px-3 py-1.5 border border-sky-300 rounded-lg text-xs mono text-sky-900 bg-white focus:outline-none focus:border-sky-500 transition-colors" oninput="syncSimNumber()">
+              ${isBoylePasco ? '<p class="text-[11px] text-sky-600 mt-2">Higher displacement means lower gas volume and higher pressure.</p>' : ''}
             </div>
             <div id="sim-visual" class="flex items-center justify-center rounded-lg bg-white border border-sky-200" style="min-height:200px;"></div>
             <div class="mt-3 text-center">
@@ -544,7 +602,7 @@
           </div>
           <div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
             <h3 class="text-sm font-semibold text-sky-700 mb-4">Record Data</h3>
-            <p class="text-xs text-sky-700 mb-4">Heat the water bath to a target temperature, watch the piston move, then click the button to record the temperature and volume in the data table.</p>
+            <p class="text-xs text-sky-700 mb-4">${currentTopic === 0 ? 'Heat the water bath to a target temperature, watch the piston move, then click the button to record the temperature and volume in the data table.' : currentTopic === 1 ? 'Push the PASCO piston down to reduce gas volume and observe pressure from the connected sensor, then click Add Volume and Pressure.' : 'Adjust the control, observe the response, then record the current reading in the data table.'}</p>
             <button onclick="addFromSim()" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2">
               <i data-lucide="plus-circle" class="w-4 h-4"></i> ${recordButtonLabel}
             </button>
@@ -568,6 +626,24 @@
               <div class="mono text-xs text-sky-900">V = ${dataPoints[0].at(-1).y.toFixed(1)} mL</div>
               <div class="mono text-xs text-sky-900">V/T = ${(dataPoints[0].at(-1).y / dataPoints[0].at(-1).x).toFixed(4)} mL/K</div>
             </div>` : ''}` : ''}
+            ${currentTopic === 1 ? `
+            <div class="mt-4 p-3 bg-white rounded-lg border border-sky-200 space-y-2">
+              <div class="text-xs font-semibold text-sky-700">Procedure</div>
+              <ol class="text-xs text-sky-700 space-y-1 list-decimal list-inside leading-relaxed">
+                <li>Set the stopcock and ensure the gas is sealed.</li>
+                <li>Push the piston down to change piston position.</li>
+                <li>Observe pressure increase on the sensor.</li>
+                <li>Click Add Volume and Pressure to save the reading.</li>
+              </ol>
+            </div>
+            ${dataPoints[1].length > 0 ? `
+            <div class="mt-3 p-3 bg-white rounded-lg border border-sky-200">
+              <div class="text-xs font-semibold text-sky-700 mb-1">Last recorded</div>
+              <div class="mono text-xs text-sky-900">V = ${dataPoints[1].at(-1).x.toFixed(1)} mL</div>
+              <div class="mono text-xs text-sky-900">P = ${dataPoints[1].at(-1).y.toFixed(1)} kPa</div>
+              <div class="mono text-xs text-sky-900">P×V = ${(dataPoints[1].at(-1).y * dataPoints[1].at(-1).x).toFixed(1)} kPa·mL</div>
+              <div class="mono text-xs text-sky-900">T = 25.0 °C (constant)</div>
+            </div>` : ''}` : ''}
           </div>
         </div>`;
       updateSim();
@@ -578,13 +654,18 @@
       const val = parseFloat(slider.value);
       const sim = topics[currentTopic].sim;
       simInputValues[currentTopic] = val;
-      document.getElementById('sim-val').textContent = sim.xMax >= 1 ? val.toFixed(1) : val.toFixed(4);
-      const y = parseFloat(sim.generate(val));
-      currentSimPoint = { x: val, y };
-      document.getElementById('sim-result').textContent = currentTopic === 0 ? y.toFixed(1) : y;
+      let y = parseFloat(sim.generate(val));
+
+      if (currentTopic === 1) {
+        y = getBoylePressureFromPosition(val);
+      }
+
+      document.getElementById('sim-val').textContent = (currentTopic === 1 || sim.xMax >= 1) ? val.toFixed(1) : val.toFixed(4);
+      currentSimPoint = { x: currentTopic === 1 ? getBoyleVolumeFromPosition(val) : val, y };
+      document.getElementById('sim-result').textContent = (currentTopic === 0 || currentTopic === 1) ? y.toFixed(1) : currentTopic === 2 ? y.toFixed(3) : y;
       // Item 3: sync number input
       const numInput = document.getElementById('sim-number');
-      if (numInput) numInput.value = sim.xMax >= 1 ? val.toFixed(1) : val.toFixed(4);
+      if (numInput) numInput.value = (currentTopic === 1 || sim.xMax >= 1) ? val.toFixed(1) : val.toFixed(4);
       // Item 4: derived metric
       const derivedEl = document.getElementById('sim-derived');
       if (derivedEl && sim.derived) {
@@ -656,25 +737,168 @@
   <text x="90" y="45" text-anchor="middle" font-size="9" font-weight="600" fill="#0369a1">Hot-water bath</text>
   <text x="304" y="75" text-anchor="middle" font-size="9" font-weight="600" fill="#334155">Gas syringe / piston</text>
 </svg>`;
-      } else if (currentTopic === 1) { // Boyle - syringe
-        const pct = (val - sim.xMin) / (sim.xMax - sim.xMin);
-        const width = 30 + pct * 150;
-        visual.innerHTML = `<div class="relative" style="width:180px;height:60px;border:2px solid #2dd4bf;border-radius:8px;overflow:hidden;"><div style="width:${width}px;height:100%;background:linear-gradient(90deg,#0d9488,#14b8a6);transition:all 0.3s;display:flex;align-items:center;justify-content:center;"><span class="text-xs text-white font-bold mono">${val.toFixed(0)} mL</span></div></div>`;
+      } else if (currentTopic === 1) { // Boyle - PASCO piston with pressure sensor
+        const displacement = val;
+        const compressionPct = displacement / 80;
+        const volume = getBoyleVolumeFromPosition(val);
+        const sensorPressure = getBoylePressureFromPosition(val);
+        const barrelX = 78;
+        const barrelY = 52;
+        const barrelW = 120;
+        const barrelH = 108;
+        const pistonY = 58 + Math.round(compressionPct * 72);
+        const gasTopY = pistonY + 8;
+        const gasHeight = Math.max(20, barrelY + barrelH - 5 - gasTopY);
+        const sensorDigits = sensorPressure.toFixed(1);
+
+        visual.innerHTML = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 220" width="100%" height="100%" style="font-family:'DM Sans',sans-serif;">
+  <rect width="520" height="220" rx="10" fill="#f0f9ff"/>
+
+  <!-- PASCO frame -->
+  <rect x="36" y="44" width="210" height="148" rx="12" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/>
+  <rect x="56" y="58" width="170" height="114" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+
+  <!-- Cylinder -->
+  <rect x="${barrelX}" y="${barrelY}" width="${barrelW}" height="${barrelH}" rx="8" fill="#ffffff" stroke="#334155" stroke-width="2"/>
+  <rect x="${barrelX + 4}" y="${gasTopY}" width="${barrelW - 8}" height="${gasHeight}" rx="6" fill="#a7f3d0" opacity="0.75" style="transition:all 0.25s ease;"/>
+
+  <!-- Piston head and rod -->
+  <rect x="${barrelX + 6}" y="${pistonY}" width="${barrelW - 12}" height="10" rx="4" fill="#64748b" stroke="#1e293b" stroke-width="1.2" style="transition:all 0.25s ease;"/>
+  <rect x="${barrelX + 54}" y="22" width="12" height="${pistonY - 20}" rx="5" fill="#94a3b8" stroke="#475569" stroke-width="1" style="transition:all 0.25s ease;"/>
+  <circle cx="${barrelX + 60}" cy="18" r="8" fill="#334155"/>
+
+  <!-- Displacement indicator -->
+  <line x1="212" y1="58" x2="212" y2="160" stroke="#0ea5e9" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="208" y1="${pistonY + 5}" x2="218" y2="${pistonY + 5}" stroke="#0ea5e9" stroke-width="2"/>
+  <text x="220" y="${Math.max(50, pistonY - 4)}" font-size="9" fill="#0369a1">${displacement.toFixed(1)} mm</text>
+
+  <!-- Tubing and sensor -->
+  <path d="M198 108 C242 108 256 66 294 66" fill="none" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>
+  <rect x="294" y="48" width="84" height="36" rx="8" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>
+  <rect x="304" y="56" width="62" height="18" rx="3" fill="#0b1220" stroke="#334155" stroke-width="1"/>
+  <text x="335" y="69" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#22d3ee">${sensorDigits}</text>
+  <rect x="378" y="61" width="24" height="10" rx="4" fill="#94a3b8"/>
+
+  <!-- Labels -->
+  <text x="141" y="38" text-anchor="middle" font-size="10" font-weight="600" fill="#334155">PASCO piston apparatus</text>
+  <text x="336" y="42" text-anchor="middle" font-size="10" font-weight="600" fill="#334155">Pressure sensor (kPa)</text>
+  <text x="141" y="178" text-anchor="middle" font-size="10" fill="#065f46">Volume: ${volume.toFixed(1)} mL</text>
+  <text x="141" y="192" text-anchor="middle" font-size="10" fill="#0c4a6e">Piston pushed down → pressure rises</text>
+</svg>`;
       } else if (currentTopic === 2) { // Kinetics - particles
-        const pct = Math.exp(-0.05 * val);
-        const count = Math.max(1, Math.round(pct * 30));
-        let dots = '';
-        for (let i = 0; i < count; i++) {
-          const x = Math.random() * 90 + 5;
-          const yp = Math.random() * 90 + 5;
-          dots += `<div style="position:absolute;left:${x}%;top:${yp}%;width:8px;height:8px;border-radius:50%;background:#2dd4bf;"></div>`;
+        const k = 0.05; // s⁻¹
+        const A0 = 1.0;
+        const concentration = A0 * Math.exp(-k * val);
+        const fractionRemaining = Math.min(1, concentration / A0);
+        const activeCount = Math.round(80 * fractionRemaining);
+        const halfLife = (Math.LN2 / k).toFixed(2);
+        // Deterministic particle positions via golden-angle spacing
+        let circles = '';
+        for (let i = 0; i < 80; i++) {
+          const px = (16 + (i * 137.508) % 448).toFixed(1);
+          const py = (18 + (i * 97.3) % 144).toFixed(1);
+          const active = i < activeCount;
+          circles += `<circle cx="${px}" cy="${py}" r="5.5" fill="${active ? '#14b8a6' : '#94a3b8'}" opacity="${active ? '0.9' : '0.28'}" style="transition:fill 0.3s,opacity 0.3s;"/>`;
         }
-        visual.innerHTML = `<div class="relative w-full h-full bg-sky-100 rounded-lg">${dots}</div>`;
+        visual.innerHTML = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 210" width="100%" height="100%" style="font-family:'DM Sans',sans-serif;">
+  <rect width="520" height="210" rx="10" fill="#f0fdfa"/>
+  <rect x="10" y="10" width="500" height="162" rx="8" fill="none" stroke="#99f6e4" stroke-width="1.5" stroke-dasharray="6 3"/>
+  ${circles}
+  <!-- legend -->
+  <circle cx="20" cy="188" r="6" fill="#14b8a6" opacity="0.9"/>
+  <text x="31" y="192" font-size="10" fill="#0f766e" font-weight="600">Reactant [A]</text>
+  <circle cx="118" cy="188" r="6" fill="#94a3b8" opacity="0.45"/>
+  <text x="129" y="192" font-size="10" fill="#64748b" font-weight="600">Product [B]</text>
+  <!-- stats bar -->
+  <rect x="220" y="178" width="290" height="22" rx="5" fill="#e0fdf4" stroke="#6ee7b7" stroke-width="1"/>
+  <text x="230" y="193" font-size="10" fill="#0369a1">[A] = ${concentration.toFixed(3)} mol/L &nbsp;|&nbsp; ${(fractionRemaining*100).toFixed(1)}% remaining &nbsp;|&nbsp; t½ = ${halfLife} s</text>
+</svg>`;
       } else { // Beer-Lambert - color
         const pct = val / sim.xMax;
-        const alpha = 0.1 + pct * 0.8;
-        visual.innerHTML = `<div style="width:80px;height:120px;border-radius:4px 4px 0 0;border:2px solid #0ea5e9;background:rgba(99,102,241,${alpha});transition:all 0.3s;position:relative;"><div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:30px;height:10px;background:#0ea5e9;border-radius:4px 4px 0 0;"></div></div>`;
+        // Absorbance A = εlc; transmittance T = 10^-A
+        const absorbance = parseFloat((12 * val).toFixed(3));
+        const transmittance = Math.pow(10, -absorbance); // 0..1
+        // Cuvette solution color: clear → deep blue-purple as concentration rises
+        const solR = Math.round(219 - pct * 170);
+        const solG = Math.round(234 - pct * 180);
+        const solB = Math.round(254 - pct * 40);
+        const solAlpha = (0.12 + pct * 0.78).toFixed(2);
+        // Transmitted beam brightness fades with transmittance
+        const beamAlpha = (0.15 + transmittance * 0.85).toFixed(3);
+        const beamR = Math.round(253 * transmittance + 200 * (1 - transmittance));
+        const beamG = Math.round(224 * transmittance + 180 * (1 - transmittance));
+        const beamB = Math.round(60 * transmittance + 40 * (1 - transmittance));
+        const txColor = `rgba(${beamR},${beamG},${beamB},${beamAlpha})`;
+        visual.innerHTML = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 210" width="100%" height="100%" style="font-family:'DM Sans',sans-serif;">
+  <rect width="520" height="210" rx="10" fill="#f0f9ff"/>
+  <defs>
+    <linearGradient id="incidentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(253,224,60,0.95)"/>
+      <stop offset="100%" stop-color="rgba(253,224,60,0.85)"/>
+    </linearGradient>
+    <linearGradient id="txGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="${txColor}"/>
+      <stop offset="100%" stop-color="rgba(${beamR},${beamG},${beamB},${(parseFloat(beamAlpha)*0.6).toFixed(3)})"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="softglow"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+
+  <!-- ── FLASHLIGHT ── -->
+  <!-- Body -->
+  <rect x="28" y="86" width="62" height="38" rx="7" fill="#374151" stroke="#1f2937" stroke-width="1.5"/>
+  <!-- Grip ridges -->
+  <line x1="48" y1="88" x2="48" y2="122" stroke="#4b5563" stroke-width="2.5"/>
+  <line x1="58" y1="88" x2="58" y2="122" stroke="#4b5563" stroke-width="2.5"/>
+  <line x1="68" y1="88" x2="68" y2="122" stroke="#4b5563" stroke-width="2.5"/>
+  <!-- Head (tapered) -->
+  <polygon points="90,82 90,128 112,120 112,90" fill="#4b5563" stroke="#1f2937" stroke-width="1.5"/>
+  <!-- Lens ring -->
+  <ellipse cx="112" cy="105" rx="5" ry="15" fill="#d1d5db" stroke="#9ca3af" stroke-width="1"/>
+  <!-- Lens glow -->
+  <ellipse cx="112" cy="105" rx="3" ry="10" fill="rgba(253,224,60,0.95)" filter="url(#glow)"/>
+
+  <!-- ── INCIDENT BEAM (flashlight → cuvette) ── -->
+  <rect x="117" y="93" width="133" height="24" rx="3" fill="url(#incidentGrad)" opacity="0.9" filter="url(#softglow)"/>
+  <!-- Soft halo -->
+  <rect x="117" y="88" width="133" height="34" rx="5" fill="rgba(253,224,60,0.18)"/>
+
+  <!-- ── CUVETTE ── -->
+  <!-- Outer glass -->
+  <rect x="250" y="52" width="64" height="106" rx="5" fill="rgba(226,232,240,0.45)" stroke="#94a3b8" stroke-width="2"/>
+  <!-- Solution fill -->
+  <rect x="255" y="57" width="54" height="96" rx="3" fill="rgba(${solR},${solG},${solB},${solAlpha})" style="transition:all 0.3s;"/>
+  <!-- Glass sheen -->
+  <rect x="255" y="57" width="8" height="96" rx="2" fill="rgba(255,255,255,0.28)"/>
+  <!-- Cuvette cap -->
+  <rect x="258" y="48" width="18" height="8" rx="3" fill="#64748b"/>
+  <!-- Label -->
+  <text x="282" y="173" text-anchor="middle" font-size="9" font-weight="600" fill="#475569">cuvette</text>
+  <text x="282" y="184" text-anchor="middle" font-size="8" fill="#0369a1">c = ${val.toFixed(4)} mol/L</text>
+
+  <!-- ── TRANSMITTED BEAM (cuvette → right) ── -->
+  <rect x="314" y="93" width="160" height="24" rx="3" fill="url(#txGrad)" style="transition:all 0.3s;" filter="url(#softglow)"/>
+  <rect x="314" y="88" width="160" height="34" rx="5" fill="rgba(${beamR},${beamG},${beamB},${(parseFloat(beamAlpha)*0.18).toFixed(3)})"/>
+
+  <!-- ── DETECTOR (right) ── -->
+  <rect x="475" y="82" width="32" height="46" rx="6" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>
+  <rect x="479" y="88" width="24" height="34" rx="3" fill="rgba(${beamR},${beamG},${beamB},${(Math.min(1,parseFloat(beamAlpha)*1.2)).toFixed(3)})" style="transition:all 0.3s;"/>
+  <text x="491" y="140" text-anchor="middle" font-size="8" fill="#64748b">detector</text>
+
+  <!-- ── BEAM LABELS ── -->
+  <text x="184" y="84" text-anchor="middle" font-size="9" fill="#92400e">I₀ (incident)</text>
+  <text x="394" y="84" text-anchor="middle" font-size="9" fill="#78350f" style="transition:all 0.3s;">I (transmitted)</text>
+
+  <!-- ── ABSORBANCE / TRANSMITTANCE readout ── -->
+  <rect x="28" y="22" width="200" height="22" rx="5" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="38" y="37" font-size="10" fill="#1e40af">A = ${absorbance.toFixed(3)}</text>
+  <text x="128" y="37" font-size="10" fill="#1e40af">T = ${(transmittance * 100).toFixed(1)}%</text>
+</svg>`;
       }
+
     }
 
     function syncSimNumber() {
@@ -684,7 +908,9 @@
       const sim = topics[currentTopic].sim;
       let val = parseFloat(numInput.value);
       if (isNaN(val)) return;
-      val = Math.max(sim.xMin, Math.min(sim.xMax, val));
+      const minVal = currentTopic === 1 ? 0 : sim.xMin;
+      const maxVal = currentTopic === 1 ? 80 : sim.xMax;
+      val = Math.max(minVal, Math.min(maxVal, val));
       slider.value = val;
       updateSim();
     }
@@ -697,7 +923,7 @@
       const x = currentSimPoint.x;
       const y = applyMeasurementVariation(currentSimPoint.y);
       dataPoints[currentTopic].push({ x, y });
-      showToast(`Recorded temperature and volume (${dataPoints[currentTopic].length} total)`);
+      showToast(`Recorded ${topics[currentTopic].sim.xLabel.toLowerCase()} and ${topics[currentTopic].sim.yLabel.toLowerCase()} (${dataPoints[currentTopic].length} total)`);
       renderSimulation(document.getElementById('content-area'));
       lucide.createIcons();
     }
@@ -719,7 +945,7 @@
             </div>
           </div>
           <input type="file" id="csv-import-input" accept=".csv,text/csv" class="hidden" onchange="importCSVFile(event)">
-          ${data.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">📋</div><p class="empty-state-text">No data yet. Use the Simulation tab or "Add Temperature & Volume" to record a point.</p></div>' : `
+          ${data.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">📋</div><p class="empty-state-text">No data yet. Use the Simulation tab and add a reading to record a point.</p></div>' : `
           <div class="overflow-x-auto max-h-80 overflow-y-auto">
             <table class="w-full text-sm">
               <thead class="sticky top-0 bg-sky-50/90 backdrop-blur-sm"><tr>
@@ -1432,6 +1658,21 @@
           ['subtitle', config.subtitle || defaultConfig.subtitle]
         ])
       });
+    }
+
+    function addFromSim() {
+      if (!Number.isFinite(currentSimPoint.x) || !Number.isFinite(currentSimPoint.y)) {
+        showToast('Adjust the simulation first.');
+        return;
+      }
+      const x = currentSimPoint.x;
+      const y = applyMeasurementVariation(currentSimPoint.y);
+      dataPoints[currentTopic].push({ x, y });
+      const xName = topics[currentTopic].sim.xLabel.split(' (')[0];
+      const yName = topics[currentTopic].sim.yLabel.split(' (')[0];
+      showToast(`Recorded ${xName} and ${yName} (${dataPoints[currentTopic].length} total)`);
+      renderSimulation(document.getElementById('content-area'));
+      lucide.createIcons();
     }
 
     // Item 16: set initial topic subtitle on page load
