@@ -345,13 +345,13 @@
         name: "Charles' Law",
         subtitle: "Exploring volume–temperature relationships at constant pressure",
         description: {
-          intro: "At constant pressure, the volume of a gas increases linearly as temperature increases. This fundamental gas law demonstrates a direct linear relationship between volume and absolute temperature.",
+          intro: "In the PASCO setup, water is heated around the thermal can so the aluminum cylinder warms the trapped gas. As the gas temperature rises at roughly constant pressure, the piston moves outward and the gas volume increases linearly with temperature.",
           variables: ["Temperature (K) — Independent variable", "Volume (mL) — Dependent variable"],
           controlledVariables: ["Pressure (kPa) — kept constant", "Amount of gas (mol) — kept constant"],
           trendline: "Linear: V = kT (where k is a constant)",
-          application: "Hot air balloons rise because heating the air inside increases its volume, making the balloon less dense than surrounding air. This principle is also used in gas thermometers and industrial gas storage."
+          application: "The same heating-and-expansion idea is used in gas thermometers, hot-air balloons, and sealed piston experiments that measure how gas volume responds to temperature changes."
         },
-        sim: { xLabel: "Temperature (K)", yLabel: "Volume (mL)", xMin: 200, xMax: 500, generate: t => (t * 0.5 + Math.random() * 5).toFixed(1), derived: { label: "Charles' Constant (V/T)", compute: (x, y) => (y / x).toFixed(4) + ' mL/K' } },
+        sim: { xLabel: "Bath Temperature (K)", yLabel: "Volume (mL)", xMin: 295, xMax: 385, generate: t => getCharlesVolume(t), derived: { label: "Charles' Constant (V/T)", compute: (x) => (getCharlesVolume(x) / x).toFixed(4) + ' mL/K' } },
         quiz: [
           { q: "What happens to gas volume when temperature increases at constant pressure?", opts: ["Decreases", "Increases linearly", "Stays the same", "Increases exponentially"], correct: 1, explain: "Charles' Law states V ∝ T at constant pressure, giving a linear increase." },
           { q: "What temperature scale must be used for Charles' Law?", opts: ["Celsius", "Fahrenheit", "Kelvin", "Any scale"], correct: 2, explain: "Kelvin (absolute temperature) must be used because Charles' Law requires T=0 to mean zero molecular motion." },
@@ -424,9 +424,23 @@
     let dataPoints = [[], [], [], []]; // per topic
     let quizStates = [{}, {}, {}, {}]; // per topic
     let tableEditStates = [null, null, null, null]; // per topic row edit state
-    const defaultTrendlines = ['linear', 'inverse', 'exponential', 'linear'];
+    const defaultTrendlines = ['none', 'none', 'none', 'none'];
     let selectedTrendlines = [...defaultTrendlines]; // per topic trendline type
     let smoothGraphLines = [false, false, false, false]; // per topic smooth line toggle
+    let simInputValues = topics.map(topic => topic.sim.xMin); // per topic simulation x-value
+    let currentSimPoint = { x: null, y: null }; // active simulation reading for the record button
+
+    function getCharlesVolume(tempK) {
+      const clampedTemp = Math.max(295, Math.min(385, tempK));
+      const k = 110 / 295; // mL/K at the baseline point
+      return k * clampedTemp;
+    }
+
+    function applyMeasurementVariation(value, variation = 0.02) {
+      if (!Number.isFinite(value)) return value;
+      const factor = 1 + ((Math.random() * 2 - 1) * variation);
+      return Math.max(0, value * factor);
+    }
 
     // ===== NAVIGATION =====
     function switchTopic(idx) {
@@ -510,16 +524,18 @@
     function renderSimulation(area) {
       const t = topics[currentTopic];
       const sim = t.sim;
+      const simValue = Number.isFinite(simInputValues[currentTopic]) ? simInputValues[currentTopic] : sim.xMin;
+      const recordButtonLabel = `Add ${sim.xLabel.split(' (')[0]} and ${sim.yLabel.split(' (')[0]}`;
       area.innerHTML = `
         <div class="grid md:grid-cols-2 gap-6">
           <div class="sim-container p-6">
             <h3 class="text-sm font-semibold text-teal-400 mb-4">${t.name} Simulation</h3>
             <div class="mb-4">
-              <label class="text-xs text-sky-700 block mb-1">${sim.xLabel}: <span id="sim-val" class="mono text-sky-900">${sim.xMax >= 1 ? sim.xMin.toFixed(1) : sim.xMin.toFixed(4)}</span></label>
-              <input type="range" id="sim-slider" min="${sim.xMin}" max="${sim.xMax}" value="${sim.xMin}" step="${(sim.xMax - sim.xMin) / 100}" class="w-full accent-teal-500 mb-2" oninput="updateSim()">
-              <input type="number" id="sim-number" min="${sim.xMin}" max="${sim.xMax}" value="${sim.xMin}" step="${(sim.xMax - sim.xMin) / 100}" class="w-full px-3 py-1.5 border border-sky-300 rounded-lg text-xs mono text-sky-900 bg-white focus:outline-none focus:border-sky-500 transition-colors" oninput="syncSimNumber()">
+              <label class="text-xs text-sky-700 block mb-1">${sim.xLabel}: <span id="sim-val" class="mono text-sky-900">${sim.xMax >= 1 ? simValue.toFixed(1) : simValue.toFixed(4)}</span></label>
+              <input type="range" id="sim-slider" min="${sim.xMin}" max="${sim.xMax}" value="${simValue}" step="${(sim.xMax - sim.xMin) / 100}" class="w-full accent-teal-500 mb-2" oninput="updateSim()">
+              <input type="number" id="sim-number" min="${sim.xMin}" max="${sim.xMax}" value="${simValue}" step="${(sim.xMax - sim.xMin) / 100}" class="w-full px-3 py-1.5 border border-sky-300 rounded-lg text-xs mono text-sky-900 bg-white focus:outline-none focus:border-sky-500 transition-colors" oninput="syncSimNumber()">
             </div>
-            <div id="sim-visual" class="h-48 flex items-center justify-center rounded-lg bg-white border border-sky-200"></div>
+            <div id="sim-visual" class="flex items-center justify-center rounded-lg bg-white border border-sky-200" style="min-height:200px;"></div>
             <div class="mt-3 text-center">
               <span class="text-xs text-sky-600">${sim.yLabel}: </span>
               <span id="sim-result" class="mono text-sky-900 text-sm font-semibold"></span>
@@ -528,13 +544,30 @@
           </div>
           <div class="bg-sky-50 rounded-xl p-6 border border-sky-200">
             <h3 class="text-sm font-semibold text-sky-700 mb-4">Record Data</h3>
-            <p class="text-xs text-sky-700 mb-4">Adjust the slider and click "Add Data Point" to record values to your data table.</p>
+            <p class="text-xs text-sky-700 mb-4">Heat the water bath to a target temperature, watch the piston move, then click the button to record the temperature and volume in the data table.</p>
             <button onclick="addFromSim()" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2">
-              <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Data Point
+              <i data-lucide="plus-circle" class="w-4 h-4"></i> ${recordButtonLabel}
             </button>
             <div class="mt-4 p-3 bg-white rounded-lg border border-sky-200">
               <p class="text-xs text-sky-600">Points recorded: <span class="text-sky-900 font-semibold">${dataPoints[currentTopic].length}</span></p>
             </div>
+            ${currentTopic === 0 ? `
+            <div class="mt-4 p-3 bg-white rounded-lg border border-sky-200 space-y-2">
+              <div class="text-xs font-semibold text-sky-700">Procedure</div>
+              <ol class="text-xs text-sky-700 space-y-1 list-decimal list-inside leading-relaxed">
+                <li>Immerse the thermal can in hot water.</li>
+                <li>Let the aluminum cylinder and trapped gas warm up.</li>
+                <li>Observe the piston move outward as volume increases.</li>
+                <li>Click Add Temperature &amp; Volume to store the reading.</li>
+              </ol>
+            </div>
+            ${dataPoints[0].length > 0 ? `
+            <div class="mt-3 p-3 bg-white rounded-lg border border-sky-200">
+              <div class="text-xs font-semibold text-sky-700 mb-1">Last recorded</div>
+              <div class="mono text-xs text-sky-900">T = ${dataPoints[0].at(-1).x.toFixed(1)} K</div>
+              <div class="mono text-xs text-sky-900">V = ${dataPoints[0].at(-1).y.toFixed(1)} mL</div>
+              <div class="mono text-xs text-sky-900">V/T = ${(dataPoints[0].at(-1).y / dataPoints[0].at(-1).x).toFixed(4)} mL/K</div>
+            </div>` : ''}` : ''}
           </div>
         </div>`;
       updateSim();
@@ -544,9 +577,11 @@
       const slider = document.getElementById('sim-slider');
       const val = parseFloat(slider.value);
       const sim = topics[currentTopic].sim;
+      simInputValues[currentTopic] = val;
       document.getElementById('sim-val').textContent = sim.xMax >= 1 ? val.toFixed(1) : val.toFixed(4);
       const y = parseFloat(sim.generate(val));
-      document.getElementById('sim-result').textContent = y;
+      currentSimPoint = { x: val, y };
+      document.getElementById('sim-result').textContent = currentTopic === 0 ? y.toFixed(1) : y;
       // Item 3: sync number input
       const numInput = document.getElementById('sim-number');
       if (numInput) numInput.value = sim.xMax >= 1 ? val.toFixed(1) : val.toFixed(4);
@@ -558,10 +593,69 @@
 
       // Visual
       const visual = document.getElementById('sim-visual');
-      if (currentTopic === 0) { // Charles - balloon
+      if (currentTopic === 0) { // Charles - PASCO apparatus SVG
         const pct = (val - sim.xMin) / (sim.xMax - sim.xMin);
-        const size = 40 + pct * 80;
-        visual.innerHTML = `<div style="width:${size}px;height:${size}px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #5eead4, #0d9488);transition:all 0.3s;box-shadow:0 0 ${size/3}px #14b8a655;"></div>`;
+        // Water color interpolation: cold=light blue → hot=warm orange
+        const r = Math.round(186 + pct * (253 - 186));
+        const g = Math.round(230 + pct * (186 - 230));
+        const b = Math.round(253 + pct * (133 - 253));
+        const waterColor = `rgb(${r},${g},${b})`;
+        // Keep water level fixed; only temperature color changes.
+        const waterFill = 108;
+        // Syringe and piston geometry (aligned motion inside/outside barrel)
+        const barrelX = 220;
+        const barrelY = 84;
+        const barrelW = 180;
+        const barrelH = 56;
+        const pistonFaceX = 356 + Math.round(pct * 42);
+        const gasWidth = Math.max(42, pistonFaceX - (barrelX + 4));
+        visual.innerHTML = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 210" width="100%" height="100%" style="font-family:'DM Sans',sans-serif;">
+  <!-- Background -->
+  <rect width="520" height="210" rx="10" fill="#f0f9ff"/>
+
+  <defs>
+    <clipPath id="beakerInside"><rect x="32" y="50" width="116" height="140" rx="2"/></clipPath>
+  </defs>
+
+  <!-- BEAKER -->
+  <!-- Water fill -->
+  <rect x="32" y="${190 - waterFill}" width="116" height="${waterFill}" fill="${waterColor}" clip-path="url(#beakerInside)" style="transition:all 0.3s ease;"/>
+  <!-- Beaker walls -->
+  <rect x="30" y="50" width="120" height="140" rx="4" fill="none" stroke="#0ea5e9" stroke-width="3"/>
+  <!-- Beaker bottom -->
+  <rect x="30" y="188" width="120" height="5" rx="2" fill="#0ea5e9"/>
+  <!-- Beaker top opening -->
+  <rect x="28" y="48" width="124" height="6" rx="3" fill="#0ea5e9"/>
+  <!-- Burner flame symbol -->
+  <ellipse cx="90" cy="198" rx="30" ry="4" fill="#fbbf24" opacity="0.5"/>
+  <text x="90" y="198" text-anchor="middle" font-size="9" fill="#b45309" dy="-2">▲ heat source</text>
+
+  <!-- THERMAL CAN (aluminum cylinder) inside beaker -->
+  <rect x="60" y="80" width="60" height="100" rx="6" fill="#cbd5e1" stroke="#64748b" stroke-width="2"/>
+  <text x="90" y="110" text-anchor="middle" font-size="8" fill="#475569">aluminum</text>
+  <text x="90" y="121" text-anchor="middle" font-size="8" fill="#475569">cylinder</text>
+
+  <!-- RUBBER TUBING from can top to cylinder -->
+  <path d="M120 92 C150 72 180 82 220 100" fill="none" stroke="#374151" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- GAS CYLINDER body -->
+  <rect x="${barrelX}" y="${barrelY}" width="${barrelW}" height="${barrelH}" rx="6" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+  <text x="${barrelX + 80}" y="${barrelY + 24}" text-anchor="middle" font-size="9" fill="#334155">trapped gas</text>
+  <!-- Gas fill (expands with temp) -->
+  <rect x="${barrelX + 2}" y="${barrelY + 2}" width="${gasWidth}" height="${barrelH - 4}" rx="4" fill="#a7f3d0" opacity="0.7" style="transition:all 0.3s ease;"/>
+
+  <!-- PISTON -->
+  <rect x="${pistonFaceX}" y="82" width="14" height="60" rx="3" fill="#64748b" stroke="#1e293b" stroke-width="1.5" style="transition:all 0.3s ease;"/>
+  <!-- Piston rod -->
+  <line x1="${pistonFaceX + 14}" y1="112" x2="${pistonFaceX + 40}" y2="112" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" style="transition:all 0.3s ease;"/>
+  <!-- Piston arrow indicator -->
+  <text x="${pistonFaceX + 21}" y="99" text-anchor="middle" font-size="10" fill="#0ea5e9" style="transition:all 0.3s ease;">→</text>
+
+  <!-- Labels -->
+  <text x="90" y="45" text-anchor="middle" font-size="9" font-weight="600" fill="#0369a1">Hot-water bath</text>
+  <text x="304" y="75" text-anchor="middle" font-size="9" font-weight="600" fill="#334155">Gas syringe / piston</text>
+</svg>`;
       } else if (currentTopic === 1) { // Boyle - syringe
         const pct = (val - sim.xMin) / (sim.xMax - sim.xMin);
         const width = 30 + pct * 150;
@@ -596,11 +690,14 @@
     }
 
     function addFromSim() {
-      const slider = document.getElementById('sim-slider');
-      const x = parseFloat(slider.value);
-      const y = parseFloat(topics[currentTopic].sim.generate(x));
+      if (!Number.isFinite(currentSimPoint.x) || !Number.isFinite(currentSimPoint.y)) {
+        showToast('Adjust the simulation first.');
+        return;
+      }
+      const x = currentSimPoint.x;
+      const y = applyMeasurementVariation(currentSimPoint.y);
       dataPoints[currentTopic].push({ x, y });
-      showToast(`Data point added (${dataPoints[currentTopic].length} total)`);
+      showToast(`Recorded temperature and volume (${dataPoints[currentTopic].length} total)`);
       renderSimulation(document.getElementById('content-area'));
       lucide.createIcons();
     }
@@ -622,7 +719,7 @@
             </div>
           </div>
           <input type="file" id="csv-import-input" accept=".csv,text/csv" class="hidden" onchange="importCSVFile(event)">
-          ${data.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">📋</div><p class="empty-state-text">No data yet. Use the Simulation tab or "Generate Sample" to add data points.</p></div>' : `
+          ${data.length === 0 ? '<div class="empty-state"><div class="empty-state-icon">📋</div><p class="empty-state-text">No data yet. Use the Simulation tab or "Add Temperature & Volume" to record a point.</p></div>' : `
           <div class="overflow-x-auto max-h-80 overflow-y-auto">
             <table class="w-full text-sm">
               <thead class="sticky top-0 bg-sky-50/90 backdrop-blur-sm"><tr>
@@ -764,7 +861,7 @@
       const range = sim.xMax - sim.xMin;
       for (let i = 0; i < 8; i++) {
         const x = sim.xMin + (range / 9) * (i + 1) + (Math.random() - 0.5) * range * 0.05;
-        const y = parseFloat(sim.generate(x));
+        const y = applyMeasurementVariation(parseFloat(sim.generate(x)));
         dataPoints[currentTopic].push({ x, y });
       }
       renderDataTable(document.getElementById('content-area'));
@@ -799,7 +896,8 @@
       const data = dataPoints[currentTopic];
       const hasData = data.length >= 2;
       const trendType = selectedTrendlines[currentTopic] || defaultTrendlines[currentTopic];
-      const smoothChecked = smoothGraphLines[currentTopic];
+        const canSmoothLine = data.length >= 3;
+        const smoothChecked = canSmoothLine && smoothGraphLines[currentTopic];
 
       let analysisHTML = '';
       let unknownHTML = '';
@@ -844,18 +942,22 @@
             <div class="flex flex-wrap items-center gap-3">
               <label class="text-xs font-semibold text-sky-700">Trendline</label>
               <select class="trendline-select" onchange="setTrendlineType(this.value)">
-                <option value="none" ${trendlineType === 'none' ? 'selected' : ''}>None</option>
-                <option value="linear" ${trendlineType === 'linear' ? 'selected' : ''}>Linear</option>
-                <option value="inverse" ${trendlineType === 'inverse' ? 'selected' : ''}>Inverse</option>
-                <option value="inverse_square" ${trendlineType === 'inverse_square' ? 'selected' : ''}>Inverse Square</option>
-                <option value="quadratic" ${trendlineType === 'quadratic' ? 'selected' : ''}>Quadratic</option>
-                <option value="exponential" ${trendlineType === 'exponential' ? 'selected' : ''}>Exponential</option>
-                <option value="logarithmic" ${trendlineType === 'logarithmic' ? 'selected' : ''}>Logarithmic</option>
-                <option value="power2" ${trendlineType === 'power2' ? 'selected' : ''}>Power (2)</option>
-                <option value="power3" ${trendlineType === 'power3' ? 'selected' : ''}>Power (3)</option>
-                <option value="power4" ${trendlineType === 'power4' ? 'selected' : ''}>Power (4)</option>
+                <option value="none" ${trendType === 'none' ? 'selected' : ''}>None</option>
+                <option value="linear" ${trendType === 'linear' ? 'selected' : ''}>Linear</option>
+                <option value="inverse" ${trendType === 'inverse' ? 'selected' : ''}>Inverse</option>
+                <option value="inverse_square" ${trendType === 'inverse_square' ? 'selected' : ''}>Inverse Square</option>
+                <option value="quadratic" ${trendType === 'quadratic' ? 'selected' : ''}>Quadratic</option>
+                <option value="exponential" ${trendType === 'exponential' ? 'selected' : ''}>Exponential</option>
+                <option value="logarithmic" ${trendType === 'logarithmic' ? 'selected' : ''}>Logarithmic</option>
+                <option value="power2" ${trendType === 'power2' ? 'selected' : ''}>Power (2)</option>
+                <option value="power3" ${trendType === 'power3' ? 'selected' : ''}>Power (3)</option>
+                <option value="power4" ${trendType === 'power4' ? 'selected' : ''}>Power (4)</option>
               </select>
-              <label class="text-xs text-sky-700 inline-flex items-center gap-2"><input type="checkbox" ${smoothChecked ? 'checked' : ''} onchange="setSmoothLine(this.checked)"> Smooth line</label>
+              <label class="text-xs text-sky-700 inline-flex items-center gap-2 ${canSmoothLine ? '' : 'opacity-60'}">
+                <input type="checkbox" ${smoothChecked ? 'checked' : ''} ${canSmoothLine ? '' : 'disabled'} onchange="setSmoothLine(this.checked)">
+                Smooth line
+              </label>
+              ${canSmoothLine ? '' : '<span class="text-[11px] text-sky-500">Needs at least 3 points</span>'}
             </div>
             <canvas id="graph-canvas" width="600" height="350" class="w-full"></canvas>
           </div>
@@ -1050,6 +1152,7 @@
       const canvas = document.getElementById('graph-canvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
+      const useSmoothLine = smoothOn && data.length >= 3;
       const W = canvas.width, H = canvas.height;
       const pad = { top: 30, right: 30, bottom: 50, left: 60 };
       const gW = W - pad.left - pad.right, gH = H - pad.top - pad.bottom;
@@ -1099,31 +1202,28 @@
         ctx.fillText(yv.toPrecision(3), pad.left - 5, toY(yv) + 3);
       }
 
-      // Data line (smooth toggle)
+      // Optional smooth connector between points
       const sorted = [...data].sort((a, b) => a.x - b.x);
-      if (sorted.length > 1) {
+      if (useSmoothLine && sorted.length > 1) {
         ctx.strokeStyle = '#0ea5e999';
         ctx.lineWidth = 1.8;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
         ctx.beginPath();
-        if (!smoothOn) {
-          sorted.forEach((d, i) => {
-            const px = toX(d.x), py = toY(d.y);
-            if (i === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-          });
-        } else {
-          ctx.moveTo(toX(sorted[0].x), toY(sorted[0].y));
-          for (let i = 0; i < sorted.length - 1; i++) {
-            const p0 = sorted[i];
-            const p1 = sorted[i + 1];
-            const cx = (toX(p0.x) + toX(p1.x)) / 2;
-            const cy = (toY(p0.y) + toY(p1.y)) / 2;
-            ctx.quadraticCurveTo(toX(p0.x), toY(p0.y), cx, cy);
-          }
-          const last = sorted[sorted.length - 1];
-          ctx.lineTo(toX(last.x), toY(last.y));
+        ctx.moveTo(toX(sorted[0].x), toY(sorted[0].y));
+        for (let i = 0; i < sorted.length - 1; i++) {
+          const p0 = sorted[i];
+          const p1 = sorted[i + 1];
+          const cx = (toX(p0.x) + toX(p1.x)) / 2;
+          const cy = (toY(p0.y) + toY(p1.y)) / 2;
+          ctx.quadraticCurveTo(toX(p0.x), toY(p0.y), cx, cy);
         }
+        const last = sorted[sorted.length - 1];
+        ctx.lineTo(toX(last.x), toY(last.y));
+        ctx.lineTo(toX(last.x), toY(last.y));
         ctx.stroke();
+        ctx.lineJoin = 'miter';
+        ctx.lineCap = 'butt';
       }
 
       // Trendline
@@ -1169,12 +1269,12 @@
       if (data.length < 2) return;
       const abs = parseFloat(document.getElementById('unknown-abs').value);
       if (isNaN(abs)) return;
-      const fit = computeFit(data, 'linear');
-      if (!Number.isFinite(fit.m) || fit.m === 0) {
+      const { m, b } = linearFit(data.map(d => d.x), data.map(d => d.y));
+      if (!Number.isFinite(m) || m === 0) {
         showToast('Unable to compute concentration from current data.');
         return;
       }
-      const conc = (abs - fit.b) / fit.m;
+      const conc = (abs - b) / m;
       document.getElementById('unknown-result').innerHTML = `<p class="mono text-xs text-teal-700 mt-2">Estimated concentration: <strong>${conc.toFixed(4)} mol/L</strong></p>`;
     }
 
