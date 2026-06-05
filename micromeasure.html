@@ -549,7 +549,7 @@
         <button id="closePolygonBtn" class="hidden btn-primary px-4 py-2 rounded-lg text-sm w-full mb-3">Close Polygon (3+ points)</button>
        <div id="editModeControls" class="hidden bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3 mb-3">
         <p class="text-xs text-yellow-300 mb-2 font-medium">✏️ Editing Area <span id="editingAreaLabel"></span></p>
-        <p class="text-xs text-slate-400 mb-3">Drag points to adjust shape. Click edge to add point. Right-click point to delete.</p>
+        <p id="areaEditHelp" class="text-xs text-slate-400 mb-3">Drag points to adjust shape. Click edge to add point. Right-click point to delete.</p>
         <div class="flex gap-2"><button id="saveAreaEdit" class="btn-primary px-3 py-1.5 rounded-lg text-xs flex-1">Save Changes</button> <button id="cancelAreaEdit" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1">Cancel</button>
         </div>
        </div>
@@ -1143,7 +1143,10 @@
       circleDraft: null, // { center: {x,y}, radiusPx }
       areas: [],
       editingAreaIndex: null,
+      areaEditBackup: null,
       draggedPointIndex: null,
+      draggedAreaHandle: null,
+      draggedAreaOffset: null,
       
       // Particles
       particles: [],
@@ -1239,6 +1242,7 @@
       closePolygonBtn: document.getElementById('closePolygonBtn'),
       editModeControls: document.getElementById('editModeControls'),
       editingAreaLabel: document.getElementById('editingAreaLabel'),
+      areaEditHelp: document.getElementById('areaEditHelp'),
       saveAreaEdit: document.getElementById('saveAreaEdit'),
       cancelAreaEdit: document.getElementById('cancelAreaEdit'),
       
@@ -1714,6 +1718,32 @@
 
         if (area.type === 'circle') {
           drawCircle(area.center, area.radiusPx, isEditing ? '#fbbf24' : '#22c55e');
+
+          if (isEditing && area.center) {
+            const radiusHandle = { x: area.center.x + area.radiusPx, y: area.center.y };
+
+            overlayCtx.fillStyle = '#fbbf24';
+            overlayCtx.beginPath();
+            overlayCtx.arc(area.center.x, area.center.y, 8, 0, Math.PI * 2);
+            overlayCtx.fill();
+            overlayCtx.strokeStyle = '#fff';
+            overlayCtx.lineWidth = 2;
+            overlayCtx.stroke();
+
+            overlayCtx.beginPath();
+            overlayCtx.arc(radiusHandle.x, radiusHandle.y, 8, 0, Math.PI * 2);
+            overlayCtx.fill();
+            overlayCtx.stroke();
+
+            overlayCtx.strokeStyle = '#fbbf24';
+            overlayCtx.lineWidth = 1.5;
+            overlayCtx.setLineDash([6, 4]);
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(area.center.x, area.center.y);
+            overlayCtx.lineTo(radiusHandle.x, radiusHandle.y);
+            overlayCtx.stroke();
+            overlayCtx.setLineDash([]);
+          }
 
           if (!isEditing && area.center) {
             const pixelText = `${formatNumber(area.pixelArea)} px²`;
@@ -2439,7 +2469,7 @@
             <button onclick="toggleAreaVisibility(${i})" class="text-slate-400 hover:text-green-400 text-sm" title="${area.visible !== false ? 'Hide' : 'Show'}">
               ${area.visible !== false ? '👁' : '🔍'}
             </button>
-            ${area.type === 'circle' ? '' : `<button onclick="editAreaMeasurement(${i})" class="text-slate-400 hover:text-yellow-400 text-sm" title="Edit">✏️</button>`}
+            <button onclick="editAreaMeasurement(${i})" class="text-slate-400 hover:text-yellow-400 text-sm" title="Edit">✏️</button>
             <button onclick="deleteAreaMeasurement(${i})" class="text-red-400 hover:text-red-300 text-lg leading-none">&times;</button>
           </div>
         </div>
@@ -2463,10 +2493,29 @@
     
     window.editAreaMeasurement = function(index) {
       const a = state.areas[index];
-      if (!a || a.type === 'circle') return;
+      if (!a) return;
 
       state.editingAreaIndex = index;
+      state.draggedPointIndex = null;
+      state.draggedAreaHandle = null;
+      state.draggedAreaOffset = null;
       state.currentTool = 'area';
+      state.areaEditBackup = a.type === 'circle'
+        ? {
+            type: 'circle',
+            center: { ...a.center },
+            radiusPx: a.radiusPx,
+            pixelArea: a.pixelArea,
+            realArea: a.realArea,
+            visible: a.visible
+          }
+        : {
+            type: 'polygon',
+            points: a.points.map(point => ({ ...point })),
+            pixelArea: a.pixelArea,
+            realArea: a.realArea,
+            visible: a.visible
+          };
       
       // Switch to area tab UI
       elements.tabBtns.forEach(b => b.classList.remove('active'));
@@ -2478,6 +2527,11 @@
       elements.areaInstructions.classList.add('hidden');
       elements.editModeControls.classList.remove('hidden');
       elements.editingAreaLabel.textContent = `A${index + 1}`;
+      if (elements.areaEditHelp) {
+        elements.areaEditHelp.textContent = a.type === 'circle'
+          ? 'Drag inside the circle to move it. Drag the outer handle to resize it.'
+          : 'Drag points to adjust shape. Click edge to add point. Right-click point to delete.';
+      }
       
       drawOverlay();
     };
@@ -2485,12 +2539,22 @@
     function saveAreaEdit() {
       if (state.editingAreaIndex !== null) {
         const area = state.areas[state.editingAreaIndex];
-        if (!area || !Array.isArray(area.points)) {
+        if (!area) {
           exitAreaEditMode();
           updateAreaDisplay();
           return;
         }
-        area.pixelArea = measurePolygonArea(area.points);
+
+        if (area.type === 'circle') {
+          area.radiusPx = Math.max(2, area.radiusPx || 0);
+          area.pixelArea = measureCircleArea(area.radiusPx);
+        } else if (Array.isArray(area.points)) {
+          area.pixelArea = measurePolygonArea(area.points);
+        } else {
+          exitAreaEditMode();
+          updateAreaDisplay();
+          return;
+        }
         area.realArea = state.isCalibrated ? area.pixelArea * Math.pow(state.unitsPerPixel, 2) : null;
         
         exitAreaEditMode();
@@ -2499,12 +2563,34 @@
     }
     
     function cancelAreaEdit() {
+      if (state.editingAreaIndex !== null && state.areaEditBackup) {
+        const area = state.areas[state.editingAreaIndex];
+        if (area) {
+          if (state.areaEditBackup.type === 'circle') {
+            area.type = 'circle';
+            area.center = { ...state.areaEditBackup.center };
+            area.radiusPx = state.areaEditBackup.radiusPx;
+          } else {
+            delete area.type;
+            delete area.center;
+            delete area.radiusPx;
+            area.points = state.areaEditBackup.points.map(point => ({ ...point }));
+          }
+          area.pixelArea = state.areaEditBackup.pixelArea;
+          area.realArea = state.areaEditBackup.realArea;
+          area.visible = state.areaEditBackup.visible;
+        }
+      }
       exitAreaEditMode();
+      updateAreaDisplay();
     }
     
     function exitAreaEditMode() {
       state.editingAreaIndex = null;
+      state.areaEditBackup = null;
       state.draggedPointIndex = null;
+      state.draggedAreaHandle = null;
+      state.draggedAreaOffset = null;
       elements.areaInstructions.classList.remove('hidden');
       elements.editModeControls.classList.add('hidden');
       drawOverlay();
@@ -4732,6 +4818,31 @@
 
       if (state.editingAreaIndex !== null) {
         const area = state.areas[state.editingAreaIndex];
+        if (area?.type === 'circle' && area.center) {
+          const distanceFromCenter = Math.hypot(coords.x - area.center.x, coords.y - area.center.y);
+          const radiusHandle = { x: area.center.x + area.radiusPx, y: area.center.y };
+          const radiusHandleDistance = Math.hypot(coords.x - radiusHandle.x, coords.y - radiusHandle.y);
+
+          if (radiusHandleDistance <= hit) {
+            state.draggedAreaHandle = 'radius';
+            state.draggedAreaOffset = null;
+            return true;
+          }
+
+          if (distanceFromCenter <= area.radiusPx + hit) {
+            state.draggedAreaHandle = 'center';
+            state.draggedAreaOffset = {
+              x: coords.x - area.center.x,
+              y: coords.y - area.center.y
+            };
+            return true;
+          }
+        }
+
+        if (!Array.isArray(area?.points)) {
+          return false;
+        }
+
         for (let i = 0; i < area.points.length; i++) {
           const p = area.points[i];
           const dist = Math.hypot(coords.x - p.x, coords.y - p.y);
@@ -4886,6 +4997,8 @@
       if (_dragPointerId === pointerId) {
         _dragPointerId = null;
         state.draggedPointIndex = null;
+        state.draggedAreaHandle = null;
+        state.draggedAreaOffset = null;
         state.draggedLengthPoint = null;
         state.draggedAnglePointIndex = null;
       }
@@ -5080,6 +5193,27 @@
         drawOverlay();
         e.preventDefault();
         return;
+      }
+
+      // Drag circle center or resize handle
+      if (_dragPointerId === e.pointerId && state.draggedAreaHandle !== null && state.editingAreaIndex !== null) {
+        const coords = pointerCanvasCoords(e);
+        const area = state.areas[state.editingAreaIndex];
+
+        if (area?.type === 'circle' && area.center) {
+          if (state.draggedAreaHandle === 'center') {
+            const offset = state.draggedAreaOffset || { x: 0, y: 0 };
+            area.center = {
+              x: coords.x - offset.x,
+              y: coords.y - offset.y
+            };
+          } else if (state.draggedAreaHandle === 'radius') {
+            area.radiusPx = Math.max(2, Math.hypot(coords.x - area.center.x, coords.y - area.center.y));
+          }
+          drawOverlay();
+          e.preventDefault();
+          return;
+        }
       }
 
       // Drag angle handle
