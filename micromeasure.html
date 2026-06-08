@@ -543,7 +543,7 @@
       <div id="areaTab" class="tab-content hidden">
         <div class="flex gap-2 mb-3">
          <button id="areaModePolygonBtn" class="btn-primary px-3 py-1.5 rounded-lg text-xs flex-1" type="button">Polygon</button>
-         <button id="areaModeCircleBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1" type="button">Circle</button>
+         <button id="areaModeOvalBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1" type="button">Oval</button>
         </div>
         <p id="areaInstructions" class="text-xs text-slate-400 mb-3">Polygon: click points to create polygon.</p>
         <button id="closePolygonBtn" class="hidden btn-primary px-4 py-2 rounded-lg text-sm w-full mb-3">Close Polygon (3+ points)</button>
@@ -596,6 +596,19 @@
         <div><label class="text-xs text-slate-400" id="minParticleAreaLabel">Min Area (px²)</label> <input type="number" id="minParticleArea" value="10" min="0.001" step="any" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm mt-1" disabled>
          <p class="text-xs text-slate-500 mt-1">Set scale first to enable</p>
         </div><button id="analyzeParticles" class="btn-primary px-4 py-2 rounded-lg text-sm w-full disabled:opacity-50" disabled>Analyze Particles</button>
+        <div id="particleDebugPanel" class="bg-slate-900/50 rounded-lg p-3 border border-slate-700 hidden">
+         <div class="flex items-center justify-between gap-3 mb-2">
+          <h4 class="text-xs font-semibold text-amber-300">Analysis Debug</h4>
+          <label class="flex items-center gap-2 text-xs cursor-pointer text-slate-300"> <input type="checkbox" id="particleMaskPreviewToggle" class="accent-amber-400"> Show binary mask </label>
+         </div>
+         <div class="grid grid-cols-2 gap-2 text-xs">
+          <div><span class="text-slate-400">Raw blobs:</span> <span id="particleDebugRawCount" class="mono">-</span></div>
+          <div><span class="text-slate-400">Filtered out:</span> <span id="particleDebugFilteredCount" class="mono">-</span></div>
+          <div><span class="text-slate-400">Suspect merges:</span> <span id="particleDebugMergeCount" class="mono">-</span></div>
+          <div><span class="text-slate-400">Mask coverage:</span> <span id="particleDebugCoverage" class="mono">-</span></div>
+         </div>
+         <p class="text-[11px] text-slate-500 mt-2">Mask preview shows the raw thresholded binary mask used before min-area filtering.</p>
+        </div>
         <div id="particleResults" class="hidden">
          <div class="bg-slate-900/50 rounded-lg p-3 mt-3">
           <h4 class="text-xs font-semibold mb-2">Summary Statistics</h4>
@@ -819,14 +832,16 @@
       </section><!-- Area Measurements -->
      <section>
       <h3 class="text-lg font-semibold text-white mb-2">Area Measurements</h3>
-      <p class="text-slate-300 mb-2">Measure polygon areas by defining vertices:</p>
+      <p class="text-slate-300 mb-2">Measure areas using either polygons or ovals:</p>
       <ul class="list-disc list-inside space-y-1 text-slate-300 ml-4">
        <li>Switch to the <strong>Area</strong> tab</li>
-       <li>Click points to create a polygon outline</li>
+       <li>Use <strong>Polygon</strong> mode to click points and create a polygon outline</li>
        <li>Click <strong>Close Polygon</strong> when you have 3+ points, or double-click to close</li>
+      <li>Use <strong>Oval</strong> mode to click and drag a bounding box for the oval</li>
        <li>Each area is labeled (A1, A2, etc.)</li>
-       <li>Use <strong>Edit</strong> to adjust vertices by dragging points</li>
-       <li>While editing, right-click a point to delete it, or click an edge to add a point</li>
+       <li>Use <strong>Edit</strong> to adjust polygon vertices or move/resize an oval</li>
+      <li>While editing a polygon, click or tap an edge to add a point</li>
+      <li>Delete polygon points with right-click on desktop or double-tap on touch/pen devices</li>
        <li>Use <strong>Eye</strong> to show/hide, <strong>×</strong> to delete</li>
       </ul>
      </section><!-- Particle Analysis -->
@@ -857,7 +872,7 @@
        <li>Set <strong>Min Area</strong> to filter out small noise (in real units if calibrated)</li>
        <li>Click <strong>Analyze Particles</strong></li>
        <li>View count, mean area, mean ECD (Equivalent Circular Diameter), and size distribution</li>
-       <li>Each detected particle is outlined in orange on the image</li>
+        <li>Each detected particle is overlaid with a semi-transparent pastel fill that follows the detected shape</li>
       </ul>
      </section><!-- Hole Analysis -->
      <section>
@@ -918,6 +933,7 @@
        <li><strong>Save Image</strong> - Export image with all measurements overlaid (PNG)</li>
          <li><strong>Copy TSV</strong> - Copy the current tab’s data as tab-separated values (paste into spreadsheets)</li>
          <li><strong>Download CSV</strong> - Download the current tab’s data as a .csv file</li>
+           <li><strong>Area export note:</strong> Area rows include a <strong>Shape</strong> column so Polygon and Oval measurements stay distinguishable.</li>
            <li><strong>Note:</strong> Export buttons appear only when the current tab has at least one measurement/object.</li>
          <li><strong>Reset</strong> - Use the reset control to clear measurements and restart</li>
       </ul>
@@ -1137,19 +1153,25 @@
       angleEditBackup: null,
       
       // Area measurements
-      areaMode: 'polygon', // 'polygon' | 'circle'
+      areaMode: 'polygon', // 'polygon' | 'oval'
       areaPoints: [],
-      isDrawingCircle: false,
-      circleDraft: null, // { center: {x,y}, radiusPx }
+      isDrawingOval: false,
+      ovalDraft: null, // { start: {x,y}, end: {x,y} }
       areas: [],
       editingAreaIndex: null,
       areaEditBackup: null,
+      hoveredAreaHandle: null,
+      hoveredAreaPointIndex: null,
+      hoveredAreaEdgeIndex: null,
+      hoveredAreaEdgePoint: null,
       draggedPointIndex: null,
       draggedAreaHandle: null,
       draggedAreaOffset: null,
       
       // Particles
       particles: [],
+      particleDebug: null,
+      showParticleMaskPreview: false,
       
       // Holes
       holes: [],
@@ -1237,7 +1259,7 @@
       copyAreaTSVBtn: document.getElementById('copyAreaTSVBtn'),
       downloadAreaTSVBtn: document.getElementById('downloadAreaTSVBtn'),
       areaModePolygonBtn: document.getElementById('areaModePolygonBtn'),
-      areaModeCircleBtn: document.getElementById('areaModeCircleBtn'),
+      areaModeOvalBtn: document.getElementById('areaModeOvalBtn'),
       areaInstructions: document.getElementById('areaInstructions'),
       closePolygonBtn: document.getElementById('closePolygonBtn'),
       editModeControls: document.getElementById('editModeControls'),
@@ -1274,6 +1296,12 @@
       particlesExportRow: document.getElementById('particlesExportRow'),
       copyParticlesTSVBtn: document.getElementById('copyParticlesTSVBtn'),
       downloadParticlesTSVBtn: document.getElementById('downloadParticlesTSVBtn'),
+      particleDebugPanel: document.getElementById('particleDebugPanel'),
+      particleMaskPreviewToggle: document.getElementById('particleMaskPreviewToggle'),
+      particleDebugRawCount: document.getElementById('particleDebugRawCount'),
+      particleDebugFilteredCount: document.getElementById('particleDebugFilteredCount'),
+      particleDebugMergeCount: document.getElementById('particleDebugMergeCount'),
+      particleDebugCoverage: document.getElementById('particleDebugCoverage'),
       
       // ROI controls
       selectParticleROI: document.getElementById('selectParticleROI'),
@@ -1604,6 +1632,12 @@
     // ========== OVERLAY DRAWING ==========
     function drawOverlay() {
       overlayCtx.clearRect(0, 0, elements.overlayCanvas.width, elements.overlayCanvas.height);
+
+      if (state.showParticleMaskPreview) {
+        drawParticleMaskPreview();
+      } else {
+        drawParticleShapeOverlay();
+      }
       
       // Draw calibration line
       if (state.calibrationLine) {
@@ -1710,39 +1744,37 @@
         if (state.anglePoints.length === 3) drawLine(state.anglePoints[1], state.anglePoints[2], color, 2, true);
       }
       
-      // Draw area measurements (polygons + circles)
+      // Draw area measurements (polygons + ovals)
       state.areas.forEach((area, i) => {
         if (area.visible === false) return;
 
         const isEditing = state.editingAreaIndex === i;
 
-        if (area.type === 'circle') {
-          drawCircle(area.center, area.radiusPx, isEditing ? '#fbbf24' : '#22c55e');
+        if (area.type === 'oval') {
+          drawOval(area.center, area.radiusX, area.radiusY, isEditing ? '#fbbf24' : '#22c55e');
 
           if (isEditing && area.center) {
-            const radiusHandle = { x: area.center.x + area.radiusPx, y: area.center.y };
+            const bounds = getOvalBounds(area);
+            const handles = getOvalResizeHandles(area);
+            const isMoveHover = state.draggedAreaHandle === 'center' || state.hoveredAreaHandle === 'center';
 
-            overlayCtx.fillStyle = '#fbbf24';
-            overlayCtx.beginPath();
-            overlayCtx.arc(area.center.x, area.center.y, 8, 0, Math.PI * 2);
-            overlayCtx.fill();
-            overlayCtx.strokeStyle = '#fff';
-            overlayCtx.lineWidth = 2;
-            overlayCtx.stroke();
-
-            overlayCtx.beginPath();
-            overlayCtx.arc(radiusHandle.x, radiusHandle.y, 8, 0, Math.PI * 2);
-            overlayCtx.fill();
-            overlayCtx.stroke();
+            if (isMoveHover) {
+              overlayCtx.fillStyle = 'rgba(251, 191, 36, 0.16)';
+              overlayCtx.beginPath();
+              overlayCtx.ellipse(area.center.x, area.center.y, area.radiusX, area.radiusY, 0, 0, Math.PI * 2);
+              overlayCtx.fill();
+            }
 
             overlayCtx.strokeStyle = '#fbbf24';
-            overlayCtx.lineWidth = 1.5;
+            overlayCtx.lineWidth = isMoveHover ? 2.5 : 1.5;
             overlayCtx.setLineDash([6, 4]);
-            overlayCtx.beginPath();
-            overlayCtx.moveTo(area.center.x, area.center.y);
-            overlayCtx.lineTo(radiusHandle.x, radiusHandle.y);
-            overlayCtx.stroke();
+            overlayCtx.strokeRect(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
             overlayCtx.setLineDash([]);
+
+            handles.forEach((handle) => {
+              const isActiveHandle = state.draggedAreaHandle === handle.id || state.hoveredAreaHandle === handle.id;
+              drawResizeHandle(handle, '#fbbf24', isActiveHandle);
+            });
           }
 
           if (!isEditing && area.center) {
@@ -1760,12 +1792,36 @@
 
         // Draw edit handles for editing area
         if (isEditing) {
-          area.points.forEach((p) => {
-            overlayCtx.fillStyle = '#fbbf24';
+          if (state.hoveredAreaEdgeIndex !== null && state.hoveredAreaEdgePoint) {
+            const start = area.points[state.hoveredAreaEdgeIndex];
+            const end = area.points[(state.hoveredAreaEdgeIndex + 1) % area.points.length];
+            overlayCtx.strokeStyle = '#fde68a';
+            overlayCtx.lineWidth = 3;
+            overlayCtx.setLineDash([6, 4]);
             overlayCtx.beginPath();
-            overlayCtx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+            overlayCtx.moveTo(start.x, start.y);
+            overlayCtx.lineTo(end.x, end.y);
+            overlayCtx.stroke();
+            overlayCtx.setLineDash([]);
+
+            overlayCtx.fillStyle = '#ffffff';
+            overlayCtx.strokeStyle = '#fbbf24';
+            overlayCtx.lineWidth = 2;
+            overlayCtx.beginPath();
+            overlayCtx.arc(state.hoveredAreaEdgePoint.x, state.hoveredAreaEdgePoint.y, 7, 0, Math.PI * 2);
             overlayCtx.fill();
-            overlayCtx.strokeStyle = '#fff';
+            overlayCtx.stroke();
+
+            drawLabel({ x: state.hoveredAreaEdgePoint.x, y: state.hoveredAreaEdgePoint.y - 18 }, 'Click/Tap to add point', '#fde68a');
+          }
+
+          area.points.forEach((p, pointIndex) => {
+            const isActivePoint = state.draggedPointIndex === pointIndex || state.hoveredAreaPointIndex === pointIndex;
+            overlayCtx.fillStyle = isActivePoint ? '#ffffff' : '#fbbf24';
+            overlayCtx.beginPath();
+            overlayCtx.arc(p.x, p.y, isActivePoint ? 9 : 8, 0, Math.PI * 2);
+            overlayCtx.fill();
+            overlayCtx.strokeStyle = isActivePoint ? '#fbbf24' : '#fff';
             overlayCtx.lineWidth = 2;
             overlayCtx.stroke();
           });
@@ -1792,16 +1848,13 @@
         state.areaPoints.forEach(p => drawPoint(p, '#22c55e'));
       }
 
-      // Draw in-progress circle (Area tool)
-      if (state.currentTool === 'area' && state.areaMode === 'circle' && state.circleDraft) {
-        drawCircle(state.circleDraft.center, state.circleDraft.radiusPx, '#22c55e', true);
-        if (state.circleDraft.center) drawPoint(state.circleDraft.center, '#22c55e');
+      // Draw in-progress oval (Area tool)
+      if (state.currentTool === 'area' && state.areaMode === 'oval' && state.ovalDraft) {
+        const draftGeometry = getOvalFromDraft(state.ovalDraft);
+        if (draftGeometry) {
+          drawOval(draftGeometry.center, draftGeometry.radiusX, draftGeometry.radiusY, '#22c55e', true);
+        }
       }
-      
-      // Draw particles
-      state.particles.forEach((p, i) => {
-        drawBoundingBox(p.bbox, '#f97316');
-      });
       
       // Draw holes
       state.holes.forEach((h, i) => {
@@ -1857,21 +1910,214 @@
       overlayCtx.stroke();
     }
 
-    function drawCircle(center, radiusPx, color, dashed = false) {
+    function drawOval(center, radiusX, radiusY, color, dashed = false) {
       if (!center) return;
       if (!Number.isFinite(center.x) || !Number.isFinite(center.y)) return;
-      if (!Number.isFinite(radiusPx) || radiusPx <= 0) return;
+      if (!Number.isFinite(radiusX) || radiusX <= 0) return;
+      if (!Number.isFinite(radiusY) || radiusY <= 0) return;
 
       overlayCtx.fillStyle = color + '40';
       overlayCtx.strokeStyle = color;
       overlayCtx.lineWidth = 2;
       overlayCtx.setLineDash(dashed ? [8, 4] : []);
       overlayCtx.beginPath();
-      overlayCtx.arc(center.x, center.y, radiusPx, 0, Math.PI * 2);
+      overlayCtx.ellipse(center.x, center.y, radiusX, radiusY, 0, 0, Math.PI * 2);
       overlayCtx.closePath();
       overlayCtx.fill();
       overlayCtx.stroke();
       overlayCtx.setLineDash([]);
+    }
+
+    function getOvalBounds(area) {
+      return {
+        left: area.center.x - area.radiusX,
+        right: area.center.x + area.radiusX,
+        top: area.center.y - area.radiusY,
+        bottom: area.center.y + area.radiusY
+      };
+    }
+
+    function getOvalResizeHandles(area) {
+      const centerX = area.center.x;
+      const centerY = area.center.y;
+      const radiusX = area.radiusX;
+      const radiusY = area.radiusY;
+      const diagonalFactor = Math.SQRT1_2;
+      return [
+        { id: 'n', x: centerX, y: centerY - radiusY },
+        { id: 'ne', x: centerX + radiusX * diagonalFactor, y: centerY - radiusY * diagonalFactor },
+        { id: 'e', x: centerX + radiusX, y: centerY },
+        { id: 'se', x: centerX + radiusX * diagonalFactor, y: centerY + radiusY * diagonalFactor },
+        { id: 's', x: centerX, y: centerY + radiusY },
+        { id: 'sw', x: centerX - radiusX * diagonalFactor, y: centerY + radiusY * diagonalFactor },
+        { id: 'w', x: centerX - radiusX, y: centerY },
+        { id: 'nw', x: centerX - radiusX * diagonalFactor, y: centerY - radiusY * diagonalFactor }
+      ];
+    }
+
+    function drawResizeHandle(handle, color, isActive = false) {
+      const size = isActive ? 11 : 9;
+      const half = size / 2;
+      overlayCtx.fillStyle = isActive ? color : '#ffffff';
+      overlayCtx.strokeStyle = isActive ? '#ffffff' : color;
+      overlayCtx.lineWidth = 2;
+      overlayCtx.fillRect(handle.x - half, handle.y - half, size, size);
+      overlayCtx.strokeRect(handle.x - half, handle.y - half, size, size);
+    }
+
+    function getOvalHandleCursor(handleId) {
+      const cursorMap = {
+        n: 'ns-resize',
+        s: 'ns-resize',
+        e: 'ew-resize',
+        w: 'ew-resize',
+        ne: 'nesw-resize',
+        sw: 'nesw-resize',
+        nw: 'nwse-resize',
+        se: 'nwse-resize'
+      };
+      return cursorMap[handleId] || 'pointer';
+    }
+
+    function getOvalHoverCursor(area, coords) {
+      const hit = canvasHitRadius();
+      const handles = getOvalResizeHandles(area);
+      for (const handle of handles) {
+        const distance = Math.hypot(coords.x - handle.x, coords.y - handle.y);
+        if (distance <= hit) return getOvalHandleCursor(handle.id);
+      }
+      if (pointInOval(coords, area, hit)) return 'move';
+      return null;
+    }
+
+    function getPolygonHoverPointIndex(area, coords) {
+      const hit = canvasHitRadius();
+      if (!Array.isArray(area?.points)) return null;
+      for (let i = 0; i < area.points.length; i++) {
+        const point = area.points[i];
+        const distance = Math.hypot(coords.x - point.x, coords.y - point.y);
+        if (distance <= hit) return i;
+      }
+      return null;
+    }
+
+    function projectPointToSegment(point, start, end) {
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const lenSq = dx * dx + dy * dy;
+      if (!lenSq) {
+        return {
+          point: { x: start.x, y: start.y },
+          distance: Math.hypot(point.x - start.x, point.y - start.y),
+          t: 0
+        };
+      }
+
+      const t = Math.max(0, Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / lenSq));
+      const projected = {
+        x: start.x + dx * t,
+        y: start.y + dy * t
+      };
+
+      return {
+        point: projected,
+        distance: Math.hypot(point.x - projected.x, point.y - projected.y),
+        t
+      };
+    }
+
+    function getPolygonHoverEdgeInfo(area, coords) {
+      const hit = canvasHitRadius();
+      if (!Array.isArray(area?.points) || area.points.length < 2) return null;
+
+      let bestEdge = null;
+      for (let i = 0; i < area.points.length; i++) {
+        const start = area.points[i];
+        const end = area.points[(i + 1) % area.points.length];
+        const projection = projectPointToSegment(coords, start, end);
+
+        if (projection.distance <= hit && projection.t > 0.05 && projection.t < 0.95) {
+          if (!bestEdge || projection.distance < bestEdge.distance) {
+            bestEdge = {
+              index: i,
+              point: projection.point,
+              distance: projection.distance
+            };
+          }
+        }
+      }
+
+      return bestEdge;
+    }
+
+    function deleteEditingPolygonPointAt(coords) {
+      if (state.editingAreaIndex === null) return false;
+      const area = state.areas[state.editingAreaIndex];
+      if (!Array.isArray(area?.points) || area.points.length <= 3) return false;
+
+      const pointIndex = getPolygonHoverPointIndex(area, coords);
+      if (pointIndex === null) return false;
+
+      area.points.splice(pointIndex, 1);
+      state.hoveredAreaPointIndex = null;
+      state.hoveredAreaEdgeIndex = null;
+      state.hoveredAreaEdgePoint = null;
+      drawOverlay();
+      return true;
+    }
+
+    function pointInOval(point, area, padding = 0) {
+      const radiusX = Math.max(1, area.radiusX + padding);
+      const radiusY = Math.max(1, area.radiusY + padding);
+      const dx = point.x - area.center.x;
+      const dy = point.y - area.center.y;
+      return ((dx * dx) / (radiusX * radiusX)) + ((dy * dy) / (radiusY * radiusY)) <= 1;
+    }
+
+    function resizeOvalFromHandle(area, handleId, coords) {
+      const minRadius = 2;
+      const minSize = minRadius * 2;
+      const bounds = getOvalBounds(area);
+      let left = bounds.left;
+      let right = bounds.right;
+      let top = bounds.top;
+      let bottom = bounds.bottom;
+
+      if (handleId.includes('w')) {
+        left = Math.min(coords.x, right - minSize);
+      }
+      if (handleId.includes('e')) {
+        right = Math.max(coords.x, left + minSize);
+      }
+      if (handleId.includes('n')) {
+        top = Math.min(coords.y, bottom - minSize);
+      }
+      if (handleId.includes('s')) {
+        bottom = Math.max(coords.y, top + minSize);
+      }
+
+      area.center = {
+        x: (left + right) / 2,
+        y: (top + bottom) / 2
+      };
+      area.radiusX = Math.max(minRadius, (right - left) / 2);
+      area.radiusY = Math.max(minRadius, (bottom - top) / 2);
+    }
+
+    function getOvalFromDraft(draft) {
+      if (!draft?.start || !draft?.end) return null;
+      const left = Math.min(draft.start.x, draft.end.x);
+      const right = Math.max(draft.start.x, draft.end.x);
+      const top = Math.min(draft.start.y, draft.end.y);
+      const bottom = Math.max(draft.start.y, draft.end.y);
+      return {
+        center: {
+          x: (left + right) / 2,
+          y: (top + bottom) / 2
+        },
+        radiusX: (right - left) / 2,
+        radiusY: (bottom - top) / 2
+      };
     }
     
     function drawPolygon(points, color) {
@@ -1891,6 +2137,149 @@
       overlayCtx.strokeStyle = color;
       overlayCtx.lineWidth = 1;
       overlayCtx.strokeRect(bbox.x, bbox.y, bbox.w, bbox.h);
+    }
+
+    function hslToRgb(h, s, l) {
+      let red;
+      let green;
+      let blue;
+
+      if (s === 0) {
+        red = l;
+        green = l;
+        blue = l;
+      } else {
+        const hueToRgb = (p, q, t) => {
+          let adjusted = t;
+          if (adjusted < 0) adjusted += 1;
+          if (adjusted > 1) adjusted -= 1;
+          if (adjusted < 1 / 6) return p + (q - p) * 6 * adjusted;
+          if (adjusted < 1 / 2) return q;
+          if (adjusted < 2 / 3) return p + (q - p) * (2 / 3 - adjusted) * 6;
+          return p;
+        };
+
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        red = hueToRgb(p, q, h + 1 / 3);
+        green = hueToRgb(p, q, h);
+        blue = hueToRgb(p, q, h - 1 / 3);
+      }
+
+      return {
+        r: Math.round(red * 255),
+        g: Math.round(green * 255),
+        b: Math.round(blue * 255)
+      };
+    }
+
+    function getParticleOverlayColor(index) {
+      const hue = ((index * 137.508) + 18) % 360;
+      const rgb = hslToRgb(hue / 360, 0.62, 0.74);
+      return {
+        r: rgb.r,
+        g: rgb.g,
+        b: rgb.b,
+        a: 132
+      };
+    }
+
+    function drawParticleShapeOverlay() {
+      if (!state.particles.length) return;
+
+      const width = elements.overlayCanvas.width;
+      const height = elements.overlayCanvas.height;
+      const imageData = overlayCtx.createImageData(width, height);
+      const data = imageData.data;
+
+      state.particles.forEach((particle, index) => {
+        const pixelIndices = particle.pixelIndices;
+        if (!pixelIndices || !pixelIndices.length) return;
+
+        const color = particle.overlayColor || getParticleOverlayColor(index);
+        for (let i = 0; i < pixelIndices.length; i++) {
+          const offset = pixelIndices[i] * 4;
+          data[offset] = color.r;
+          data[offset + 1] = color.g;
+          data[offset + 2] = color.b;
+          data[offset + 3] = color.a;
+        }
+      });
+
+      overlayCtx.putImageData(imageData, 0, 0);
+    }
+
+    function drawParticleMaskPreview() {
+      const binaryMask = state.particleDebug?.binaryMask;
+      if (!binaryMask || !binaryMask.length) return;
+
+      const width = elements.overlayCanvas.width;
+      const height = elements.overlayCanvas.height;
+      const imageData = overlayCtx.createImageData(width, height);
+      const data = imageData.data;
+
+      for (let i = 0; i < binaryMask.length; i++) {
+        if (!binaryMask[i]) continue;
+        const offset = i * 4;
+        data[offset] = 255;
+        data[offset + 1] = 255;
+        data[offset + 2] = 255;
+        data[offset + 3] = 170;
+      }
+
+      overlayCtx.putImageData(imageData, 0, 0);
+    }
+
+    function estimateSuspectMergeCount(components, minArea) {
+      if (!Array.isArray(components) || !components.length) return 0;
+
+      const suspectAreaFloor = Math.max(250, minArea * 4);
+      let count = 0;
+
+      components.forEach(comp => {
+        if (!comp?.bbox || comp.areaPx < suspectAreaFloor) return;
+
+        const bboxArea = Math.max(1, comp.bbox.w * comp.bbox.h);
+        const fillRatio = comp.areaPx / bboxArea;
+        const aspectRatio = Math.max(comp.bbox.w, comp.bbox.h) / Math.max(1, Math.min(comp.bbox.w, comp.bbox.h));
+        const spanRatio = Math.max(comp.bbox.w, comp.bbox.h) / Math.max(1, comp.ecdPx || 1);
+
+        if (spanRatio > 1.35 || fillRatio < 0.52 || aspectRatio > 1.6) {
+          count++;
+        }
+      });
+
+      return count;
+    }
+
+    function updateParticleDebugPanel() {
+      const debug = state.particleDebug;
+      const hasDebug = !!debug;
+
+      if (elements.particleDebugPanel) {
+        elements.particleDebugPanel.classList.toggle('hidden', !hasDebug);
+      }
+      if (elements.particleMaskPreviewToggle) {
+        elements.particleMaskPreviewToggle.disabled = !hasDebug;
+        elements.particleMaskPreviewToggle.checked = !!state.showParticleMaskPreview;
+      }
+      if (!hasDebug) return;
+
+      if (elements.particleDebugRawCount) elements.particleDebugRawCount.textContent = String(debug.rawComponentCount);
+      if (elements.particleDebugFilteredCount) elements.particleDebugFilteredCount.textContent = String(debug.filteredOutCount);
+      if (elements.particleDebugMergeCount) elements.particleDebugMergeCount.textContent = String(debug.suspectMergeCount);
+      if (elements.particleDebugCoverage) elements.particleDebugCoverage.textContent = `${formatNumber(debug.coveragePercent)}%`;
+    }
+
+    function clearParticleDebug() {
+      state.particleDebug = null;
+      state.showParticleMaskPreview = false;
+      if (elements.particleMaskPreviewToggle) {
+        elements.particleMaskPreviewToggle.checked = false;
+      }
+      if (elements.particleDebugPanel) {
+        elements.particleDebugPanel.classList.add('hidden');
+      }
     }
     
     function drawLabel(p, text, color) {
@@ -2432,9 +2821,10 @@
       return Math.abs(area / 2);
     }
 
-    function measureCircleArea(radiusPx) {
-      const r = Math.max(0, radiusPx || 0);
-      return Math.PI * r * r;
+    function measureEllipseArea(radiusX, radiusY) {
+      const a = Math.max(0, radiusX || 0);
+      const b = Math.max(0, radiusY || 0);
+      return Math.PI * a * b;
     }
     
     function addAreaMeasurement(points) {
@@ -2447,14 +2837,15 @@
       updateSaveButtonState();
     }
 
-    function addCircleAreaMeasurement(center, radiusPx) {
-      const pixelArea = measureCircleArea(radiusPx);
+    function addOvalAreaMeasurement(center, radiusX, radiusY) {
+      const pixelArea = measureEllipseArea(radiusX, radiusY);
       const realArea = state.isCalibrated ? pixelArea * Math.pow(state.unitsPerPixel, 2) : null;
-      state.areas.push({ type: 'circle', center: { ...center }, radiusPx, pixelArea, realArea });
+      state.areas.push({ type: 'oval', center: { ...center }, radiusX, radiusY, pixelArea, realArea });
+      const newAreaIndex = state.areas.length - 1;
       updateAreaDisplay();
-      drawOverlay();
       updateGuidance();
       updateSaveButtonState();
+      editAreaMeasurement(newAreaIndex);
     }
     
     function updateAreaDisplay() {
@@ -2462,6 +2853,7 @@
         <div class="measurement-item">
           <div>
             <span class="font-medium">A${i+1}:</span>
+            <span class="text-[11px] uppercase tracking-wide text-slate-400 ml-1">${area.type === 'oval' ? 'Oval' : 'Polygon'}</span>
             <span class="mono">${formatNumber(area.pixelArea)} px²</span>
             ${state.isCalibrated ? `<span class="mono text-green-400 ml-2">${formatNumber(area.realArea)} ${state.unit}²</span>` : ''}
           </div>
@@ -2496,15 +2888,20 @@
       if (!a) return;
 
       state.editingAreaIndex = index;
+      state.hoveredAreaHandle = null;
+      state.hoveredAreaPointIndex = null;
+      state.hoveredAreaEdgeIndex = null;
+      state.hoveredAreaEdgePoint = null;
       state.draggedPointIndex = null;
       state.draggedAreaHandle = null;
       state.draggedAreaOffset = null;
       state.currentTool = 'area';
-      state.areaEditBackup = a.type === 'circle'
+      state.areaEditBackup = a.type === 'oval'
         ? {
-            type: 'circle',
+        type: 'oval',
             center: { ...a.center },
-            radiusPx: a.radiusPx,
+        radiusX: a.radiusX,
+        radiusY: a.radiusY,
             pixelArea: a.pixelArea,
             realArea: a.realArea,
             visible: a.visible
@@ -2528,9 +2925,9 @@
       elements.editModeControls.classList.remove('hidden');
       elements.editingAreaLabel.textContent = `A${index + 1}`;
       if (elements.areaEditHelp) {
-        elements.areaEditHelp.textContent = a.type === 'circle'
-          ? 'Drag inside the circle to move it. Drag the outer handle to resize it.'
-          : 'Drag points to adjust shape. Click edge to add point. Right-click point to delete.';
+        elements.areaEditHelp.textContent = a.type === 'oval'
+          ? 'Drag inside the oval to move it. Drag any of the 8 handles to resize it.'
+          : 'Drag points to adjust shape. Click edge to add point. Right-click a point to delete, or double-tap it on touch.';
       }
       
       drawOverlay();
@@ -2545,9 +2942,10 @@
           return;
         }
 
-        if (area.type === 'circle') {
-          area.radiusPx = Math.max(2, area.radiusPx || 0);
-          area.pixelArea = measureCircleArea(area.radiusPx);
+        if (area.type === 'oval') {
+          area.radiusX = Math.max(2, area.radiusX || 0);
+          area.radiusY = Math.max(2, area.radiusY || 0);
+          area.pixelArea = measureEllipseArea(area.radiusX, area.radiusY);
         } else if (Array.isArray(area.points)) {
           area.pixelArea = measurePolygonArea(area.points);
         } else {
@@ -2566,14 +2964,16 @@
       if (state.editingAreaIndex !== null && state.areaEditBackup) {
         const area = state.areas[state.editingAreaIndex];
         if (area) {
-          if (state.areaEditBackup.type === 'circle') {
-            area.type = 'circle';
+          if (state.areaEditBackup.type === 'oval') {
+            area.type = 'oval';
             area.center = { ...state.areaEditBackup.center };
-            area.radiusPx = state.areaEditBackup.radiusPx;
+            area.radiusX = state.areaEditBackup.radiusX;
+            area.radiusY = state.areaEditBackup.radiusY;
           } else {
             delete area.type;
             delete area.center;
-            delete area.radiusPx;
+            delete area.radiusX;
+            delete area.radiusY;
             area.points = state.areaEditBackup.points.map(point => ({ ...point }));
           }
           area.pixelArea = state.areaEditBackup.pixelArea;
@@ -2588,6 +2988,10 @@
     function exitAreaEditMode() {
       state.editingAreaIndex = null;
       state.areaEditBackup = null;
+      state.hoveredAreaHandle = null;
+      state.hoveredAreaPointIndex = null;
+      state.hoveredAreaEdgeIndex = null;
+      state.hoveredAreaEdgePoint = null;
       state.draggedPointIndex = null;
       state.draggedAreaHandle = null;
       state.draggedAreaOffset = null;
@@ -2600,8 +3004,8 @@
       exitAreaEditMode();
       state.areas = [];
       state.areaPoints = [];
-      state.isDrawingCircle = false;
-      state.circleDraft = null;
+      state.isDrawingOval = false;
+      state.ovalDraft = null;
       elements.closePolygonBtn.classList.add('hidden');
       updateAreaDisplay();
       drawOverlay();
@@ -2610,12 +3014,13 @@
 
     function setAreaMode(mode) {
       if (state.editingAreaIndex !== null) return;
-      if (mode !== 'polygon' && mode !== 'circle') return;
+      if (mode === 'circle') mode = 'oval';
+      if (mode !== 'polygon' && mode !== 'oval') return;
 
       state.areaMode = mode;
       state.areaPoints = [];
-      state.isDrawingCircle = false;
-      state.circleDraft = null;
+      state.isDrawingOval = false;
+      state.ovalDraft = null;
 
       elements.closePolygonBtn.classList.add('hidden');
 
@@ -2625,19 +3030,19 @@
           elements.areaModePolygonBtn.classList.add('btn-primary');
           elements.areaModePolygonBtn.classList.remove('btn-secondary');
         }
-        if (elements.areaModeCircleBtn) {
-          elements.areaModeCircleBtn.classList.add('btn-secondary');
-          elements.areaModeCircleBtn.classList.remove('btn-primary');
+        if (elements.areaModeOvalBtn) {
+          elements.areaModeOvalBtn.classList.add('btn-secondary');
+          elements.areaModeOvalBtn.classList.remove('btn-primary');
         }
       } else {
-        if (elements.areaInstructions) elements.areaInstructions.textContent = 'Circle: click and drag to draw a circle.';
+        if (elements.areaInstructions) elements.areaInstructions.textContent = 'Oval: click and drag to draw a bounding box for the oval.';
         if (elements.areaModePolygonBtn) {
           elements.areaModePolygonBtn.classList.add('btn-secondary');
           elements.areaModePolygonBtn.classList.remove('btn-primary');
         }
-        if (elements.areaModeCircleBtn) {
-          elements.areaModeCircleBtn.classList.add('btn-primary');
-          elements.areaModeCircleBtn.classList.remove('btn-secondary');
+        if (elements.areaModeOvalBtn) {
+          elements.areaModeOvalBtn.classList.add('btn-primary');
+          elements.areaModeOvalBtn.classList.remove('btn-secondary');
         }
       }
 
@@ -2922,7 +3327,10 @@
       return morphologicalDilate(eroded, width, height);
     }
     
-    function thresholdAndLabelComponents(gray, width, height, threshold, brightIsObject, minArea, useAdaptive, blockSize, roi) {
+    function thresholdAndLabelComponents(gray, width, height, threshold, brightIsObject, minArea, useAdaptive, blockSize, roi, options = {}) {
+      const includePixelMask = !!options.includePixelMask;
+      const includeBinaryMask = !!options.includeBinaryMask;
+
       // Default ROI is the entire image
       if (!roi) {
         roi = { x: 0, y: 0, width: width, height: height };
@@ -2953,6 +3361,11 @@
       // Apply morphological opening if requested
       if (elements.morphologicalOpening && elements.morphologicalOpening.checked) {
         binary = morphologicalOpening(binary, width, height);
+      }
+
+      let foregroundPixelCount = 0;
+      for (let i = 0; i < binary.length; i++) {
+        if (binary[i]) foregroundPixelCount++;
       }
       
       // Connected component labeling (8-connected) - only within ROI
@@ -3019,7 +3432,7 @@
             components.set(root, {
               area: 0,
               minX: width, maxX: 0, minY: height, maxY: 0,
-              pixels: []
+              pixels: includePixelMask ? [] : null
             });
           }
           
@@ -3029,6 +3442,9 @@
           comp.maxX = Math.max(comp.maxX, x);
           comp.minY = Math.min(comp.minY, y);
           comp.maxY = Math.max(comp.maxY, y);
+          if (includePixelMask) {
+            comp.pixels.push(i);
+          }
         }
       }
       
@@ -3043,6 +3459,8 @@
             areaReal: state.isCalibrated ? comp.area * Math.pow(state.unitsPerPixel, 2) : null,
             ecdPx: ecd,
             ecdReal: state.isCalibrated ? ecd * state.unitsPerPixel : null,
+            pixelIndices: includePixelMask ? Uint32Array.from(comp.pixels) : null,
+            overlayColor: includePixelMask ? getParticleOverlayColor(result.length) : null,
             bbox: {
               x: comp.minX,
               y: comp.minY,
@@ -3052,6 +3470,16 @@
           });
         }
       });
+
+      result.debug = {
+        rawComponentCount: components.size,
+        filteredOutCount: components.size - result.length,
+        acceptedCount: result.length,
+        suspectMergeCount: estimateSuspectMergeCount(result, minArea),
+        foregroundPixelCount,
+        coveragePercent: (foregroundPixelCount / Math.max(1, width * height)) * 100,
+        binaryMask: includeBinaryMask ? Uint8Array.from(binary) : null
+      };
       
       return result;
     }
@@ -3953,8 +4381,11 @@
         minArea,
         useAdaptive,
         blockSize,
-        roi
+        roi,
+        { includePixelMask: true, includeBinaryMask: true }
       );
+      state.particleDebug = state.particles.debug || null;
+      state.showParticleMaskPreview = false;
       
       // Finalize
       updateProgress('Finalizing results...', 100, 0);
@@ -3982,6 +4413,7 @@
       elements.particleStdDev.textContent = formatNumber(ecdStats.std) + ' px';
       
       elements.particleResults.classList.remove('hidden');
+      updateParticleDebugPanel();
       drawHistogram(elements.particleHistogram, state.particles.map(p => p.ecdPx), '#f97316');
       updateStatsButtonsVisibility();
     }
@@ -4131,11 +4563,11 @@
 
     // ========== PER-FEATURE EXPORT ==========
     function buildFeatureTSV(type) {
-      let tsv = 'Type\tID\tValue_px\tValue_real\tUnit\n';
+      let tsv = 'Type\tID\tShape\tValue_px\tValue_real\tUnit\n';
 
       if (type === 'length') {
         state.lengths.forEach((len, i) => {
-          tsv += `Length\tL${i + 1}\t${len.pixelLength.toFixed(4)}\t${state.isCalibrated ? len.realLength.toFixed(4) : ''}\t${state.isCalibrated ? state.unit : 'px'}\n`;
+          tsv += `Length\tL${i + 1}\t\t${len.pixelLength.toFixed(4)}\t${state.isCalibrated ? len.realLength.toFixed(4) : ''}\t${state.isCalibrated ? state.unit : 'px'}\n`;
         });
         return tsv;
       }
@@ -4143,30 +4575,31 @@
       if (type === 'angle') {
         state.angles.forEach((ang, i) => {
           const v = Number.isFinite(ang.angleDeg) ? ang.angleDeg : 0;
-          tsv += `Angle\tAng${i + 1}\t${v.toFixed(4)}\t${v.toFixed(4)}\tdeg\n`;
+          tsv += `Angle\tAng${i + 1}\t\t${v.toFixed(4)}\t${v.toFixed(4)}\tdeg\n`;
         });
         return tsv;
       }
 
       if (type === 'area') {
         state.areas.forEach((area, i) => {
-          tsv += `Area\tA${i + 1}\t${area.pixelArea.toFixed(4)}\t${state.isCalibrated ? area.realArea.toFixed(4) : ''}\t${state.isCalibrated ? state.unit + '²' : 'px²'}\n`;
+          const shape = area.type === 'oval' ? 'Oval' : 'Polygon';
+          tsv += `Area\tA${i + 1}\t${shape}\t${area.pixelArea.toFixed(4)}\t${state.isCalibrated ? area.realArea.toFixed(4) : ''}\t${state.isCalibrated ? state.unit + '²' : 'px²'}\n`;
         });
         return tsv;
       }
 
       if (type === 'particles') {
         state.particles.forEach((p) => {
-          tsv += `Particle_Area\tP${p.id}\t${p.areaPx}\t${state.isCalibrated ? p.areaReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit + '²' : 'px²'}\n`;
-          tsv += `Particle_ECD\tP${p.id}\t${p.ecdPx.toFixed(4)}\t${state.isCalibrated ? p.ecdReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit : 'px'}\n`;
+          tsv += `Particle_Area\tP${p.id}\t\t${p.areaPx}\t${state.isCalibrated ? p.areaReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit + '²' : 'px²'}\n`;
+          tsv += `Particle_ECD\tP${p.id}\t\t${p.ecdPx.toFixed(4)}\t${state.isCalibrated ? p.ecdReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit : 'px'}\n`;
         });
         return tsv;
       }
 
       if (type === 'holes') {
         state.holes.forEach((h) => {
-          tsv += `Hole_Area\tH${h.id}\t${h.areaPx}\t${state.isCalibrated ? h.areaReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit + '²' : 'px²'}\n`;
-          tsv += `Hole_ECD\tH${h.id}\t${h.ecdPx.toFixed(4)}\t${state.isCalibrated ? h.ecdReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit : 'px'}\n`;
+          tsv += `Hole_Area\tH${h.id}\t\t${h.areaPx}\t${state.isCalibrated ? h.areaReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit + '²' : 'px²'}\n`;
+          tsv += `Hole_ECD\tH${h.id}\t\t${h.ecdPx.toFixed(4)}\t${state.isCalibrated ? h.ecdReal.toFixed(4) : ''}\t${state.isCalibrated ? state.unit : 'px'}\n`;
         });
         return tsv;
       }
@@ -4248,6 +4681,7 @@
 
     function clearAllParticles() {
       state.particles = [];
+      clearParticleDebug();
       if (elements.particleResults) elements.particleResults.classList.add('hidden');
       updateStatsButtonsVisibility();
       drawOverlay();
@@ -4279,9 +4713,10 @@
       state.areaPoints = [];
       state.editingAreaIndex = null;
       state.draggedPointIndex = null;
-      state.isDrawingCircle = false;
-      state.circleDraft = null;
+      state.isDrawingOval = false;
+      state.ovalDraft = null;
       state.particles = [];
+      clearParticleDebug();
       state.holes = [];
       state.roi = null;
       state.isDrawingROI = false;
@@ -4318,9 +4753,9 @@
         elements.areaModePolygonBtn.classList.add('btn-primary');
         elements.areaModePolygonBtn.classList.remove('btn-secondary');
       }
-      if (elements.areaModeCircleBtn) {
-        elements.areaModeCircleBtn.classList.add('btn-secondary');
-        elements.areaModeCircleBtn.classList.remove('btn-primary');
+      if (elements.areaModeOvalBtn) {
+        elements.areaModeOvalBtn.classList.add('btn-secondary');
+        elements.areaModeOvalBtn.classList.remove('btn-primary');
       }
       
       updateLengthDisplay();
@@ -4480,7 +4915,7 @@
     if (elements.areaStatsBtn) elements.areaStatsBtn.addEventListener('click', () => openStatsModal('area'));
     if (elements.areaHistBtn) elements.areaHistBtn.addEventListener('click', () => openHistogramModal('area'));
     if (elements.areaModePolygonBtn) elements.areaModePolygonBtn.addEventListener('click', () => setAreaMode('polygon'));
-    if (elements.areaModeCircleBtn) elements.areaModeCircleBtn.addEventListener('click', () => setAreaMode('circle'));
+    if (elements.areaModeOvalBtn) elements.areaModeOvalBtn.addEventListener('click', () => setAreaMode('oval'));
     elements.closePolygonBtn.addEventListener('click', () => {
       if (state.areaMode === 'polygon' && state.areaPoints.length >= 3) {
         addAreaMeasurement(state.areaPoints);
@@ -4519,6 +4954,12 @@
 
     if (elements.clearParticles) elements.clearParticles.addEventListener('click', clearAllParticles);
     if (elements.clearHoles) elements.clearHoles.addEventListener('click', clearAllHoles);
+    if (elements.particleMaskPreviewToggle) {
+      elements.particleMaskPreviewToggle.addEventListener('change', (e) => {
+        state.showParticleMaskPreview = !!e.target.checked && !!state.particleDebug?.binaryMask;
+        drawOverlay();
+      });
+    }
 
     // Header reset with confirmation
     if (elements.headerResetBtn) elements.headerResetBtn.addEventListener('click', openResetConfirm);
@@ -4746,10 +5187,10 @@
             needsRedraw = true;
           }
 
-          if (state.isDrawingCircle || state.circleDraft) {
-            state.isDrawingCircle = false;
-            state.circleDraft = null;
-            _circlePointerId = null;
+          if (state.isDrawingOval || state.ovalDraft) {
+            state.isDrawingOval = false;
+            state.ovalDraft = null;
+            _ovalPointerId = null;
             needsRedraw = true;
           }
 
@@ -4774,7 +5215,7 @@
     let _panPrimaryPointerId = null;
     let _roiPointerId = null;
     let _dragPointerId = null;
-    let _circlePointerId = null;
+    let _ovalPointerId = null;
 
     const _lastTap = {
       mouse: { ts: 0, x: 0, y: 0 },
@@ -4818,18 +5259,22 @@
 
       if (state.editingAreaIndex !== null) {
         const area = state.areas[state.editingAreaIndex];
-        if (area?.type === 'circle' && area.center) {
-          const distanceFromCenter = Math.hypot(coords.x - area.center.x, coords.y - area.center.y);
-          const radiusHandle = { x: area.center.x + area.radiusPx, y: area.center.y };
-          const radiusHandleDistance = Math.hypot(coords.x - radiusHandle.x, coords.y - radiusHandle.y);
-
-          if (radiusHandleDistance <= hit) {
-            state.draggedAreaHandle = 'radius';
-            state.draggedAreaOffset = null;
-            return true;
+        if (area?.type === 'oval' && area.center) {
+          const handles = getOvalResizeHandles(area);
+          for (const handle of handles) {
+            const handleDistance = Math.hypot(coords.x - handle.x, coords.y - handle.y);
+            if (handleDistance <= hit) {
+              state.hoveredAreaHandle = handle.id;
+              state.hoveredAreaPointIndex = null;
+              state.draggedAreaHandle = handle.id;
+              state.draggedAreaOffset = null;
+              return true;
+            }
           }
 
-          if (distanceFromCenter <= area.radiusPx + hit) {
+          if (pointInOval(coords, area, hit)) {
+            state.hoveredAreaHandle = 'center';
+            state.hoveredAreaPointIndex = null;
             state.draggedAreaHandle = 'center';
             state.draggedAreaOffset = {
               x: coords.x - area.center.x,
@@ -4847,6 +5292,8 @@
           const p = area.points[i];
           const dist = Math.hypot(coords.x - p.x, coords.y - p.y);
           if (dist <= hit) {
+            state.hoveredAreaHandle = null;
+            state.hoveredAreaPointIndex = i;
             state.draggedPointIndex = i;
             return true;
           }
@@ -4914,10 +5361,22 @@
 
       // Area tool
       if (state.currentTool === 'area') {
-        // In edit mode, don't add new points with regular click
-        if (state.editingAreaIndex !== null) return;
+        if (state.editingAreaIndex !== null) {
+          const area = state.areas[state.editingAreaIndex];
+          if (Array.isArray(area?.points)) {
+            const edgeInfo = getPolygonHoverEdgeInfo(area, coords);
+            if (edgeInfo) {
+              area.points.splice(edgeInfo.index + 1, 0, { ...edgeInfo.point });
+              state.hoveredAreaPointIndex = edgeInfo.index + 1;
+              state.hoveredAreaEdgeIndex = null;
+              state.hoveredAreaEdgePoint = null;
+              drawOverlay();
+            }
+          }
+          return;
+        }
 
-        // Circle mode uses drag-to-draw; ignore tap-to-add behavior.
+        // Oval mode uses drag-to-draw; ignore tap-to-add behavior.
         if (state.areaMode !== 'polygon') return;
 
         state.areaPoints.push(coords);
@@ -4988,10 +5447,10 @@
         }
       }
 
-      if (_circlePointerId === pointerId) {
-        _circlePointerId = null;
-        state.isDrawingCircle = false;
-        state.circleDraft = null;
+      if (_ovalPointerId === pointerId) {
+        _ovalPointerId = null;
+        state.isDrawingOval = false;
+        state.ovalDraft = null;
       }
 
       if (_dragPointerId === pointerId) {
@@ -5068,10 +5527,10 @@
           if (p.pointerType === e.pointerType) count++;
         }
         if (count >= 2) {
-          if (state.isDrawingCircle || state.circleDraft) {
-            state.isDrawingCircle = false;
-            state.circleDraft = null;
-            _circlePointerId = null;
+          if (state.isDrawingOval || state.ovalDraft) {
+            state.isDrawingOval = false;
+            state.ovalDraft = null;
+            _ovalPointerId = null;
             drawOverlay();
           }
           state.isPanning = true;
@@ -5107,12 +5566,12 @@
         }
       }
 
-      // Area: Circle drawing mode (single pointer drag)
-      if ((e.button === 0 || e.pointerType !== 'mouse') && state.currentTool === 'area' && state.areaMode === 'circle' && state.editingAreaIndex === null && _circlePointerId === null) {
+      // Area: Oval drawing mode (single pointer drag)
+      if ((e.button === 0 || e.pointerType !== 'mouse') && state.currentTool === 'area' && state.areaMode === 'oval' && state.editingAreaIndex === null && _ovalPointerId === null) {
         const coords = pointerCanvasCoords(e);
-        state.isDrawingCircle = true;
-        state.circleDraft = { center: coords, radiusPx: 0 };
-        _circlePointerId = e.pointerId;
+        state.isDrawingOval = true;
+        state.ovalDraft = { start: coords, end: coords };
+        _ovalPointerId = e.pointerId;
         drawOverlay();
         e.preventDefault();
         return;
@@ -5165,14 +5624,55 @@
         return;
       }
 
-      // Area: circle draft update
-      if (state.isDrawingCircle && _circlePointerId === e.pointerId && state.circleDraft) {
+      // Area: oval draft update
+      if (state.isDrawingOval && _ovalPointerId === e.pointerId && state.ovalDraft) {
         const coords = pointerCanvasCoords(e);
-        const c = state.circleDraft.center;
-        state.circleDraft.radiusPx = Math.hypot(coords.x - c.x, coords.y - c.y);
+        state.ovalDraft.end = coords;
         drawOverlay();
         e.preventDefault();
         return;
+      }
+
+      if (_dragPointerId === null && state.editingAreaIndex !== null) {
+        const coords = pointerCanvasCoords(e);
+        const area = state.areas[state.editingAreaIndex];
+        if (area?.type === 'oval' && area.center) {
+          const hoverCursor = getOvalHoverCursor(area, coords);
+          const nextHandle = hoverCursor ? (hoverCursor === 'move' ? 'center' : (getOvalResizeHandles(area).find((handle) => Math.hypot(coords.x - handle.x, coords.y - handle.y) <= canvasHitRadius()) || {}).id || null) : null;
+          const nextCursor = hoverCursor || 'pointer';
+          const changed = state.hoveredAreaHandle !== nextHandle
+            || state.hoveredAreaPointIndex !== null
+            || state.hoveredAreaEdgeIndex !== null
+            || state.hoveredAreaEdgePoint !== null
+            || elements.overlayCanvas.style.cursor !== nextCursor;
+
+          state.hoveredAreaHandle = nextHandle;
+          state.hoveredAreaPointIndex = null;
+          state.hoveredAreaEdgeIndex = null;
+          state.hoveredAreaEdgePoint = null;
+          elements.overlayCanvas.style.cursor = nextCursor;
+          if (changed) drawOverlay();
+        } else if (Array.isArray(area?.points)) {
+          const hoverPointIndex = getPolygonHoverPointIndex(area, coords);
+          const hoverEdgeInfo = hoverPointIndex === null ? getPolygonHoverEdgeInfo(area, coords) : null;
+          const nextEdgeIndex = hoverEdgeInfo ? hoverEdgeInfo.index : null;
+          const nextEdgePoint = hoverEdgeInfo ? hoverEdgeInfo.point : null;
+          const nextCursor = hoverPointIndex !== null ? 'move' : (hoverEdgeInfo ? 'copy' : 'pointer');
+          const edgePointChanged = (!!state.hoveredAreaEdgePoint !== !!nextEdgePoint)
+            || (state.hoveredAreaEdgePoint && nextEdgePoint && (state.hoveredAreaEdgePoint.x !== nextEdgePoint.x || state.hoveredAreaEdgePoint.y !== nextEdgePoint.y));
+          const changed = state.hoveredAreaHandle !== null
+            || state.hoveredAreaPointIndex !== hoverPointIndex
+            || state.hoveredAreaEdgeIndex !== nextEdgeIndex
+            || edgePointChanged
+            || elements.overlayCanvas.style.cursor !== nextCursor;
+
+          state.hoveredAreaHandle = null;
+          state.hoveredAreaPointIndex = hoverPointIndex;
+          state.hoveredAreaEdgeIndex = nextEdgeIndex;
+          state.hoveredAreaEdgePoint = nextEdgePoint;
+          elements.overlayCanvas.style.cursor = nextCursor;
+          if (changed) drawOverlay();
+        }
       }
 
       // Drag length endpoint
@@ -5195,20 +5695,20 @@
         return;
       }
 
-      // Drag circle center or resize handle
+      // Drag oval center or resize handle
       if (_dragPointerId === e.pointerId && state.draggedAreaHandle !== null && state.editingAreaIndex !== null) {
         const coords = pointerCanvasCoords(e);
         const area = state.areas[state.editingAreaIndex];
 
-        if (area?.type === 'circle' && area.center) {
+        if (area?.type === 'oval' && area.center) {
           if (state.draggedAreaHandle === 'center') {
             const offset = state.draggedAreaOffset || { x: 0, y: 0 };
             area.center = {
               x: coords.x - offset.x,
               y: coords.y - offset.y
             };
-          } else if (state.draggedAreaHandle === 'radius') {
-            area.radiusPx = Math.max(2, Math.hypot(coords.x - area.center.x, coords.y - area.center.y));
+          } else {
+            resizeOvalFromHandle(area, state.draggedAreaHandle, coords);
           }
           drawOverlay();
           e.preventDefault();
@@ -5240,7 +5740,7 @@
       const pointerType = p.pointerType || 'unknown';
       const wasDragging = (_dragPointerId === e.pointerId);
       const wasROI = (_roiPointerId === e.pointerId);
-      const wasCircle = (_circlePointerId === e.pointerId);
+      const wasOval = (_ovalPointerId === e.pointerId);
 
       // Update pointer end position
       p.x = e.clientX;
@@ -5249,19 +5749,19 @@
       // Remove pointer now; this affects multi-touch panning end logic.
       _activePointers.delete(e.pointerId);
 
-      // Circle mode: finalize or cancel circle drawing on pointer up/cancel.
-      if (wasCircle && state.circleDraft) {
+      // Oval mode: finalize or cancel oval drawing on pointer up/cancel.
+      if (wasOval && state.ovalDraft) {
         const endCoords = pointerCanvasCoords(e);
-        const center = state.circleDraft.center;
-        const radiusPx = Math.hypot(endCoords.x - center.x, endCoords.y - center.y);
+        state.ovalDraft.end = endCoords;
+        const draftGeometry = getOvalFromDraft(state.ovalDraft);
 
-        state.isDrawingCircle = false;
-        state.circleDraft = null;
-        _circlePointerId = null;
+        state.isDrawingOval = false;
+        state.ovalDraft = null;
+        _ovalPointerId = null;
 
-        // Only commit if we are still in circle mode and this is a normal pointer-up.
-        if (e.type === 'pointerup' && state.currentTool === 'area' && state.areaMode === 'circle' && radiusPx >= 2) {
-          addCircleAreaMeasurement(center, radiusPx);
+        // Only commit if we are still in oval mode and this is a normal pointer-up.
+        if (e.type === 'pointerup' && state.currentTool === 'area' && state.areaMode === 'oval' && draftGeometry && draftGeometry.radiusX >= 2 && draftGeometry.radiusY >= 2) {
+          addOvalAreaMeasurement(draftGeometry.center, draftGeometry.radiusX, draftGeometry.radiusY);
         } else {
           drawOverlay();
         }
@@ -5282,11 +5782,16 @@
         if (pointerType === 'touch' || pointerType === 'pen') {
           // Touch/pen: on double-tap, close polygon without adding another point.
           if (doubleTap) {
-            if (state.currentTool === 'area' && state.areaMode === 'polygon' && state.areaPoints.length >= 3) {
+            const coords = pointerCanvasCoords(e);
+            if (state.editingAreaIndex !== null && deleteEditingPolygonPointAt(coords)) {
+              clearTap(pointerType);
+            } else if (state.currentTool === 'area' && state.areaMode === 'polygon' && state.areaPoints.length >= 3) {
               addAreaMeasurement(state.areaPoints);
               state.areaPoints = [];
+              clearTap(pointerType);
+            } else {
+              clearTap(pointerType);
             }
-            clearTap(pointerType);
           } else {
             recordTap(pointerType, nowX, nowY);
             handleCanvasTap(pointerCanvasCoords(e));
@@ -5312,6 +5817,13 @@
 
     elements.overlayCanvas.addEventListener('pointerup', handlePointerUpOrCancel, { passive: false });
     elements.overlayCanvas.addEventListener('pointercancel', handlePointerUpOrCancel, { passive: false });
+
+    elements.overlayCanvas.addEventListener('contextmenu', (e) => {
+      const coords = pointerCanvasCoords(e);
+      if (!deleteEditingPolygonPointAt(coords)) return;
+
+      e.preventDefault();
+    });
     
     // Set crosshair cursor when image loaded
     elements.overlayCanvas.style.cursor = 'crosshair';
