@@ -18,9 +18,11 @@
     }
 
     const tiffDecoderReady = loadOptionalScript('https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.min.js');
+    const docxLibraryReady = loadOptionalScript('https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js');
 
     Promise.all([
       tiffDecoderReady,
+      docxLibraryReady,
       loadOptionalScript('./_sdk/element_sdk.js'),
       loadOptionalScript('./_sdk/data_sdk.js')
     ]);
@@ -476,23 +478,42 @@
      </div><!-- Calibration Inputs Panel -->
      <div id="calibrationInputs" class="hidden tool-card p-3">
       <div class="grid grid-cols-2 gap-3">
+      <div class="col-span-2"><span class="text-xs text-slate-400 block mb-1">Calibration Mode</span>
+       <div id="calibrationModeList" class="grid gap-2">
+        <label class="flex items-center gap-2 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm cursor-pointer"><input type="radio" id="calibrationModeMeasure" name="calibrationMode" value="measure" class="accent-blue-500" checked> <span>Measure scale bar</span>
+        </label>
+        <label class="flex items-center gap-2 rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm cursor-pointer"><input type="radio" id="calibrationModeRatio" name="calibrationMode" value="ratio" class="accent-blue-500"> <span>Enter ratio directly</span>
+        </label>
+       </div>
+      </div>
+       <div id="manualScaleHelp" class="col-span-2 text-xs text-slate-500">Click two points on the scale bar, then enter its known real-world length.</div>
+       <div id="manualScaleFields" class="contents">
        <div><label class="text-xs text-slate-400 block mb-1">Known Length</label> <input type="number" id="knownLength" step="any" min="0" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm" placeholder="e.g., 100">
        </div>
        <div><label class="text-xs text-slate-400 block mb-1">Unit</label> <select id="unitSelect" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm"> <option value="nm">nm</option> <option value="μm" selected>μm</option> <option value="mm">mm</option> </select>
        </div>
+       </div>
+      <div id="ratioScaleFields" class="contents hidden">
+       <div class="col-span-2"><label class="text-xs text-slate-400 block mb-1">Ratio Value</label> <input type="number" id="ratioValue" step="any" min="0" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm" placeholder="e.g., 0.25 or 4" disabled>
+       </div>
+       <div><label class="text-xs text-slate-400 block mb-1">Ratio Type</label> <select id="ratioType" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm" disabled> <option value="unitsPerPixel" selected>units per pixel</option> <option value="pixelsPerUnit">pixels per unit</option> </select>
+       </div>
+       <div><label class="text-xs text-slate-400 block mb-1">Unit</label> <select id="ratioUnitSelect" class="w-full bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm" disabled> <option value="nm">nm</option> <option value="μm" selected>μm</option> <option value="mm">mm</option> </select>
+       </div>
+      </div>
        <div class="col-span-2 flex gap-2"><button id="saveScale" class="btn-primary px-4 py-2 rounded-lg text-sm flex-1">Save Scale</button> <button id="cancelScale" class="btn-secondary px-4 py-2 rounded-lg text-sm">Cancel</button>
        </div>
       </div>
      </div><!-- Canvas Container -->
     <div class="flex-1 tool-card overflow-hidden min-h-[60vh] lg:min-h-0">
       <div id="canvasWrapper" class="canvas-container w-full min-h-[60vh] lg:h-full flex items-center justify-center">
-       <div id="noImagePlaceholder" class="text-center p-8 pointer-events-none">
-        <svg class="w-16 h-16 mx-auto text-slate-600 mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        <p class="text-slate-500 text-sm">Load an image to begin analysis</p>
-        <p class="text-slate-600 text-xs mt-1">Supports TIFF (first page), PNG, JPG, WebP, and other browser-supported image formats</p>
-        <p class="text-slate-500 text-xs mt-3">↓ Drag &amp; drop an image here</p>
-       </div>
+      <div id="noImagePlaceholder" class="text-center p-8 pointer-events-none max-w-md mx-auto">
+       <svg class="w-16 h-16 mx-auto text-slate-500 mb-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+       </svg>
+       <p class="text-slate-200 text-base font-medium tracking-[0.01em]">Load an image to start analysis</p>
+       <p class="text-slate-400 text-sm mt-2 leading-relaxed">Supports TIFF, PNG, JPG, WebP, and other browser-supported image formats.</p>
+       <p class="inline-flex items-center justify-center gap-2 mt-4 px-3 py-1.5 rounded-full border border-slate-700 bg-slate-900/70 text-slate-300 text-sm">↓ <span>Drag and drop an image here</span></p>
+      </div>
        <canvas id="mainCanvas" class="hidden"></canvas>
        <canvas id="overlayCanvas" class="hidden"></canvas>
       </div>
@@ -639,6 +660,7 @@
         </div>
         <div id="particlesExportRow" class="flex gap-2 flex-wrap hidden">
          <button id="copyParticlesTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[90px]" disabled>Copy TSV</button>
+         <button id="downloadParticlesReportBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[120px]" disabled>Download Report</button>
          <button id="downloadParticlesTSVBtn" class="btn-secondary px-3 py-1.5 rounded-lg text-xs flex-1 min-w-[110px]" disabled>Download CSV</button>
         </div>
        </div>
@@ -1117,6 +1139,7 @@
     // ========== STATE ==========
     const state = {
       image: null,
+      imageLabel: 'Loaded image',
       imageData: null,
       zoom: 100,
       panX: 0,
@@ -1133,6 +1156,7 @@
       unitsPerPixel: 0,
       unit: 'μm',
       calibrationLine: null,
+      calibrationSource: null,
       isSettingScale: false,
       scalePoints: [],
       
@@ -1172,6 +1196,7 @@
       particles: [],
       particleDebug: null,
       showParticleMaskPreview: false,
+      particleThresholdMode: 'manual',
       
       // Holes
       holes: [],
@@ -1203,7 +1228,15 @@
       resetPan: document.getElementById('resetPan'),
       setScaleBtn: document.getElementById('setScaleBtn'),
       calibrationInputs: document.getElementById('calibrationInputs'),
+      calibrationModeMeasure: document.getElementById('calibrationModeMeasure'),
+      calibrationModeRatio: document.getElementById('calibrationModeRatio'),
+      manualScaleHelp: document.getElementById('manualScaleHelp'),
+      manualScaleFields: document.getElementById('manualScaleFields'),
+      ratioScaleFields: document.getElementById('ratioScaleFields'),
       knownLength: document.getElementById('knownLength'),
+      ratioValue: document.getElementById('ratioValue'),
+      ratioType: document.getElementById('ratioType'),
+      ratioUnitSelect: document.getElementById('ratioUnitSelect'),
       unitSelect: document.getElementById('unitSelect'),
       saveScale: document.getElementById('saveScale'),
       cancelScale: document.getElementById('cancelScale'),
@@ -1295,6 +1328,7 @@
       clearParticles: document.getElementById('clearParticles'),
       particlesExportRow: document.getElementById('particlesExportRow'),
       copyParticlesTSVBtn: document.getElementById('copyParticlesTSVBtn'),
+      downloadParticlesReportBtn: document.getElementById('downloadParticlesReportBtn'),
       downloadParticlesTSVBtn: document.getElementById('downloadParticlesTSVBtn'),
       particleDebugPanel: document.getElementById('particleDebugPanel'),
       particleMaskPreviewToggle: document.getElementById('particleMaskPreviewToggle'),
@@ -1555,6 +1589,7 @@
           ? await loadTiffImage(file)
           : await loadBrowserImage(file);
 
+        state.imageLabel = file.name || 'Loaded image';
         applyLoadedImage(imageSource);
       } catch (error) {
         console.error('Image load failed:', error);
@@ -1569,6 +1604,7 @@
       const img = new Image();
       img.onload = () => {
         resetToStart();
+        state.imageLabel = 'sample-sem.jpg (demo)';
         applyLoadedImage(img);
       };
       img.src = 'data/sample-sem.jpg';
@@ -2432,59 +2468,146 @@
       const canSave = state.image && hasMeasurements;
       elements.saveScreenshot.disabled = !canSave;
     }
-    
-    // ========== CALIBRATION ==========
-    function setScale() {
-      if (!state.image || state.isSettingScale) return;
-      state.isSettingScale = true;
-      state.scalePoints = [];
-      elements.calibrationInputs.classList.remove('hidden');
-      elements.setScaleBtn.textContent = 'Drawing...';
-      elements.setScaleBtn.disabled = true;
+
+    function getCalibrationMode() {
+      return document.querySelector('input[name="calibrationMode"]:checked')?.value || 'measure';
     }
-    
-    function saveScale() {
-      const knownLength = parseFloat(elements.knownLength.value);
-      if (!knownLength || knownLength <= 0 || state.scalePoints.length !== 2) return;
-      
-      const p1 = state.scalePoints[0];
-      const p2 = state.scalePoints[1];
-      const pixelLength = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
-      
-      state.unitsPerPixel = knownLength / pixelLength;
-      state.unit = elements.unitSelect.value;
+
+    function updateCalibrationModeUI() {
+      const mode = getCalibrationMode();
+      const isMeasureMode = mode === 'measure';
+      const panelOpen = elements.calibrationInputs && !elements.calibrationInputs.classList.contains('hidden');
+
+      if (isMeasureMode && elements.ratioUnitSelect && elements.unitSelect) {
+        elements.unitSelect.value = elements.ratioUnitSelect.value;
+      }
+      if (!isMeasureMode && elements.ratioUnitSelect && elements.unitSelect) {
+        elements.ratioUnitSelect.value = elements.unitSelect.value;
+      }
+
+      if (elements.manualScaleFields) elements.manualScaleFields.classList.toggle('hidden', !isMeasureMode);
+      if (elements.ratioScaleFields) elements.ratioScaleFields.classList.toggle('hidden', isMeasureMode);
+      if (elements.knownLength) elements.knownLength.disabled = !isMeasureMode;
+      if (elements.ratioValue) elements.ratioValue.disabled = isMeasureMode;
+      if (elements.ratioType) elements.ratioType.disabled = isMeasureMode;
+      if (elements.ratioUnitSelect) elements.ratioUnitSelect.disabled = isMeasureMode;
+
+      if (elements.manualScaleHelp) {
+        elements.manualScaleHelp.textContent = isMeasureMode
+          ? 'Click two points on the scale bar, then enter its known real-world length.'
+          : 'Enter a calibration ratio directly. The app will normalize it internally as units per pixel.';
+      }
+
+      state.isSettingScale = panelOpen && isMeasureMode;
+      if (!isMeasureMode) state.scalePoints = [];
+
+      if (panelOpen) {
+        elements.setScaleBtn.textContent = isMeasureMode ? 'Drawing...' : 'Set Scale';
+        elements.setScaleBtn.disabled = isMeasureMode;
+      }
+
+      drawOverlay();
+    }
+
+    function getDisplayedMinAreaValue(inputEl, previousUnitsPerPixel) {
+      const currentValue = parseFloat(inputEl.value);
+      if (!Number.isFinite(currentValue) || currentValue <= 0) return 10;
+      if (state.isCalibrated && previousUnitsPerPixel > 0) {
+        return currentValue / Math.pow(previousUnitsPerPixel, 2);
+      }
+      return currentValue;
+    }
+
+    function updateCalibrationStatus() {
+      const sourceLabel = state.calibrationSource === 'typed-ratio' ? 'typed' : 'measured';
+      elements.scaleValue.textContent = `${state.unitsPerPixel.toFixed(4)} ${state.unit}/px (${sourceLabel})`;
+    }
+
+    function applyCalibration(unitsPerPixel, options = {}) {
+      const previousUnitsPerPixel = state.unitsPerPixel;
+      const previousCalibrationState = state.isCalibrated;
+      const {
+        calibrationLine = null,
+        calibrationSource = 'measured',
+        calibrationUnit = elements.unitSelect.value
+      } = options;
+
+      state.unitsPerPixel = unitsPerPixel;
+      state.unit = calibrationUnit;
+      if (elements.unitSelect) elements.unitSelect.value = calibrationUnit;
+      if (elements.ratioUnitSelect) elements.ratioUnitSelect.value = calibrationUnit;
       state.isCalibrated = true;
-      state.calibrationLine = { p1, p2 };
+      state.calibrationLine = calibrationLine;
+      state.calibrationSource = calibrationSource;
       state.isSettingScale = false;
       state.scalePoints = [];
-      
+
       elements.calibrationInputs.classList.add('hidden');
       elements.scaleInfo.classList.remove('hidden');
-      elements.scaleValue.textContent = state.unitsPerPixel.toFixed(4) + ' ' + state.unit + '/px';
+      updateCalibrationStatus();
       elements.setScaleBtn.textContent = 'Set Scale';
       elements.setScaleBtn.disabled = false;
-      
-      // Enable min area inputs and update labels to use real units
+
       elements.minParticleArea.disabled = false;
       elements.minHoleArea.disabled = false;
       elements.minParticleAreaLabel.textContent = `Min Area (${state.unit}²)`;
       elements.minHoleAreaLabel.textContent = `Min Area (${state.unit}²)`;
-      
-      // Convert current pixel values to real units
-      const currentParticleAreaPx = parseFloat(elements.minParticleArea.value) || 10;
-      const currentHoleAreaPx = parseFloat(elements.minHoleArea.value) || 10;
+
+      const particleAreaPx = previousCalibrationState
+        ? getDisplayedMinAreaValue(elements.minParticleArea, previousUnitsPerPixel)
+        : (parseFloat(elements.minParticleArea.value) || 10);
+      const holeAreaPx = previousCalibrationState
+        ? getDisplayedMinAreaValue(elements.minHoleArea, previousUnitsPerPixel)
+        : (parseFloat(elements.minHoleArea.value) || 10);
       const areaConversion = Math.pow(state.unitsPerPixel, 2);
-      
-      elements.minParticleArea.value = (currentParticleAreaPx * areaConversion).toFixed(4);
-      elements.minHoleArea.value = (currentHoleAreaPx * areaConversion).toFixed(4);
-      
-      // Update placeholder text
+
+      elements.minParticleArea.value = (particleAreaPx * areaConversion).toFixed(4);
+      elements.minHoleArea.value = (holeAreaPx * areaConversion).toFixed(4);
+
       elements.minParticleArea.nextElementSibling.textContent = `Value in ${state.unit}²`;
       elements.minHoleArea.nextElementSibling.textContent = `Value in ${state.unit}²`;
-      
+
       drawOverlay();
       updateMeasurementDisplays();
       updateGuidance();
+    }
+    
+    // ========== CALIBRATION ==========
+    function setScale() {
+      if (!state.image || state.isSettingScale) return;
+      elements.calibrationInputs.classList.remove('hidden');
+      state.scalePoints = [];
+      updateCalibrationModeUI();
+    }
+    
+    function saveScale() {
+      if (getCalibrationMode() === 'ratio') {
+        const ratioValue = parseFloat(elements.ratioValue.value);
+        if (!ratioValue || ratioValue <= 0) return;
+
+        const unitsPerPixel = elements.ratioType.value === 'pixelsPerUnit'
+          ? 1 / ratioValue
+          : ratioValue;
+
+        applyCalibration(unitsPerPixel, {
+          calibrationSource: 'typed-ratio',
+          calibrationUnit: elements.ratioUnitSelect?.value || elements.unitSelect.value
+        });
+        return;
+      }
+
+      const knownLength = parseFloat(elements.knownLength.value);
+      if (!knownLength || knownLength <= 0 || state.scalePoints.length !== 2) return;
+
+      const p1 = state.scalePoints[0];
+      const p2 = state.scalePoints[1];
+      const pixelLength = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+      if (!pixelLength) return;
+
+      applyCalibration(knownLength / pixelLength, {
+        calibrationLine: { p1, p2 },
+        calibrationSource: 'measured'
+      });
     }
     
     function cancelScale() {
@@ -2497,8 +2620,10 @@
     }
     
     function resetScale() {
+      const previousUnitsPerPixel = state.unitsPerPixel;
       state.isCalibrated = false;
       state.calibrationLine = null;
+      state.calibrationSource = null;
       state.unitsPerPixel = 0;
       
       elements.scaleInfo.classList.add('hidden');
@@ -2516,8 +2641,8 @@
       const currentHoleAreaReal = parseFloat(elements.minHoleArea.value);
       
       // If we had a previous calibration, convert back; otherwise use default
-      if (state.unitsPerPixel > 0) {
-        const areaConversion = Math.pow(state.unitsPerPixel, 2);
+      if (previousUnitsPerPixel > 0) {
+        const areaConversion = Math.pow(previousUnitsPerPixel, 2);
         elements.minParticleArea.value = Math.round(currentParticleAreaReal / areaConversion);
         elements.minHoleArea.value = Math.round(currentHoleAreaReal / areaConversion);
       } else {
@@ -2831,10 +2956,13 @@
       const pixelArea = measurePolygonArea(points);
       const realArea = state.isCalibrated ? pixelArea * Math.pow(state.unitsPerPixel, 2) : null;
       state.areas.push({ points: [...points], pixelArea, realArea });
+      const newAreaIndex = state.areas.length - 1;
+      state.areaPoints = [];
+      elements.closePolygonBtn.classList.add('hidden');
       updateAreaDisplay();
-      drawOverlay();
       updateGuidance();
       updateSaveButtonState();
+      editAreaMeasurement(newAreaIndex);
     }
 
     function addOvalAreaMeasurement(center, radiusX, radiusY) {
@@ -4135,6 +4263,7 @@
       if (elements.copyAreaTSVBtn) elements.copyAreaTSVBtn.disabled = !hasArea;
       if (elements.downloadAreaTSVBtn) elements.downloadAreaTSVBtn.disabled = !hasArea;
       if (elements.copyParticlesTSVBtn) elements.copyParticlesTSVBtn.disabled = !hasParticles;
+      if (elements.downloadParticlesReportBtn) elements.downloadParticlesReportBtn.disabled = !hasParticles;
       if (elements.downloadParticlesTSVBtn) elements.downloadParticlesTSVBtn.disabled = !hasParticles;
       if (elements.copyHolesTSVBtn) elements.copyHolesTSVBtn.disabled = !hasHoles;
       if (elements.downloadHolesTSVBtn) elements.downloadHolesTSVBtn.disabled = !hasHoles;
@@ -4652,21 +4781,453 @@
       a.click();
       URL.revokeObjectURL(url);
     }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    function canvasToBlobAsync(canvas, type = 'image/png') {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Canvas export failed.'));
+        }, type);
+      });
+    }
+
+    function sanitizeFilenamePart(text) {
+      return String(text || 'report')
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+        .replace(/\s+/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .slice(0, 80) || 'report';
+    }
+
+    function formatTimestampForFilename(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${year}${month}${day}_${hours}${minutes}${seconds}`;
+    }
+
+    function formatDateTimeForReport(date) {
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+
+    function reportNumber(value, fractionDigits = 4) {
+      if (!Number.isFinite(value)) return 'N/A';
+      return value.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: fractionDigits
+      });
+    }
+
+    function getNormalizedROI() {
+      if (!state.image) return null;
+      const roi = state.roi || { x: 0, y: 0, width: state.image.width, height: state.image.height };
+      const x = Math.max(0, Math.floor(roi.x));
+      const y = Math.max(0, Math.floor(roi.y));
+      const width = Math.min(state.image.width - x, Math.max(1, Math.ceil(roi.width)));
+      const height = Math.min(state.image.height - y, Math.max(1, Math.ceil(roi.height)));
+      return { x, y, width, height };
+    }
+
+    function captureCompositeCanvas(region = null) {
+      if (!state.image) return null;
+
+      const sourceCanvas = document.createElement('canvas');
+      sourceCanvas.width = state.image.width;
+      sourceCanvas.height = state.image.height;
+      const sourceCtx = sourceCanvas.getContext('2d');
+      sourceCtx.drawImage(state.image, 0, 0);
+      sourceCtx.drawImage(elements.overlayCanvas, 0, 0);
+
+      if (!region) return sourceCanvas;
+
+      const croppedCanvas = document.createElement('canvas');
+      croppedCanvas.width = region.width;
+      croppedCanvas.height = region.height;
+      const croppedCtx = croppedCanvas.getContext('2d');
+      croppedCtx.drawImage(
+        sourceCanvas,
+        region.x,
+        region.y,
+        region.width,
+        region.height,
+        0,
+        0,
+        region.width,
+        region.height
+      );
+      return croppedCanvas;
+    }
+
+    function computeParticleCentroid(particle) {
+      if (particle?.pixelIndices?.length && state.image?.width) {
+        let sumX = 0;
+        let sumY = 0;
+        const width = state.image.width;
+        particle.pixelIndices.forEach((pixelIndex) => {
+          sumX += pixelIndex % width;
+          sumY += Math.floor(pixelIndex / width);
+        });
+        return {
+          x: sumX / particle.pixelIndices.length,
+          y: sumY / particle.pixelIndices.length
+        };
+      }
+
+      if (particle?.bbox) {
+        return {
+          x: particle.bbox.x + (particle.bbox.w / 2),
+          y: particle.bbox.y + (particle.bbox.h / 2)
+        };
+      }
+
+      return { x: NaN, y: NaN };
+    }
+
+    function getParticleHistogramSummary(values) {
+      if (!values.length) return { bins: [], binCount: 0, min: NaN, max: NaN };
+      const binCount = Math.min(20, Math.max(5, Math.ceil(Math.sqrt(values.length))));
+      const histogram = computeHistogram(values, binCount);
+      const range = (histogram.max - histogram.min) || 1;
+      const step = range / histogram.bins.length;
+      return {
+        binCount: histogram.bins.length,
+        min: histogram.min,
+        max: histogram.max,
+        bins: histogram.bins.map((count, index) => {
+          const start = histogram.min + (index * step);
+          const end = index === histogram.bins.length - 1 ? histogram.max : start + step;
+          return { start, end, count };
+        })
+      };
+    }
+
+    function buildDescriptiveStatsSummary(stats) {
+      if (!stats) return null;
+      return {
+        ...stats,
+        variance: Number.isFinite(stats.std) ? Math.pow(stats.std, 2) : NaN,
+        range: Number.isFinite(stats.max) && Number.isFinite(stats.min) ? stats.max - stats.min : NaN
+      };
+    }
+
+    function getParticleThresholdModeLabel() {
+      if (elements.adaptiveThreshold.checked || state.particleThresholdMode === 'adaptive') return 'Adaptive';
+      if (state.particleThresholdMode === 'otsu') return 'Auto (Otsu)';
+      return 'Manual';
+    }
+
+    function getParticleReportData() {
+      if (!state.particles.length || !state.image) return null;
+
+      const generatedAt = new Date();
+      const roi = getNormalizedROI();
+      const analyzedAreaPx = roi.width * roi.height;
+      const analyzedAreaReal = state.isCalibrated ? analyzedAreaPx * Math.pow(state.unitsPerPixel, 2) : null;
+      const areaUnit = state.isCalibrated ? `${state.unit}²` : 'px²';
+      const lengthUnit = state.isCalibrated ? state.unit : 'px';
+      const minAreaDisplay = parseFloat(elements.minParticleArea.value) || 0;
+      const minAreaPx = state.isCalibrated ? minAreaDisplay / Math.pow(state.unitsPerPixel, 2) : minAreaDisplay;
+      const particleAreaValues = state.particles.map((particle) => state.isCalibrated ? particle.areaReal : particle.areaPx);
+      const particleEcdValues = state.particles.map((particle) => state.isCalibrated ? particle.ecdReal : particle.ecdPx);
+      const areaStats = buildDescriptiveStatsSummary(computeDescriptiveStats(particleAreaValues));
+      const ecdStats = buildDescriptiveStatsSummary(computeDescriptiveStats(particleEcdValues));
+      const histogram = getParticleHistogramSummary(particleEcdValues);
+      const density = state.particles.length / Math.max(1e-12, state.isCalibrated ? analyzedAreaReal : analyzedAreaPx);
+      const debug = state.particleDebug || null;
+      const baseFilename = `micromeasure_particles_report_${sanitizeFilenamePart(state.imageLabel)}_${formatTimestampForFilename(generatedAt)}`;
+
+      return {
+        generatedAt,
+        baseFilename,
+        softwareName: 'MicroMeasure',
+        softwareVersion: '1.2.0',
+        reportTitle: 'Particle Analysis Report',
+        image: {
+          label: state.imageLabel || 'Loaded image',
+          width: state.image.width,
+          height: state.image.height,
+          areaPx: state.image.width * state.image.height
+        },
+        roi: {
+          active: !!state.roi,
+          ...roi,
+          areaPx: analyzedAreaPx,
+          areaReal: analyzedAreaReal
+        },
+        calibration: {
+          applied: state.isCalibrated,
+          unit: state.unit,
+          unitsPerPixel: state.unitsPerPixel,
+          source: state.calibrationSource || 'unavailable'
+        },
+        settings: {
+          polarity: document.querySelector('input[name="particlePolarity"]:checked')?.value || 'bright',
+          thresholdMode: getParticleThresholdModeLabel(),
+          thresholdValue: parseInt(elements.particleThreshold.value || '0', 10),
+          adaptiveEnabled: !!elements.adaptiveThreshold.checked,
+          adaptiveBlockSize: parseInt(elements.adaptiveBlockSize.value || '0', 10),
+          backgroundSubtraction: !!elements.backgroundSubtraction.checked,
+          rollingBallRadius: parseInt(elements.rollingBallRadius.value || '0', 10),
+          smoothingMethod: elements.smoothingMethod.value,
+          morphologicalOpening: !!elements.morphologicalOpening.checked,
+          minAreaDisplay,
+          minAreaPx
+        },
+        processing: {
+          rawBlobs: debug?.rawComponentCount ?? state.particles.length,
+          acceptedParticles: debug?.acceptedCount ?? state.particles.length,
+          filteredOut: debug?.filteredOutCount ?? 0,
+          suspectMerges: debug?.suspectMergeCount ?? 0,
+          foregroundPixelCount: debug?.foregroundPixelCount ?? 0,
+          maskCoveragePercent: debug?.coveragePercent ?? 0
+        },
+        summary: {
+          particleCount: state.particles.length,
+          totalAnalyzedArea: state.isCalibrated ? analyzedAreaReal : analyzedAreaPx,
+          totalAnalyzedAreaUnit: areaUnit,
+          particleDensity: density,
+          densityUnit: state.isCalibrated ? `particles per ${state.unit}²` : 'particles per px²',
+          areaStats,
+          ecdStats,
+          histogram
+        },
+        particles: state.particles.map((particle) => {
+          const centroid = computeParticleCentroid(particle);
+          return {
+            id: particle.id,
+            areaPx: particle.areaPx,
+            areaReal: particle.areaReal,
+            ecdPx: particle.ecdPx,
+            ecdReal: particle.ecdReal,
+            centroidX: centroid.x,
+            centroidY: centroid.y,
+            bboxX: particle.bbox?.x ?? NaN,
+            bboxY: particle.bbox?.y ?? NaN,
+            bboxW: particle.bbox?.w ?? NaN,
+            bboxH: particle.bbox?.h ?? NaN
+          };
+        }),
+        qualityNotes: [
+          'Results depend on image calibration, threshold selection, and preprocessing settings.',
+          'Overlapping or touching particles may be merged into single detections.',
+          'Particles below the configured minimum area were excluded from accepted results.',
+          'ROI selection restricts the analyzed region and changes density and coverage metrics.'
+        ],
+        units: {
+          areaUnit,
+          lengthUnit
+        }
+      };
+    }
+
+    async function buildParticleReportAssets() {
+      const roi = getNormalizedROI();
+      const analysisCanvas = captureCompositeCanvas();
+      const roiCanvas = captureCompositeCanvas(roi);
+      const histogramCanvas = elements.particleHistogram;
+
+      const analysisBlob = await canvasToBlobAsync(analysisCanvas, 'image/png');
+      const roiBlob = await canvasToBlobAsync(roiCanvas, 'image/png');
+      const histogramBlob = await canvasToBlobAsync(histogramCanvas, 'image/png');
+
+      return {
+        analysis: {
+          bytes: new Uint8Array(await analysisBlob.arrayBuffer()),
+          width: 520,
+          height: Math.max(140, Math.round((analysisCanvas.height / Math.max(1, analysisCanvas.width)) * 520))
+        },
+        roi: {
+          bytes: new Uint8Array(await roiBlob.arrayBuffer()),
+          width: 420,
+          height: Math.max(140, Math.round((roiCanvas.height / Math.max(1, roiCanvas.width)) * 420))
+        },
+        histogram: {
+          bytes: new Uint8Array(await histogramBlob.arrayBuffer()),
+          width: 440,
+          height: 180
+        }
+      };
+    }
+
+    function makeDocxTable(docxLib, headers, rows) {
+      return new docxLib.Table({
+        width: { size: 100, type: docxLib.WidthType.PERCENTAGE },
+        rows: [
+          new docxLib.TableRow({
+            tableHeader: true,
+            children: headers.map((header) => new docxLib.TableCell({
+              children: [new docxLib.Paragraph({ children: [new docxLib.TextRun({ text: header, bold: true })] })]
+            }))
+          }),
+          ...rows.map((row) => new docxLib.TableRow({
+            children: row.map((cell) => new docxLib.TableCell({
+              children: [new docxLib.Paragraph(String(cell ?? ''))]
+            }))
+          }))
+        ]
+      });
+    }
+
+    async function buildParticleDocxBlob(report) {
+      const docxReady = await docxLibraryReady;
+      if (!docxReady || !window.docx) {
+        throw new Error('DOCX export is unavailable because the DOCX library could not be loaded.');
+      }
+
+      const docxLib = window.docx;
+      const assets = await buildParticleReportAssets();
+      const areaStats = report.summary.areaStats;
+      const ecdStats = report.summary.ecdStats;
+      const roiLabel = report.roi.active
+        ? `${Math.round(report.roi.width)} x ${Math.round(report.roi.height)} px at (${Math.round(report.roi.x)}, ${Math.round(report.roi.y)})`
+        : 'Full image';
+
+      const children = [
+        new docxLib.Paragraph({
+          text: report.reportTitle,
+          heading: docxLib.HeadingLevel.TITLE,
+          alignment: docxLib.AlignmentType.CENTER,
+          spacing: { after: 200 }
+        }),
+        new docxLib.Paragraph({ alignment: docxLib.AlignmentType.CENTER, text: `${report.softwareName} ${report.softwareVersion}` }),
+        new docxLib.Paragraph({ alignment: docxLib.AlignmentType.CENTER, text: `Generated ${formatDateTimeForReport(report.generatedAt)}` }),
+        new docxLib.Paragraph({ text: 'Image Information', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        makeDocxTable(docxLib, ['Field', 'Value'], [
+          ['File', report.image.label],
+          ['Image Size', `${report.image.width} x ${report.image.height} px`],
+          ['ROI', roiLabel],
+          ['Analyzed Area', `${reportNumber(report.summary.totalAnalyzedArea)} ${report.summary.totalAnalyzedAreaUnit}`]
+        ]),
+        new docxLib.Paragraph({ text: 'Calibration', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        makeDocxTable(docxLib, ['Field', 'Value'], [
+          ['Calibrated', report.calibration.applied ? 'Yes' : 'No'],
+          ['Scale', report.calibration.applied ? `${reportNumber(report.calibration.unitsPerPixel, 6)} ${report.calibration.unit}/px` : 'N/A'],
+          ['Source', report.calibration.applied ? report.calibration.source : 'N/A'],
+          ['Unit', report.calibration.applied ? report.calibration.unit : 'px']
+        ]),
+        new docxLib.Paragraph({ text: 'Particle Analysis Settings', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        makeDocxTable(docxLib, ['Setting', 'Value'], [
+          ['Polarity', report.settings.polarity === 'bright' ? 'Bright particles' : 'Dark particles'],
+          ['Threshold Mode', report.settings.thresholdMode],
+          ['Threshold Value', report.settings.thresholdValue],
+          ['Adaptive Threshold', report.settings.adaptiveEnabled ? 'Yes' : 'No'],
+          ['Adaptive Block Size', report.settings.adaptiveEnabled ? report.settings.adaptiveBlockSize : 'N/A'],
+          ['Background Subtraction', report.settings.backgroundSubtraction ? 'Yes' : 'No'],
+          ['Rolling Ball Radius', report.settings.backgroundSubtraction ? `${report.settings.rollingBallRadius} px` : 'N/A'],
+          ['Smoothing', report.settings.smoothingMethod],
+          ['Morphological Opening', report.settings.morphologicalOpening ? 'Yes' : 'No'],
+          ['Minimum Area', `${reportNumber(report.settings.minAreaDisplay)} ${report.units.areaUnit}`],
+          ['Minimum Area (pixel equivalent)', `${reportNumber(report.settings.minAreaPx)} px^2`]
+        ]),
+        new docxLib.Paragraph({ text: 'Processing Summary', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        makeDocxTable(docxLib, ['Metric', 'Value'], [
+          ['Raw Blobs', report.processing.rawBlobs],
+          ['Accepted Particles', report.processing.acceptedParticles],
+          ['Filtered Out', report.processing.filteredOut],
+          ['Suspect Merges', report.processing.suspectMerges],
+          ['Foreground Pixels', report.processing.foregroundPixelCount],
+          ['Mask Coverage', `${reportNumber(report.processing.maskCoveragePercent, 2)}%`],
+          ['Particle Density', `${reportNumber(report.summary.particleDensity, 6)} ${report.summary.densityUnit}`]
+        ]),
+        new docxLib.Paragraph({ text: 'Summary Statistics', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        makeDocxTable(docxLib, ['Metric', 'Particle Area', 'Particle ECD'], [
+          ['Count (n)', areaStats?.n ?? 0, ecdStats?.n ?? 0],
+          ['Sum', `${reportNumber(areaStats?.sum)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.sum)} ${report.units.lengthUnit}`],
+          ['Mean', `${reportNumber(areaStats?.mean)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.mean)} ${report.units.lengthUnit}`],
+          ['Median', `${reportNumber(areaStats?.median)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.median)} ${report.units.lengthUnit}`],
+          ['Std Dev', `${reportNumber(areaStats?.std)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.std)} ${report.units.lengthUnit}`],
+          ['Variance', `${reportNumber(areaStats?.variance)} ${report.units.areaUnit}^2`, `${reportNumber(ecdStats?.variance)} ${report.units.lengthUnit}^2`],
+          ['SEM', `${reportNumber(areaStats?.sem)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.sem)} ${report.units.lengthUnit}`],
+          ['Min', `${reportNumber(areaStats?.min)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.min)} ${report.units.lengthUnit}`],
+          ['Max', `${reportNumber(areaStats?.max)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.max)} ${report.units.lengthUnit}`],
+          ['Range', `${reportNumber(areaStats?.range)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.range)} ${report.units.lengthUnit}`],
+          ['Q1', `${reportNumber(areaStats?.q1)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.q1)} ${report.units.lengthUnit}`],
+          ['Q3', `${reportNumber(areaStats?.q3)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.q3)} ${report.units.lengthUnit}`],
+          ['IQR', `${reportNumber(areaStats?.iqr)} ${report.units.areaUnit}`, `${reportNumber(ecdStats?.iqr)} ${report.units.lengthUnit}`],
+          ['Coefficient of Variation', `${reportNumber(areaStats?.cv)}%`, `${reportNumber(ecdStats?.cv)}%`]
+        ]),
+        new docxLib.Paragraph({ text: 'Histogram', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        new docxLib.Paragraph({ text: `ECD distribution (${report.units.lengthUnit})` }),
+        new docxLib.Paragraph({ children: [new docxLib.ImageRun({ data: assets.histogram.bytes, transformation: { width: assets.histogram.width, height: assets.histogram.height } })] }),
+        makeDocxTable(docxLib, ['Bin', 'Start', 'End', 'Count'], report.summary.histogram.bins.map((bin, index) => [
+          index + 1,
+          `${reportNumber(bin.start)} ${report.units.lengthUnit}`,
+          `${reportNumber(bin.end)} ${report.units.lengthUnit}`,
+          bin.count
+        ])),
+        new docxLib.Paragraph({ text: 'ROI Image', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        new docxLib.Paragraph({ children: [new docxLib.ImageRun({ data: assets.roi.bytes, transformation: { width: assets.roi.width, height: assets.roi.height } })] }),
+        new docxLib.Paragraph({ text: 'Analysis Snapshot', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        new docxLib.Paragraph({ children: [new docxLib.ImageRun({ data: assets.analysis.bytes, transformation: { width: assets.analysis.width, height: assets.analysis.height } })] }),
+        new docxLib.Paragraph({ text: 'Per-Particle Results', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        makeDocxTable(docxLib, ['ID', 'Area (px^2)', `Area (${report.units.areaUnit})`, 'ECD (px)', `ECD (${report.units.lengthUnit})`, 'Centroid X', 'Centroid Y', 'BBox X', 'BBox Y', 'BBox W', 'BBox H'], report.particles.map((particle) => [
+          `P${particle.id}`,
+          reportNumber(particle.areaPx),
+          report.calibration.applied ? reportNumber(particle.areaReal) : 'N/A',
+          reportNumber(particle.ecdPx),
+          report.calibration.applied ? reportNumber(particle.ecdReal) : 'N/A',
+          reportNumber(particle.centroidX),
+          reportNumber(particle.centroidY),
+          reportNumber(particle.bboxX),
+          reportNumber(particle.bboxY),
+          reportNumber(particle.bboxW),
+          reportNumber(particle.bboxH)
+        ])),
+        new docxLib.Paragraph({ text: 'Quality Notes', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        ...report.qualityNotes.map((note) => new docxLib.Paragraph({ text: note, bullet: { level: 0 } })),
+        new docxLib.Paragraph({ text: 'Audit Footer', heading: docxLib.HeadingLevel.HEADING_1, spacing: { before: 180, after: 120 } }),
+        new docxLib.Paragraph(`Report generated by ${report.softwareName} ${report.softwareVersion}`),
+        new docxLib.Paragraph(`Generation timestamp: ${formatDateTimeForReport(report.generatedAt)}`)
+      ];
+
+      const doc = new docxLib.Document({
+        sections: [{ children }]
+      });
+
+      return docxLib.Packer.toBlob(doc);
+    }
+
+    async function downloadParticleReport() {
+      const report = getParticleReportData();
+      if (!report) {
+        window.alert('Analyze particles first to generate a report.');
+        return;
+      }
+
+      try {
+        const docxBlob = await buildParticleDocxBlob(report);
+        downloadBlob(docxBlob, `${report.baseFilename}.docx`);
+      } catch (error) {
+        console.error('DOCX report export failed:', error);
+        window.alert(error?.message || 'DOCX report export failed.');
+      }
+    }
     
     function saveScreenshot() {
       if (!state.image) return;
       
       // Create a temporary canvas to combine main image and overlay
-      const exportCanvas = document.createElement('canvas');
-      exportCanvas.width = state.image.width;
-      exportCanvas.height = state.image.height;
-      const exportCtx = exportCanvas.getContext('2d');
-      
-      // Draw the main image
-      exportCtx.drawImage(state.image, 0, 0);
-      
-      // Draw the overlay on top
-      exportCtx.drawImage(elements.overlayCanvas, 0, 0);
+      const exportCanvas = captureCompositeCanvas();
       
       // Convert to blob and download
       exportCanvas.toBlob((blob) => {
@@ -4682,6 +5243,7 @@
     function clearAllParticles() {
       state.particles = [];
       clearParticleDebug();
+      state.particleThresholdMode = elements.adaptiveThreshold.checked ? 'adaptive' : 'manual';
       if (elements.particleResults) elements.particleResults.classList.add('hidden');
       updateStatsButtonsVisibility();
       drawOverlay();
@@ -4700,7 +5262,11 @@
     
     function resetProject() {
       state.isCalibrated = false;
+      state.unitsPerPixel = 0;
       state.calibrationLine = null;
+      state.calibrationSource = null;
+      state.imageLabel = 'Loaded image';
+      state.particleThresholdMode = 'manual';
       state.lengths = [];
       state.lengthPoints = [];
       state.anglePoints = [];
@@ -4724,6 +5290,10 @@
       state.roiMode = null;
       
       elements.scaleInfo.classList.add('hidden');
+        if (elements.knownLength) elements.knownLength.value = '';
+        if (elements.ratioValue) elements.ratioValue.value = '';
+        if (elements.calibrationModeMeasure) elements.calibrationModeMeasure.checked = true;
+        updateCalibrationModeUI();
       elements.particleResults.classList.add('hidden');
       elements.holeResults.classList.add('hidden');
       
@@ -4901,6 +5471,9 @@
     elements.saveScale.addEventListener('click', saveScale);
     elements.cancelScale.addEventListener('click', cancelScale);
     elements.resetScaleBtn.addEventListener('click', resetScale);
+    document.querySelectorAll('input[name="calibrationMode"]').forEach((input) => {
+      input.addEventListener('change', updateCalibrationModeUI);
+    });
     elements.clearLengths.addEventListener('click', clearAllLengths);
     if (elements.lengthStatsBtn) elements.lengthStatsBtn.addEventListener('click', () => openStatsModal('length'));
     if (elements.lengthHistBtn) elements.lengthHistBtn.addEventListener('click', () => openHistogramModal('length'));
@@ -4948,6 +5521,7 @@
     if (elements.copyAreaTSVBtn) elements.copyAreaTSVBtn.addEventListener('click', () => copyFeatureTSV('area'));
     if (elements.downloadAreaTSVBtn) elements.downloadAreaTSVBtn.addEventListener('click', () => downloadFeatureCSV('area'));
     if (elements.copyParticlesTSVBtn) elements.copyParticlesTSVBtn.addEventListener('click', () => copyFeatureTSV('particles'));
+    if (elements.downloadParticlesReportBtn) elements.downloadParticlesReportBtn.addEventListener('click', downloadParticleReport);
     if (elements.downloadParticlesTSVBtn) elements.downloadParticlesTSVBtn.addEventListener('click', () => downloadFeatureCSV('particles'));
     if (elements.copyHolesTSVBtn) elements.copyHolesTSVBtn.addEventListener('click', () => copyFeatureTSV('holes'));
     if (elements.downloadHolesTSVBtn) elements.downloadHolesTSVBtn.addEventListener('click', () => downloadFeatureCSV('holes'));
@@ -4968,6 +5542,7 @@
       closeResetConfirm();
       resetToStart();
     });
+    updateCalibrationModeUI();
     if (elements.resetConfirmModal) {
       elements.resetConfirmModal.addEventListener('click', (e) => {
         if (e.target === elements.resetConfirmModal) closeResetConfirm();
@@ -5044,6 +5619,7 @@
     elements.adaptiveThreshold.addEventListener('change', (e) => {
       elements.manualThresholdControls.classList.toggle('hidden', e.target.checked);
       elements.adaptiveThresholdControls.classList.toggle('hidden', !e.target.checked);
+      state.particleThresholdMode = e.target.checked ? 'adaptive' : 'manual';
     });
     
     // Hole preprocessing UI controls
@@ -5158,10 +5734,12 @@
       const threshold = otsuThreshold(gray);
       elements.particleThreshold.value = threshold;
       elements.thresholdValue.textContent = threshold;
+      state.particleThresholdMode = 'otsu';
     });
     
     elements.particleThreshold.addEventListener('input', (e) => {
       elements.thresholdValue.textContent = e.target.value;
+      if (!elements.adaptiveThreshold.checked) state.particleThresholdMode = 'manual';
     });
     
     elements.holeThreshold.addEventListener('input', (e) => {
