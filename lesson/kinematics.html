@@ -1076,7 +1076,7 @@
                 sim.time += dt;
                 const totalP = sim.carProgress + computeDeltaProgress();
                 sim.currentVelocity = getCurrentVelocity();
-                if (totalP >= 1 || totalP <= 0) sim.isPlaying = false;
+                if ((totalP >= 1 && sim.currentVelocity > 0) || (totalP <= 0 && sim.currentVelocity < 0)) sim.isPlaying = false;
             } else {
                 distLastTime = Date.now();
             }
@@ -1144,7 +1144,7 @@
                 sim.time += dt;
                 const totalP = sim.carProgress + computeDeltaProgressForSim(sim);
                 sim.currentVelocity = getCurrentVelocityForSim(sim);
-                if (totalP >= 1 || totalP <= 0) sim.isPlaying = false;
+                if ((totalP >= 1 && sim.currentVelocity > 0) || (totalP <= 0 && sim.currentVelocity < 0)) sim.isPlaying = false;
             } else {
                 velLastTime = Date.now();
             }
@@ -1567,8 +1567,10 @@
             const sumXY = data.reduce((sum, point) => sum + point.x * point.y, 0);
             const sumX2 = data.reduce((sum, point) => sum + point.x * point.x, 0);
             const denominator = n * sumX2 - sumX * sumX;
-            const slope = denominator === 0 ? 0 : (n * sumXY - sumX * sumY) / denominator;
-            const intercept = (sumY - slope * sumX) / n;
+            let slope = denominator === 0 ? 0 : (n * sumXY - sumX * sumY) / denominator;
+            if (Math.abs(slope) < 1e-10) slope = 0;
+            let intercept = (sumY - slope * sumX) / n;
+            if (Math.abs(intercept) < 1e-10) intercept = 0;
             const meanY = sumY / n;
             const ssRes = data.reduce((sum, point) => sum + Math.pow(point.y - (slope * point.x + intercept), 2), 0);
             const ssTot = data.reduce((sum, point) => sum + Math.pow(point.y - meanY, 2), 0);
@@ -1692,6 +1694,18 @@
             return calculateLinearFit(data);
         }
 
+        function formatTrendlineEquation(fit, trendType, dependentVar, independentVar) {
+            if (!fit || fit._none || trendType === 'none') return '-';
+            if (trendType === 'linear') return `${dependentVar} = ${fit.slope.toFixed(3)}${independentVar} + ${fit.intercept.toFixed(3)}`;
+            if (trendType === 'quadratic') return `${dependentVar} = ${fit.a.toFixed(3)}${independentVar}^2 + ${fit.b.toFixed(3)}${independentVar} + ${fit.c.toFixed(3)}`;
+            if (trendType === 'inverse') return `${dependentVar} = ${fit.k.toFixed(3)}/${independentVar} + ${(fit.intercept || 0).toFixed(3)}`;
+            if (trendType === 'inverse_square') return `${dependentVar} = ${fit.k.toFixed(3)}/${independentVar}^2 + ${(fit.intercept || 0).toFixed(3)}`;
+            if (trendType === 'exponential') return `${dependentVar} = ${fit.a.toFixed(3)}e^(${fit.b.toFixed(3)}${independentVar})`;
+            if (trendType === 'logarithmic') return `${dependentVar} = ${fit.a.toFixed(3)}ln(${independentVar}) + ${fit.b.toFixed(3)}`;
+            if (trendType === 'power2' || trendType === 'power3' || trendType === 'power4') return `${dependentVar} = ${fit.k.toFixed(3)}${independentVar}^${fit.n} + ${(fit.intercept || 0).toFixed(3)}`;
+            return fit.equation;
+        }
+
         function predictY(x, fit, trendType) {
             if (trendType === 'linear') return fit.slope * x + fit.intercept;
             if (trendType === 'quadratic') return fit.a * x * x + fit.b * x + fit.c;
@@ -1712,6 +1726,20 @@
                 if (y !== null && Number.isFinite(y)) points.push({ x, y });
             }
             return points;
+        }
+
+        function getStableYAxisBounds(datasets) {
+            const values = datasets
+                .flatMap(dataset => dataset.data || [])
+                .map(point => point.y)
+                .filter(Number.isFinite);
+            if (!values.length) return {};
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            if (Math.abs(max - min) > 1e-6) return {};
+            const center = (min + max) / 2;
+            const padding = Math.max(1, Math.abs(center) * 0.1);
+            return { min: center - padding, max: center + padding };
         }
 
         function normalizeSegments(pointCount) {
@@ -1922,7 +1950,7 @@
                             <span class="segment-analysis-type">${trendlineModeLabels[segment.type]}</span>
                         </div>
                         <div class="segment-analysis-meta">Points P${segment.start + 1} to P${segment.end + 1}</div>
-                        <div class="segment-analysis-row"><div class="segment-analysis-key">Equation</div><div class="segment-analysis-value">${segment.fit.equation}</div></div>
+                        <div class="segment-analysis-row"><div class="segment-analysis-key">Equation</div><div class="segment-analysis-value">${formatTrendlineEquation(segment.fit, segment.type, 'x', 't')}</div></div>
                         <div class="segment-analysis-row"><div class="segment-analysis-key">R^2</div><div class="segment-analysis-r2">${segment.fit.r2.toFixed(4)}</div></div>
                     </div>
                 `).join('')}</div>`;
@@ -1951,7 +1979,7 @@
                 <div class="analysis-metrics">
                     <div class="analysis-metric">
                         <div class="analysis-metric-label">Equation</div>
-                        <div class="analysis-metric-value">${fit._none ? '-' : fit.equation}</div>
+                        <div class="analysis-metric-value">${formatTrendlineEquation(fit, trendType, 'x', 't')}</div>
                     </div>
                     <div class="analysis-metric">
                         <div class="analysis-metric-label">R^2 Value</div>
@@ -2085,7 +2113,7 @@
                             <span class="segment-analysis-type">${trendlineModeLabels[segment.type]}</span>
                         </div>
                         <div class="segment-analysis-meta">Points P${segment.start + 1} to P${segment.end + 1}</div>
-                        <div class="segment-analysis-row"><div class="segment-analysis-key">Equation</div><div class="segment-analysis-value">${segment.fit.equation}</div></div>
+                        <div class="segment-analysis-row"><div class="segment-analysis-key">Equation</div><div class="segment-analysis-value">${formatTrendlineEquation(segment.fit, segment.type, 'v', 't')}</div></div>
                         <div class="segment-analysis-row"><div class="segment-analysis-key">R^2</div><div class="segment-analysis-r2">${segment.fit.r2.toFixed(4)}</div></div>
                     </div>
                 `).join('')}</div>`;
@@ -2114,7 +2142,7 @@
                 <div class="analysis-metrics">
                     <div class="analysis-metric">
                         <div class="analysis-metric-label">Equation</div>
-                        <div class="analysis-metric-value">${fit._none ? '-' : fit.equation}</div>
+                        <div class="analysis-metric-value">${formatTrendlineEquation(fit, trendType, 'v', 't')}</div>
                     </div>
                     <div class="analysis-metric">
                         <div class="analysis-metric-label">R^2 Value</div>
@@ -2170,23 +2198,25 @@
                     tension: 0.3
                 });
             }
+            const velocityDatasets = [{
+                label: 'Data Points',
+                data: sortedData.map((point, index) => ({ x: point.x, y: point.y, _pointId: `P${index + 1}` })),
+                backgroundColor: 'rgba(37, 99, 235, 0.75)',
+                borderColor: '#2563eb',
+                borderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                showLine: smoothLine,
+                fill: false,
+                tension: smoothLine ? 0.35 : 0,
+                cubicInterpolationMode: smoothLine ? 'monotone' : 'default'
+            }, ...trendlineDatasets];
+            const yAxisBounds = getStableYAxisBounds(velocityDatasets);
 
             velocityChart = new Chart(canvas.getContext('2d'), {
                 type: 'scatter',
                 data: {
-                    datasets: [{
-                        label: 'Data Points',
-                        data: sortedData.map((point, index) => ({ x: point.x, y: point.y, _pointId: `P${index + 1}` })),
-                        backgroundColor: 'rgba(37, 99, 235, 0.75)',
-                        borderColor: '#2563eb',
-                        borderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8,
-                        showLine: smoothLine,
-                        fill: false,
-                        tension: smoothLine ? 0.35 : 0,
-                        cubicInterpolationMode: smoothLine ? 'monotone' : 'default'
-                    }, ...trendlineDatasets]
+                    datasets: velocityDatasets
                 },
                 options: {
                     responsive: true,
@@ -2219,8 +2249,9 @@
                             grid: { color: 'rgba(37, 99, 235, 0.1)' }
                         },
                         y: {
+                            ...yAxisBounds,
                             title: { display: true, text: velocityState.yLabel, color: '#1a202c', font: { weight: '600' } },
-                            ticks: { color: '#64748b' },
+                            ticks: { color: '#64748b', callback: value => Number(value).toFixed(2) },
                             grid: { color: 'rgba(37, 99, 235, 0.1)' }
                         }
                     }
