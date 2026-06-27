@@ -1,0 +1,2435 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinematics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #dbeafe 100%);
+            color: #1a202c;
+        }
+
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.08);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(37, 99, 235, 0.12);
+        }
+
+        .navbar-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e3a8a;
+        }
+
+        .main-content {
+            flex: 1;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .module-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: #172554;
+            margin-bottom: 0.35rem;
+        }
+
+        .module-subtitle {
+            color: #475569;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .module-switcher {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 12px;
+            padding: 0.5rem;
+        }
+
+        .module-switch-btn {
+            border: none;
+            background: transparent;
+            color: #475569;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 800;
+            padding: 0.75rem 1rem;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .module-switch-btn:hover {
+            background: rgba(37, 99, 235, 0.08);
+            color: #1d4ed8;
+        }
+
+        .module-switch-btn.active {
+            background: #172554;
+            color: #ffffff;
+        }
+
+        .module-container {
+            display: none;
+        }
+
+        .module-container.active {
+            display: block;
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 12px;
+            padding: 0.5rem;
+        }
+
+        .tab-btn {
+            border: none;
+            background: transparent;
+            color: #475569;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            padding: 0.75rem 1rem;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(37, 99, 235, 0.08);
+            color: #1d4ed8;
+        }
+
+        .tab-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .simulation-container,
+        .graph-container {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        .simulation-area,
+        .graph-card,
+        .analysis-panel,
+        .table-wrapper,
+        .control-panel {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 12px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        }
+
+        .simulation-area {
+            min-height: 420px;
+            display: flex;
+            padding: 1.5rem;
+        }
+
+        .control-panel,
+        .analysis-panel {
+            padding: 1rem;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            color: #334155;
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .control-value {
+            color: #2563eb;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .slider {
+            width: 100%;
+            margin-top: 0.6rem;
+            accent-color: #2563eb;
+        }
+
+        .btn-control,
+        .btn-secondary {
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            min-height: 40px;
+            padding: 0.65rem 0.85rem;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+        }
+
+        .btn-control:hover,
+        .btn-secondary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+        }
+
+        .btn-play,
+        .btn-add-data,
+        .btn-generate {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .btn-pause,
+        .btn-add-row,
+        .btn-import-csv {
+            background: #0f766e;
+            color: #ffffff;
+        }
+
+        .btn-reset,
+        .btn-clear {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        .btn-export-csv {
+            background: #7c3aed;
+            color: #ffffff;
+        }
+
+        .btn-add-data {
+            width: 100%;
+        }
+
+        .table-controls {
+            display: flex;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 520px;
+        }
+
+        th,
+        td {
+            padding: 0.85rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+        }
+
+        th {
+            background: #eff6ff;
+            color: #1e3a8a;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        tbody tr:hover {
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .empty-state {
+            padding: 2rem;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .empty-state-icon {
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .graph-card {
+            padding: 1rem;
+        }
+
+        .chart-wrapper {
+            height: 430px;
+            position: relative;
+        }
+
+        .trendline-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .trendline-label,
+        .smooth-line-toggle {
+            color: #334155;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .trendline-select,
+        .segment-row select,
+        .editable-row input {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            color: #1e293b;
+            padding: 0.55rem 0.65rem;
+        }
+
+        .segment-controls {
+            display: none;
+            margin-bottom: 1rem;
+            padding: 0.85rem;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 10px;
+            background: #f8fafc;
+        }
+
+        .segment-controls.active {
+            display: block;
+        }
+
+        .segment-toolbar,
+        .segment-row,
+        .analysis-metrics,
+        .segment-analysis-header,
+        .segment-analysis-row {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .segment-toolbar {
+            justify-content: space-between;
+            margin-bottom: 0.7rem;
+        }
+
+        .segment-title {
+            font-weight: 800;
+            color: #334155;
+        }
+
+        .segment-list {
+            display: grid;
+            gap: 0.55rem;
+        }
+
+        .segment-add-btn,
+        .segment-delete-btn,
+        .btn-save-row,
+        .btn-cancel-row,
+        .btn-delete-row {
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            padding: 0.45rem 0.65rem;
+        }
+
+        .segment-add-btn,
+        .btn-save-row {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .segment-delete-btn,
+        .btn-cancel-row,
+        .btn-delete-row {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .segment-note {
+            color: #64748b;
+            font-size: 0.82rem;
+            margin-top: 0.65rem;
+        }
+
+        .analysis-text {
+            color: #334155;
+            line-height: 1.55;
+        }
+
+        .analysis-metrics {
+            align-items: stretch;
+            margin-bottom: 1rem;
+        }
+
+        .analysis-metric {
+            flex: 1;
+            background: #eff6ff;
+            border-radius: 10px;
+            padding: 0.85rem;
+        }
+
+        .analysis-metric-label {
+            color: #64748b;
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .analysis-metric-value {
+            color: #1e3a8a;
+            font-weight: 800;
+            margin-top: 0.25rem;
+            word-break: break-word;
+        }
+
+        .segment-analysis-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .segment-analysis-card {
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 10px;
+            padding: 0.85rem;
+        }
+
+        .segment-analysis-header,
+        .segment-analysis-row {
+            justify-content: space-between;
+        }
+
+        .segment-analysis-badge {
+            background: #2563eb;
+            color: #ffffff;
+            border-radius: 999px;
+            min-width: 1.6rem;
+            padding: 0.2rem 0.45rem;
+            text-align: center;
+        }
+
+        .segment-analysis-type,
+        .segment-analysis-key {
+            font-weight: 800;
+            color: #334155;
+        }
+
+        .segment-analysis-meta,
+        .segment-analysis-value,
+        .segment-analysis-r2 {
+            color: #64748b;
+            font-size: 0.88rem;
+        }
+
+        .editable-row input {
+            width: min(180px, 100%);
+        }
+
+        .data-point-added {
+            animation: dataPulse 0.7s ease;
+        }
+
+        @keyframes dataPulse {
+            0% { background: #dbeafe; }
+            100% { background: transparent; }
+        }
+
+        @media (max-width: 768px) {
+            .navbar,
+            .main-content {
+                padding: 1rem;
+            }
+
+            .module-title {
+                font-size: 1.8rem;
+            }
+
+            .tab-btn {
+                flex: 1 1 100%;
+            }
+
+            .module-switch-btn {
+                flex: 1 1 100%;
+            }
+
+            .simulation-container,
+            .graph-container {
+                grid-template-columns: 1fr;
+            }
+
+            .control-buttons,
+            .analysis-metrics {
+                flex-direction: column;
+                display: flex;
+            }
+
+            .table-controls {
+                display: grid;
+            }
+        }
+  </style>
+ </head>
+ <body>
+  <div class="app-container">
+   <header class="navbar">
+    <div class="navbar-title">Kinematics</div>
+   </header>
+
+   <main class="main-content">
+    <div class="module-switcher" aria-label="Kinematics modules">
+     <button class="module-switch-btn active" type="button" data-module-target="distance">Distance vs Time</button>
+     <button class="module-switch-btn" type="button" data-module-target="velocity">Velocity vs Time</button>
+    </div>
+
+    <section class="module-container active" data-module="distance">
+     <h1 class="module-title">Distance vs Time</h1>
+     <p class="module-subtitle">Explore how motion shapes the distance-time graph.</p>
+
+     <div class="tab-container" aria-label="Distance vs Time sections">
+      <button class="tab-btn active" type="button" data-tab="simulation">Simulation</button>
+      <button class="tab-btn" type="button" data-tab="data">Data Table</button>
+      <button class="tab-btn" type="button" data-tab="graph">Graph &amp; Analysis</button>
+     </div>
+
+     <div class="tab-content active" data-tab="simulation">
+      <div class="simulation-container">
+       <div class="simulation-area" style="flex-direction:column;align-items:center;justify-content:center;">
+        <div style="position:relative;width:100%;max-width:600px;aspect-ratio:3/1;border-radius:12px;overflow:hidden;" id="distanceSimBox">
+         <svg viewBox="0 0 600 200" style="width:100%;height:100%;" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="600" height="115" fill="#e0f2fe"/>
+          <rect x="0" y="115" width="600" height="85" fill="#f1f5f9"/>
+          <rect x="0" y="128" width="600" height="52" fill="#475569"/>
+          <line x1="0" y1="130" x2="600" y2="130" stroke="#fbbf24" stroke-width="2"/>
+          <line x1="0" y1="154" x2="600" y2="154" stroke="white" stroke-width="2.5" stroke-dasharray="28,18"/>
+          <line x1="30" y1="120" x2="570" y2="120" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,6"/>
+          <line id="distProgressLine" x1="30" y1="120" x2="30" y2="120" stroke="#7c3aed" stroke-width="2.5" opacity="0.7"/>
+          <rect x="29" y="103" width="2" height="20" fill="#10b981"/>
+          <polygon points="31,103 46,109 31,115" fill="#10b981"/>
+          <rect x="569" y="103" width="2" height="20" fill="#ef4444"/>
+          <polygon points="571,103 556,109 571,115" fill="#ef4444"/>
+          <text id="distEndLabel" x="569" y="98" font-size="10" fill="#ef4444" text-anchor="middle">100 m</text>
+          <g id="distCarSVG" transform="translate(20,78)">
+           <rect x="0" y="10" width="72" height="28" rx="5" fill="#dc2626"/>
+           <path d="M 10,10 L 20,-8 L 52,-8 L 62,10 Z" fill="#b91c1c"/>
+           <path d="M 22,10 L 29,-5 L 36,-5 L 36,10 Z" fill="#93c5fd" opacity="0.8"/>
+           <path d="M 38,10 L 38,-5 L 51,-5 L 58,10 Z" fill="#93c5fd" opacity="0.8"/>
+           <rect x="68" y="16" width="6" height="10" rx="2" fill="#fef08a"/>
+           <rect x="-2" y="16" width="5" height="10" rx="2" fill="#fca5a5"/>
+           <circle cx="14" cy="40" r="10" fill="#1e293b"/>
+           <circle cx="14" cy="40" r="4" fill="#94a3b8"/>
+           <circle cx="58" cy="40" r="10" fill="#1e293b"/>
+           <circle cx="58" cy="40" r="4" fill="#94a3b8"/>
+           <line x1="36" y1="12" x2="36" y2="36" stroke="#b91c1c" stroke-width="1.5"/>
+           <rect x="39" y="23" width="8" height="3" rx="1.5" fill="#f87171"/>
+          </g>
+          <text id="distCarLabel" x="56" y="70" font-size="11" fill="#7c3aed" font-weight="bold" text-anchor="middle">0.00 m</text>
+          <text id="distSVGTime" x="300" y="18" font-size="12" fill="#475569" text-anchor="middle">Time: 0.0 s</text>
+          <text id="distSVGVel" x="300" y="36" font-size="12" fill="#475569" text-anchor="middle">Velocity: 0 m/s</text>
+         </svg>
+        </div>
+       </div>
+       <div class="control-panel">
+        <div class="control-group">
+         <div class="control-buttons">
+          <button class="btn-control btn-play" id="playDistance">Play</button>
+          <button class="btn-control btn-pause" id="pauseDistance">Pause</button>
+          <button class="btn-control btn-reset" id="resetDistance">Reset</button>
+         </div>
+        </div>
+        <div class="control-group">
+         <label class="control-label">Motion Mode</label>
+         <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px;">
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="radio" name="distMode" value="pos_velocity" checked> Constant Velocity</label>
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="radio" name="distMode" value="neg_velocity"> Constant Velocity (-)</label>
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="radio" name="distMode" value="pos_accel"> Constant Acceleration</label>
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="radio" name="distMode" value="neg_accel"> Constant Acceleration (-)</label>
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="radio" name="distMode" value="rest"> At Rest</label>
+         </div>
+        </div>
+        <div class="control-group" id="distVelSliderGroup">
+         <label class="control-label">Velocity (m/s) <span class="control-value" id="velocityValue">5</span></label>
+         <input type="range" class="slider" id="velocitySlider" min="1" max="20" value="5">
+         <input type="number" id="velocityInput" min="1" max="20" step="1" value="5" style="margin-top:6px;width:100%;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;">
+        </div>
+        <div class="control-group" id="distAccelSliderGroup" style="display:none;">
+         <label class="control-label">Acceleration (m/s^2) <span class="control-value" id="distAccelValue">2</span></label>
+         <input type="range" class="slider" id="distAccelSlider" min="0.5" max="10" value="2" step="0.5">
+         <input type="number" id="distAccelInput" min="0.5" max="10" step="0.5" value="2" style="margin-top:6px;width:100%;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;">
+        </div>
+        <div class="control-group"><label class="control-label">Current Time (s) <span class="control-value" id="timeDisplay">0</span></label></div>
+        <div class="control-group"><label class="control-label">Current Distance (m) <span class="control-value" id="distanceDisplay">0</span></label></div>
+        <div class="control-group"><label class="control-label">Current Velocity (m/s) <span class="control-value" id="currentVelocityDisplay">0.00</span></label></div>
+        <button class="btn-control btn-add-data" id="addDataDistance">+ Add Data Point</button>
+       </div>
+      </div>
+     </div>
+
+     <div class="tab-content" data-tab="data">
+      <div class="table-controls">
+       <button class="btn-secondary btn-generate" id="generateDataDistance">Generate Sample Data</button>
+       <button class="btn-secondary btn-clear" id="clearDataDistance">Clear Data</button>
+       <button class="btn-secondary btn-add-row" id="addRowDistance">Add Row</button>
+       <button class="btn-secondary btn-import-csv" id="importCSVDistance">Import CSV</button>
+       <input type="file" id="csvInputDistance" accept=".csv" style="display:none">
+       <button class="btn-secondary btn-export-csv" id="exportCSVDistance">Export CSV</button>
+      </div>
+      <div class="table-wrapper">
+       <table id="tableDistance">
+        <thead>
+         <tr>
+          <th>Trial</th>
+          <th>Time (s)</th>
+          <th>Distance (m)</th>
+          <th></th>
+         </tr>
+        </thead>
+        <tbody></tbody>
+       </table>
+       <div class="empty-state" id="emptyDistance" style="display: none;">
+        <div class="empty-state-icon">Data</div>
+        <p>No data yet. Run the simulation or generate sample data!</p>
+       </div>
+      </div>
+     </div>
+
+     <div class="tab-content" data-tab="graph">
+      <div class="graph-container">
+       <div class="graph-card">
+        <div class="trendline-selector">
+         <label class="trendline-label">Trendline:</label>
+         <select class="trendline-select" id="trendlineDistance">
+          <option value="none">None</option>
+          <option value="linear" selected>Linear</option>
+          <option value="inverse">Inverse</option>
+          <option value="inverse_square">Inverse Square</option>
+          <option value="quadratic">Quadratic</option>
+          <option value="exponential">Exponential</option>
+          <option value="logarithmic">Logarithmic</option>
+          <option value="power2">Power (2)</option>
+          <option value="power3">Power (3)</option>
+          <option value="power4">Power (4)</option>
+         </select>
+         <label class="smooth-line-toggle"><input type="checkbox" id="smoothLineDistance"> Smooth line</label>
+         <label class="smooth-line-toggle"><input type="checkbox" id="multiTrendlineDistance"> Multi trendline</label>
+        </div>
+        <div id="segmentControlsDistance" class="segment-controls"></div>
+        <div class="chart-wrapper">
+         <canvas id="chartDistance"></canvas>
+        </div>
+       </div>
+       <div class="analysis-panel">
+        <div class="analysis-item">
+         <div class="analysis-text" id="interpretationDistance">
+          Add data points to see the trendline and analysis
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </section>
+
+    <section class="module-container" data-module="velocity">
+     <h1 class="module-title">Velocity vs Time</h1>
+     <p class="module-subtitle">Explore how changing motion shapes the velocity-time graph.</p>
+
+     <div class="tab-container" aria-label="Velocity vs Time sections">
+      <button class="tab-btn active" type="button" data-tab="simulation">Simulation</button>
+      <button class="tab-btn" type="button" data-tab="data">Data Table</button>
+      <button class="tab-btn" type="button" data-tab="graph">Graph &amp; Analysis</button>
+     </div>
+
+     <div class="tab-content active" data-tab="simulation">
+      <div class="simulation-container">
+       <div class="simulation-area" style="flex-direction:column;align-items:center;justify-content:center;">
+        <div style="position:relative;width:100%;max-width:600px;aspect-ratio:3/1;border-radius:12px;overflow:hidden;" id="velocitySimBox">
+         <svg viewBox="0 0 600 200" style="width:100%;height:100%;" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="600" height="115" fill="#e0f2fe"/>
+          <rect x="0" y="115" width="600" height="85" fill="#f1f5f9"/>
+          <rect x="0" y="128" width="600" height="52" fill="#475569"/>
+          <line x1="0" y1="130" x2="600" y2="130" stroke="#fbbf24" stroke-width="2"/>
+          <line x1="0" y1="154" x2="600" y2="154" stroke="white" stroke-width="2.5" stroke-dasharray="28,18"/>
+          <line x1="30" y1="120" x2="570" y2="120" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,6"/>
+          <line id="velProgressLine" x1="30" y1="120" x2="30" y2="120" stroke="#2563eb" stroke-width="2.5" opacity="0.7"/>
+          <rect x="29" y="103" width="2" height="20" fill="#10b981"/>
+          <polygon points="31,103 46,109 31,115" fill="#10b981"/>
+          <rect x="569" y="103" width="2" height="20" fill="#ef4444"/>
+          <polygon points="571,103 556,109 571,115" fill="#ef4444"/>
+          <text id="velEndLabel" x="569" y="98" font-size="10" fill="#ef4444" text-anchor="middle">100 m</text>
+          <g id="velCarSVG" transform="translate(20,78)">
+           <rect x="0" y="10" width="72" height="28" rx="5" fill="#2563eb"/>
+           <path d="M 10,10 L 20,-8 L 52,-8 L 62,10 Z" fill="#1d4ed8"/>
+           <path d="M 22,10 L 29,-5 L 36,-5 L 36,10 Z" fill="#93c5fd" opacity="0.8"/>
+           <path d="M 38,10 L 38,-5 L 51,-5 L 58,10 Z" fill="#93c5fd" opacity="0.8"/>
+           <rect x="68" y="16" width="6" height="10" rx="2" fill="#fef08a"/>
+           <rect x="-2" y="16" width="5" height="10" rx="2" fill="#fca5a5"/>
+           <circle cx="14" cy="40" r="10" fill="#1e293b"/>
+           <circle cx="14" cy="40" r="4" fill="#94a3b8"/>
+           <circle cx="58" cy="40" r="10" fill="#1e293b"/>
+           <circle cx="58" cy="40" r="4" fill="#94a3b8"/>
+           <line x1="36" y1="12" x2="36" y2="36" stroke="#1d4ed8" stroke-width="1.5"/>
+           <rect x="39" y="23" width="8" height="3" rx="1.5" fill="#60a5fa"/>
+          </g>
+          <text id="velCarLabel" x="56" y="70" font-size="11" fill="#2563eb" font-weight="bold" text-anchor="middle">0.00 m/s</text>
+          <text id="velSVGTime" x="300" y="18" font-size="12" fill="#475569" text-anchor="middle">Time: 0.0 s</text>
+          <text id="velSVGVel" x="300" y="36" font-size="12" fill="#475569" text-anchor="middle">Velocity: 0 m/s</text>
+         </svg>
+        </div>
+       </div>
+       <div class="control-panel">
+        <div class="control-group">
+         <div class="control-buttons">
+          <button class="btn-control btn-play" id="playVelocity">Play</button>
+          <button class="btn-control btn-pause" id="pauseVelocity">Pause</button>
+          <button class="btn-control btn-reset" id="resetVelocity">Reset</button>
+         </div>
+        </div>
+        <div class="control-group">
+         <label class="control-label">Motion Mode</label>
+         <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px;">
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="radio" name="velMode" value="pos_velocity" checked> Constant Velocity</label>
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="radio" name="velMode" value="neg_velocity"> Constant Velocity (-)</label>
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="radio" name="velMode" value="pos_accel"> Constant Acceleration</label>
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="radio" name="velMode" value="neg_accel"> Constant Acceleration (-)</label>
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;"><input type="radio" name="velMode" value="rest"> At Rest</label>
+         </div>
+        </div>
+        <div class="control-group" id="velVelSliderGroup">
+         <label class="control-label">Velocity (m/s) <span class="control-value" id="velVelocityValue">5</span></label>
+         <input type="range" class="slider" id="velVelocitySlider" min="1" max="20" value="5">
+         <input type="number" id="velVelocityInput" min="1" max="20" step="1" value="5" style="margin-top:6px;width:100%;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;">
+        </div>
+        <div class="control-group" id="velAccelSliderGroup" style="display:none;">
+         <label class="control-label">Acceleration (m/s^2) <span class="control-value" id="velAccelValue">2</span></label>
+         <input type="range" class="slider" id="velAccelSlider" min="0.5" max="10" value="2" step="0.5">
+         <input type="number" id="velAccelInput" min="0.5" max="10" step="0.5" value="2" style="margin-top:6px;width:100%;padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;">
+        </div>
+        <div class="control-group"><label class="control-label">Current Time (s) <span class="control-value" id="timeDisplayVel">0</span></label></div>
+        <div class="control-group"><label class="control-label">Current Velocity (m/s) <span class="control-value" id="velocityDisplay">0</span></label></div>
+        <button class="btn-control btn-add-data" id="addDataVelocity">+ Add Data Point</button>
+       </div>
+      </div>
+     </div>
+
+     <div class="tab-content" data-tab="data">
+      <div class="table-controls">
+       <button class="btn-secondary btn-generate" id="generateDataVelocity">Generate Sample Data</button>
+       <button class="btn-secondary btn-clear" id="clearDataVelocity">Clear Data</button>
+       <button class="btn-secondary btn-add-row" id="addRowVelocity">Add Row</button>
+       <button class="btn-secondary btn-import-csv" id="importCSVVelocity">Import CSV</button>
+       <input type="file" id="csvInputVelocity" accept=".csv" style="display:none">
+       <button class="btn-secondary btn-export-csv" id="exportCSVVelocity">Export CSV</button>
+      </div>
+      <div class="table-wrapper">
+       <table id="tableVelocity">
+        <thead>
+         <tr>
+          <th>Trial</th>
+          <th>Time (s)</th>
+          <th>Velocity (m/s)</th>
+          <th></th>
+         </tr>
+        </thead>
+        <tbody></tbody>
+       </table>
+       <div class="empty-state" id="emptyVelocity" style="display: none;">
+        <div class="empty-state-icon">Data</div>
+        <p>No data yet. Run the simulation or generate sample data!</p>
+       </div>
+      </div>
+     </div>
+
+     <div class="tab-content" data-tab="graph">
+      <div class="graph-container">
+       <div class="graph-card">
+        <div class="trendline-selector">
+         <label class="trendline-label">Trendline:</label>
+         <select class="trendline-select" id="trendlineVelocity">
+          <option value="none">None</option>
+          <option value="linear" selected>Linear</option>
+          <option value="inverse">Inverse</option>
+          <option value="inverse_square">Inverse Square</option>
+          <option value="quadratic">Quadratic</option>
+          <option value="exponential">Exponential</option>
+          <option value="logarithmic">Logarithmic</option>
+          <option value="power2">Power (2)</option>
+          <option value="power3">Power (3)</option>
+          <option value="power4">Power (4)</option>
+         </select>
+         <label class="smooth-line-toggle"><input type="checkbox" id="smoothLineVelocity"> Smooth line</label>
+         <label class="smooth-line-toggle"><input type="checkbox" id="multiTrendlineVelocity"> Multi trendline</label>
+        </div>
+        <div id="segmentControlsVelocity" class="segment-controls"></div>
+        <div class="chart-wrapper">
+         <canvas id="chartVelocity"></canvas>
+        </div>
+       </div>
+       <div class="analysis-panel">
+        <div class="analysis-item">
+         <div class="analysis-text" id="interpretationVelocity">
+          Add data points to see the trendline and analysis
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </section>
+   </main>
+  </div>
+
+  <script>
+        const state = {
+            name: 'Distance vs Time',
+            xLabel: 'Time (s)',
+            yLabel: 'Distance (m)',
+            data: [],
+            simulation: {
+                time: 0,
+                velocity: 5,
+                acceleration: 2,
+                currentVelocity: 0,
+                isPlaying: false,
+                maxTime: 20,
+                mode: 'pos_velocity',
+                carProgress: 0,
+                baseDistance: 0,
+                modeStartTime: 0,
+                modeStartVelocity: 0,
+                justReset: true
+            }
+        };
+        const velocityState = {
+            name: 'Velocity vs Time',
+            xLabel: 'Time (s)',
+            yLabel: 'Velocity (m/s)',
+            data: [],
+            simulation: {
+                time: 0,
+                velocity: 5,
+                acceleration: 2,
+                currentVelocity: 0,
+                isPlaying: false,
+                maxTime: 20,
+                mode: 'pos_velocity',
+                carProgress: 0,
+                baseDistance: 0,
+                modeStartTime: 0,
+                modeStartVelocity: 0,
+                justReset: true
+            }
+        };
+
+        let chart = null;
+        let velocityChart = null;
+        let distLastTime = Date.now();
+        let velLastTime = Date.now();
+
+        const segmentPalette = ['#f59e0b', '#2563eb', '#10b981', '#ef4444', '#8b5cf6'];
+        const trendlineModeOptions = ['none', 'linear', 'inverse', 'inverse_square', 'quadratic', 'exponential', 'logarithmic', 'power2', 'power3', 'power4'];
+        const trendlineModeLabels = {
+            none: 'None',
+            linear: 'Linear',
+            inverse: 'Inverse',
+            inverse_square: 'Inverse Square',
+            quadratic: 'Quadratic',
+            exponential: 'Exponential',
+            logarithmic: 'Logarithmic',
+            power2: 'Power (2)',
+            power3: 'Power (3)',
+            power4: 'Power (4)'
+        };
+        const segmentedTrendlineState = {
+            enabled: false,
+            segments: [{ start: 0, end: 1, type: 'linear' }]
+        };
+        const velocitySegmentedTrendlineState = {
+            enabled: false,
+            segments: [{ start: 0, end: 1, type: 'linear' }]
+        };
+
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, value));
+        }
+
+        function addNoise(value, percentage = 0.02) {
+            const base = Math.max(Math.abs(value), 1);
+            return value + (Math.random() - 0.5) * 2 * base * percentage;
+        }
+
+        function getModeElapsed() {
+            return Math.max(0, state.simulation.time - state.simulation.modeStartTime);
+        }
+
+        function computeDeltaProgress() {
+            const sim = state.simulation;
+            const time = getModeElapsed();
+            const ref = Math.max(0.001, sim.velocity * sim.maxTime);
+            switch (sim.mode) {
+                case 'pos_velocity':
+                case 'neg_velocity':
+                    return (sim.modeStartVelocity * time) / ref;
+                case 'pos_accel':
+                    return (sim.modeStartVelocity * time + 0.5 * sim.acceleration * time * time) / ref;
+                case 'neg_accel':
+                    return (sim.modeStartVelocity * time - 0.5 * sim.acceleration * time * time) / ref;
+                default:
+                    return 0;
+            }
+        }
+
+        function getDistanceDelta() {
+            const sim = state.simulation;
+            const time = getModeElapsed();
+            switch (sim.mode) {
+                case 'pos_velocity':
+                case 'neg_velocity':
+                    return sim.modeStartVelocity * time;
+                case 'pos_accel':
+                    return sim.modeStartVelocity * time + 0.5 * sim.acceleration * time * time;
+                case 'neg_accel':
+                    return sim.modeStartVelocity * time - 0.5 * sim.acceleration * time * time;
+                default:
+                    return 0;
+            }
+        }
+
+        function getCurrentVelocity() {
+            const sim = state.simulation;
+            const time = getModeElapsed();
+            switch (sim.mode) {
+                case 'pos_velocity':
+                case 'neg_velocity':
+                    return sim.modeStartVelocity;
+                case 'pos_accel':
+                    return sim.modeStartVelocity + sim.acceleration * time;
+                case 'neg_accel':
+                    return sim.modeStartVelocity - sim.acceleration * time;
+                case 'rest':
+                    return time > 0 ? 0 : sim.modeStartVelocity;
+                default:
+                    return sim.modeStartVelocity;
+            }
+        }
+
+        function totalDistance() {
+            return Math.max(0, state.simulation.baseDistance + getDistanceDelta());
+        }
+
+        function getSimModeElapsed(sim) {
+            return Math.max(0, sim.time - sim.modeStartTime);
+        }
+
+        function computeDeltaProgressForSim(sim) {
+            const time = getSimModeElapsed(sim);
+            const ref = Math.max(0.001, sim.velocity * sim.maxTime);
+            switch (sim.mode) {
+                case 'pos_velocity':
+                case 'neg_velocity':
+                    return (sim.modeStartVelocity * time) / ref;
+                case 'pos_accel':
+                    return (sim.modeStartVelocity * time + 0.5 * sim.acceleration * time * time) / ref;
+                case 'neg_accel':
+                    return (sim.modeStartVelocity * time - 0.5 * sim.acceleration * time * time) / ref;
+                default:
+                    return 0;
+            }
+        }
+
+        function getDistanceDeltaForSim(sim) {
+            const time = getSimModeElapsed(sim);
+            switch (sim.mode) {
+                case 'pos_velocity':
+                case 'neg_velocity':
+                    return sim.modeStartVelocity * time;
+                case 'pos_accel':
+                    return sim.modeStartVelocity * time + 0.5 * sim.acceleration * time * time;
+                case 'neg_accel':
+                    return sim.modeStartVelocity * time - 0.5 * sim.acceleration * time * time;
+                default:
+                    return 0;
+            }
+        }
+
+        function getCurrentVelocityForSim(sim) {
+            const time = getSimModeElapsed(sim);
+            switch (sim.mode) {
+                case 'pos_velocity':
+                case 'neg_velocity':
+                    return sim.modeStartVelocity;
+                case 'pos_accel':
+                    return sim.modeStartVelocity + sim.acceleration * time;
+                case 'neg_accel':
+                    return sim.modeStartVelocity - sim.acceleration * time;
+                case 'rest':
+                    return time > 0 ? 0 : sim.modeStartVelocity;
+                default:
+                    return sim.modeStartVelocity;
+            }
+        }
+
+        function totalVelocityDistance() {
+            return Math.max(0, velocityState.simulation.baseDistance + getDistanceDeltaForSim(velocityState.simulation));
+        }
+
+        function setAddDataResumeState(isResume) {
+            const addBtn = document.getElementById('addDataDistance');
+            addBtn.dataset.state = isResume ? 'resume' : 'add';
+            addBtn.textContent = isResume ? 'Resume' : '+ Add Data Point';
+        }
+
+        function updateDistanceSVG() {
+            const sim = state.simulation;
+            const totalProgress = clamp(sim.carProgress + computeDeltaProgress(), 0, 1);
+            const currentV = getCurrentVelocity();
+            const distance = totalDistance();
+            const startX = 20;
+            const endX = 498;
+            const carW = 72;
+            const carX = startX + totalProgress * (endX - startX);
+            const carCenterX = carX + carW / 2;
+            let infoText = '';
+
+            switch (sim.mode) {
+                case 'pos_velocity':
+                case 'neg_velocity':
+                    infoText = `v = ${currentV.toFixed(2)} m/s`;
+                    break;
+                case 'pos_accel':
+                    infoText = `a = +${sim.acceleration} m/s^2 | v = ${currentV.toFixed(2)} m/s`;
+                    break;
+                case 'neg_accel':
+                    infoText = `a = -${sim.acceleration} m/s^2 | v = ${currentV.toFixed(2)} m/s`;
+                    break;
+                case 'rest':
+                    infoText = 'v = 0.00 m/s (at rest mode)';
+                    break;
+            }
+
+            const carGroup = document.getElementById('distCarSVG');
+            if (carGroup) {
+                carGroup.setAttribute(
+                    'transform',
+                    currentV < 0 ? `translate(${(carX + carW).toFixed(1)},78) scale(-1,1)` : `translate(${carX.toFixed(1)},78)`
+                );
+            }
+
+            document.getElementById('distCarLabel').setAttribute('x', carCenterX.toFixed(1));
+            document.getElementById('distCarLabel').textContent = `${distance.toFixed(2)} m`;
+            document.getElementById('distProgressLine').setAttribute('x2', (30 + totalProgress * 540).toFixed(1));
+            document.getElementById('distEndLabel').textContent = `${(sim.velocity * sim.maxTime).toFixed(0)} m`;
+            document.getElementById('distSVGTime').textContent = `Time: ${sim.time.toFixed(1)} s`;
+            document.getElementById('distSVGVel').textContent = infoText;
+            document.getElementById('timeDisplay').textContent = sim.time.toFixed(1);
+            document.getElementById('distanceDisplay').textContent = distance.toFixed(2);
+            document.getElementById('currentVelocityDisplay').textContent = currentV.toFixed(2);
+        }
+
+        function distanceAnimationLoop() {
+            const sim = state.simulation;
+            if (sim.isPlaying) {
+                const now = Date.now();
+                const dt = (now - distLastTime) / 1000;
+                distLastTime = now;
+                sim.time += dt;
+                const totalP = sim.carProgress + computeDeltaProgress();
+                sim.currentVelocity = getCurrentVelocity();
+                if (totalP >= 1 || totalP <= 0) sim.isPlaying = false;
+            } else {
+                distLastTime = Date.now();
+            }
+            updateDistanceSVG();
+            requestAnimationFrame(distanceAnimationLoop);
+        }
+
+        function setVelocityAddDataResumeState(isResume) {
+            const addBtn = document.getElementById('addDataVelocity');
+            addBtn.dataset.state = isResume ? 'resume' : 'add';
+            addBtn.textContent = isResume ? 'Resume' : '+ Add Data Point';
+        }
+
+        function updateVelocitySVG() {
+            const sim = velocityState.simulation;
+            const totalProgress = clamp(sim.carProgress + computeDeltaProgressForSim(sim), 0, 1);
+            const currentV = getCurrentVelocityForSim(sim);
+            const startX = 20;
+            const endX = 498;
+            const carW = 72;
+            const carX = startX + totalProgress * (endX - startX);
+            const carCenterX = carX + carW / 2;
+            let infoText = '';
+
+            switch (sim.mode) {
+                case 'pos_velocity':
+                case 'neg_velocity':
+                    infoText = `v = ${currentV.toFixed(2)} m/s`;
+                    break;
+                case 'pos_accel':
+                    infoText = `a = +${sim.acceleration} m/s^2 | v = ${currentV.toFixed(2)} m/s`;
+                    break;
+                case 'neg_accel':
+                    infoText = `a = -${sim.acceleration} m/s^2 | v = ${currentV.toFixed(2)} m/s`;
+                    break;
+                case 'rest':
+                    infoText = 'v = 0.00 m/s (at rest mode)';
+                    break;
+            }
+
+            const carGroup = document.getElementById('velCarSVG');
+            if (carGroup) {
+                carGroup.setAttribute(
+                    'transform',
+                    currentV < 0 ? `translate(${(carX + carW).toFixed(1)},78) scale(-1,1)` : `translate(${carX.toFixed(1)},78)`
+                );
+            }
+
+            document.getElementById('velCarLabel').setAttribute('x', carCenterX.toFixed(1));
+            document.getElementById('velCarLabel').textContent = `${currentV.toFixed(2)} m/s`;
+            document.getElementById('velProgressLine').setAttribute('x2', (30 + totalProgress * 540).toFixed(1));
+            document.getElementById('velEndLabel').textContent = `${(sim.velocity * sim.maxTime).toFixed(0)} m`;
+            document.getElementById('velSVGTime').textContent = `Time: ${sim.time.toFixed(1)} s`;
+            document.getElementById('velSVGVel').textContent = infoText;
+            document.getElementById('timeDisplayVel').textContent = sim.time.toFixed(1);
+            document.getElementById('velocityDisplay').textContent = currentV.toFixed(2);
+        }
+
+        function velocityAnimationLoop() {
+            const sim = velocityState.simulation;
+            if (sim.isPlaying) {
+                const now = Date.now();
+                const dt = (now - velLastTime) / 1000;
+                velLastTime = now;
+                sim.time += dt;
+                const totalP = sim.carProgress + computeDeltaProgressForSim(sim);
+                sim.currentVelocity = getCurrentVelocityForSim(sim);
+                if (totalP >= 1 || totalP <= 0) sim.isPlaying = false;
+            } else {
+                velLastTime = Date.now();
+            }
+            updateVelocitySVG();
+            requestAnimationFrame(velocityAnimationLoop);
+        }
+
+        function playVelocitySimulation() {
+            const sim = velocityState.simulation;
+            if (sim.justReset) {
+                sim.modeStartTime = sim.time;
+                if (sim.mode === 'neg_velocity') sim.modeStartVelocity = -Math.abs(sim.velocity);
+                else if (sim.mode === 'pos_velocity') sim.modeStartVelocity = Math.abs(sim.velocity);
+                else sim.modeStartVelocity = 0;
+                sim.currentVelocity = sim.mode === 'rest' ? 0 : sim.modeStartVelocity;
+                sim.justReset = false;
+            }
+            if (sim.mode === 'rest') {
+                sim.modeStartTime = sim.time;
+                sim.modeStartVelocity = 0;
+                sim.currentVelocity = 0;
+                sim.justReset = false;
+            }
+            sim.isPlaying = true;
+            setVelocityAddDataResumeState(false);
+        }
+
+        function resetVelocitySimulation() {
+            Object.assign(velocityState.simulation, {
+                time: 0,
+                currentVelocity: 0,
+                isPlaying: false,
+                carProgress: 0,
+                baseDistance: 0,
+                modeStartTime: 0,
+                modeStartVelocity: 0,
+                justReset: true
+            });
+            setVelocityAddDataResumeState(false);
+            updateVelocitySVG();
+        }
+
+        function freezeVelocityMotionForModeChange() {
+            const sim = velocityState.simulation;
+            sim.carProgress = clamp(sim.carProgress + computeDeltaProgressForSim(sim), 0, 1);
+            sim.baseDistance = totalVelocityDistance();
+            sim.currentVelocity = getCurrentVelocityForSim(sim);
+            sim.modeStartTime = sim.time;
+        }
+
+        function handleVelocityModeChange(mode) {
+            const sim = velocityState.simulation;
+            freezeVelocityMotionForModeChange();
+            sim.mode = mode;
+            if (sim.justReset) {
+                sim.modeStartVelocity = 0;
+                sim.currentVelocity = 0;
+            } else if (mode === 'neg_velocity') {
+                sim.modeStartVelocity = -Math.abs(sim.velocity);
+                sim.currentVelocity = sim.modeStartVelocity;
+            } else if (mode === 'pos_velocity') {
+                sim.modeStartVelocity = Math.abs(sim.velocity);
+                sim.currentVelocity = sim.modeStartVelocity;
+            } else if (mode === 'rest') {
+                sim.modeStartVelocity = 0;
+                sim.currentVelocity = 0;
+            } else {
+                sim.modeStartVelocity = sim.currentVelocity;
+            }
+            sim.isPlaying = false;
+            setVelocityAddDataResumeState(false);
+            document.getElementById('velVelSliderGroup').style.display = mode.includes('velocity') ? '' : 'none';
+            document.getElementById('velAccelSliderGroup').style.display = mode.includes('accel') ? '' : 'none';
+            updateVelocitySVG();
+        }
+
+        function playSimulation() {
+            const sim = state.simulation;
+            if (sim.justReset) {
+                sim.modeStartTime = sim.time;
+                if (sim.mode === 'neg_velocity') sim.modeStartVelocity = -Math.abs(sim.velocity);
+                else if (sim.mode === 'pos_velocity') sim.modeStartVelocity = Math.abs(sim.velocity);
+                else sim.modeStartVelocity = 0;
+                sim.currentVelocity = sim.mode === 'rest' ? 0 : sim.modeStartVelocity;
+                sim.justReset = false;
+            }
+            if (sim.mode === 'rest') {
+                sim.modeStartTime = sim.time;
+                sim.modeStartVelocity = 0;
+                sim.currentVelocity = 0;
+                sim.justReset = false;
+            }
+            sim.isPlaying = true;
+            setAddDataResumeState(false);
+        }
+
+        function resetSimulation() {
+            Object.assign(state.simulation, {
+                time: 0,
+                currentVelocity: 0,
+                isPlaying: false,
+                carProgress: 0,
+                baseDistance: 0,
+                modeStartTime: 0,
+                modeStartVelocity: 0,
+                justReset: true
+            });
+            setAddDataResumeState(false);
+            updateDistanceSVG();
+        }
+
+        function freezeMotionForModeChange() {
+            const sim = state.simulation;
+            sim.carProgress = clamp(sim.carProgress + computeDeltaProgress(), 0, 1);
+            sim.baseDistance = totalDistance();
+            sim.currentVelocity = getCurrentVelocity();
+            sim.modeStartTime = sim.time;
+        }
+
+        function handleModeChange(mode) {
+            const sim = state.simulation;
+            freezeMotionForModeChange();
+            sim.mode = mode;
+            if (sim.justReset) {
+                sim.modeStartVelocity = 0;
+                sim.currentVelocity = 0;
+            } else if (mode === 'neg_velocity') {
+                sim.modeStartVelocity = -Math.abs(sim.velocity);
+                sim.currentVelocity = sim.modeStartVelocity;
+            } else if (mode === 'pos_velocity') {
+                sim.modeStartVelocity = Math.abs(sim.velocity);
+                sim.currentVelocity = sim.modeStartVelocity;
+            } else if (mode === 'rest') {
+                sim.modeStartVelocity = 0;
+                sim.currentVelocity = 0;
+            } else {
+                sim.modeStartVelocity = sim.currentVelocity;
+            }
+            sim.isPlaying = false;
+            setAddDataResumeState(false);
+            document.getElementById('distVelSliderGroup').style.display = mode.includes('velocity') ? '' : 'none';
+            document.getElementById('distAccelSliderGroup').style.display = mode.includes('accel') ? '' : 'none';
+            updateDistanceSVG();
+        }
+
+        function addDataPoint() {
+            state.data.push({
+                x: parseFloat(state.simulation.time.toFixed(3)),
+                y: parseFloat(totalDistance().toFixed(3))
+            });
+            renderTableRows();
+            const lastRow = document.querySelector('#tableDistance tbody tr:last-child');
+            if (lastRow) lastRow.classList.add('data-point-added');
+            document.getElementById('emptyDistance').style.display = 'none';
+            updateChart();
+        }
+
+        function renderTableRows() {
+            const tbody = document.querySelector('#tableDistance tbody');
+            tbody.innerHTML = '';
+            state.data.forEach((point, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${index + 1}</td><td>${point.x.toFixed(3)}</td><td>${point.y.toFixed(3)}</td><td><button class="btn-delete-row" title="Delete row">Delete</button></td>`;
+                row.querySelector('.btn-delete-row').addEventListener('click', () => {
+                    state.data.splice(index, 1);
+                    renderTableRows();
+                    document.getElementById('emptyDistance').style.display = state.data.length ? 'none' : 'block';
+                    updateChart();
+                });
+            });
+        }
+
+        function generateSampleData() {
+            state.data = [];
+            const v = 5;
+            for (let t = 0; t <= 12; t += 2) {
+                state.data.push({ x: t, y: Math.max(0, parseFloat(addNoise(v * t, 0.015).toFixed(3))) });
+            }
+            renderTableRows();
+            document.getElementById('emptyDistance').style.display = 'none';
+            updateChart();
+        }
+
+        function clearData() {
+            state.data = [];
+            renderTableRows();
+            document.getElementById('emptyDistance').style.display = 'block';
+            if (chart) {
+                chart.destroy();
+                chart = null;
+            }
+            document.getElementById('interpretationDistance').textContent = 'Add data points to see the trendline and analysis';
+            renderSegmentControls([]);
+        }
+
+        function addManualRow() {
+            const tbody = document.querySelector('#tableDistance tbody');
+            const existing = tbody.querySelector('.editable-row');
+            if (existing) existing.remove();
+            const row = tbody.insertRow();
+            row.classList.add('editable-row');
+            row.innerHTML = `
+                <td>${state.data.length + 1}</td>
+                <td><input type="number" class="input-x" placeholder="${state.xLabel}" step="any"></td>
+                <td>
+                    <input type="number" class="input-y" placeholder="${state.yLabel}" step="any">
+                    <button class="btn-save-row">Save</button>
+                    <button class="btn-cancel-row">Cancel</button>
+                </td>
+                <td></td>
+            `;
+            document.getElementById('emptyDistance').style.display = 'none';
+            row.querySelector('.input-x').focus();
+            row.querySelector('.btn-save-row').addEventListener('click', () => {
+                const xInput = row.querySelector('.input-x');
+                const yInput = row.querySelector('.input-y');
+                const x = parseFloat(xInput.value);
+                const y = parseFloat(yInput.value);
+                xInput.style.borderColor = Number.isNaN(x) ? '#dc2626' : '';
+                yInput.style.borderColor = Number.isNaN(y) ? '#dc2626' : '';
+                if (Number.isNaN(x) || Number.isNaN(y)) return;
+                state.data.push({ x, y });
+                renderTableRows();
+                updateChart();
+            });
+            row.querySelector('.btn-cancel-row').addEventListener('click', () => {
+                row.remove();
+                document.getElementById('emptyDistance').style.display = state.data.length ? 'none' : 'block';
+            });
+        }
+
+        function exportCSVData() {
+            if (!state.data.length) {
+                alert('No data to export!');
+                return;
+            }
+            const rows = [['Trial', state.xLabel, state.yLabel], ...state.data.map((point, index) => [index + 1, point.x, point.y])];
+            const csvContent = rows.map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Distance_vs_Time_data.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function importCSVData(file) {
+            const reader = new FileReader();
+            reader.onload = event => {
+                const lines = event.target.result.trim().split(/\r?\n/);
+                if (lines.length < 1) return;
+                const firstLine = lines[0].split(',');
+                const startIndex = Number.isNaN(parseFloat(firstLine[0])) ? 1 : 0;
+                const imported = [];
+                for (let i = startIndex; i < lines.length; i++) {
+                    const parts = lines[i].split(',');
+                    let x;
+                    let y;
+                    if (parts.length >= 3) {
+                        x = parseFloat(parts[1]);
+                        y = parseFloat(parts[2]);
+                    } else if (parts.length >= 2) {
+                        x = parseFloat(parts[0]);
+                        y = parseFloat(parts[1]);
+                    }
+                    if (!Number.isNaN(x) && !Number.isNaN(y)) imported.push({ x, y });
+                }
+                state.data = imported;
+                renderTableRows();
+                document.getElementById('emptyDistance').style.display = state.data.length ? 'none' : 'block';
+                updateChart();
+            };
+            reader.readAsText(file);
+        }
+
+        function addVelocityDataPoint() {
+            const currentV = getCurrentVelocityForSim(velocityState.simulation);
+            velocityState.simulation.currentVelocity = currentV;
+            velocityState.data.push({
+                x: parseFloat(velocityState.simulation.time.toFixed(3)),
+                y: parseFloat(currentV.toFixed(3))
+            });
+            renderVelocityTableRows();
+            const lastRow = document.querySelector('#tableVelocity tbody tr:last-child');
+            if (lastRow) lastRow.classList.add('data-point-added');
+            document.getElementById('emptyVelocity').style.display = 'none';
+            updateVelocityChart();
+        }
+
+        function renderVelocityTableRows() {
+            const tbody = document.querySelector('#tableVelocity tbody');
+            tbody.innerHTML = '';
+            velocityState.data.forEach((point, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `<td>${index + 1}</td><td>${point.x.toFixed(3)}</td><td>${point.y.toFixed(3)}</td><td><button class="btn-delete-row" title="Delete row">Delete</button></td>`;
+                row.querySelector('.btn-delete-row').addEventListener('click', () => {
+                    velocityState.data.splice(index, 1);
+                    renderVelocityTableRows();
+                    document.getElementById('emptyVelocity').style.display = velocityState.data.length ? 'none' : 'block';
+                    updateVelocityChart();
+                });
+            });
+        }
+
+        function generateVelocitySampleData() {
+            velocityState.data = [];
+            const a = 2;
+            for (let t = 0; t <= 8; t += 1.5) {
+                velocityState.data.push({ x: t, y: Math.max(0, parseFloat(addNoise(a * t, 0.015).toFixed(3))) });
+            }
+            renderVelocityTableRows();
+            document.getElementById('emptyVelocity').style.display = 'none';
+            updateVelocityChart();
+        }
+
+        function clearVelocityData() {
+            velocityState.data = [];
+            renderVelocityTableRows();
+            document.getElementById('emptyVelocity').style.display = 'block';
+            if (velocityChart) {
+                velocityChart.destroy();
+                velocityChart = null;
+            }
+            document.getElementById('interpretationVelocity').textContent = 'Add data points to see the trendline and analysis';
+            renderVelocitySegmentControls([]);
+        }
+
+        function addVelocityManualRow() {
+            const tbody = document.querySelector('#tableVelocity tbody');
+            const existing = tbody.querySelector('.editable-row');
+            if (existing) existing.remove();
+            const row = tbody.insertRow();
+            row.classList.add('editable-row');
+            row.innerHTML = `
+                <td>${velocityState.data.length + 1}</td>
+                <td><input type="number" class="input-x" placeholder="${velocityState.xLabel}" step="any"></td>
+                <td>
+                    <input type="number" class="input-y" placeholder="${velocityState.yLabel}" step="any">
+                    <button class="btn-save-row">Save</button>
+                    <button class="btn-cancel-row">Cancel</button>
+                </td>
+                <td></td>
+            `;
+            document.getElementById('emptyVelocity').style.display = 'none';
+            row.querySelector('.input-x').focus();
+            row.querySelector('.btn-save-row').addEventListener('click', () => {
+                const xInput = row.querySelector('.input-x');
+                const yInput = row.querySelector('.input-y');
+                const x = parseFloat(xInput.value);
+                const y = parseFloat(yInput.value);
+                xInput.style.borderColor = Number.isNaN(x) ? '#dc2626' : '';
+                yInput.style.borderColor = Number.isNaN(y) ? '#dc2626' : '';
+                if (Number.isNaN(x) || Number.isNaN(y)) return;
+                velocityState.data.push({ x, y });
+                renderVelocityTableRows();
+                updateVelocityChart();
+            });
+            row.querySelector('.btn-cancel-row').addEventListener('click', () => {
+                row.remove();
+                document.getElementById('emptyVelocity').style.display = velocityState.data.length ? 'none' : 'block';
+            });
+        }
+
+        function exportVelocityCSVData() {
+            if (!velocityState.data.length) {
+                alert('No data to export!');
+                return;
+            }
+            const rows = [['Trial', velocityState.xLabel, velocityState.yLabel], ...velocityState.data.map((point, index) => [index + 1, point.x, point.y])];
+            const csvContent = rows.map(row => row.join(',')).join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Velocity_vs_Time_data.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        function importVelocityCSVData(file) {
+            const reader = new FileReader();
+            reader.onload = event => {
+                const text = event.target.result.trim();
+                if (!text) return;
+                const lines = text.split(/\r?\n/);
+                const firstLine = lines[0].split(',');
+                const startIndex = Number.isNaN(parseFloat(firstLine[0])) ? 1 : 0;
+                const imported = [];
+                for (let i = startIndex; i < lines.length; i++) {
+                    const parts = lines[i].split(',');
+                    let x;
+                    let y;
+                    if (parts.length >= 3) {
+                        x = parseFloat(parts[1]);
+                        y = parseFloat(parts[2]);
+                    } else if (parts.length >= 2) {
+                        x = parseFloat(parts[0]);
+                        y = parseFloat(parts[1]);
+                    }
+                    if (!Number.isNaN(x) && !Number.isNaN(y)) imported.push({ x, y });
+                }
+                velocityState.data = imported;
+                renderVelocityTableRows();
+                document.getElementById('emptyVelocity').style.display = velocityState.data.length ? 'none' : 'block';
+                updateVelocityChart();
+            };
+            reader.readAsText(file);
+        }
+
+        function calculateLinearFit(data) {
+            if (data.length < 2) return { slope: 0, intercept: 0, r2: 0, equation: 'y = 0' };
+            const n = data.length;
+            const sumX = data.reduce((sum, point) => sum + point.x, 0);
+            const sumY = data.reduce((sum, point) => sum + point.y, 0);
+            const sumXY = data.reduce((sum, point) => sum + point.x * point.y, 0);
+            const sumX2 = data.reduce((sum, point) => sum + point.x * point.x, 0);
+            const denominator = n * sumX2 - sumX * sumX;
+            const slope = denominator === 0 ? 0 : (n * sumXY - sumX * sumY) / denominator;
+            const intercept = (sumY - slope * sumX) / n;
+            const meanY = sumY / n;
+            const ssRes = data.reduce((sum, point) => sum + Math.pow(point.y - (slope * point.x + intercept), 2), 0);
+            const ssTot = data.reduce((sum, point) => sum + Math.pow(point.y - meanY, 2), 0);
+            const r2 = ssTot === 0 ? 1 : 1 - ssRes / ssTot;
+            return { slope, intercept, r2, equation: `y = ${slope.toFixed(3)}x + ${intercept.toFixed(3)}` };
+        }
+
+        function solveLinearSystem(matrix, vector) {
+            const n = vector.length;
+            const a = matrix.map((row, i) => [...row, vector[i]]);
+            for (let i = 0; i < n; i++) {
+                let maxRow = i;
+                for (let k = i + 1; k < n; k++) {
+                    if (Math.abs(a[k][i]) > Math.abs(a[maxRow][i])) maxRow = k;
+                }
+                [a[i], a[maxRow]] = [a[maxRow], a[i]];
+                if (Math.abs(a[i][i]) < 1e-12) return null;
+                for (let k = i + 1; k < n; k++) {
+                    const factor = a[k][i] / a[i][i];
+                    for (let j = i; j <= n; j++) a[k][j] -= factor * a[i][j];
+                }
+            }
+            const solution = new Array(n).fill(0);
+            for (let i = n - 1; i >= 0; i--) {
+                const known = solution.reduce((sum, value, j) => sum + (j > i ? a[i][j] * value : 0), 0);
+                solution[i] = (a[i][n] - known) / a[i][i];
+            }
+            return solution;
+        }
+
+        function calculateQuadraticFit(data) {
+            if (data.length < 3) return { a: 0, b: 0, c: 0, r2: 0, equation: 'y = 0' };
+            const sums = data.reduce((acc, point) => {
+                const x2 = point.x ** 2;
+                acc.x += point.x;
+                acc.x2 += x2;
+                acc.x3 += point.x ** 3;
+                acc.x4 += point.x ** 4;
+                acc.y += point.y;
+                acc.xy += point.x * point.y;
+                acc.x2y += x2 * point.y;
+                return acc;
+            }, { x: 0, x2: 0, x3: 0, x4: 0, y: 0, xy: 0, x2y: 0 });
+            const coeff = solveLinearSystem(
+                [[sums.x4, sums.x3, sums.x2], [sums.x3, sums.x2, sums.x], [sums.x2, sums.x, data.length]],
+                [sums.x2y, sums.xy, sums.y]
+            );
+            if (!coeff) return { a: 0, b: 0, c: 0, r2: 0, equation: 'y = 0' };
+            const [a, b, c] = coeff;
+            const meanY = sums.y / data.length;
+            const ssRes = data.reduce((sum, point) => sum + (point.y - (a * point.x * point.x + b * point.x + c)) ** 2, 0);
+            const ssTot = data.reduce((sum, point) => sum + (point.y - meanY) ** 2, 0);
+            return { a, b, c, r2: ssTot === 0 ? 1 : 1 - ssRes / ssTot, equation: `y = ${a.toFixed(3)}x^2 + ${b.toFixed(3)}x + ${c.toFixed(3)}` };
+        }
+
+        function calculateTransformedFit(data, transformX, transformY, equationBuilder, projector) {
+            const transformed = data
+                .map(point => ({ x: transformX(point.x), y: transformY(point.y), raw: point }))
+                .filter(point => Number.isFinite(point.x) && Number.isFinite(point.y));
+            if (transformed.length < 2) return { k: 0, a: 0, b: 0, r2: 0, equation: 'y = 0' };
+            const fit = calculateLinearFit(transformed);
+            const validRaw = transformed.map(point => point.raw);
+            const meanY = validRaw.reduce((sum, point) => sum + point.y, 0) / validRaw.length;
+            const ssRes = validRaw.reduce((sum, point) => sum + (point.y - projector(point.x, fit)) ** 2, 0);
+            const ssTot = validRaw.reduce((sum, point) => sum + (point.y - meanY) ** 2, 0);
+            return { ...equationBuilder(fit), r2: ssTot === 0 ? 1 : 1 - ssRes / ssTot };
+        }
+
+        function calculateInverseFit(data) {
+            return calculateTransformedFit(data, x => 1 / x, y => y, fit => ({
+                k: fit.slope,
+                intercept: fit.intercept,
+                equation: `y = ${fit.slope.toFixed(3)}/x + ${fit.intercept.toFixed(3)}`
+            }), (x, fit) => fit.slope / x + fit.intercept);
+        }
+
+        function calculateInverseSquareFit(data) {
+            return calculateTransformedFit(data, x => 1 / (x * x), y => y, fit => ({
+                k: fit.slope,
+                intercept: fit.intercept,
+                equation: `y = ${fit.slope.toFixed(3)}/x^2 + ${fit.intercept.toFixed(3)}`
+            }), (x, fit) => fit.slope / (x * x) + fit.intercept);
+        }
+
+        function calculateExponentialFit(data) {
+            return calculateTransformedFit(data, x => x, y => y > 0 ? Math.log(y) : NaN, fit => ({
+                a: Math.exp(fit.intercept),
+                b: fit.slope,
+                equation: `y = ${Math.exp(fit.intercept).toFixed(3)}e^(${fit.slope.toFixed(3)}x)`
+            }), (x, fit) => Math.exp(fit.intercept) * Math.exp(fit.slope * x));
+        }
+
+        function calculateLogarithmicFit(data) {
+            return calculateTransformedFit(data, x => x > 0 ? Math.log(x) : NaN, y => y, fit => ({
+                a: fit.slope,
+                b: fit.intercept,
+                equation: `y = ${fit.slope.toFixed(3)}ln(x) + ${fit.intercept.toFixed(3)}`
+            }), (x, fit) => fit.slope * Math.log(x) + fit.intercept);
+        }
+
+        function calculatePowerNFit(data, n) {
+            return calculateTransformedFit(data, x => x ** n, y => y, fit => ({
+                k: fit.slope,
+                intercept: fit.intercept,
+                n,
+                equation: `y = ${fit.slope.toFixed(3)}x^${n} + ${fit.intercept.toFixed(3)}`
+            }), (x, fit) => fit.slope * (x ** n) + fit.intercept);
+        }
+
+        function calculateFitByType(data, trendType) {
+            if (trendType === 'none') return { equation: '-', r2: 0, _none: true };
+            if (trendType === 'linear') return calculateLinearFit(data);
+            if (trendType === 'quadratic') return calculateQuadraticFit(data);
+            if (trendType === 'inverse') return calculateInverseFit(data);
+            if (trendType === 'inverse_square') return calculateInverseSquareFit(data);
+            if (trendType === 'exponential') return calculateExponentialFit(data);
+            if (trendType === 'logarithmic') return calculateLogarithmicFit(data);
+            if (trendType === 'power2') return calculatePowerNFit(data, 2);
+            if (trendType === 'power3') return calculatePowerNFit(data, 3);
+            if (trendType === 'power4') return calculatePowerNFit(data, 4);
+            return calculateLinearFit(data);
+        }
+
+        function predictY(x, fit, trendType) {
+            if (trendType === 'linear') return fit.slope * x + fit.intercept;
+            if (trendType === 'quadratic') return fit.a * x * x + fit.b * x + fit.c;
+            if (trendType === 'inverse') return x !== 0 ? fit.k / x + (fit.intercept || 0) : null;
+            if (trendType === 'inverse_square') return x !== 0 ? fit.k / (x * x) + (fit.intercept || 0) : null;
+            if (trendType === 'exponential') return fit.a * Math.exp(fit.b * x);
+            if (trendType === 'logarithmic') return x > 0 ? fit.a * Math.log(x) + fit.b : null;
+            if (trendType === 'power2' || trendType === 'power3' || trendType === 'power4') return fit.k * Math.pow(x, fit.n) + (fit.intercept || 0);
+            return null;
+        }
+
+        function generateTrendlineSeries(fit, trendType, minX, maxX) {
+            if (!Number.isFinite(minX) || !Number.isFinite(maxX) || maxX === minX || trendType === 'none') return [];
+            const points = [];
+            const step = (maxX - minX) / 80;
+            for (let x = minX; x <= maxX + step * 0.001; x += step) {
+                const y = predictY(x, fit, trendType);
+                if (y !== null && Number.isFinite(y)) points.push({ x, y });
+            }
+            return points;
+        }
+
+        function normalizeSegments(pointCount) {
+            const maxIndex = Math.max(pointCount - 1, 0);
+            const minSpan = pointCount >= 2 ? 1 : 0;
+            if (!segmentedTrendlineState.segments.length) {
+                segmentedTrendlineState.segments = [{ start: 0, end: minSpan, type: 'linear' }];
+            }
+            segmentedTrendlineState.segments = segmentedTrendlineState.segments.slice(0, 5).map(segment => {
+                let start = clamp(Math.round(segment.start || 0), 0, maxIndex);
+                let end = clamp(Math.round(segment.end || minSpan), 0, maxIndex);
+                if (pointCount >= 2 && end <= start) {
+                    end = clamp(start + 1, 0, maxIndex);
+                    if (end <= start) start = clamp(end - 1, 0, maxIndex);
+                }
+                if (pointCount < 2) {
+                    start = 0;
+                    end = 0;
+                }
+                return {
+                    start,
+                    end,
+                    type: trendlineModeOptions.includes(segment.type) ? segment.type : 'linear'
+                };
+            });
+        }
+
+        function buildPointOptions(sortedData, selectedIndex) {
+            return sortedData.map((point, index) => `<option value="${index}" ${index === selectedIndex ? 'selected' : ''}>P${index + 1} (${point.x.toFixed(3)})</option>`).join('');
+        }
+
+        function buildTypeOptions(selectedType) {
+            return trendlineModeOptions.map(type => `<option value="${type}" ${type === selectedType ? 'selected' : ''}>${trendlineModeLabels[type]}</option>`).join('');
+        }
+
+        function addSegment() {
+            const sortedData = [...state.data].sort((a, b) => a.x - b.x);
+            normalizeSegments(sortedData.length);
+            if (segmentedTrendlineState.segments.length >= 5) return;
+            const last = segmentedTrendlineState.segments[segmentedTrendlineState.segments.length - 1];
+            const start = sortedData.length >= 2 ? clamp(last.end, 0, Math.max(sortedData.length - 2, 0)) : 0;
+            segmentedTrendlineState.segments.push({ start, end: clamp(start + 1, 0, Math.max(sortedData.length - 1, 0)), type: 'linear' });
+            updateChart();
+        }
+
+        function removeSegment(index) {
+            if (segmentedTrendlineState.segments.length <= 1) return;
+            segmentedTrendlineState.segments.splice(index, 1);
+            updateChart();
+        }
+
+        function renderSegmentControls(sortedData) {
+            const container = document.getElementById('segmentControlsDistance');
+            const toggle = document.getElementById('multiTrendlineDistance');
+            segmentedTrendlineState.enabled = !!toggle.checked;
+            container.classList.toggle('active', segmentedTrendlineState.enabled);
+            document.getElementById('trendlineDistance').disabled = segmentedTrendlineState.enabled;
+            if (!segmentedTrendlineState.enabled) {
+                container.innerHTML = '';
+                return;
+            }
+            normalizeSegments(sortedData.length);
+            if (sortedData.length < 2) {
+                container.innerHTML = '<div class="segment-toolbar"><div class="segment-title">Segmented trendline (1-5)</div><button type="button" class="segment-add-btn" disabled>Add segment</button></div><div class="segment-note">Add at least two data points to define segment ranges.</div>';
+                return;
+            }
+            const rows = segmentedTrendlineState.segments.map((segment, index) => `
+                <div class="segment-row" data-segment-index="${index}">
+                    <select class="segment-start">${buildPointOptions(sortedData, segment.start)}</select>
+                    <select class="segment-end">${buildPointOptions(sortedData, segment.end)}</select>
+                    <select class="segment-type">${buildTypeOptions(segment.type)}</select>
+                    <button type="button" class="segment-delete-btn" ${segmentedTrendlineState.segments.length <= 1 ? 'disabled' : ''}>-</button>
+                </div>
+            `).join('');
+            container.innerHTML = `
+                <div class="segment-toolbar">
+                    <div class="segment-title">Segmented trendline (1-5)</div>
+                    <button type="button" class="segment-add-btn" ${segmentedTrendlineState.segments.length >= 5 ? 'disabled' : ''}>Add segment</button>
+                </div>
+                <div class="segment-list">${rows}</div>
+                <div class="segment-note">Each row is Start Point, End Point, and Fit Type.</div>
+            `;
+            container.querySelector('.segment-add-btn').addEventListener('click', addSegment);
+            container.querySelectorAll('.segment-row').forEach(row => {
+                const index = Number(row.dataset.segmentIndex);
+                row.querySelector('.segment-start').addEventListener('change', event => {
+                    segmentedTrendlineState.segments[index].start = Number(event.target.value);
+                    updateChart();
+                });
+                row.querySelector('.segment-end').addEventListener('change', event => {
+                    segmentedTrendlineState.segments[index].end = Number(event.target.value);
+                    updateChart();
+                });
+                row.querySelector('.segment-type').addEventListener('change', event => {
+                    segmentedTrendlineState.segments[index].type = event.target.value;
+                    updateChart();
+                });
+                row.querySelector('.segment-delete-btn').addEventListener('click', () => removeSegment(index));
+            });
+        }
+
+        function normalizeVelocitySegments(pointCount) {
+            const maxIndex = Math.max(pointCount - 1, 0);
+            const minSpan = pointCount >= 2 ? 1 : 0;
+            if (!velocitySegmentedTrendlineState.segments.length) {
+                velocitySegmentedTrendlineState.segments = [{ start: 0, end: minSpan, type: 'linear' }];
+            }
+            velocitySegmentedTrendlineState.segments = velocitySegmentedTrendlineState.segments.slice(0, 5).map(segment => {
+                let start = clamp(Math.round(segment.start || 0), 0, maxIndex);
+                let end = clamp(Math.round(segment.end || minSpan), 0, maxIndex);
+                if (pointCount >= 2 && end <= start) {
+                    end = clamp(start + 1, 0, maxIndex);
+                    if (end <= start) start = clamp(end - 1, 0, maxIndex);
+                }
+                if (pointCount < 2) {
+                    start = 0;
+                    end = 0;
+                }
+                return {
+                    start,
+                    end,
+                    type: trendlineModeOptions.includes(segment.type) ? segment.type : 'linear'
+                };
+            });
+        }
+
+        function addVelocitySegment() {
+            const sortedData = [...velocityState.data].sort((a, b) => a.x - b.x);
+            normalizeVelocitySegments(sortedData.length);
+            if (velocitySegmentedTrendlineState.segments.length >= 5) return;
+            const last = velocitySegmentedTrendlineState.segments[velocitySegmentedTrendlineState.segments.length - 1];
+            const start = sortedData.length >= 2 ? clamp(last.end, 0, Math.max(sortedData.length - 2, 0)) : 0;
+            velocitySegmentedTrendlineState.segments.push({ start, end: clamp(start + 1, 0, Math.max(sortedData.length - 1, 0)), type: 'linear' });
+            updateVelocityChart();
+        }
+
+        function removeVelocitySegment(index) {
+            if (velocitySegmentedTrendlineState.segments.length <= 1) return;
+            velocitySegmentedTrendlineState.segments.splice(index, 1);
+            updateVelocityChart();
+        }
+
+        function renderVelocitySegmentControls(sortedData) {
+            const container = document.getElementById('segmentControlsVelocity');
+            const toggle = document.getElementById('multiTrendlineVelocity');
+            velocitySegmentedTrendlineState.enabled = !!toggle.checked;
+            container.classList.toggle('active', velocitySegmentedTrendlineState.enabled);
+            document.getElementById('trendlineVelocity').disabled = velocitySegmentedTrendlineState.enabled;
+            if (!velocitySegmentedTrendlineState.enabled) {
+                container.innerHTML = '';
+                return;
+            }
+            normalizeVelocitySegments(sortedData.length);
+            if (sortedData.length < 2) {
+                container.innerHTML = '<div class="segment-toolbar"><div class="segment-title">Segmented trendline (1-5)</div><button type="button" class="segment-add-btn" disabled>Add segment</button></div><div class="segment-note">Add at least two data points to define segment ranges.</div>';
+                return;
+            }
+            const rows = velocitySegmentedTrendlineState.segments.map((segment, index) => `
+                <div class="segment-row" data-segment-index="${index}">
+                    <select class="segment-start">${buildPointOptions(sortedData, segment.start)}</select>
+                    <select class="segment-end">${buildPointOptions(sortedData, segment.end)}</select>
+                    <select class="segment-type">${buildTypeOptions(segment.type)}</select>
+                    <button type="button" class="segment-delete-btn" ${velocitySegmentedTrendlineState.segments.length <= 1 ? 'disabled' : ''}>-</button>
+                </div>
+            `).join('');
+            container.innerHTML = `
+                <div class="segment-toolbar">
+                    <div class="segment-title">Segmented trendline (1-5)</div>
+                    <button type="button" class="segment-add-btn" ${velocitySegmentedTrendlineState.segments.length >= 5 ? 'disabled' : ''}>Add segment</button>
+                </div>
+                <div class="segment-list">${rows}</div>
+                <div class="segment-note">Each row is Start Point, End Point, and Fit Type.</div>
+            `;
+            container.querySelector('.segment-add-btn').addEventListener('click', addVelocitySegment);
+            container.querySelectorAll('.segment-row').forEach(row => {
+                const index = Number(row.dataset.segmentIndex);
+                row.querySelector('.segment-start').addEventListener('change', event => {
+                    velocitySegmentedTrendlineState.segments[index].start = Number(event.target.value);
+                    updateVelocityChart();
+                });
+                row.querySelector('.segment-end').addEventListener('change', event => {
+                    velocitySegmentedTrendlineState.segments[index].end = Number(event.target.value);
+                    updateVelocityChart();
+                });
+                row.querySelector('.segment-type').addEventListener('change', event => {
+                    velocitySegmentedTrendlineState.segments[index].type = event.target.value;
+                    updateVelocityChart();
+                });
+                row.querySelector('.segment-delete-btn').addEventListener('click', () => removeVelocitySegment(index));
+            });
+        }
+
+        function updateAnalysis(fit, trendType, segmentFits, useSegments) {
+            const panel = document.getElementById('interpretationDistance');
+            if (useSegments) {
+                if (state.data.length < 2) {
+                    panel.textContent = 'Add at least two data points to compute segmented trendlines.';
+                    return;
+                }
+                if (!segmentFits.length) {
+                    panel.textContent = 'No valid segments yet. Ensure each segment has enough points for its fit type.';
+                    return;
+                }
+                panel.innerHTML = `<div class="segment-analysis-list">${segmentFits.map(segment => `
+                    <div class="segment-analysis-card">
+                        <div class="segment-analysis-header">
+                            <span class="segment-analysis-badge">${segment.index}</span>
+                            <span class="segment-analysis-type">${trendlineModeLabels[segment.type]}</span>
+                        </div>
+                        <div class="segment-analysis-meta">Points P${segment.start + 1} to P${segment.end + 1}</div>
+                        <div class="segment-analysis-row"><div class="segment-analysis-key">Equation</div><div class="segment-analysis-value">${segment.fit.equation}</div></div>
+                        <div class="segment-analysis-row"><div class="segment-analysis-key">R^2</div><div class="segment-analysis-r2">${segment.fit.r2.toFixed(4)}</div></div>
+                    </div>
+                `).join('')}</div>`;
+                return;
+            }
+
+            let interpretation = '';
+            if (trendType === 'none') {
+                interpretation = 'No trendline selected.';
+            } else if (!state.data.length) {
+                interpretation = 'Add data points to see the trendline and analysis';
+            } else if (fit.r2 > 0.95) {
+                interpretation = 'Excellent fit! Strong correlation observed between variables.';
+            } else if (fit.r2 > 0.85) {
+                interpretation = 'Good fit. The relationship is clearly established.';
+            } else if (fit.r2 > 0.70) {
+                interpretation = 'Moderate fit. The relationship exists but with some scatter.';
+            } else {
+                interpretation = 'Weak fit. More data or analysis needed.';
+            }
+            if (state.data.length) {
+                const linearFit = calculateLinearFit(state.data);
+                interpretation += ` The slope of ${linearFit.slope.toFixed(3)} represents the velocity of the object.`;
+            }
+            panel.innerHTML = `
+                <div class="analysis-metrics">
+                    <div class="analysis-metric">
+                        <div class="analysis-metric-label">Equation</div>
+                        <div class="analysis-metric-value">${fit._none ? '-' : fit.equation}</div>
+                    </div>
+                    <div class="analysis-metric">
+                        <div class="analysis-metric-label">R^2 Value</div>
+                        <div class="analysis-metric-value">${fit._none ? '-' : fit.r2.toFixed(4)}</div>
+                    </div>
+                </div>
+                <div class="analysis-interpretation">${interpretation}</div>
+            `;
+        }
+
+        function updateChart() {
+            const canvas = document.getElementById('chartDistance');
+            if (!canvas || !window.Chart) return;
+            if (chart) chart.destroy();
+            const sortedData = [...state.data].sort((a, b) => a.x - b.x);
+            renderSegmentControls(sortedData);
+            const trendType = document.getElementById('trendlineDistance').value;
+            const smoothLine = document.getElementById('smoothLineDistance').checked;
+            const useSegments = document.getElementById('multiTrendlineDistance').checked;
+            const trendlineDatasets = [];
+            const segmentFits = [];
+            let fit = calculateFitByType(sortedData, trendType);
+
+            if (useSegments) {
+                normalizeSegments(sortedData.length);
+                segmentedTrendlineState.segments.forEach((segment, index) => {
+                    const segmentData = sortedData.slice(segment.start, segment.end + 1);
+                    if (segmentData.length < 2 || (segment.type === 'quadratic' && segmentData.length < 3)) return;
+                    const segmentFit = calculateFitByType(segmentData, segment.type);
+                    trendlineDatasets.push({
+                        label: `Trendline ${index + 1}`,
+                        data: generateTrendlineSeries(segmentFit, segment.type, segmentData[0].x, segmentData[segmentData.length - 1].x),
+                        borderColor: segmentPalette[index % segmentPalette.length],
+                        borderWidth: 2.5,
+                        backgroundColor: 'transparent',
+                        pointRadius: 0,
+                        showLine: true,
+                        fill: false,
+                        tension: 0.2
+                    });
+                    segmentFits.push({ index: index + 1, fit: segmentFit, type: segment.type, start: segment.start, end: segment.end });
+                });
+            } else if (trendType !== 'none' && sortedData.length > 0) {
+                trendlineDatasets.push({
+                    label: 'Trendline',
+                    data: generateTrendlineSeries(fit, trendType, sortedData[0].x, sortedData[sortedData.length - 1].x),
+                    borderColor: '#f59e0b',
+                    borderWidth: 2.5,
+                    backgroundColor: 'transparent',
+                    pointRadius: 0,
+                    showLine: true,
+                    fill: false,
+                    tension: 0.3
+                });
+            }
+
+            chart = new Chart(canvas.getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Data Points',
+                        data: sortedData.map((point, index) => ({ x: point.x, y: point.y, _pointId: `P${index + 1}` })),
+                        backgroundColor: 'rgba(37, 99, 235, 0.75)',
+                        borderColor: '#2563eb',
+                        borderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        showLine: smoothLine,
+                        fill: false,
+                        tension: smoothLine ? 0.35 : 0,
+                        cubicInterpolationMode: smoothLine ? 'monotone' : 'default'
+                    }, ...trendlineDatasets]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label(context) {
+                                    const point = context.raw || {};
+                                    const x = typeof point.x === 'number' ? point.x.toFixed(3) : point.x;
+                                    const y = typeof point.y === 'number' ? point.y.toFixed(3) : point.y;
+                                    return point._pointId ? `${point._pointId}: (${x}, ${y})` : `${context.dataset.label}: (${x}, ${y})`;
+                                }
+                            }
+                        },
+                        legend: {
+                            labels: {
+                                color: '#1a202c',
+                                font: { size: 12, weight: '600' },
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: { display: true, text: state.xLabel, color: '#1a202c', font: { weight: '600' } },
+                            ticks: { color: '#64748b' },
+                            grid: { color: 'rgba(37, 99, 235, 0.1)' }
+                        },
+                        y: {
+                            title: { display: true, text: state.yLabel, color: '#1a202c', font: { weight: '600' } },
+                            ticks: { color: '#64748b' },
+                            grid: { color: 'rgba(37, 99, 235, 0.1)' }
+                        }
+                    }
+                }
+            });
+
+            updateAnalysis(fit, trendType, segmentFits, useSegments);
+        }
+
+        function updateVelocityAnalysis(fit, trendType, segmentFits, useSegments) {
+            const panel = document.getElementById('interpretationVelocity');
+            if (useSegments) {
+                if (velocityState.data.length < 2) {
+                    panel.textContent = 'Add at least two data points to compute segmented trendlines.';
+                    return;
+                }
+                if (!segmentFits.length) {
+                    panel.textContent = 'No valid segments yet. Ensure each segment has enough points for its fit type.';
+                    return;
+                }
+                panel.innerHTML = `<div class="segment-analysis-list">${segmentFits.map(segment => `
+                    <div class="segment-analysis-card">
+                        <div class="segment-analysis-header">
+                            <span class="segment-analysis-badge">${segment.index}</span>
+                            <span class="segment-analysis-type">${trendlineModeLabels[segment.type]}</span>
+                        </div>
+                        <div class="segment-analysis-meta">Points P${segment.start + 1} to P${segment.end + 1}</div>
+                        <div class="segment-analysis-row"><div class="segment-analysis-key">Equation</div><div class="segment-analysis-value">${segment.fit.equation}</div></div>
+                        <div class="segment-analysis-row"><div class="segment-analysis-key">R^2</div><div class="segment-analysis-r2">${segment.fit.r2.toFixed(4)}</div></div>
+                    </div>
+                `).join('')}</div>`;
+                return;
+            }
+
+            let interpretation = '';
+            if (trendType === 'none') {
+                interpretation = 'No trendline selected.';
+            } else if (!velocityState.data.length) {
+                interpretation = 'Add data points to see the trendline and analysis';
+            } else if (fit.r2 > 0.95) {
+                interpretation = 'Excellent fit! Strong correlation observed between variables.';
+            } else if (fit.r2 > 0.85) {
+                interpretation = 'Good fit. The relationship is clearly established.';
+            } else if (fit.r2 > 0.70) {
+                interpretation = 'Moderate fit. The relationship exists but with some scatter.';
+            } else {
+                interpretation = 'Weak fit. More data or analysis needed.';
+            }
+            if (velocityState.data.length) {
+                const linearFit = calculateLinearFit(velocityState.data);
+                interpretation += ` The slope of ${linearFit.slope.toFixed(3)} m/s^2 represents acceleration.`;
+            }
+            panel.innerHTML = `
+                <div class="analysis-metrics">
+                    <div class="analysis-metric">
+                        <div class="analysis-metric-label">Equation</div>
+                        <div class="analysis-metric-value">${fit._none ? '-' : fit.equation}</div>
+                    </div>
+                    <div class="analysis-metric">
+                        <div class="analysis-metric-label">R^2 Value</div>
+                        <div class="analysis-metric-value">${fit._none ? '-' : fit.r2.toFixed(4)}</div>
+                    </div>
+                </div>
+                <div class="analysis-interpretation">${interpretation}</div>
+            `;
+        }
+
+        function updateVelocityChart() {
+            const canvas = document.getElementById('chartVelocity');
+            if (!canvas || !window.Chart) return;
+            if (velocityChart) velocityChart.destroy();
+            const sortedData = [...velocityState.data].sort((a, b) => a.x - b.x);
+            renderVelocitySegmentControls(sortedData);
+            const trendType = document.getElementById('trendlineVelocity').value;
+            const smoothLine = document.getElementById('smoothLineVelocity').checked;
+            const useSegments = document.getElementById('multiTrendlineVelocity').checked;
+            const trendlineDatasets = [];
+            const segmentFits = [];
+            let fit = calculateFitByType(sortedData, trendType);
+
+            if (useSegments) {
+                normalizeVelocitySegments(sortedData.length);
+                velocitySegmentedTrendlineState.segments.forEach((segment, index) => {
+                    const segmentData = sortedData.slice(segment.start, segment.end + 1);
+                    if (segmentData.length < 2 || (segment.type === 'quadratic' && segmentData.length < 3)) return;
+                    const segmentFit = calculateFitByType(segmentData, segment.type);
+                    trendlineDatasets.push({
+                        label: `Trendline ${index + 1}`,
+                        data: generateTrendlineSeries(segmentFit, segment.type, segmentData[0].x, segmentData[segmentData.length - 1].x),
+                        borderColor: segmentPalette[index % segmentPalette.length],
+                        borderWidth: 2.5,
+                        backgroundColor: 'transparent',
+                        pointRadius: 0,
+                        showLine: true,
+                        fill: false,
+                        tension: 0.2
+                    });
+                    segmentFits.push({ index: index + 1, fit: segmentFit, type: segment.type, start: segment.start, end: segment.end });
+                });
+            } else if (trendType !== 'none' && sortedData.length > 0) {
+                trendlineDatasets.push({
+                    label: 'Trendline',
+                    data: generateTrendlineSeries(fit, trendType, sortedData[0].x, sortedData[sortedData.length - 1].x),
+                    borderColor: '#f59e0b',
+                    borderWidth: 2.5,
+                    backgroundColor: 'transparent',
+                    pointRadius: 0,
+                    showLine: true,
+                    fill: false,
+                    tension: 0.3
+                });
+            }
+
+            velocityChart = new Chart(canvas.getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Data Points',
+                        data: sortedData.map((point, index) => ({ x: point.x, y: point.y, _pointId: `P${index + 1}` })),
+                        backgroundColor: 'rgba(37, 99, 235, 0.75)',
+                        borderColor: '#2563eb',
+                        borderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        showLine: smoothLine,
+                        fill: false,
+                        tension: smoothLine ? 0.35 : 0,
+                        cubicInterpolationMode: smoothLine ? 'monotone' : 'default'
+                    }, ...trendlineDatasets]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label(context) {
+                                    const point = context.raw || {};
+                                    const x = typeof point.x === 'number' ? point.x.toFixed(3) : point.x;
+                                    const y = typeof point.y === 'number' ? point.y.toFixed(3) : point.y;
+                                    return point._pointId ? `${point._pointId}: (${x}, ${y})` : `${context.dataset.label}: (${x}, ${y})`;
+                                }
+                            }
+                        },
+                        legend: {
+                            labels: {
+                                color: '#1a202c',
+                                font: { size: 12, weight: '600' },
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: { display: true, text: velocityState.xLabel, color: '#1a202c', font: { weight: '600' } },
+                            ticks: { color: '#64748b' },
+                            grid: { color: 'rgba(37, 99, 235, 0.1)' }
+                        },
+                        y: {
+                            title: { display: true, text: velocityState.yLabel, color: '#1a202c', font: { weight: '600' } },
+                            ticks: { color: '#64748b' },
+                            grid: { color: 'rgba(37, 99, 235, 0.1)' }
+                        }
+                    }
+                }
+            });
+
+            updateVelocityAnalysis(fit, trendType, segmentFits, useSegments);
+        }
+
+        function switchModule(moduleName) {
+            document.querySelectorAll('.module-container').forEach(module => {
+                module.classList.toggle('active', module.dataset.module === moduleName);
+            });
+            document.querySelectorAll('.module-switch-btn').forEach(button => {
+                button.classList.toggle('active', button.dataset.moduleTarget === moduleName);
+            });
+            const activeGraph = document.querySelector(`.module-container[data-module="${moduleName}"] .tab-content[data-tab="graph"].active`);
+            if (activeGraph && moduleName === 'distance') setTimeout(updateChart, 50);
+            if (activeGraph && moduleName === 'velocity') setTimeout(updateVelocityChart, 50);
+        }
+
+        function switchTab(moduleName, tabName) {
+            const container = document.querySelector(`.module-container[data-module="${moduleName}"]`);
+            if (!container) return;
+
+            container.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.tab === tabName);
+            });
+            container.querySelectorAll('.tab-btn').forEach(button => {
+                button.classList.toggle('active', button.dataset.tab === tabName);
+            });
+            if (moduleName === 'distance' && tabName === 'graph') setTimeout(updateChart, 50);
+            if (moduleName === 'velocity' && tabName === 'graph') setTimeout(updateVelocityChart, 50);
+        }
+
+        function bindControls() {
+            document.querySelectorAll('.module-switch-btn').forEach(button => {
+                button.addEventListener('click', () => switchModule(button.dataset.moduleTarget));
+            });
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const container = button.closest('.module-container');
+                    if (!container) return;
+                    switchTab(container.dataset.module, button.dataset.tab);
+                });
+            });
+            document.getElementById('playDistance').addEventListener('click', playSimulation);
+            document.getElementById('pauseDistance').addEventListener('click', () => {
+                state.simulation.isPlaying = false;
+                setAddDataResumeState(false);
+            });
+            document.getElementById('resetDistance').addEventListener('click', resetSimulation);
+            document.querySelectorAll('input[name="distMode"]').forEach(radio => {
+                radio.addEventListener('change', event => handleModeChange(event.target.value));
+            });
+
+            const velocitySlider = document.getElementById('velocitySlider');
+            const velocityInput = document.getElementById('velocityInput');
+            const accelSlider = document.getElementById('distAccelSlider');
+            const accelInput = document.getElementById('distAccelInput');
+
+            function syncVelocity(value) {
+                const parsed = parseFloat(value);
+                if (Number.isNaN(parsed)) {
+                    velocitySlider.value = state.simulation.velocity;
+                    velocityInput.value = state.simulation.velocity;
+                    return;
+                }
+                const v = clamp(parsed, parseFloat(velocitySlider.min), parseFloat(velocitySlider.max));
+                state.simulation.velocity = v;
+                velocitySlider.value = v;
+                velocityInput.value = v;
+                document.getElementById('velocityValue').textContent = v;
+                if (!state.simulation.justReset && state.simulation.mode === 'neg_velocity') state.simulation.modeStartVelocity = -Math.abs(v);
+                if (!state.simulation.justReset && state.simulation.mode === 'pos_velocity') state.simulation.modeStartVelocity = Math.abs(v);
+                updateDistanceSVG();
+            }
+
+            function syncAcceleration(value) {
+                const parsed = parseFloat(value);
+                if (Number.isNaN(parsed)) {
+                    accelSlider.value = state.simulation.acceleration;
+                    accelInput.value = state.simulation.acceleration;
+                    return;
+                }
+                const a = clamp(parsed, parseFloat(accelSlider.min), parseFloat(accelSlider.max));
+                state.simulation.acceleration = a;
+                accelSlider.value = a;
+                accelInput.value = a;
+                document.getElementById('distAccelValue').textContent = a;
+                updateDistanceSVG();
+            }
+
+            velocitySlider.addEventListener('input', event => syncVelocity(event.target.value));
+            velocityInput.addEventListener('change', event => syncVelocity(event.target.value));
+            accelSlider.addEventListener('input', event => syncAcceleration(event.target.value));
+            accelInput.addEventListener('change', event => syncAcceleration(event.target.value));
+            document.getElementById('addDataDistance').addEventListener('click', () => {
+                const button = document.getElementById('addDataDistance');
+                if (button.dataset.state === 'resume') {
+                    state.simulation.isPlaying = true;
+                    setAddDataResumeState(false);
+                    return;
+                }
+                addDataPoint();
+                state.simulation.isPlaying = false;
+                setAddDataResumeState(true);
+            });
+
+            document.getElementById('generateDataDistance').addEventListener('click', generateSampleData);
+            document.getElementById('clearDataDistance').addEventListener('click', clearData);
+            document.getElementById('addRowDistance').addEventListener('click', addManualRow);
+            document.getElementById('importCSVDistance').addEventListener('click', () => document.getElementById('csvInputDistance').click());
+            document.getElementById('csvInputDistance').addEventListener('change', event => {
+                if (event.target.files[0]) importCSVData(event.target.files[0]);
+                event.target.value = '';
+            });
+            document.getElementById('exportCSVDistance').addEventListener('click', exportCSVData);
+            document.getElementById('trendlineDistance').addEventListener('change', updateChart);
+            document.getElementById('smoothLineDistance').addEventListener('change', updateChart);
+            document.getElementById('multiTrendlineDistance').addEventListener('change', updateChart);
+
+            document.getElementById('playVelocity').addEventListener('click', playVelocitySimulation);
+            document.getElementById('pauseVelocity').addEventListener('click', () => {
+                velocityState.simulation.isPlaying = false;
+                setVelocityAddDataResumeState(false);
+            });
+            document.getElementById('resetVelocity').addEventListener('click', resetVelocitySimulation);
+            document.querySelectorAll('input[name="velMode"]').forEach(radio => {
+                radio.addEventListener('change', event => handleVelocityModeChange(event.target.value));
+            });
+
+            const velVelocitySlider = document.getElementById('velVelocitySlider');
+            const velVelocityInput = document.getElementById('velVelocityInput');
+            const velAccelSlider = document.getElementById('velAccelSlider');
+            const velAccelInput = document.getElementById('velAccelInput');
+
+            function syncVelocityModuleVelocity(value) {
+                const parsed = parseFloat(value);
+                if (Number.isNaN(parsed)) {
+                    velVelocitySlider.value = velocityState.simulation.velocity;
+                    velVelocityInput.value = velocityState.simulation.velocity;
+                    return;
+                }
+                const v = clamp(parsed, parseFloat(velVelocitySlider.min), parseFloat(velVelocitySlider.max));
+                velocityState.simulation.velocity = v;
+                velVelocitySlider.value = v;
+                velVelocityInput.value = v;
+                document.getElementById('velVelocityValue').textContent = v;
+                if (!velocityState.simulation.justReset && velocityState.simulation.mode === 'neg_velocity') velocityState.simulation.modeStartVelocity = -Math.abs(v);
+                if (!velocityState.simulation.justReset && velocityState.simulation.mode === 'pos_velocity') velocityState.simulation.modeStartVelocity = Math.abs(v);
+                updateVelocitySVG();
+            }
+
+            function syncVelocityModuleAcceleration(value) {
+                const parsed = parseFloat(value);
+                if (Number.isNaN(parsed)) {
+                    velAccelSlider.value = velocityState.simulation.acceleration;
+                    velAccelInput.value = velocityState.simulation.acceleration;
+                    return;
+                }
+                const a = clamp(parsed, parseFloat(velAccelSlider.min), parseFloat(velAccelSlider.max));
+                velocityState.simulation.acceleration = a;
+                velAccelSlider.value = a;
+                velAccelInput.value = a;
+                document.getElementById('velAccelValue').textContent = a;
+                updateVelocitySVG();
+            }
+
+            velVelocitySlider.addEventListener('input', event => syncVelocityModuleVelocity(event.target.value));
+            velVelocityInput.addEventListener('change', event => syncVelocityModuleVelocity(event.target.value));
+            velAccelSlider.addEventListener('input', event => syncVelocityModuleAcceleration(event.target.value));
+            velAccelInput.addEventListener('change', event => syncVelocityModuleAcceleration(event.target.value));
+            document.getElementById('addDataVelocity').addEventListener('click', () => {
+                const button = document.getElementById('addDataVelocity');
+                if (button.dataset.state === 'resume') {
+                    velocityState.simulation.isPlaying = true;
+                    setVelocityAddDataResumeState(false);
+                    return;
+                }
+                addVelocityDataPoint();
+                velocityState.simulation.isPlaying = false;
+                setVelocityAddDataResumeState(true);
+            });
+
+            document.getElementById('generateDataVelocity').addEventListener('click', generateVelocitySampleData);
+            document.getElementById('clearDataVelocity').addEventListener('click', clearVelocityData);
+            document.getElementById('addRowVelocity').addEventListener('click', addVelocityManualRow);
+            document.getElementById('importCSVVelocity').addEventListener('click', () => document.getElementById('csvInputVelocity').click());
+            document.getElementById('csvInputVelocity').addEventListener('change', event => {
+                if (event.target.files[0]) importVelocityCSVData(event.target.files[0]);
+                event.target.value = '';
+            });
+            document.getElementById('exportCSVVelocity').addEventListener('click', exportVelocityCSVData);
+            document.getElementById('trendlineVelocity').addEventListener('change', updateVelocityChart);
+            document.getElementById('smoothLineVelocity').addEventListener('change', updateVelocityChart);
+            document.getElementById('multiTrendlineVelocity').addEventListener('change', updateVelocityChart);
+        }
+
+        window.addEventListener('load', () => {
+            if (window.lucide) lucide.createIcons();
+            bindControls();
+            document.getElementById('emptyDistance').style.display = 'block';
+            document.getElementById('emptyVelocity').style.display = 'block';
+            updateDistanceSVG();
+            updateVelocitySVG();
+            distanceAnimationLoop();
+            velocityAnimationLoop();
+        });
+  </script>
+ </body>
+</html>

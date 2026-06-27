@@ -49,8 +49,10 @@
 
       <!-- Video container (shown after upload) -->
       <div id="video-container" class="video-container hidden">
-        <video id="video-el" preload="metadata" playsinline></video>
-        <canvas id="overlay-canvas"></canvas>
+        <div id="video-stage" class="video-stage">
+          <video id="video-el" preload="metadata" playsinline></video>
+          <canvas id="overlay-canvas"></canvas>
+        </div>
       </div>
 
       <!-- Video controls (shown after upload) -->
@@ -84,6 +86,22 @@
             <span class="overlay-icon">👁</span> Hide Overlay
           </button>
           <span class="overlay-hint">Toggle markers, axes &amp; trajectory visibility</span>
+        </div>
+        <div class="ctrl-row zoom-row">
+          <label for="zoom-slider" class="zoom-label">Zoom</label>
+          <input type="range" id="zoom-slider" class="zoom-slider" min="100" max="300" value="100" step="25">
+          <span id="zoom-value" class="zoom-value">100%</span>
+          <div class="pan-pad" aria-label="Pan zoomed video">
+            <span></span>
+            <button id="btn-pan-up" class="ctrl-btn pan-btn" type="button" title="Pan up">&uarr;</button>
+            <span></span>
+            <button id="btn-pan-left" class="ctrl-btn pan-btn" type="button" title="Pan left">&larr;</button>
+            <button id="btn-reset-zoom" class="ctrl-btn pan-btn" type="button" title="Reset zoom">&#8962;</button>
+            <button id="btn-pan-right" class="ctrl-btn pan-btn" type="button" title="Pan right">&rarr;</button>
+            <span></span>
+            <button id="btn-pan-down" class="ctrl-btn pan-btn" type="button" title="Pan down">&darr;</button>
+            <span></span>
+          </div>
         </div>
       </div>
 

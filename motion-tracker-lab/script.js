@@ -9,6 +9,7 @@
 // ============================================================
 const App = {
   // DOM refs (populated in init)
+  stageEl:  null,
   videoEl:   null,
   canvasEl:  null,
   ctx:       null,
@@ -45,6 +46,13 @@ const App = {
   // Overlay visibility
   showOverlay: true,
 
+  // Zoom and pan state for the visible video/canvas viewport
+  zoom: 1,
+  panX: 0,
+  panY: 0,
+  displayW: 0,
+  displayH: 0,
+
   // Axis drag state
   dragging:   null,   // null | 'x-axis' | 'y-axis'
   _dragMoved: false,  // suppress click after a drag
@@ -59,6 +67,7 @@ const App = {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  App.stageEl  = document.getElementById('video-stage');
   App.videoEl  = document.getElementById('video-el');
   App.canvasEl = document.getElementById('overlay-canvas');
   App.ctx      = App.canvasEl.getContext('2d');
@@ -70,6 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTrackingEvents();
   setupResultEvents();
   setupInfoModals();
+  window.addEventListener('resize', () => {
+    if (!App.videoLoaded) return;
+    sizeCanvas();
+    drawCanvas();
+  });
 
   updateWorkflow();
   setStatus('Upload a video or load sample video to begin.');
@@ -157,6 +171,7 @@ function onVideoMetadata() {
 function sizeCanvas() {
   const video  = App.videoEl;
   const container = document.getElementById('video-container');
+  const stage = App.stageEl;
   const maxW   = container.parentElement.clientWidth || 800;
   const maxH   = 460;
   const vw     = video.videoWidth  || 800;
@@ -176,8 +191,14 @@ function sizeCanvas() {
   // Match video display
   video.style.width  = w + 'px';
   video.style.height = h + 'px';
+  stage.style.width  = w + 'px';
+  stage.style.height = h + 'px';
   container.style.width  = w + 'px';
   container.style.height = h + 'px';
+  App.displayW = w;
+  App.displayH = h;
+  clampPan();
+  applyZoomPan();
 }
 
 // ============================================================
@@ -189,6 +210,13 @@ function setupControlEvents() {
   document.getElementById('btn-next-frame').addEventListener('click', () => stepFrame(+1));
   document.getElementById('btn-reset-video').addEventListener('click', resetToStart);
   document.getElementById('btn-toggle-overlay').addEventListener('click', toggleOverlay);
+  document.getElementById('zoom-slider').addEventListener('input', e => setZoom(parseInt(e.target.value, 10) / 100));
+  document.getElementById('btn-reset-zoom').addEventListener('click', resetZoom);
+  document.getElementById('btn-pan-up').addEventListener('click', () => panZoom(0, getPanStep()));
+  document.getElementById('btn-pan-down').addEventListener('click', () => panZoom(0, -getPanStep()));
+  document.getElementById('btn-pan-left').addEventListener('click', () => panZoom(getPanStep(), 0));
+  document.getElementById('btn-pan-right').addEventListener('click', () => panZoom(-getPanStep(), 0));
+  updateZoomControls();
 
   const scrubber = document.getElementById('scrubber');
   scrubber.addEventListener('input', () => {
@@ -228,6 +256,72 @@ function resetToStart() {
   if (!App.videoLoaded || App.isSampleMode) return;
   App.videoEl.pause();
   App.videoEl.currentTime = 0;
+}
+
+function setZoom(zoom) {
+  App.zoom = Math.max(1, Math.min(3, zoom || 1));
+  if (App.zoom === 1) {
+    App.panX = 0;
+    App.panY = 0;
+  }
+  clampPan();
+  applyZoomPan();
+  updateZoomControls();
+}
+
+function resetZoom() {
+  App.zoom = 1;
+  App.panX = 0;
+  App.panY = 0;
+  applyZoomPan();
+  updateZoomControls();
+}
+
+function panZoom(dx, dy) {
+  if (App.zoom <= 1) return;
+  App.panX += dx;
+  App.panY += dy;
+  clampPan();
+  applyZoomPan();
+  updateZoomControls();
+}
+
+function getPanStep() {
+  const base = Math.min(App.displayW || 600, App.displayH || 400);
+  return Math.max(20, Math.round(base * 0.12));
+}
+
+function getPanLimits() {
+  return {
+    x: Math.max(0, ((App.displayW || 0) * App.zoom - (App.displayW || 0)) / 2),
+    y: Math.max(0, ((App.displayH || 0) * App.zoom - (App.displayH || 0)) / 2)
+  };
+}
+
+function clampPan() {
+  const limits = getPanLimits();
+  App.panX = Math.max(-limits.x, Math.min(limits.x, App.panX));
+  App.panY = Math.max(-limits.y, Math.min(limits.y, App.panY));
+}
+
+function applyZoomPan() {
+  if (!App.stageEl) return;
+  App.stageEl.style.transform = `translate(${App.panX}px, ${App.panY}px) scale(${App.zoom})`;
+}
+
+function updateZoomControls() {
+  const slider = document.getElementById('zoom-slider');
+  const value = document.getElementById('zoom-value');
+  if (slider) slider.value = Math.round(App.zoom * 100);
+  if (value) value.textContent = `${Math.round(App.zoom * 100)}%`;
+
+  const panDisabled = App.zoom <= 1;
+  ['btn-pan-up', 'btn-pan-down', 'btn-pan-left', 'btn-pan-right', 'btn-reset-zoom'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = id === 'btn-reset-zoom'
+      ? App.zoom === 1 && App.panX === 0 && App.panY === 0
+      : panDisabled;
+  });
 }
 
 function updatePlayBtn() {
@@ -1440,6 +1534,11 @@ function resetAll(silent = false) {
   App.points        = [];
   App.velocities    = [];
   App.accelerations = [];
+  App.zoom          = 1;
+  App.panX          = 0;
+  App.panY          = 0;
+  App.displayW      = 0;
+  App.displayH      = 0;
   App.cal           = {
     scale:  { p1:null, p2:null, realDist:null, unit:'m', pixelsPerUnit:null, done:false },
     origin: { point:null, done:false },
@@ -1452,6 +1551,12 @@ function resetAll(silent = false) {
   App.videoEl.src = '';
   App.videoEl.style.width  = '';
   App.videoEl.style.height = '';
+  if (App.stageEl) {
+    App.stageEl.style.width = '';
+    App.stageEl.style.height = '';
+    applyZoomPan();
+  }
+  updateZoomControls();
 
   document.getElementById('upload-area').classList.remove('hidden');
   document.getElementById('video-container').classList.add('hidden');
