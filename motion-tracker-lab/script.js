@@ -1301,7 +1301,7 @@ function updateChart(graphType) {
     } else if (fitType === 'quadratic' && xData.length >= 3) {
       fitResult = fitQuadratic(xData, yData);
     } else if (fitType === 'quadratic') {
-      showModal('Not Enough Points', 'At least 3 points are required for a quadratic fit.');
+      showFitPending('Quadratic fit will appear after at least 3 graphable points are tracked.');
     }
 
     if (fitResult) {
@@ -1354,6 +1354,12 @@ function updateChart(graphType) {
   });
 
   updateWorkflow();
+}
+
+function showFitPending(message) {
+  const panel = document.getElementById('fit-panel');
+  panel.textContent = message;
+  panel.classList.remove('hidden');
 }
 
 function showFitResult(type, result, xLabel, yLabel, graphType) {
