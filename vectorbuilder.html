@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en"><head><script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260629-05-f19f4d2"}');</script><script src="/_sdk/e4192b04afde3ce7.telemetry_sdk.js" integrity="sha512-4eZpyKBd3YJnsIPrIpaBqo7QT5UZ6+KSFXkSu1IQiB7jKM8y67ChRhZ5Yh6JfuOJCbPdISiNcS6nLKZzIMG1uQ=="></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Vector Builder</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    body { font-family: 'DM Sans', sans-serif; touch-action: none; }
+    .btn-control { transition: all 0.15s ease; }
+    .btn-control:active { transform: scale(0.95); }
+    .btn-mode-active { background: #1e293b; color: #fff; }
+    .btn-mode-inactive { background: #f1f5f9; color: #64748b; }
+    .btn-sub-active { background: #3b82f6; color: #fff; }
+    .btn-sub-inactive { background: #e2e8f0; color: #475569; }
+    .vector-item { transition: background 0.1s; }
+    .vector-item:hover { background: #f1f5f9; }
+    .vector-item.selected { background: #dbeafe; }
+  </style>
+  <script src="/_sdk/48bf7c4c70d0d03c.data_sdk.js" type="text/javascript" integrity="sha512-e/yrQJz+prdXXt4yUvxXhl1WBGu3BRkP8X0fipGXI5gqiFClI7wI6K3TQnD7d63vx+BVhwzIvY6r8OrpX7lXJA=="></script>
+  <script src="/_sdk/5d8c692e132d2125.resizing_sdk.js" type="text/javascript" integrity="sha512-/Du3Fqe12kKsCd3BrbaNQEPtMxQi9S5hbJhnTf09AAilpqYsGa4N0rnimSX1Ui4dwNElKlen6VlI+E1n/NEfrA=="></script>
+ </head>
+ <body data-template-id="__page-root" class="min-h-screen w-full overflow-hidden flex flex-col" style="background: linear-gradient(135deg, rgb(248, 250, 252), rgb(241, 245, 249));">
+  <header class="flex items-center justify-between px-4 py-3 md:px-6 flex-wrap gap-2">
+   <h1 data-template-id="app-title" class="canva-text text-2xl md:text-3xl font-bold" style="color: rgb(30, 41, 59); font-weight: 700; font-style: normal; font-size: 32px;">Vector Builder</h1>
+   <div class="flex gap-2 items-center"><button id="mode-single" class="btn-control px-3 py-2 rounded-lg text-sm font-semibold btn-mode-active" onclick="setMode('single')">Vector</button> <button id="mode-addition" class="btn-control px-3 py-2 rounded-lg text-sm font-semibold btn-mode-inactive" onclick="setMode('addition')">Addition</button>
+   </div>
+  </header>
+  <div id="sub-mode-bar" class="px-4 md:px-6 pb-2 flex gap-2"><button id="sub-add" class="btn-control px-3 py-1.5 rounded-md text-xs font-semibold btn-sub-active" onclick="setSubMode('add')">Add</button> <button id="sub-edit" class="btn-control px-3 py-1.5 rounded-md text-xs font-semibold btn-sub-inactive" onclick="setSubMode('edit')">Edit</button> <button id="sub-info" class="btn-control px-3 py-1.5 rounded-md text-xs font-semibold btn-sub-inactive" onclick="setSubMode('info')">Info</button>
+  </div>
+  <main class="flex-1 flex flex-col lg:flex-row gap-3 px-4 pb-4 md:px-6 min-h-0">
+   <div class="flex-1 relative min-h-0">
+    <canvas id="canvas" class="w-full h-full rounded-xl shadow-2xl bg-white cursor-crosshair block"></canvas>
+   </div>
+   <aside class="w-full lg:w-72 flex flex-col gap-3 shrink-0 overflow-hidden">
+    <div data-template-id="info-panel" class="canva-panel rounded-xl p-4 space-y-3" style="background: rgb(248, 250, 252); color: rgb(30, 41, 59);">
+     <h2 data-template-id="info-title" class="canva-text font-bold text-lg" style="color: rgb(71, 85, 105); font-weight: 700; font-style: normal; font-size: 24px;">Vector Info</h2>
+     <div id="info-content" class="space-y-2 text-sm font-mono">
+      <div class="flex justify-between">
+       <span class="opacity-70">X Component</span><span id="val-x" class="font-bold">0.00</span>
+      </div>
+      <div class="flex justify-between">
+       <span class="opacity-70">Y Component</span><span id="val-y" class="font-bold">0.00</span>
+      </div>
+      <div class="flex justify-between">
+       <span class="opacity-70">Magnitude (r)</span><span id="val-r" class="font-bold">0.00</span>
+      </div>
+      <div class="flex justify-between">
+       <span class="opacity-70">Angle (θ)</span><span id="val-angle" class="font-bold">0.00°</span>
+      </div>
+     </div>
+     <div id="addition-info" class="hidden space-y-2 text-sm font-mono border-t border-slate-200 pt-3 mt-3">
+      <p class="font-bold text-blue-600 text-xs uppercase tracking-wider">Resultant</p>
+      <div class="flex justify-between">
+       <span class="opacity-70">X</span><span id="res-x" class="font-bold">0.00</span>
+      </div>
+      <div class="flex justify-between">
+       <span class="opacity-70">Y</span><span id="res-y" class="font-bold">0.00</span>
+      </div>
+      <div class="flex justify-between">
+       <span class="opacity-70">Magnitude</span><span id="res-r" class="font-bold">0.00</span>
+      </div>
+      <div class="flex justify-between">
+       <span class="opacity-70">Angle</span><span id="res-angle" class="font-bold">0.00°</span>
+      </div>
+     </div>
+    </div>
+    <div id="vector-list-panel" class="hidden rounded-xl bg-white border border-slate-200 p-3 overflow-y-auto max-h-48">
+     <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Vectors</p>
+     <div id="vector-list" class="space-y-1"></div>
+     <p id="vector-list-empty" class="text-xs text-slate-400 italic">No vectors yet. Use Add mode.</p>
+    </div>
+    <div class="grid grid-cols-2 gap-2"><button data-template-id="btn-reset" class="canva-button btn-control rounded-lg py-3 font-semibold text-sm" onclick="resetAll()" style="background: rgb(239, 68, 68); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 16px;">Reset</button> <button data-template-id="btn-snap" class="canva-button btn-control rounded-lg py-3 font-semibold text-sm" onclick="toggleSnap()" style="background: rgb(59, 130, 246); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 16px;">Snap to Grid</button> <button data-template-id="btn-components" class="canva-button btn-control rounded-lg py-3 font-semibold text-sm" onclick="toggleComponents()" style="background: rgb(99, 102, 241); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 16px;">Components</button> <button data-template-id="btn-angle" class="canva-button btn-control rounded-lg py-3 font-semibold text-sm" onclick="toggleAngle()" style="background: rgb(139, 92, 246); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 16px;">Angle</button> <button data-template-id="btn-grid" class="canva-button btn-control rounded-lg py-3 font-semibold text-sm col-span-2" onclick="toggleGrid()" style="background: rgb(100, 116, 139); color: rgb(255, 255, 255); font-weight: 600; font-style: normal; font-size: 16px;">Toggle Grid</button>
+    </div>
+   </aside>
+  </main>
+  <script src="/_sdk/222d5a595d1ea7ba.editing_sdk.js" integrity="sha512-+eUQhAMYoBwLPVWl3qwUfHhQeNM4ejU4XowINDMcqsaOwqt9uw0YaoGtGcOm1aWn4O0sfUcOk3TSof/bgT1OKQ=="></script>
+  <script>
+    lucide.createIcons();
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let mode = 'single';
+    let subMode = 'add';
+    let snap = false, showComponents = true, showAngle = true, showGrid = true;
+    let dragging = false;
+
+    // Single mode vectors
+    let singleVectors = [];
+    // Addition mode vectors
+    let additionVectors = [];
+    let nextSingleId = 1;
+    let nextAddId = 1;
+    let selectedIdx = -1;
+    let scale = 40;
+    let origin = {x:0, y:0};
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      origin = {x: rect.width/2, y: rect.height/2};
+      draw();
+    }
+    window.addEventListener('resize', resize);
+    setTimeout(resize, 50);
+
+    function currentVectors() { return mode === 'single' ? singleVectors : additionVectors; }
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById('mode-single').className = `btn-control px-3 py-2 rounded-lg text-sm font-semibold ${m==='single'?'btn-mode-active':'btn-mode-inactive'}`;
+      document.getElementById('mode-addition').className = `btn-control px-3 py-2 rounded-lg text-sm font-semibold ${m==='addition'?'btn-mode-active':'btn-mode-inactive'}`;
+      document.getElementById('sub-mode-bar').classList.remove('hidden');
+      document.getElementById('addition-info').classList.toggle('hidden', m==='single');
+      selectedIdx = -1;
+      updateListVisibility(); renderList(); updateInfo(); draw();
+    }
+
+    function setSubMode(s) {
+      subMode = s;
+      ['add','edit','info'].forEach(k => {
+        document.getElementById('sub-'+k).className = `btn-control px-3 py-1.5 rounded-md text-xs font-semibold ${k===s?'btn-sub-active':'btn-sub-inactive'}`;
+      });
+      canvas.style.cursor = s==='add' ? 'crosshair' : 'default';
+      selectedIdx = -1;
+      updateListVisibility(); renderList(); updateInfo(); draw();
+    }
+
+    function updateListVisibility() {
+      const show = subMode==='edit' || subMode==='info';
+      document.getElementById('vector-list-panel').classList.toggle('hidden', !show);
+    }
+
+    function renderList() {
+      const container = document.getElementById('vector-list');
+      const empty = document.getElementById('vector-list-empty');
+      const vecs = currentVectors();
+      container.innerHTML = '';
+      empty.classList.toggle('hidden', vecs.length > 0);
+      vecs.forEach((v, idx) => {
+        const div = document.createElement('div');
+        div.className = `vector-item flex justify-between items-center px-2 py-1.5 rounded cursor-pointer text-sm ${idx===selectedIdx?'selected':''}`;
+        div.textContent = `V${v.id}`;
+        const span = document.createElement('span');
+        span.className = 'text-xs text-slate-400 font-mono';
+        span.textContent = `(${v.x.toFixed(1)}, ${v.y.toFixed(1)})`;
+        div.appendChild(span);
+        if (subMode === 'edit') {
+          const del = document.createElement('button');
+          del.className = 'text-red-400 hover:text-red-600 ml-2 text-xs font-bold';
+          del.textContent = '✕';
+          del.onclick = (e) => { e.stopPropagation(); vecs.splice(idx, 1); if(selectedIdx>=vecs.length) selectedIdx=-1; renderList(); updateInfo(); draw(); };
+          div.appendChild(del);
+        }
+        div.onclick = () => { selectedIdx = idx; renderList(); updateInfo(); draw(); };
+        container.appendChild(div);
+      });
+    }
+
+    function resetAll() {
+      if (mode==='single') { singleVectors=[]; nextSingleId=1; }
+      else { additionVectors=[]; nextAddId=1; }
+      selectedIdx=-1; renderList(); updateInfo(); draw();
+    }
+
+    function toggleSnap() { snap=!snap; draw(); }
+    function toggleComponents() { showComponents=!showComponents; draw(); }
+    function toggleAngle() { showAngle=!showAngle; draw(); }
+    function toggleGrid() { showGrid=!showGrid; draw(); }
+
+    function getCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      let x = (clientX - rect.left - origin.x) / scale;
+      let y = -(clientY - rect.top - origin.y) / scale;
+      if (snap) { x=Math.round(x); y=Math.round(y); }
+      return {x, y};
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      canvas.setPointerCapture(e.pointerId);
+      const c = getCoords(e);
+      const vecs = currentVectors();
+
+      if (subMode==='add') {
+        dragging = true;
+        const id = mode==='single' ? nextSingleId++ : nextAddId++;
+        vecs.push({id, x: c.x, y: c.y});
+        selectedIdx = vecs.length - 1;
+        renderList();
+      } else if (subMode==='edit' && selectedIdx >= 0) {
+        dragging = true;
+        vecs[selectedIdx] = {...vecs[selectedIdx], x: c.x, y: c.y};
+      }
+      updateInfo(); draw();
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      e.preventDefault();
+      const c = getCoords(e);
+      const vecs = currentVectors();
+      if (subMode==='add' && vecs.length > 0) {
+        const last = vecs[vecs.length-1];
+        vecs[vecs.length-1] = {...last, x: c.x, y: c.y};
+      } else if (subMode==='edit' && selectedIdx >= 0) {
+        vecs[selectedIdx] = {...vecs[selectedIdx], x: c.x, y: c.y};
+      }
+      updateInfo(); draw();
+    });
+
+    canvas.addEventListener('pointerup', () => { dragging=false; renderList(); });
+
+    function updateInfo() {
+      const vecs = currentVectors();
+      let v = {x:0, y:0};
+      if (selectedIdx >= 0 && vecs[selectedIdx]) v = vecs[selectedIdx];
+      else if (vecs.length > 0) v = vecs[vecs.length-1];
+
+      const r = Math.sqrt(v.x*v.x + v.y*v.y);
+      const angle = Math.atan2(v.y, v.x) * 180 / Math.PI;
+      document.getElementById('val-x').textContent = v.x.toFixed(2);
+      document.getElementById('val-y').textContent = v.y.toFixed(2);
+      document.getElementById('val-r').textContent = r.toFixed(2);
+      document.getElementById('val-angle').textContent = angle.toFixed(1)+'°';
+
+      if (mode==='addition') {
+        let rx=0, ry=0;
+        additionVectors.forEach(vec => { rx+=vec.x; ry+=vec.y; });
+        const rr=Math.sqrt(rx*rx+ry*ry), ra=Math.atan2(ry,rx)*180/Math.PI;
+        document.getElementById('res-x').textContent=rx.toFixed(2);
+        document.getElementById('res-y').textContent=ry.toFixed(2);
+        document.getElementById('res-r').textContent=rr.toFixed(2);
+        document.getElementById('res-angle').textContent=ra.toFixed(1)+'°';
+      }
+    }
+
+    function draw() {
+      const w = canvas.width/devicePixelRatio, h = canvas.height/devicePixelRatio;
+      ctx.clearRect(0,0,w,h);
+
+      if (showGrid) {
+        ctx.strokeStyle='rgba(100,116,139,0.1)'; ctx.lineWidth=1;
+        for (let i=-20;i<=20;i++) {
+          const px=origin.x+i*scale, py=origin.y+i*scale;
+          ctx.beginPath();ctx.moveTo(px,0);ctx.lineTo(px,h);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(0,py);ctx.lineTo(w,py);ctx.stroke();
+        }
+      }
+
+      ctx.strokeStyle='rgba(51,65,85,0.6)'; ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(0,origin.y);ctx.lineTo(w,origin.y);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(origin.x,0);ctx.lineTo(origin.x,h);ctx.stroke();
+
+      ctx.fillStyle='rgba(51,65,85,0.7)'; ctx.font='12px DM Sans'; ctx.textAlign='center';
+      for (let i=-10;i<=10;i++) {
+        if(i===0) continue;
+        ctx.fillText(i, origin.x+i*scale, origin.y+16);
+        ctx.fillText(i, origin.x-16, origin.y-i*scale+4);
+      }
+
+      const colors=['#ff6b6b','#4ecdc4','#ffd93d','#a78bfa','#34d399','#f472b6','#fb923c','#38bdf8'];
+
+      function drawVector(vx,vy,color,label,highlight) {
+        if(vx===0&&vy===0) return;
+        const px=origin.x+vx*scale, py=origin.y-vy*scale;
+        if (showComponents) {
+          ctx.setLineDash([6,4]); ctx.strokeStyle=color+'60'; ctx.lineWidth=2;
+          ctx.beginPath();ctx.moveTo(px,origin.y);ctx.lineTo(px,py);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(origin.x,py);ctx.lineTo(px,py);ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        if (showAngle) {
+          const a=Math.atan2(vy,vx);
+          ctx.strokeStyle=color+'80'; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.arc(origin.x,origin.y,30,0,-a,a>0); ctx.stroke();
+        }
+        ctx.strokeStyle=color; ctx.lineWidth=highlight?4:3;
+        ctx.beginPath();ctx.moveTo(origin.x,origin.y);ctx.lineTo(px,py);ctx.stroke();
+        const a2=Math.atan2(-vy,vx), hl=14;
+        ctx.fillStyle=color; ctx.beginPath();
+        ctx.moveTo(px,py);
+        ctx.lineTo(px-hl*Math.cos(a2-0.4),py-hl*Math.sin(a2-0.4));
+        ctx.lineTo(px-hl*Math.cos(a2+0.4),py-hl*Math.sin(a2+0.4));
+        ctx.closePath();ctx.fill();
+        if(label){ctx.fillStyle=color;ctx.font='bold 14px DM Sans';ctx.textAlign='left';ctx.fillText(label,px+10,py-10);}
+      }
+
+      const vecs = currentVectors();
+
+      if (mode==='single') {
+        vecs.forEach((v,idx) => {
+          drawVector(v.x, v.y, colors[idx%colors.length], 'V'+v.id, idx===selectedIdx);
+        });
+      } else {
+        // Draw each addition vector
+        vecs.forEach((v,idx) => {
+          drawVector(v.x, v.y, colors[idx%colors.length], 'V'+v.id, idx===selectedIdx);
+        });
+        // Draw resultant
+        if (vecs.length >= 2) {
+          let rx=0, ry=0;
+          vecs.forEach(v => { rx+=v.x; ry+=v.y; });
+          if (rx!==0||ry!==0) {
+            // Draw tip-to-tail chain
+            ctx.setLineDash([4,4]); ctx.strokeStyle='rgba(100,116,139,0.3)'; ctx.lineWidth=1.5;
+            let cx=origin.x, cy=origin.y;
+            vecs.forEach(v => {
+              const nx=cx+v.x*scale, ny=cy-v.y*scale;
+              ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(nx,ny);ctx.stroke();
+              cx=nx; cy=ny;
+            });
+            ctx.setLineDash([]);
+            drawVector(rx, ry, '#10b981', 'R', false);
+          }
+        }
+      }
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a135d061c3a0cc5a',t:'MTc4Mjc0NTM2NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+</body></html>
