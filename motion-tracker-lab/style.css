@@ -858,6 +858,49 @@ table#data-table {
   margin-top: 12px;
 }
 
+.modal-docs {
+  max-width: 720px;
+}
+
+.docs-body {
+  max-height: min(68vh, 620px);
+  overflow-y: auto;
+}
+
+.docs-section {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.docs-section:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.docs-section h4 {
+  color: var(--text);
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.docs-section ul,
+.docs-section ol {
+  padding-left: 20px;
+}
+
+.docs-section li {
+  margin-bottom: 4px;
+}
+
+.citation-text {
+  color: var(--text);
+  background: #F8FAFC;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin: 6px 0;
+}
+
 /* ============================================================
    RESPONSIVE
    ============================================================ */

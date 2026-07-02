@@ -18,6 +18,7 @@
       </div>
       <div class="header-actions">
         <button id="btn-show-workflow" class="btn btn-outline">🧭 Workflow</button>
+        <button id="btn-show-docs"     class="btn btn-outline">Documentation</button>
         <button id="btn-load-sample"   class="btn btn-outline">🎥 Load Sample Video</button>
         <button id="btn-reset-all"     class="btn btn-danger-outline">🔄 Reset All</button>
       </div>
@@ -287,6 +288,102 @@
       </div>
       <div class="modal-ftr">
         <button class="btn btn-primary info-close" data-target="modal-workflow">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DOCUMENTATION MODAL ===== -->
+  <div id="modal-docs" class="modal-overlay hidden">
+    <div class="modal modal-info modal-docs">
+      <div class="modal-hdr">
+        <h3>Motion Tracker Lab Documentation</h3>
+        <button class="modal-close info-close" data-target="modal-docs">✕</button>
+      </div>
+      <div class="modal-body docs-body">
+        <section class="docs-section">
+          <h4>About</h4>
+          <ul>
+            <li><strong>Version:</strong> 1.0</li>
+            <li><strong>Website:</strong> <a href="https://www.inanolab.com/motiontracker.html" target="_blank" rel="noopener">https://www.inanolab.com/motiontracker.html</a></li>
+            <li><strong>Developer / Programmer:</strong> Dr. James Salveo Olarve</li>
+            <li><strong>Affiliation:</strong> i-Nano Research Facility, De La Salle University Manila</li>
+          </ul>
+        </section>
+
+        <section class="docs-section">
+          <h4>Citation Recommendation</h4>
+          <p>If you use Motion Tracker in academic work:</p>
+          <p class="citation-text">Olarve, J. S. L. (2026). Motion Tracker. i-Nano Research Facility, De La Salle University Manila. Retrieved from https://www.inanolab.com/motiontracker.html</p>
+          <p>Updated citation will be provided once DOI is assigned.</p>
+        </section>
+
+        <section class="docs-section">
+          <h4>Purpose</h4>
+          <p>Motion Tracker Lab is a browser-based physics video analysis tool for manually tracking the motion of an object in a video. It helps users convert video observations into calibrated position, velocity, acceleration, tables, graphs, and curve fits.</p>
+        </section>
+
+        <section class="docs-section">
+          <h4>Target Users</h4>
+          <ul>
+            <li>Physics students collecting position-time data from real videos.</li>
+            <li>Physics teachers and laboratory instructors running mechanics activities.</li>
+            <li>STEM learners working on classroom, home, or remote experiments.</li>
+            <li>Schools that need a no-install browser tool for shared devices.</li>
+          </ul>
+        </section>
+
+        <section class="docs-section">
+          <h4>Common Use Cases</h4>
+          <ul>
+            <li>Projectile motion analysis from tossed balls or launched objects.</li>
+            <li>Cart acceleration on ramps and other constant-acceleration experiments.</li>
+            <li>Pendulum, oscillation, and simple collision investigations.</li>
+            <li>Exporting experimental motion data for reports or spreadsheets.</li>
+          </ul>
+        </section>
+
+        <section class="docs-section">
+          <h4>Core Workflow</h4>
+          <ol>
+            <li>Upload a video file or load the built-in sample video.</li>
+            <li>Set scale using two video points with a known real-world distance.</li>
+            <li>Set the coordinate origin.</li>
+            <li>Set the positive x-axis direction and coordinate convention.</li>
+            <li>Track the object's position frame by frame.</li>
+            <li>Review the data table, graphs, and optional curve fits.</li>
+            <li>Export data as CSV, copy table data, or export a graph image.</li>
+          </ol>
+        </section>
+
+        <section class="docs-section">
+          <h4>Main Features</h4>
+          <ul>
+            <li>Local video loading for MP4, WebM, and browser-supported MOV files.</li>
+            <li>Frame stepping, playback controls, scrubber, and configurable FPS.</li>
+            <li>Scale, origin, and axis calibration with physics or screen coordinates.</li>
+            <li>Manual point tracking with optional auto-advance.</li>
+            <li>Overlay markers for calibration, axes, tracked points, and trajectory.</li>
+            <li>Zoom and pan controls for precise point selection.</li>
+            <li>Data table with time, pixel coordinates, real coordinates, and velocities.</li>
+            <li>Graphs for position, trajectory, velocity, and acceleration.</li>
+            <li>Linear and quadratic fits with R-squared and physics interpretations.</li>
+            <li>CSV export, graph PNG export, and clipboard copy.</li>
+          </ul>
+        </section>
+
+        <section class="docs-section">
+          <h4>Limitations</h4>
+          <ul>
+            <li>Tracking is manual; automatic object detection is not included.</li>
+            <li>The app is designed for one tracked object at a time.</li>
+            <li>Accuracy depends on correct FPS selection, video quality, and click precision.</li>
+            <li>Large videos and some MOV codecs may not load smoothly in every browser.</li>
+            <li>Measurement uncertainty and graph error bars are not currently included.</li>
+          </ul>
+        </section>
+      </div>
+      <div class="modal-ftr">
+        <button class="btn btn-primary info-close" data-target="modal-docs">Close</button>
       </div>
     </div>
   </div>

@@ -1666,6 +1666,9 @@ function setupInfoModals() {
   document.getElementById('btn-show-workflow').addEventListener('click', () => {
     document.getElementById('modal-workflow').classList.remove('hidden');
   });
+  document.getElementById('btn-show-docs').addEventListener('click', () => {
+    document.getElementById('modal-docs').classList.remove('hidden');
+  });
 
   // Close buttons inside each modal (✕ and Close button share .info-close)
   document.querySelectorAll('.info-close').forEach(btn => {
@@ -1675,7 +1678,7 @@ function setupInfoModals() {
   });
 
   // Click outside the modal box to dismiss
-  ['modal-workflow'].forEach(id => {
+  ['modal-workflow', 'modal-docs'].forEach(id => {
     document.getElementById(id).addEventListener('click', e => {
       if (e.target === document.getElementById(id)) {
         document.getElementById(id).classList.add('hidden');
