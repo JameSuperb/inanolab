@@ -513,8 +513,8 @@
         case 'ellipse': createEllipse(); break;
         case 'two': createTwoCircles(); break;
         case 'brain':
-          // Load brain image preset from assets
-          loadPresetImage('assets/dlsuclass/brain.png');
+          // Load brain image preset from the site image folder
+          loadPresetImage('../Images/brain.jpg');
           // Toggle active state for buttons, then return to avoid premature render
           presetBtns.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.preset === preset);
