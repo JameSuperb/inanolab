@@ -41,6 +41,24 @@ body{font-family:'Cascadia Code','Consolas','Monaco','Courier New',monospace;fon
 .esym{color:#1a7a3a;white-space:pre;padding-left:4px;font-weight:500}
 .eerr{color:var(--err)}
 .einfo{color:var(--dim);font-style:italic}
+.plotbox{margin:8px 0 12px 4px;width:100%;max-width:760px;background:#fff;border:1px solid var(--border);
+  border-radius:7px;overflow:hidden;box-shadow:0 2px 10px rgba(30,107,56,.08)}
+.plothead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;
+  background:#edf5ed;border-bottom:1px solid var(--border);padding:7px 10px}
+.plotinfo{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.plottitle{color:var(--accent);font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.plotmeta{color:var(--dim);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%;flex-shrink:0}
+.plotsave{background:transparent;border:1px solid var(--accent);border-radius:5px;color:var(--accent);
+  cursor:pointer;font:inherit;font-size:11px;font-weight:700;padding:3px 8px;white-space:nowrap}
+.plotsave:hover{background:var(--accent);color:#fff}
+.plotcanvas{display:block;width:100%;height:auto;background:#fff}
+@media(max-width:520px){
+  #out{padding-left:10px;padding-right:10px}
+  .plotbox{margin-left:0}
+  .plothead{align-items:flex-start}
+  .plotinfo{flex-direction:column;align-items:flex-start;gap:2px}
+  .plotmeta{max-width:100%;white-space:normal}
+}
 .eblank{height:8px}
 #inbar{
   border-top:2px solid var(--accent);
@@ -228,11 +246,13 @@ body{font-family:'Cascadia Code','Consolas','Monaco','Courier New',monospace;fon
     <nav id="doc-nav">
       <div class="dnav-grp">Overview</div>
       <button class="dnav dact" data-sec="gs">Getting Started</button>
+      <button class="dnav" data-sec="dabout">About</button>
       <div class="dnav-grp">Mathematics</div>
       <button class="dnav" data-sec="dnumeric">Numeric Operations</button>
       <button class="dnav" data-sec="dmatrix">Matrix &amp; Linear Algebra</button>
       <button class="dnav" data-sec="dsymbolic">Symbolic Math</button>
       <button class="dnav" data-sec="deqsys">System of Equations</button>
+      <button class="dnav" data-sec="dgraph">Graphing</button>
       <div class="dnav-grp">Reference</div>
       <button class="dnav" data-sec="dcmds">Constants &amp; Commands</button>
     </nav>
@@ -241,7 +261,7 @@ body{font-family:'Cascadia Code','Consolas','Monaco','Courier New',monospace;fon
       <!-- ── Getting Started ── -->
       <div class="dsec dact" id="gs">
         <h3>Getting Started</h3>
-        <p>Calcario is a browser-based mathematical computing environment that supports both <strong>numerical</strong> and <strong>symbolic</strong> calculations — no installation required. It is powered by <strong>Math.js</strong> for numeric/matrix work and <strong>Algebrite</strong> (a JavaScript CAS) for symbolic algebra and calculus.</p>
+        <p>Calcario is a browser-based educational scientific calculator and math workspace for doing numerical, matrix, symbolic, equation-solving, and graphing tasks directly from a terminal-style interface. It can be used by students and teachers to evaluate expressions, work with matrices, solve algebraic or linear systems, perform calculus operations like differentiation and integration, plot functions, save graph images, and explore math concepts without installing separate software.</p>
 
         <h4>The Interface</h4>
         <ul>
@@ -288,7 +308,26 @@ body{font-family:'Cascadia Code','Consolas','Monaco','Courier New',monospace;fon
         <div class="dnote">💡 Variables persist for the entire browser session. Use <code>clear all</code> to reset the workspace.</div>
       </div>
 
-      <!-- ── Numeric Operations ── -->
+      <!-- About -->
+      <div class="dsec" id="dabout">
+        <h3>About</h3>
+        <p>Calcario is a browser-based educational scientific calculator and math workspace for doing numerical, matrix, symbolic, equation-solving, and graphing tasks directly from a terminal-style interface. It can be used by students and teachers to evaluate expressions, work with matrices, solve algebraic or linear systems, perform calculus operations like differentiation and integration, plot functions, save graph images, and explore math concepts without installing separate software.</p>
+
+        <h4>Application Information</h4>
+        <table class="dftbl">
+          <tr><th>Item</th><th>Details</th><th>Reference</th></tr>
+          <tr><td>Version</td><td>1.0</td><td>Initial public version</td></tr>
+          <tr><td>Website</td><td>https://www.inanolab.com/calcario.html</td><td>Official web app page</td></tr>
+          <tr><td>Developer / Programmer</td><td>Dr. James Salveo Olarve</td><td>Author and maintainer</td></tr>
+          <tr><td>Affiliation</td><td>i-Nano Research Facility, De La Salle University Manila</td><td>Institutional affiliation</td></tr>
+        </table>
+
+        <h4>Citation Recommendation</h4>
+        <p>If you use Calcario in academic work, please cite it as:</p>
+        <pre>Olarve, J. S. L. (2026). Calcario. i-Nano Research Facility, De La Salle University Manila. Retrieved from https://www.inanolab.com/calcario.html</pre>
+        <div class="dnote">Updated citation details will be provided once a DOI is assigned.</div>
+      </div>
+
       <div class="dsec" id="dnumeric">
         <h3>Numeric Operations</h3>
         <p>All numeric operations use <strong>Math.js</strong> under the hood. Results are floating-point numbers (IEEE 754 double precision, ~15 significant digits).</p>
@@ -585,6 +624,37 @@ body{font-family:'Cascadia Code','Consolas','Monaco','Courier New',monospace;fon
       </div>
 
       <!-- ── Constants & Commands ── -->
+      <!-- Graphing -->
+      <div class="dsec" id="dgraph">
+        <h3>Graphing</h3>
+        <p>Calcario can plot a single real-valued function of <code>x</code> directly in the terminal. Graphs are rendered as canvas images with automatic y-axis scaling, grid lines, tick labels, and axes when zero is visible.</p>
+
+        <h4>Basic Syntax</h4>
+        <pre><span class="pr">&gt;&gt;</span> plot(expression, xmin, xmax)</pre>
+        <p>The expression is evaluated across the x-range using Math.js. Bounds may use constants or existing numeric variables.</p>
+
+        <h4>Examples</h4>
+        <pre><span class="pr">&gt;&gt;</span> plot(sin(x), -10, 10)
+<span class="pr">&gt;&gt;</span> plot(cos(x), 0, 2*pi)
+<span class="pr">&gt;&gt;</span> plot(x^2 - 4*x + 3, -2, 6)
+<span class="pr">&gt;&gt;</span> plot(1/x, -5, 5)
+<span class="pr">&gt;&gt;</span> a = 2
+<span class="pr">&gt;&gt;</span> plot(a*x + 1, -10, 10)</pre>
+
+        <h4>Saved Images</h4>
+        <p>Each graph includes a <strong>Save PNG</strong> button. Click it to download that graph as a PNG image file for reports, worksheets, or presentations.</p>
+
+        <h4>Behavior</h4>
+        <ul>
+          <li>Only one function is supported per plot command in this version.</li>
+          <li>Invalid values such as <code>NaN</code>, <code>Inf</code>, and non-real complex results are skipped.</li>
+          <li>Large jumps are split into separate curve segments, which helps functions like <code>tan(x)</code> and <code>1/x</code>.</li>
+          <li>The graph redraws automatically when the browser window changes size.</li>
+        </ul>
+
+        <div class="dnote">Use <code>plot(expr, xmin, xmax)</code> for numeric graphing. Symbolic declarations are still useful for algebra, but graph expressions should evaluate to real numbers over the selected range.</div>
+      </div>
+
       <div class="dsec" id="dcmds">
         <h3>Constants &amp; Commands</h3>
 
@@ -719,6 +789,10 @@ class Engine {
     const bi=this._builtin(expr);
     if(bi!==null) return {...bi,sup};
 
+    if(/^plot\b/i.test(expr)){
+      return this._plot(expr,sup);
+    }
+
     const sm=expr.match(/^syms\s+(.+)$/);
     if(sm){
       const vars=sm[1].trim().split(/\s+/);
@@ -769,6 +843,198 @@ class Engine {
       return {k:'info',msg:`Cleared '${v}'.`};
     }
     return null;
+  }
+
+  _plot(expr,sup){
+    const m=expr.match(/^plot\s*\(([\s\S]*)\)\s*$/i);
+    if(!m){
+      return {k:'err',msg:'Invalid plot syntax. Use plot(expression, xmin, xmax).'};
+    }
+
+    const parsed=this._splitTopLevelArgs(m[1]);
+    if(parsed.k==='err') return parsed;
+    const args=parsed.args;
+    if(args.length!==3){
+      return {k:'err',msg:`plot expects 3 arguments: plot(expression, xmin, xmax). Received ${args.length}.`};
+    }
+
+    const [fnExpr,xMinExpr,xMaxExpr]=args.map(a=>a.trim());
+    if(!fnExpr){
+      return {k:'err',msg:'plot expression is empty. Use plot(expression, xmin, xmax).'};
+    }
+    if(/^\[.*\]$/.test(fnExpr)){
+      return {k:'err',msg:'Multiple-function plots are planned for a later phase. For now, use one expression.'};
+    }
+
+    const xMin=this._evalPlotBound(xMinExpr,'xmin');
+    if(xMin.k==='err') return xMin;
+    const xMax=this._evalPlotBound(xMaxExpr,'xmax');
+    if(xMax.k==='err') return xMax;
+    if(xMin.value>=xMax.value){
+      return {k:'err',msg:'plot range must have xmin less than xmax.'};
+    }
+
+    const sampled=this._samplePlot(fnExpr,xMin.value,xMax.value);
+    if(sampled.k==='err') return sampled;
+
+    return {
+      k:'plot',
+      expr:fnExpr,
+      xMin:xMin.value,
+      xMax:xMax.value,
+      xMinExpr,
+      xMaxExpr,
+      samples:sampled.samples,
+      validCount:sampled.validCount,
+      invalidCount:sampled.invalidCount,
+      segments:sampled.segments,
+      yMin:sampled.yMin,
+      yMax:sampled.yMax,
+      viewYMin:sampled.viewYMin,
+      viewYMax:sampled.viewYMax,
+      sup
+    };
+  }
+
+  _splitTopLevelArgs(src){
+    const args=[];
+    let cur='';
+    const stack=[];
+    const pairs={'(':')','[':']','{':'}'};
+    const closers=new Set(Object.values(pairs));
+    for(let i=0;i<src.length;i++){
+      const ch=src[i];
+      if(ch===','&&stack.length===0){
+        args.push(cur.trim());
+        cur='';
+        continue;
+      }
+      if(pairs[ch]){
+        stack.push(pairs[ch]);
+      }else if(closers.has(ch)){
+        if(stack.pop()!==ch){
+          return {k:'err',msg:'plot arguments contain mismatched brackets or parentheses.'};
+        }
+      }
+      cur+=ch;
+    }
+    if(stack.length){
+      return {k:'err',msg:'plot arguments contain unclosed brackets or parentheses.'};
+    }
+    args.push(cur.trim());
+    return {k:'ok',args};
+  }
+
+  _evalPlotBound(expr,label){
+    if(!expr){
+      return {k:'err',msg:`plot ${label} is empty. Use plot(expression, xmin, xmax).`};
+    }
+    try{
+      const value=math.evaluate(expr,this.scope);
+      if(typeof value!=='number'||!isFinite(value)){
+        return {k:'err',msg:`plot ${label} must evaluate to a finite number.`};
+      }
+      return {k:'ok',value};
+    }catch(e){
+      return {k:'err',msg:`plot ${label} could not be evaluated: ${this._cleanErr(e.message)}`};
+    }
+  }
+
+  _samplePlot(expr,xMin,xMax){
+    const sampleCount=501;
+    let compiled;
+    try{
+      compiled=math.compile(expr);
+    }catch(e){
+      return {k:'err',msg:`plot expression could not be parsed: ${this._cleanErr(e.message)}`};
+    }
+
+    const samples=[];
+    let firstErr=null;
+    for(let i=0;i<sampleCount;i++){
+      const x=xMin+(xMax-xMin)*i/(sampleCount-1);
+      const point={x,y:null,ok:false};
+      try{
+        const y=this._plotNumber(compiled.evaluate({...this.scope,x}));
+        if(y!==null){
+          point.y=y;
+          point.ok=true;
+        }
+      }catch(e){
+        if(!firstErr) firstErr=this._cleanErr(e.message);
+      }
+      samples.push(point);
+    }
+
+    const ys=samples.filter(p=>p.ok).map(p=>p.y);
+    if(!ys.length){
+      const detail=firstErr?` Last error: ${firstErr}`:'';
+      return {k:'err',msg:`plot expression produced no finite real values.${detail}`};
+    }
+
+    const sorted=[...ys].sort((a,b)=>a-b);
+    const yMin=sorted[0],yMax=sorted[sorted.length-1];
+    const low=this._percentile(sorted,.02);
+    const high=this._percentile(sorted,.98);
+    const robustRange=Math.max(high-low,1e-9);
+    const jumpLimit=Math.max(10,robustRange*4);
+    const segments=[];
+    let cur=[],prev=null;
+    for(const p of samples){
+      if(!p.ok){
+        if(cur.length) segments.push(cur);
+        cur=[]; prev=null;
+        continue;
+      }
+      if(prev&&Math.abs(p.y-prev.y)>jumpLimit){
+        if(cur.length) segments.push(cur);
+        cur=[];
+      }
+      cur.push(p);
+      prev=p;
+    }
+    if(cur.length) segments.push(cur);
+
+    let viewYMin=low,viewYMax=high;
+    if(viewYMin===viewYMax){
+      const pad=Math.max(1,Math.abs(viewYMin)*.1);
+      viewYMin-=pad;
+      viewYMax+=pad;
+    }else{
+      const pad=(viewYMax-viewYMin)*.08;
+      viewYMin-=pad;
+      viewYMax+=pad;
+    }
+
+    return {
+      k:'ok',
+      samples,
+      validCount:ys.length,
+      invalidCount:samples.length-ys.length,
+      segments,
+      yMin,
+      yMax,
+      viewYMin,
+      viewYMax
+    };
+  }
+
+  _plotNumber(v){
+    if(typeof v==='number'){
+      return isFinite(v)?v:null;
+    }
+    if(v&&v.re!==undefined&&v.im!==undefined){
+      return Math.abs(v.im)<1e-12&&isFinite(v.re)?v.re:null;
+    }
+    return null;
+  }
+
+  _percentile(sorted,p){
+    if(!sorted.length) return 0;
+    const idx=(sorted.length-1)*p;
+    const lo=Math.floor(idx),hi=Math.ceil(idx);
+    if(lo===hi) return sorted[lo];
+    return sorted[lo]+(sorted[hi]-sorted[lo])*(idx-lo);
   }
 
   _needsSym(expr){
@@ -1012,6 +1278,7 @@ class Term {
       this._run(cmd);this.$inp.focus();
     });
     document.addEventListener('click',e=>{if(!e.target.closest('#runbtn'))this.$inp.focus();});
+    window.addEventListener('resize',()=>this._schedulePlotResize());
     this.$inp.focus();
   }
 
@@ -1081,6 +1348,11 @@ class Term {
           this._add('eres',`${label}:\n${r.lines}`);
         }
         break;
+      case 'plot':
+        if(!r.sup){
+          this._addPlot(r);
+        }
+        break;
       case 'err': this._add('eerr',`error: ${r.msg}`); break;
     }
   }
@@ -1091,6 +1363,175 @@ class Term {
     const el=document.createElement('div');
     el.className=`e ${cls}`; el.textContent=text;
     this.$out.appendChild(el);
+  }
+
+  _addPlot(r){
+    const wrap=document.createElement('div');
+    wrap.className='e plotbox';
+    const range=`x: ${this.eng.fmtVal(r.xMin)} to ${this.eng.fmtVal(r.xMax)} | y: ${this.eng.fmtVal(r.viewYMin)} to ${this.eng.fmtVal(r.viewYMax)}`;
+    const head=document.createElement('div');
+    head.className='plothead';
+    const info=document.createElement('div');
+    info.className='plotinfo';
+    const title=document.createElement('div');
+    title.className='plottitle';
+    title.textContent=`plot: ${r.expr}`;
+    const meta=document.createElement('div');
+    meta.className='plotmeta';
+    meta.textContent=range;
+    const save=document.createElement('button');
+    save.className='plotsave';
+    save.type='button';
+    save.textContent='Save PNG';
+    info.appendChild(title);
+    info.appendChild(meta);
+    head.appendChild(info);
+    head.appendChild(save);
+    wrap.appendChild(head);
+    const canvas=document.createElement('canvas');
+    canvas.className='plotcanvas';
+    wrap.appendChild(canvas);
+    this.$out.appendChild(wrap);
+    canvas._plotData=r;
+    this._resizePlot(canvas);
+    save.addEventListener('click',e=>{
+      e.stopPropagation();
+      this._savePlot(canvas,r);
+    });
+  }
+
+  _schedulePlotResize(){
+    clearTimeout(this._plotResizeTimer);
+    this._plotResizeTimer=setTimeout(()=>{
+      this.$out.querySelectorAll('.plotcanvas').forEach(c=>{
+        if(c._plotData) this._resizePlot(c);
+      });
+    },120);
+  }
+
+  _resizePlot(canvas){
+    const box=canvas.closest('.plotbox');
+    const available=(box&&box.clientWidth)||this.$out.clientWidth;
+    const width=Math.max(220,Math.min(740,available));
+    const height=Math.max(170,Math.round(width*.55));
+    this._drawPlot(canvas,canvas._plotData,width,height);
+  }
+
+  _savePlot(canvas,r){
+    try{
+      const a=document.createElement('a');
+      a.href=canvas.toDataURL('image/png');
+      a.download=this._plotFilename(r);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      this.$inp.focus();
+    }catch(e){
+      this._add('eerr','error: Could not save plot image.');
+      this.$inp.focus();
+    }
+  }
+
+  _plotFilename(r){
+    const stamp=new Date().toISOString().replace(/[:T]/g,'-').replace(/\..+$/,'');
+    const expr=r.expr.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,36)||'plot';
+    return `calcario-${expr}-${stamp}.png`;
+  }
+
+  _drawPlot(canvas,r,width,height){
+    const dpr=window.devicePixelRatio||1;
+    canvas.style.width=width+'px';
+    canvas.style.height=height+'px';
+    canvas.width=Math.round(width*dpr);
+    canvas.height=Math.round(height*dpr);
+    const ctx=canvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,width,height);
+
+    const pad={l:54,r:18,t:18,b:38};
+    const gw=width-pad.l-pad.r,gh=height-pad.t-pad.b;
+    const xMin=r.xMin,xMax=r.xMax,yMin=r.viewYMin,yMax=r.viewYMax;
+    const xToPx=x=>pad.l+(x-xMin)/(xMax-xMin)*gw;
+    const yToPx=y=>pad.t+(yMax-y)/(yMax-yMin)*gh;
+
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,width,height);
+    ctx.fillStyle='#f7fbf7';
+    ctx.fillRect(pad.l,pad.t,gw,gh);
+
+    const xTicks=this._ticks(xMin,xMax,6);
+    const yTicks=this._ticks(yMin,yMax,5);
+    ctx.font='11px Cascadia Code, Consolas, monospace';
+    ctx.lineWidth=1;
+    ctx.strokeStyle='#d7e6d7';
+    ctx.fillStyle='#5a7a5a';
+    ctx.textAlign='center';
+    ctx.textBaseline='top';
+    for(const x of xTicks){
+      const px=xToPx(x);
+      ctx.beginPath();ctx.moveTo(px,pad.t);ctx.lineTo(px,pad.t+gh);ctx.stroke();
+      ctx.fillText(this._tickLabel(x),px,pad.t+gh+7);
+    }
+    ctx.textAlign='right';
+    ctx.textBaseline='middle';
+    for(const y of yTicks){
+      const py=yToPx(y);
+      ctx.beginPath();ctx.moveTo(pad.l,py);ctx.lineTo(pad.l+gw,py);ctx.stroke();
+      ctx.fillText(this._tickLabel(y),pad.l-8,py);
+    }
+
+    ctx.strokeStyle='#789878';
+    ctx.lineWidth=1.2;
+    if(xMin<=0&&xMax>=0){
+      const px=xToPx(0);
+      ctx.beginPath();ctx.moveTo(px,pad.t);ctx.lineTo(px,pad.t+gh);ctx.stroke();
+    }
+    if(yMin<=0&&yMax>=0){
+      const py=yToPx(0);
+      ctx.beginPath();ctx.moveTo(pad.l,py);ctx.lineTo(pad.l+gw,py);ctx.stroke();
+    }
+    ctx.strokeStyle='#9ec29e';
+    ctx.strokeRect(pad.l,pad.t,gw,gh);
+
+    ctx.strokeStyle='#1e6b38';
+    ctx.lineWidth=2;
+    ctx.lineJoin='round';
+    ctx.lineCap='round';
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(pad.l,pad.t,gw,gh);
+    ctx.clip();
+    for(const seg of r.segments){
+      if(seg.length<2) continue;
+      ctx.beginPath();
+      seg.forEach((p,i)=>{
+        const px=xToPx(p.x),py=yToPx(p.y);
+        if(i===0) ctx.moveTo(px,py);
+        else ctx.lineTo(px,py);
+      });
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  _ticks(min,max,count){
+    const span=max-min;
+    if(!isFinite(span)||span<=0) return [min,max];
+    const raw=span/Math.max(1,count-1);
+    const pow=Math.pow(10,Math.floor(Math.log10(raw)));
+    const n=raw/pow;
+    const step=(n<=1?1:n<=2?2:n<=5?5:10)*pow;
+    const ticks=[];
+    let v=Math.ceil(min/step)*step;
+    for(let i=0;i<60&&v<=max+step*.5;i++,v+=step){
+      ticks.push(Math.abs(v)<step*1e-10?0:v);
+    }
+    return ticks.length?ticks:[min,max];
+  }
+
+  _tickLabel(v){
+    if(Math.abs(v)>=10000||Math.abs(v)<.001&&v!==0) return v.toExponential(1);
+    return parseFloat(v.toPrecision(5)).toString();
   }
 
   _addCmd(cmd){
@@ -1149,6 +1590,14 @@ class Term {
   <tr><td>limit(sin(x)/x, x, 0)</td><td>Limit as x→0</td></tr>
   <tr><td>taylor(sin(x), x, 5)</td><td>Taylor series to order 5</td></tr>
   <tr><td>roots(x^3 - x, x)</td><td>Polynomial roots</td></tr>
+  </table>
+<div class="e hcat">-- Graphing ------------------------------------------------</div>
+<table class="htbl">
+  <tr><td>plot(sin(x), -10, 10)</td><td>Plot one function of x</td></tr>
+  <tr><td>plot(cos(x), 0, 2*pi)</td><td>Bounds may use constants</td></tr>
+  <tr><td>plot(x^2 - 4*x + 3, -2, 6)</td><td>Polynomial graph</td></tr>
+  <tr><td>plot(1/x, -5, 5)</td><td>Discontinuities are split into segments</td></tr>
+  <tr><td>Save PNG button</td><td>Download the graph image</td></tr>
 </table>
 <div class="e hcat">── Constants ───────────────────────────────────────────────</div>
 <table class="htbl">
